@@ -40,14 +40,32 @@ const adminSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
+    inviteCodes: {
+      employee: {
+        type: String,
+        unique: true,
+        sparse: true,
+      },
+      manager: {
+        type: String,
+        unique: true,
+        sparse: true,
+      },
+      sales: {
+        type: String,
+        unique: true,
+        sparse: true,
+      },
+    },
   },
   { timestamps: true }
 );
 
 // Password hash before save
-adminSchema.pre("save", async function (next) {
-  if (!this.isModified("password"));
+adminSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

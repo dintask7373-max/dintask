@@ -49,6 +49,27 @@ export const createEmployee = async (req, res) => {
       });
     }
 
+    // 🔹 Auto-Assign Manager if not provided
+    let managerIdToAssign = assignManagerId;
+    if (!managerIdToAssign) {
+      // Find any manager belonging to this Admin
+      const Manager = (await import("../Models/ManagerModel.js")).default;
+      const defaultManager = await Manager.findOne({
+        adminId: req.user.id,
+        isDeleted: false
+      });
+
+      if (defaultManager) {
+        managerIdToAssign = defaultManager._id;
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "No Manager found in your company. Please create a Manager first to assign to this employee.",
+          data: null
+        });
+      }
+    }
+
     const password = await generateRandomPassword()
     const hashedPassword = await bcrypt.hash(password, 10);
     const employee = await Employee.create({
@@ -56,7 +77,7 @@ export const createEmployee = async (req, res) => {
       email,
       role,
       roleName,
-      assignManagerId,
+      assignManagerId: managerIdToAssign,
       password: hashedPassword,
       adminId: req.user.id,
     });
@@ -68,6 +89,7 @@ export const createEmployee = async (req, res) => {
       success: true,
       message: "Employee created successfully",
       data: employee,
+      password: password
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message, data: null });
@@ -198,6 +220,17 @@ export const loginEmployee = async (req, res) => {
         success: false,
         message: "Employee account is inactive",
         data: null,
+      });
+    }
+
+    // 🔹 New Check: If Manager is Inactive (Rejected/Pending), Employee cannot login
+    const EmployeeManager = await Employee.findOne({ email, isDeleted: false }).populate("assignManagerId");
+
+    if (EmployeeManager && EmployeeManager.assignManagerId && !EmployeeManager.assignManagerId.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Your Manager's account is not active. Please contact your administrator.",
+        data: null
       });
     }
 

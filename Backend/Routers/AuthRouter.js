@@ -9,8 +9,14 @@ import {
   loginAdmin,
   getSingleAdmin,
   changePassword,
+
   adminReports,
+  generateInviteCode,
+  getJoinRequests,
+  handleJoinRequest,
+
 } from "../Controllers/AuthCtrl.js";
+
 
 const router = express.Router();
 import { AdminMiddleware, isAdmin } from "../Middlewares/AdminMiddleware.js";
@@ -32,5 +38,11 @@ router.patch("/changeAdminStatus/:id", changeAdminStatus);
 router.post("/loginAdmin", loginAdmin);
 router.post("/changePassword", AdminMiddleware, isAdmin, changePassword);
 router.get("/adminReports", AdminMiddleware, isAdmin, adminReports);
+
+// Invite System
+// Invite System
+router.patch("/generate-invite-code", AdminMiddleware, isAdmin, generateInviteCode);
+router.get("/join-requests", AdminMiddleware, isAdmin, getJoinRequests);
+router.patch("/handle-join-request", AdminMiddleware, isAdmin, handleJoinRequest);
 
 export default router;

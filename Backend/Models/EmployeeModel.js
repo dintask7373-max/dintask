@@ -24,6 +24,11 @@ const employeeSchema = new mongoose.Schema(
       unique: true,
     },
 
+    mobile: {
+      type: String,
+      default: "",
+    },
+
     role: {
       type: String,
       default: "employee",
@@ -51,7 +56,12 @@ const employeeSchema = new mongoose.Schema(
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
-      required: true,
+      ref: "Admin",
+      // required: true, // Made optional for self-registration
+    },
+    isWorkspaceVerified: {
+      type: Boolean,
+      default: false
     },
     avatar: {
       type: String,

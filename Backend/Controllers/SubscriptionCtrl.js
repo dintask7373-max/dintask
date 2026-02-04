@@ -42,7 +42,10 @@ export const createSubscription = async (req, res) => {
     let razorpaySubscriptionId = null;
     let razorpaySubscriptionUrl = null;
 
-    if (plan.planPrice > 0 && plan.razorpayPlanId) {
+    // Check if this is just a log creation (no payment yet)
+    const { isLog } = req.body;
+
+    if (!isLog && plan.planPrice > 0 && plan.razorpayPlanId) {
       const razorpaySubscription = await razorpay.subscriptions.create({
         plan_id: plan.razorpayPlanId,
         customer_notify: 1,
@@ -59,7 +62,7 @@ export const createSubscription = async (req, res) => {
       planId,
       razorpaySubscriptionId,
       razorpaySubscriptionUrl,
-      status: plan.planPrice > 0 ? "pending" : "active",
+      status: "pending", // Always pending initially
       finalPayableAmount: plan.planPrice,
     });
 
@@ -168,12 +171,21 @@ export const getSubscriptionByAdmin = async (req, res) => {
 /* ============ GET ALL SUBSCRIPTIONS ============ */
 export const getAllSubscriptions = async (req, res) => {
   try {
-    const subscriptions = await Subscription.find({
-      isDeleted: false,
-    }).populate("adminId planId");
+    const { status } = req.query; // Check for status in query
+
+    let filter = { isDeleted: false };
+    if (status) {
+      filter.status = status;
+    }
+
+    const subscriptions = await Subscription.find(filter)
+      .populate("adminId planId")
+      .sort({ createdAt: -1 }); // Sort by newest first
+
     res.status(200).json({
       success: true,
       message: "Subscriptions fetched successfully",
+      count: subscriptions.length,
       subscriptions,
     });
   } catch (error) {

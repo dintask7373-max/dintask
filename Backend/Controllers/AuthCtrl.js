@@ -5,8 +5,8 @@ import bcrypt from "bcryptjs";
 import { uploadToCloudinary } from "../Cloudinary/CloudinaryHelper.js"
 import Subscription from "../Models/SubscriptionModel.js";
 import Task from "../Models/TaskModel.js";
-import Manager from "../Models/ManagerModel.js";
-import Employee from "../Models/EmployeeModel.js";
+// import Manager from "../Models/ManagerModel.js";
+// import Employee from "../Models/EmployeeModel.js";
 
 // ================= LOGIN SUPER ADMIN =================
 export const loginSuperAdmin = async (req, res) => {
@@ -48,6 +48,8 @@ export const loginSuperAdmin = async (req, res) => {
   }
 };
 
+import Plan from "../Models/PlanModel.js";
+
 export const createAdmin = async (req, res) => {
   try {
     const { ownerName, email, companyName, password } = req.body;
@@ -57,7 +59,33 @@ export const createAdmin = async (req, res) => {
 
     const admin = await Admin.create({ ownerName, email, companyName, password });
 
-    res.status(201).json({ success: true, message: "Admin created successfully", data: admin });
+    // 🔹 Assign Default Free Plan
+    let freePlan = await Plan.findOne({ planName: "Free Trial", isDeleted: false });
+
+    // If Free Plan doesn't exist, create one
+    if (!freePlan) {
+      freePlan = await Plan.create({
+        planName: "Free Trial",
+        planPrice: 0,
+        planType: "monthly",
+        planTier: "starter",
+        employeeLimit: 5, // Default limit for free tier
+        managerLimit: 1,
+        planDetails: ["Free access for testing"],
+        isActive: true
+      });
+    }
+
+    // 🔹 Create Active Subscription
+    await Subscription.create({
+      adminId: admin._id,
+      planId: freePlan._id,
+      status: "active",
+      finalPayableAmount: 0,
+      // razorpay details empty for free plan
+    });
+
+    res.status(201).json({ success: true, message: "Admin created successfully with Free Plan", data: admin });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message, data: null });
   }
@@ -244,10 +272,10 @@ export const adminReports = async (req, res) => {
 
     if (filterType === "last7days") {
       startDate.setDate(startDate.getDate() - 7);
-    } 
+    }
     else if (filterType === "last30days") {
       startDate.setDate(startDate.getDate() - 30);
-    } 
+    }
     else if (filterType === "thisYear") {
       startDate = new Date(new Date().getFullYear(), 0, 1);
     }
@@ -309,5 +337,234 @@ export const adminReports = async (req, res) => {
       message: error.message,
       data: null
     });
+  }
+};
+
+// ================= GENERATE INVITE CODE (Role Based) =================
+export const generateInviteCode = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const { id } = req.user; // Admin ID
+
+    if (!["employee", "manager", "sales"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role selected" });
+    }
+
+    // Generate random 4-char string (e.g., "X9Y2")
+    const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    // Prefix based on role
+    let prefix = "";
+    if (role === "employee") prefix = "EMP";
+    if (role === "manager") prefix = "MNG";
+    if (role === "sales") prefix = "SLS";
+
+    const inviteCode = `${prefix}-${randomCode}`;
+
+    const admin = await Admin.findById(id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found" });
+    }
+
+    // Update specific role code
+    if (!admin.inviteCodes) admin.inviteCodes = {};
+    admin.inviteCodes[role] = inviteCode;
+
+    await admin.save();
+
+    res.status(200).json({
+      success: true,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} Invite Code Generated Successfully`,
+      inviteCode,
+      role
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ================= JOIN WORKSPACE (Role Based & Strict) =================
+import Employee from "../Models/EmployeeModel.js";
+import Manager from "../Models/ManagerModel.js";
+import SalesUser from "../Models/Sales/SalesUserModel.js";
+
+export const joinWorkspace = async (req, res) => {
+  try {
+    const { inviteCode } = req.body;
+    const { id, role } = req.user; // User ID and Role from Token
+
+    if (!inviteCode) {
+      return res.status(400).json({ success: false, message: "Invite Code is required" });
+    }
+
+    const admin = await Admin.findOne({
+      $or: [
+        { "inviteCodes.employee": inviteCode },
+        { "inviteCodes.manager": inviteCode },
+        { "inviteCodes.sales": inviteCode },
+      ],
+    });
+
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Invalid Invite Code" });
+    }
+
+    let endpointRoleMatch = false;
+
+    const checkAndJoin = async (Model, roleKey) => {
+      if (admin.inviteCodes[roleKey] !== inviteCode) {
+        return { match: true, error: `This code is not for ${roleKey}s.` };
+      }
+
+      const user = await Model.findById(id);
+
+      // If already verified with SAME admin, return success
+      if (user.adminId && user.adminId.toString() === admin._id.toString() && user.isWorkspaceVerified) {
+        return { match: true, alreadyVerified: true };
+      }
+
+      // Else update (New join or Re-join)
+      await Model.findByIdAndUpdate(id, {
+        adminId: admin._id,
+        isWorkspaceVerified: false, // Pending Approval
+      });
+
+      return { match: true };
+    };
+
+    let result = { match: false };
+
+    // --- EMPLOYEE ---
+    if (role === "employee" || role === "Employee") {
+      result = await checkAndJoin(Employee, "employee");
+    }
+    // --- MANAGER ---
+    else if (role === "manager" || role === "Manager") {
+      result = await checkAndJoin(Manager, "manager");
+    }
+    // --- SALES ---
+    else if (role === "sales" || role === "SalesUser" || role === "salesUser") {
+      result = await checkAndJoin(SalesUser, "sales");
+    }
+
+    if (!result.match) {
+      return res.status(400).json({ success: false, message: "Role mismatch or unknown role in token." });
+    }
+
+    if (result.error) {
+      return res.status(403).json({ success: false, message: result.error });
+    }
+
+    if (result.alreadyVerified) {
+      return res.status(200).json({
+        success: true,
+        message: "You are already a verified member of this workspace!",
+        adminDetails: {
+          companyName: admin.companyName,
+          ownerName: admin.ownerName
+        }
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Request sent to Admin for approval!",
+      adminDetails: {
+        companyName: admin.companyName,
+        ownerName: admin.ownerName
+      }
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ================= GET JOIN REQUESTS (Admin) =================
+export const getJoinRequests = async (req, res) => {
+  try {
+    const { id } = req.user; // Admin ID
+
+    // Fetch Pending Employees
+    const employees = await Employee.find({
+      adminId: id,
+      isWorkspaceVerified: false,
+      isDeleted: false
+    }).select("fullName email mobile role createdAt avatar");
+
+    // Fetch Pending Managers
+    const managers = await Manager.find({
+      adminId: id,
+      isWorkspaceVerified: false,
+      isDeleted: false
+    }).select("fullName email department role createdAt avatar");
+
+    // Fetch Pending Sales Users
+    const salesUsers = await SalesUser.find({
+      adminId: id,
+      isWorkspaceVerified: false,
+      isActive: true
+    }).select("fullName email mobile role createdAt avatar");
+
+    // Combine and Format
+    const requests = [
+      ...employees.map(u => ({ ...u.toObject(), type: "employee" })),
+      ...managers.map(u => ({ ...u.toObject(), type: "manager" })),
+      ...salesUsers.map(u => ({ ...u.toObject(), type: "sales" }))
+    ];
+
+    requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      requests
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ================= HANDLE JOIN REQUEST (Verify/Reject) =================
+export const handleJoinRequest = async (req, res) => {
+  try {
+    const { userId, role, action } = req.body; // action: 'verify' | 'reject'
+    const { id: adminId } = req.user;
+
+    if (!["verify", "reject"].includes(action)) {
+      return res.status(400).json({ success: false, message: "Invalid action" });
+    }
+
+    let Model;
+    if (role === "employee") Model = Employee;
+    else if (role === "manager") Model = Manager;
+    else if (role === "sales") Model = SalesUser;
+    else return res.status(400).json({ success: false, message: "Invalid role" });
+
+    const user = await Model.findOne({ _id: userId, adminId });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found or not linked to you" });
+    }
+
+    if (action === "verify") {
+      user.isWorkspaceVerified = true;
+      await user.save();
+      return res.status(200).json({ success: true, message: "User verified successfully" });
+    }
+
+    if (action === "reject") {
+      // Unlink Admin
+      user.adminId = null;
+      user.isWorkspaceVerified = false;
+      await user.save();
+      return res.status(200).json({ success: true, message: "Request rejected" });
+    }
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
