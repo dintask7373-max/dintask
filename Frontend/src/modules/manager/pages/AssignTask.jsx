@@ -9,7 +9,11 @@ import {
     Type,
     Flag,
     Plus,
-    Save
+    Save,
+    ArrowLeft,
+    Zap,
+    Target,
+    Layers
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -19,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Badge } from '@/shared/components/ui/badge';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Calendar } from '@/shared/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
@@ -44,7 +49,6 @@ const AssignTask = () => {
     const employees = useEmployeeStore(state => state.employees);
     const addNotification = useNotificationStore(state => state.addNotification);
 
-    // Filter employees managed by the current user
     const subEmployees = employees.filter(e => e.managerId === user?.id);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,31 +63,22 @@ const AssignTask = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSelectChange = (name, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (!formData.title || !formData.assignedTo || !date) {
-            toast.error("Please fill in all required fields");
+            toast.error("Tactical parameters incomplete");
             return;
         }
 
         setIsSubmitting(true);
-
         try {
-            // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 800));
 
             const newTask = {
@@ -92,132 +87,125 @@ const AssignTask = () => {
                 deadline: date.toISOString(),
                 priority: formData.priority,
                 status: 'pending',
-                assignedTo: [formData.assignedTo], // Array of IDs
+                assignedTo: [formData.assignedTo],
                 assignedBy: user.id || 'manager',
-                assignedToManager: user.id, // Keeping it within manager's scope
-                delegatedBy: user.id, // Explicitly marked as delegated/assigned by manager
+                assignedToManager: user.id,
+                delegatedBy: user.id,
                 createdAt: new Date().toISOString(),
                 progress: 0,
                 labels: formData.labels.split(',').map(l => l.trim()).filter(l => l),
-                activity: [
-                    {
-                        type: 'system',
-                        user: user.name || 'Manager',
-                        content: 'created and assigned this task',
-                        time: 'Just now'
-                    }
-                ]
+                activity: [{
+                    type: 'system',
+                    user: user.name || 'Manager',
+                    content: 'initialized task deployment',
+                    time: 'Just now'
+                }]
             };
 
             addTask(newTask);
-
-            // Send notification to the assignee
             addNotification({
-                title: 'New Task Assigned',
-                description: `You have been assigned: "${newTask.title}" by ${user.name}`,
+                title: 'New Task Assignment',
+                description: `Directive: "${newTask.title}" initiated by ${user.name}`,
                 category: 'task',
                 recipientId: formData.assignedTo
             });
 
-            toast.success("Task assigned successfully!");
-            navigate('/manager/delegation'); // Redirect to delegation view
+            toast.success("Tactical deployment successful");
+            navigate('/manager/delegation');
         } catch (error) {
-            toast.error("Failed to assign task");
-            console.error(error);
+            toast.error("Deployment failed");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
-            <div className="flex flex-col gap-2">
-                <Button
-                    variant="ghost"
-                    className="w-fit p-0 h-auto hover:bg-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mb-2"
-                    onClick={() => navigate(-1)}
-                >
-                    ← Back
-                </Button>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Assign New Task</h1>
-                <p className="text-slate-500 dark:text-slate-400">
-                    Create a new task and assign it directly to a team member.
-                </p>
+        <div className="space-y-4 sm:space-y-6 pb-10 max-w-5xl mx-auto px-1">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"
+                        onClick={() => navigate(-1)}
+                    >
+                        <ArrowLeft size={14} />
+                    </Button>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                            Task <span className="text-primary-600">Deployment</span>
+                        </h1>
+                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                            Operational assignment protocols
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
-                {/* Main Form */}
-                <div className="lg:col-span-2 space-y-6">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader>
-                            <CardTitle>Task Details</CardTitle>
-                            <CardDescription>Enter the core information for this task.</CardDescription>
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-12">
+                {/* Deployment Config Form */}
+                <div className="lg:col-span-8 space-y-4 sm:space-y-6">
+                    <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+                        <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                <Layers size={14} className="text-primary-500" />
+                                Core Configuration
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="title" className="flex items-center gap-2">
-                                    <Type size={14} className="text-slate-400" />
-                                    Task Title <span className="text-red-500">*</span>
-                                </Label>
+                        <CardContent className="p-5 sm:p-8 space-y-5">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="title" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Objective Title</Label>
                                 <Input
                                     id="title"
                                     name="title"
-                                    placeholder="e.g. Update Q3 Financial Report"
+                                    placeholder="e.g., SITE-O1 INFRASTRUCTURE PATCH"
                                     value={formData.title}
                                     onChange={handleInputChange}
-                                    className="dark:bg-slate-900"
+                                    className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="description" className="flex items-center gap-2">
-                                    <AlignLeft size={14} className="text-slate-400" />
-                                    Description
-                                </Label>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="description" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Operational Brief</Label>
                                 <Textarea
                                     id="description"
                                     name="description"
-                                    placeholder="Provide detailed instructions..."
-                                    className="min-h-[120px] dark:bg-slate-900 resize-none"
+                                    placeholder="Input detailed tactical directives..."
+                                    className="min-h-[120px] bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm p-4 resize-none"
                                     value={formData.description}
                                     onChange={handleInputChange}
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="flex items-center gap-2">
-                                        <AlertCircle size={14} className="text-slate-400" />
-                                        Priority
-                                    </Label>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Priority Class</Label>
                                     <Select
                                         value={formData.priority}
                                         onValueChange={(val) => handleSelectChange('priority', val)}
                                     >
-                                        <SelectTrigger className="dark:bg-slate-900">
-                                            <SelectValue placeholder="Select priority" />
+                                        <SelectTrigger className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4">
+                                            <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="low">Low Priority</SelectItem>
-                                            <SelectItem value="medium">Medium Priority</SelectItem>
-                                            <SelectItem value="high">High Priority</SelectItem>
-                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                            <SelectItem value="low" className="text-[10px] font-black uppercase tracking-widest">Minimal</SelectItem>
+                                            <SelectItem value="medium" className="text-[10px] font-black uppercase tracking-widest font-primary-600">Standard</SelectItem>
+                                            <SelectItem value="high" className="text-[10px] font-black uppercase tracking-widest text-orange-500">High</SelectItem>
+                                            <SelectItem value="urgent" className="text-[10px] font-black uppercase tracking-widest text-red-500">Urgent</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="labels" className="flex items-center gap-2">
-                                        <Flag size={14} className="text-slate-400" />
-                                        Labels (comma separated)
-                                    </Label>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="labels" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Tactical Tags</Label>
                                     <Input
                                         id="labels"
                                         name="labels"
-                                        placeholder="Design, Urgent, Review"
+                                        placeholder="SYNC, DELTA, CORE"
                                         value={formData.labels}
                                         onChange={handleInputChange}
-                                        className="dark:bg-slate-900"
+                                        className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4"
                                     />
                                 </div>
                             </div>
@@ -225,84 +213,82 @@ const AssignTask = () => {
                     </Card>
                 </div>
 
-                {/* Sidebar Controls */}
-                <div className="space-y-6">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader>
-                            <CardTitle>Assignment</CardTitle>
+                {/* Assignment & Deployment Sidebar */}
+                <div className="lg:col-span-4 space-y-4 sm:space-y-6">
+                    <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden sticky top-6">
+                        <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                <Target size={14} className="text-primary-500" />
+                                Deployment Unit
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    <User size={14} className="text-slate-400" />
-                                    Assign To <span className="text-red-500">*</span>
-                                </Label>
+                        <CardContent className="p-5 space-y-5">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset ID</Label>
                                 <Select
                                     value={formData.assignedTo}
                                     onValueChange={(val) => handleSelectChange('assignedTo', val)}
                                 >
-                                    <SelectTrigger className="h-14 dark:bg-slate-900">
-                                        <SelectValue placeholder="Select team member" />
+                                    <SelectTrigger className="h-12 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-black text-[10px] uppercase tracking-widest px-4">
+                                        <SelectValue placeholder="IDENTIFY TARGET" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl">
                                         {subEmployees.length > 0 ? (
                                             subEmployees.map(emp => (
                                                 <SelectItem key={emp.id} value={emp.id}>
                                                     <div className="flex items-center gap-2">
-                                                        <Avatar className="h-6 w-6">
+                                                        <Avatar className="h-5 w-5 bg-primary-100">
                                                             <AvatarImage src={emp.avatar} />
-                                                            <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
+                                                            <AvatarFallback className="text-[8px] font-black">{emp.name.charAt(0)}</AvatarFallback>
                                                         </Avatar>
-                                                        <span>{emp.name}</span>
+                                                        <span className="text-[10px] font-black">{emp.name.toUpperCase()}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))
                                         ) : (
-                                            <div className="p-2 text-xs text-center text-slate-500">No team members found</div>
+                                            <div className="p-2 text-[8px] font-black uppercase text-center text-slate-400">Zero Personnel Detected</div>
                                         )}
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    <CalendarIcon size={14} className="text-slate-400" />
-                                    Due Date <span className="text-red-500">*</span>
-                                </Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Time Horizon</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
-                                            variant={"outline"}
+                                            variant={"ghost"}
                                             className={cn(
-                                                "w-full justify-start text-left font-normal dark:bg-slate-900",
-                                                !date && "text-muted-foreground"
+                                                "w-full h-12 justify-start bg-slate-50 dark:bg-slate-800/50 rounded-xl font-black text-[10px] uppercase tracking-widest px-4",
+                                                !date && "text-slate-400"
                                             )}
                                         >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                                            <CalendarIcon className="mr-2 h-4 w-4 text-primary-500" />
+                                            {date ? format(date, "PPP").toUpperCase() : <span className="italic">SET DEADLINE</span>}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
+                                    <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden">
                                         <Calendar
                                             mode="single"
                                             selected={date}
                                             onSelect={setDate}
                                             initialFocus
+                                            className="font-sans"
                                         />
                                     </PopoverContent>
                                 </Popover>
                             </div>
 
                             <Button
-                                className="w-full h-12 gap-2 text-md font-bold mt-4"
+                                className="w-full h-12 gap-2 font-black text-[10px] uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-500/20 text-white rounded-xl mt-4"
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? (
-                                    <>Assigning...</>
+                                    <>INITIALIZING...</>
                                 ) : (
                                     <>
-                                        <Plus size={18} /> Assign Task
+                                        <Zap size={14} className="fill-current" /> DEPLOY TASK
                                     </>
                                 )}
                             </Button>
@@ -310,10 +296,14 @@ const AssignTask = () => {
                     </Card>
                 </div>
             </div>
-            {/* Recent Assignments */}
-            <div className="mt-8">
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-4">Recent Assignments</h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+            {/* Recent Deployment History - High Density List */}
+            <div className="mt-8 sm:mt-12">
+                <div className="flex items-center gap-2 mb-5 px-1">
+                    <div className="h-4 w-1 bg-primary-600 rounded-full" />
+                    <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">Recent Deployments</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {useTaskStore(state => state.tasks)
                         .filter(t => t.delegatedBy === user?.id)
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -321,37 +311,33 @@ const AssignTask = () => {
                         .map(task => {
                             const assignee = employees.find(e => task.assignedTo?.includes(e.id));
                             return (
-                                <Card key={task.id} className="border-none shadow-sm hover:shadow-md transition-shadow group">
-                                    <CardHeader className="pb-2">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-primary-600 transition-colors">{task.title}</h3>
-                                            <span className={cn(
-                                                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border",
-                                                task.priority === 'urgent' ? "bg-red-50 text-red-600 border-red-100" :
-                                                    task.priority === 'high' ? "bg-orange-50 text-orange-600 border-orange-100" :
-                                                        task.priority === 'medium' ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                                            "bg-slate-50 text-slate-500 border-slate-100"
+                                <Card key={task.id} className="border-none shadow-sm hover:shadow-md transition-all bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
+                                    <CardContent className="p-4">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase leading-tight line-clamp-1 group-hover:text-primary-600 transition-colors">{task.title}</h3>
+                                            <Badge variant="ghost" className={cn(
+                                                "text-[8px] font-black uppercase h-4 px-1 rounded",
+                                                task.priority === 'urgent' ? "bg-red-50 text-red-600" :
+                                                    task.priority === 'high' ? "bg-orange-50 text-orange-600" :
+                                                        "bg-primary-50 text-primary-600"
                                             )}>
                                                 {task.priority}
-                                            </span>
+                                            </Badge>
                                         </div>
-                                        <CardDescription className="line-clamp-2 text-xs mt-1">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight line-clamp-2 italic mb-4">
                                             {task.description}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        </p>
+                                        <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800">
                                             <div className="flex items-center gap-2">
-                                                <Avatar className="h-6 w-6">
-                                                    <AvatarImage src={assignee?.avatar} />
-                                                    <AvatarFallback>{assignee?.name?.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                                                    {assignee?.name || 'Unassigned'}
+                                                <div className="size-5 rounded-lg overflow-hidden bg-slate-100">
+                                                    <img src={assignee?.avatar} alt={assignee?.name} className="w-full h-full object-cover" />
+                                                </div>
+                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                                    {assignee?.name.split(' ')[0] || 'ASYNC'}
                                                 </span>
                                             </div>
-                                            <span className="text-[10px] text-slate-400">
-                                                {new Date(task.createdAt).toLocaleDateString()}
+                                            <span className="text-[8px] font-black text-slate-400">
+                                                {format(new Date(task.createdAt), "MMM dd").toUpperCase()}
                                             </span>
                                         </div>
                                     </CardContent>

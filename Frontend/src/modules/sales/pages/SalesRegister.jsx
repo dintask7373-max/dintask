@@ -40,12 +40,12 @@ const SalesRegister = () => {
         const { fullName, email, password, confirmPassword } = formData;
 
         if (!fullName || !email || !password || !confirmPassword) {
-            toast.error('Please fill in all fields');
+            toast.error('Operational initialization failed: missing data');
             return;
         }
 
         if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
+            toast.error('Security key mismatch');
             return;
         }
 
@@ -60,117 +60,143 @@ const SalesRegister = () => {
                     workspaceId: referralCode,
                     role: 'Sales'
                 });
-                toast.success('Join request sent! Waiting for Admin approval.');
+                toast.success('Join request transmitted. Pending Command approval.');
                 navigate('/employee/success-join');
             } else {
                 await new Promise(resolve => setTimeout(resolve, 1500));
-                toast.success('Sales account created successfully! Please login.');
+                toast.success('Sales operator integrated successfully');
                 navigate('/sales/login');
             }
         } catch {
-            toast.error('Registration failed. Please try again.');
+            toast.error('Integration failure. Transmit again.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 font-sans">
-            <Card className="w-full max-w-sm border-slate-200 dark:border-slate-800 shadow-xl shadow-primary-100/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
-                <div className="h-2 bg-primary-600 w-full" />
-                <CardHeader className="text-center space-y-1 pt-8">
-                    <div className="flex justify-center mb-4">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 font-sans relative overflow-hidden">
+            {/* Ambient Background Elements */}
+            <div className="absolute top-[-10%] left-[-10%] size-[40%] bg-primary-500/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] size-[40%] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+            <Card className="w-full max-w-[480px] border-none shadow-2xl shadow-primary-500/10 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden relative z-10">
+                <div className={cn(
+                    "h-2 bg-gradient-to-r w-full",
+                    referralCode ? "from-emerald-600 to-blue-600" : "from-primary-600 to-blue-600"
+                )} />
+
+                <CardHeader className="text-center space-y-2 pt-10 pb-6 px-10">
+                    <div className="flex justify-center mb-6">
                         <div className={cn(
-                            "p-3 rounded-2xl transition-colors",
-                            referralCode ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-primary-50 dark:bg-primary-900/20 text-primary-600"
+                            "size-16 rounded-[1.5rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center p-3 relative group transition-all",
+                            referralCode ? "text-emerald-600" : "text-primary-600"
                         )}>
-                            {referralCode ? <Link2 className="w-8 h-8" /> : <ShieldCheck className="w-8 h-8" />}
+                            <div className={cn(
+                                "absolute inset-0 rounded-[1.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity",
+                                referralCode ? "bg-emerald-500/20" : "bg-primary-500/20"
+                            )} />
+                            {referralCode ? <Link2 size={32} className="relative z-10" /> : <UserPlus size={32} className="relative z-10" />}
                         </div>
                     </div>
-                    <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        {referralCode ? 'Join Sales Team' : 'Sales Registration'}
+                    <CardTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                        {referralCode ? 'Force <span className="text-emerald-600">Link</span>' : 'Operator <span className="text-primary-600">Sync</span>'}
                     </CardTitle>
-                    <CardDescription className="text-slate-500 dark:text-slate-400">
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                         {referralCode ? (
-                            <span className="flex items-center justify-center gap-1 text-emerald-600 font-bold dark:text-emerald-400">
-                                Workspace: {referralCode}
+                            <span className="flex items-center justify-center gap-1.5 text-emerald-600 font-black">
+                                <ShieldCheck size={12} /> External Workspace: {referralCode}
                             </span>
-                        ) : 'Join the sales team'}
+                        ) : 'Scale the sales infrastructure'}
                     </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="px-10 pb-8 space-y-6">
                     <form onSubmit={handleRegister} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="fullName">Full Name</Label>
-                            <Input
-                                id="fullName"
-                                type="text"
-                                placeholder="John Sales"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                className="h-11 border-slate-200 focus:ring-primary-500"
-                            />
+                        <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Legal Designation</Label>
+                                <Input
+                                    id="fullName"
+                                    type="text"
+                                    placeholder="Operator Name"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Comm Link</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="operator@entity.com"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Sales Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="sales@dintask.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="h-11 border-slate-200 focus:ring-primary-500"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="h-11 border-slate-200 focus:ring-primary-500"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                className="h-11 border-slate-200 focus:ring-primary-500"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Security Key</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm Key</Label>
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                />
+                            </div>
                         </div>
 
                         <Button
                             type="submit"
-                            className="w-full h-11 text-base font-semibold transition-all bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-200 dark:shadow-none"
+                            className={cn(
+                                "w-full h-14 mt-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl rounded-xl",
+                                referralCode ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" : "bg-primary-600 hover:bg-primary-700 shadow-primary-500/20"
+                            )}
                             disabled={loading}
                         >
                             {loading ? (
-                                <div className="flex items-center gap-2 text-white">
+                                <div className="flex items-center gap-3">
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    Creating Account...
+                                    Synchronizing...
                                 </div>
                             ) : (
-                                <><UserPlus size={18} className="mr-2" /> Register</>
+                                <><UserPlus size={18} className="mr-2" /> Initialize Account</>
                             )}
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex flex-col space-y-4 pb-6 border-t border-slate-100 dark:border-slate-800 pt-6 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="text-center">
-                        <p className="text-xs text-slate-500">
-                            Already have an account? <Link to="/sales/login" className="font-bold text-primary-600 dark:text-primary-400 hover:underline">Sign In</Link>
-                        </p>
+
+                <CardFooter className="flex flex-col space-y-5 p-10 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="w-full flex items-center justify-between gap-4">
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 whitespace-nowrap">Existing Operator?</span>
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
                     </div>
+
+                    <Link to="/sales/login" className="w-full h-12 rounded-xl bg-white dark:bg-slate-800 border-none shadow-sm flex items-center justify-center text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest hover:bg-slate-50 transition-colors">
+                        Return to Portal
+                    </Link>
+
+                    <p className="text-[8px] font-bold text-slate-400 text-center uppercase tracking-[0.2em]">
+                        Neural Enrollment Protocol v2.8
+                    </p>
                 </CardFooter>
             </Card>
         </div>

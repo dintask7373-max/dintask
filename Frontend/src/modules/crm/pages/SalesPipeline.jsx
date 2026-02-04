@@ -216,14 +216,14 @@ const SalesPipeline = () => {
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col space-y-3">
       {/* Header Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 sm:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
         <div className="flex items-center gap-3 px-1">
-          <div className="lg:hidden w-8 h-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+          <div className="lg:hidden size-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
             <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Sales <span className="text-primary-600">Pipeline</span></h1>
-            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-none mt-1">Status Overview</p>
+            <h1 className="text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">Sales <span className="text-primary-600">Pipeline</span></h1>
+            <p className="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] leading-none mt-1">Acquisition Velocity</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -231,36 +231,36 @@ const SalesPipeline = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <Input
               placeholder="Search..."
-              className="pl-9 h-9 sm:h-10 w-full sm:w-[150px] lg:w-[250px] bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-xs font-bold"
+              className="pl-9 h-8 sm:h-9 w-full sm:w-[130px] lg:w-[220px] bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-[10px] font-bold"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Select value={filterPriority} onValueChange={setFilterPriority}>
-            <SelectTrigger className="w-[100px] sm:w-[120px] h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-[10px] font-black uppercase">
+            <SelectTrigger className="w-[90px] h-8 sm:h-9 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-[9px] font-black uppercase">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800">
-              <SelectItem value="all" className="text-[10px] font-black uppercase">All</SelectItem>
-              <SelectItem value="high" className="text-[10px] font-black uppercase">High</SelectItem>
-              <SelectItem value="medium" className="text-[10px] font-black uppercase">Medium</SelectItem>
-              <SelectItem value="low" className="text-[10px] font-black uppercase">Low</SelectItem>
+              <SelectItem value="all" className="text-[9px] font-black uppercase">All</SelectItem>
+              <SelectItem value="high" className="text-[9px] font-black uppercase">High</SelectItem>
+              <SelectItem value="medium" className="text-[9px] font-black uppercase">Medium</SelectItem>
+              <SelectItem value="low" className="text-[9px] font-black uppercase">Low</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => setIsAddOpen(true)} className="gap-2 h-9 sm:h-10 bg-primary-600 hover:bg-primary-700 rounded-xl shadow-lg shadow-primary-500/20 px-3 sm:px-5">
-            <Plus size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Deal</span>
+          <Button onClick={() => setIsAddOpen(true)} className="gap-1.5 h-8 sm:h-9 bg-primary-600 hover:bg-primary-700 rounded-xl shadow-lg shadow-primary-500/20 px-3 sm:px-4">
+            <Plus size={14} />
+            <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">Deploy deal</span>
           </Button>
         </div>
       </div>
 
       {/* Kanban Board Area */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 custom-scrollbar">
-        <div className="flex h-full gap-4 min-w-max px-1">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 scrollbar-hide">
+        <div className="flex h-full gap-3 sm:gap-4 min-w-max px-1">
           {processedPipeline.map(({ stage, leads: stageLeads, totalValue }) => (
             <div
               key={stage}
-              className="flex flex-col w-[260px] sm:w-[280px] bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100/50 dark:border-slate-800 h-full max-h-full transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30"
+              className="flex flex-col w-[220px] sm:w-[240px] bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100/50 dark:border-slate-800 h-full max-h-full transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30"
               onDragOver={handleDragOver}
               onDrop={() => handleDrop(stage)}
             >
@@ -295,9 +295,9 @@ const SalesPipeline = () => {
                       key={lead.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, lead.id, stage)}
-                      className="group bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900/50 transition-all relative overflow-hidden"
+                      className="group bg-white dark:bg-slate-900 p-2.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900/50 transition-all relative overflow-hidden"
                     >
-                      <div className="absolute top-0 right-0 w-12 h-12 bg-slate-50 dark:bg-slate-800/30 rounded-bl-full -mr-6 -mt-6 group-hover:scale-110 transition-transform" />
+                      <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 dark:bg-slate-800/30 rounded-bl-full -mr-5 -mt-5 group-hover:scale-110 transition-transform" />
 
                       <div className="flex justify-between items-start mb-2 relative z-10">
                         <Badge
@@ -323,20 +323,19 @@ const SalesPipeline = () => {
                         </DropdownMenu>
                       </div>
 
-                      <h4 className="font-black text-slate-900 dark:text-white text-[11px] mb-1 line-clamp-1 relative z-10 leading-tight tracking-tight uppercase">{lead.name}</h4>
+                      <h4 className="font-black text-slate-900 dark:text-white text-[10px] mb-0.5 line-clamp-1 relative z-10 leading-tight tracking-tight uppercase">{lead.name}</h4>
 
-                      <div className="flex items-center gap-1.5 text-[9px] text-slate-400 mb-3 relative z-10 font-bold uppercase tracking-wider">
-                        <Building2 size={10} className="text-slate-300" />
+                      <div className="flex items-center gap-1.5 text-[8px] text-slate-400 mb-2 relative z-10 font-black uppercase tracking-widest leading-none">
+                        <Building2 size={9} className="text-slate-300 shrink-0" />
                         <span className="truncate">{lead.company}</span>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2.5 border-t border-slate-50 dark:border-slate-800 relative z-10">
-                        <div className="flex items-center gap-0.5 text-primary-600 font-black text-[11px] tracking-tight">
-                          <IndianRupee size={10} className="stroke-[3px]" />
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-slate-800 relative z-10">
+                        <div className="flex items-center gap-0.5 text-primary-600 font-black text-[10px] tracking-tight">
+                          <IndianRupee size={9} className="stroke-[3px]" />
                           {Number(lead.amount || 0).toLocaleString()}
                         </div>
-                        <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest">
-                          <Calendar size={9} />
+                        <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest whitespace-nowrap">
                           {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : '—'}
                         </div>
                       </div>

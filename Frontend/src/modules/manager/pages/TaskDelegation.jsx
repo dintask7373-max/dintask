@@ -12,14 +12,16 @@ import {
     UserPlus,
     UserMinus,
     MessageSquare,
-    MoreVertical
+    MoreVertical,
+    Zap,
+    Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
 import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
-import { Card, CardContent } from '@/shared/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
@@ -30,7 +32,8 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+    DialogDescription,
+    DialogFooter
 } from "@/shared/components/ui/dialog";
 import { toast } from 'sonner';
 
@@ -50,9 +53,8 @@ const TaskDelegation = () => {
 
     const handleDelegateTask = (employeeId) => {
         if (!selectedTask) return;
-
-        delegateTaskToEmployee(selectedTask.id, employeeId, user.id, "Delegated via Manager Dashboard");
-        toast.success(`Task delegated successfully`);
+        delegateTaskToEmployee(selectedTask.id, employeeId, user.id, "Delegated via Tactical Command Node");
+        toast.success(`Task deployment confirmed`);
         setIsModalOpen(false);
         setSelectedTask(null);
     };
@@ -76,190 +78,190 @@ const TaskDelegation = () => {
     }, [employees, user]);
 
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Task Delegation</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Delegate tasks assigned by Admin to your team members.
-                    </p>
+        <div className="space-y-4 sm:space-y-6 pb-12">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+                <div className="flex items-center gap-3">
+                    <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                            Delegation <span className="text-primary-600">Terminal</span>
+                        </h1>
+                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                            Operational task redistribution
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            {/* Search and Stats */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            {/* Tactical Search & Oversight */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                     <Input
-                        placeholder="Search tasks..."
-                        className="pl-10 h-11 border-none shadow-sm dark:bg-slate-900"
+                        placeholder="Search deployment queue..."
+                        className="pl-11 h-11 bg-white dark:bg-slate-900 border-none shadow-xl shadow-slate-200/20 dark:shadow-none rounded-2xl font-bold text-xs"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center gap-4 bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3 h-11 bg-white dark:bg-slate-900 px-4 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-none">
                     <div className="flex items-center gap-2">
-                        <Badge className="bg-amber-500 text-white border-none">{pendingTasks.length}</Badge>
-                        <span className="text-xs font-bold text-slate-500 uppercase">Pending</span>
+                        <div className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{pendingTasks.length} PENDING</span>
                     </div>
-                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
+                    <div className="w-px h-3 bg-slate-100 dark:bg-slate-800" />
                     <div className="flex items-center gap-2">
-                        <Badge className="bg-primary-500 text-white border-none">{delegatedTasks.length}</Badge>
-                        <span className="text-xs font-bold text-slate-500 uppercase">Delegated</span>
+                        <div className="size-2 rounded-full bg-primary-500" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{delegatedTasks.length} DEPLOYED</span>
                     </div>
                 </div>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-2">
-                {/* Pending Delegation */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* Pending Delegation Grid */}
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold flex items-center gap-2">
-                            <ArrowRightLeft className="text-amber-500" size={20} />
-                            Pending Delegation
-                        </h2>
+                    <div className="flex items-center gap-2 px-1">
+                        <ArrowRightLeft className="text-amber-500" size={16} />
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Assignment Queue</h2>
                     </div>
 
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        animate="animate"
-                        className="grid gap-4"
-                    >
+                    <div className="grid gap-3">
                         {pendingTasks.length > 0 ? pendingTasks.map((task) => (
-                            <motion.div key={task.id} variants={fadeInUp}>
-                                <Card className="border-none shadow-sm hover:shadow-md transition-shadow group">
-                                    <CardContent className="p-4">
-                                        <div className="space-y-4 text-left">
-                                            <div className="flex items-start justify-between">
-                                                <div className="space-y-1">
-                                                    <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
-                                                        {task.title}
-                                                    </h3>
-                                                    <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        <span className="flex items-center gap-1">
-                                                            <CalendarIcon size={12} />
-                                                            {new Date(task.deadline).toLocaleDateString()}
-                                                        </span>
-                                                        <span className={cn(
-                                                            "px-2 py-0.5 rounded-full border border-current",
-                                                            task.priority === 'urgent' ? 'text-red-500' : 'text-blue-500'
-                                                        )}>
-                                                            {task.priority}
-                                                        </span>
+                            <Card key={task.id} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden group hover:border-l-4 hover:border-l-amber-500 transition-all">
+                                <CardContent className="p-4 sm:p-5">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="space-y-1.5 flex-1 overflow-hidden text-left">
+                                            <h3 className="font-black text-[11px] sm:text-xs text-slate-900 dark:text-white uppercase leading-tight group-hover:text-amber-600 transition-colors truncate">
+                                                {task.title}
+                                            </h3>
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex items-center gap-1 text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                                                    <Clock size={10} className="text-amber-500" />
+                                                    DUE: {new Date(task.deadline).toLocaleDateString().toUpperCase()}
+                                                </span>
+                                                <Badge variant="ghost" className={cn(
+                                                    "text-[8px] font-black uppercase h-4 px-1.5",
+                                                    task.priority === 'urgent' ? 'bg-red-50 text-red-500' : 'bg-primary-50 text-primary-600'
+                                                )}>
+                                                    {task.priority}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            className="h-8 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 font-black text-[9px] uppercase tracking-widest shrink-0"
+                                            onClick={() => handleDelegateClick(task)}
+                                        >
+                                            <UserPlus size={12} className="mr-1.5" /> DEPLOY
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )) : (
+                            <div className="text-center py-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-[2rem] border border-dashed border-slate-200 dark:border-slate-800">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Queue Vacuum Detected</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Delegated Task Repository */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-1 text-left">
+                        <CheckCircle2 className="text-emerald-500" size={16} />
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Deployed Assets</h2>
+                    </div>
+
+                    <div className="grid gap-3">
+                        {delegatedTasks.length > 0 ? delegatedTasks.map((task) => {
+                            const assignee = teamMembers.find(e => task.assignedTo?.includes(e.id));
+                            return (
+                                <Card key={task.id} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden group hover:bg-slate-50/50 transition-all opacity-80 hover:opacity-100">
+                                    <CardContent className="p-3 sm:p-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                <div className="relative shrink-0">
+                                                    <Avatar className="size-9 rounded-xl border-2 border-white dark:border-slate-800 shadow-sm">
+                                                        <AvatarImage src={assignee?.avatar} />
+                                                        <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-[10px]">
+                                                            {assignee?.name?.charAt(0)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="absolute -bottom-1 -right-1 size-3.5 bg-white dark:bg-slate-900 rounded-lg flex items-center justify-center border border-slate-100">
+                                                        <CheckCircle2 className="text-emerald-500" size={10} />
                                                     </div>
                                                 </div>
-                                                <Button
-                                                    size="sm"
-                                                    className="rounded-xl h-9 px-4 gap-2 text-xs font-bold"
-                                                    onClick={() => handleDelegateClick(task)}
-                                                >
-                                                    Delegate <UserPlus size={14} />
-                                                </Button>
+                                                <div className="min-w-0 flex-1 text-left overflow-hidden">
+                                                    <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase leading-none mb-1 truncate">
+                                                        {task.title}
+                                                    </h3>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate">
+                                                        LINKED TO: <span className="text-primary-600">{assignee?.name}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <Badge variant="outline" className="text-[8px] font-black h-4 px-1.5 border-slate-200 uppercase tracking-tighter">
+                                                    {task.status}
+                                                </Badge>
+
                                             </div>
                                         </div>
                                     </CardContent>
                                 </Card>
-                            </motion.div>
-                        )) : (
-                            <div className="text-center py-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <p className="text-sm text-slate-400 font-medium">No tasks pending delegation</p>
-                            </div>
-                        )}
-                    </motion.div>
-                </div>
-
-                {/* Already Delegated */}
-                <div className="space-y-4">
-                    <h2 className="text-lg font-bold flex items-center gap-2 text-left">
-                        <CheckCircle2 className="text-emerald-500" size={20} />
-                        Delegated Tasks
-                    </h2>
-
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="initial"
-                        animate="animate"
-                        className="grid gap-4"
-                    >
-                        {delegatedTasks.length > 0 ? delegatedTasks.map((task) => {
-                            const assignee = teamMembers.find(e => task.assignedTo?.includes(e.id));
-                            return (
-                                <motion.div key={task.id} variants={fadeInUp}>
-                                    <Card className="border-none shadow-sm opacity-80 hover:opacity-100 transition-all group">
-                                        <CardContent className="p-4">
-                                            <div className="flex items-center justify-between gap-4">
-                                                <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                    <div className="relative">
-                                                        <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
-                                                            <AvatarImage src={assignee?.avatar} />
-                                                            <AvatarFallback className="bg-primary-100 text-primary-600 text-xs font-bold">
-                                                                {assignee?.name?.charAt(0)}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-0.5 border border-slate-100 dark:border-slate-800">
-                                                            <CheckCircle2 className="text-emerald-500" size={12} />
-                                                        </div>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1 text-left">
-                                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                                                            {task.title}
-                                                        </h3>
-                                                        <p className="text-[10px] text-slate-500 font-medium truncate">
-                                                            Assigned to <span className="text-primary-600 font-bold">{assignee?.name}</span>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="text-[10px] border-slate-200 dark:border-slate-800 capitalize">
-                                                        {task.status}
-                                                    </Badge>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-slate-400">
-                                                        <MoreVertical size={16} />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
                             );
                         }) : (
-                            <div className="text-center py-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <p className="text-sm text-slate-400 font-medium">No active delegations</p>
+                            <div className="text-center py-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-[2rem] border border-dashed border-slate-200 dark:border-slate-800">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Force Zero</p>
                             </div>
                         )}
-                    </motion.div>
+                    </div>
                 </div>
             </div>
-            {/* Delegation Modal */}
+
+            {/* Delegation Modal - Premium Tactical */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delegate Task: {selectedTask?.title}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                        <p className="text-sm text-slate-500">Select a team member to assign this task to:</p>
+                <DialogContent className="sm:max-w-md rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden font-sans">
+                    <div className="bg-slate-900 p-6 text-white border-b-4 border-primary-600">
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                            <Shield className="text-primary-500" size={20} />
+                            Asset Allocation
+                        </DialogTitle>
+                        <DialogDescription className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
+                            RE-ASSIGNING OBJECTIVE: {selectedTask?.title}
+                        </DialogDescription>
+                    </div>
+                    <div className="p-6 bg-white dark:bg-slate-900 max-h-[60vh] overflow-y-auto">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Select Operations Asset</p>
                         <div className="grid gap-2">
                             {teamMembers.map(member => (
-                                <div
+                                <button
                                     key={member.id}
-                                    className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group"
+                                    className="flex items-center justify-between p-3 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group text-left"
                                     onClick={() => handleDelegateTask(member.id)}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8">
+                                        <Avatar className="size-8 rounded-xl">
                                             <AvatarImage src={member.avatar} />
-                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                            <AvatarFallback className="font-black text-[10px]">{member.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{member.name}</p>
-                                            <p className="text-[10px] text-slate-500">{member.role}</p>
+                                            <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase leading-none mb-1">{member.name}</p>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{member.role}</p>
                                         </div>
                                     </div>
-                                    <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100">Select</Button>
-                                </div>
+                                    <div className="size-6 rounded-lg bg-slate-50 group-hover:bg-primary-600 group-hover:text-white flex items-center justify-center transition-colors">
+                                        <ChevronRight size={14} />
+                                    </div>
+                                </button>
                             ))}
                         </div>
+                    </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
+                        <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-9 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest italic">Abort Sync</Button>
                     </div>
                 </DialogContent>
             </Dialog>

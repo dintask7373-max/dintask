@@ -10,11 +10,13 @@ import {
     Clock,
     TrendingUp,
     ArrowUpRight,
-    ArrowDownRight,
     Phone,
     Mail,
-    Building
+    Building,
+    ArrowRight
 } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -37,9 +39,10 @@ import { toast } from 'sonner';
 
 
 const Deals = () => {
+    const navigate = useNavigate();
     const { user } = useAuthStore();
     const { salesReps, getSalesRepByEmail } = useSalesStore();
-    const { leads, addLead, updateLead, deleteLead, pipelineStages } = useCRMStore();
+    const { leads, addLead, editLead, deleteLead, pipelineStages } = useCRMStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStage, setSelectedStage] = useState('all');
@@ -60,18 +63,25 @@ const Deals = () => {
         priority: 'medium'
     });
 
+    // Edit Deal Dialog state
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editDealData, setEditDealData] = useState({
+        name: '',
+        company: '',
+        amount: '',
+        status: 'New',
+        priority: 'medium'
+    });
+
     // Get current sales rep data
     const salesRep = useMemo(() => {
         return getSalesRepByEmail(user?.email);
     }, [user?.email, getSalesRepByEmail]);
 
-    // Filter and sort deals (leads that are treated as deals)
+    // Filter and sort deals
     const filteredDeals = useMemo(() => {
         if (!salesRep && !user) return [];
-
-        // In a real app, we'd filter by owner. For demo purposes, we show all or filtered by mocked owner IDs if matched
-        // let myDeals = leads.filter(lead => lead.owner === salesRep?.id || lead.owner === user?.id);
-        let myDeals = leads; // Show all for visibility in this demo context
+        let myDeals = leads;
 
         return myDeals
             .filter(deal => {
@@ -110,7 +120,6 @@ const Deals = () => {
             });
     }, [leads, searchTerm, selectedStage, selectedPriority, sortBy, sortOrder, salesRep, user]);
 
-    // Calculate deal statistics
     const dealStats = useMemo(() => {
         const totalDeals = filteredDeals.length;
         const totalValue = filteredDeals.reduce((sum, deal) => sum + (deal.amount || 0), 0);
@@ -120,15 +129,7 @@ const Deals = () => {
         const avgDealValue = totalDeals > 0 ? Math.round(totalValue / totalDeals) : 0;
         const winRate = totalDeals > 0 ? Math.round((wonDeals / (wonDeals + lostDeals)) * 100) : 0;
 
-        return {
-            totalDeals,
-            totalValue,
-            wonDeals,
-            lostDeals,
-            activeDeals,
-            avgDealValue,
-            winRate: isNaN(winRate) ? 0 : winRate
-        };
+        return { totalDeals, totalValue, wonDeals, lostDeals, activeDeals, avgDealValue, winRate: isNaN(winRate) ? 0 : winRate };
     }, [filteredDeals]);
 
     const getStageColor = (stage) => {
@@ -152,10 +153,6 @@ const Deals = () => {
         }
     };
 
-    const handleAddDeal = () => {
-        setIsAddOpen(true);
-    };
-
     const submitNewDeal = () => {
         if (!newDealData.clientName) {
             toast.error("Client Name is required");
@@ -163,7 +160,7 @@ const Deals = () => {
         }
 
         const newDeal = {
-            name: newDealData.clientName, // Using name for company/client name mapping
+            name: newDealData.clientName,
             company: newDealData.clientName,
             status: newDealData.status,
             priority: newDealData.priority,
@@ -177,12 +174,7 @@ const Deals = () => {
         addLead(newDeal);
         toast.success(`Deal created for ${newDealData.clientName}`);
         setIsAddOpen(false);
-        setNewDealData({
-            clientName: '',
-            amount: '',
-            status: 'New',
-            priority: 'medium'
-        });
+        setNewDealData({ clientName: '', amount: '', status: 'New', priority: 'medium' });
     };
 
     const handleViewDeal = (dealId) => {
@@ -202,399 +194,419 @@ const Deals = () => {
         }
     };
 
+    const handleEditDeal = () => {
+        if (selectedDeal) {
+            setEditDealData({
+                name: selectedDeal.name,
+                company: selectedDeal.company,
+                amount: selectedDeal.amount,
+                status: selectedDeal.status,
+                priority: selectedDeal.priority
+            });
+            setIsEditOpen(true);
+            setIsViewOpen(false);
+        }
+    };
+
+    const submitEditDeal = () => {
+        if (!editDealData.name) {
+            toast.error("Name is required");
+            return;
+        }
+        editLead(selectedDeal.id, {
+            ...editDealData,
+            amount: parseFloat(editDealData.amount) || 0
+        });
+        toast.success("Deal updated successfully");
+        setIsEditOpen(false);
+        setSelectedDeal(null);
+    };
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">My Deals</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Manage and track all your sales deals</p>
+        <div className="space-y-3 sm:space-y-4 pb-10">
+            {/* Header section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-3">
+                    <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                            Sales <span className="text-primary-600">Pipeline</span>
+                        </h1>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+                            Operational deal flow & conversions
+                        </p>
+                    </div>
                 </div>
-                <Button className="gap-2" onClick={handleAddDeal}>
-                    <Plus size={16} />
-                    New Deal
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        onClick={() => setIsAddOpen(true)}
+                        className="flex-1 sm:flex-none h-10 px-6 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] uppercase tracking-widest whitespace-nowrap"
+                    >
+                        <Plus size={16} />
+                        <span>New Deal</span>
+                    </Button>
+                </div>
             </div>
 
-            <Card className="border-none shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-lg font-bold">Deal Pipeline</CardTitle>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="relative">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input
-                                placeholder="Search deals..."
-                                className="pl-8 w-[200px]"
+            {/* Quick Stats Grid - Compact */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                {[
+                    { label: 'Active Pipeline', value: dealStats.activeDeals, icon: IndianRupee, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: 'Force Strength' },
+                    { label: 'Strategic Wins', value: dealStats.wonDeals, icon: CheckSquare, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20', trend: 'Conversion' },
+                    { label: 'Total Value', value: `₹${(dealStats.totalValue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', trend: 'Portfolio' },
+                    { label: 'Efficiency', value: `${dealStats.winRate}%`, icon: ArrowUpRight, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10', trend: 'Success Rate' }
+                ].map((stat, i) => (
+                    <Card key={i} className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
+                        <CardContent className="p-3.5 sm:p-4 flex items-center justify-between">
+                            <div className="space-y-3">
+                                <div className={cn("size-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500", stat.bg)}>
+                                    <stat.icon size={16} className={stat.color} />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                    <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{stat.value}</p>
+                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter italic leading-none">{stat.trend}</p>
+                                </div>
+                            </div>
+                            <div className="size-14 -mr-3 opacity-[0.03] transform rotate-12 transition-transform group-hover:rotate-0 duration-700">
+                                <stat.icon size={56} />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Filters Bar - Ultra Compact */}
+            <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                <CardContent className="p-2 sm:p-3">
+                    <div className="flex flex-col lg:flex-row items-center gap-3">
+                        <div className="relative flex-1 w-full group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 transition-colors group-focus-within:text-primary-600" />
+                            <input
+                                placeholder="Scan tactical pipeline for identifier..."
+                                className="w-full h-10 pl-11 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-xs outline-none focus:ring-1 focus:ring-primary-100"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Select value={selectedStage} onValueChange={setSelectedStage}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Filter by Stage" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Stages</SelectItem>
-                                {pipelineStages && pipelineStages.map(stage => (
-                                    <SelectItem key={stage} value={stage}>{stage}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                            <SelectTrigger className="w-[150px]">
-                                <SelectValue placeholder="Filter by Priority" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Priorities</SelectItem>
-                                <SelectItem value="high">High</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Button variant="outline" size="icon">
-                            <Filter size={16} />
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Deal ID</TableHead>
-                                    <TableHead>Client</TableHead>
-                                    <TableHead onClick={() => handleSort('amount')} className="cursor-pointer">
-                                        <div className="flex items-center gap-1">
-                                            Amount
-                                            {sortBy === 'amount' && (
-                                                sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                            )}
-                                        </div>
-                                    </TableHead>
-                                    <TableHead onClick={() => handleSort('stage')} className="cursor-pointer">
-                                        <div className="flex items-center gap-1">
-                                            Stage
-                                            {sortBy === 'stage' && (
-                                                sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                            )}
-                                        </div>
-                                    </TableHead>
-                                    <TableHead onClick={() => handleSort('priority')} className="cursor-pointer">
-                                        <div className="flex items-center gap-1">
-                                            Priority
-                                            {sortBy === 'priority' && (
-                                                sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                            )}
-                                        </div>
-                                    </TableHead>
-                                    <TableHead onClick={() => handleSort('deadline')} className="cursor-pointer">
-                                        <div className="flex items-center gap-1">
-                                            Deadline
-                                            {sortBy === 'deadline' && (
-                                                sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                            )}
-                                        </div>
-                                    </TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredDeals.length > 0 ? (
-                                    filteredDeals.map((deal) => (
-                                        <TableRow key={deal.id}>
-                                            <TableCell className="font-medium">{deal.id}</TableCell>
-                                            <TableCell className="flex items-center gap-2">
-                                                <User size={16} className="text-slate-400" />
-                                                {deal.company || deal.name}
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                <IndianRupee size={16} className="inline-block mr-1 text-emerald-500" />
-                                                ₹{(deal.amount || 0).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge className={getStageColor(deal.status)}>
-                                                    {deal.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={
-                                                    deal.priority === 'high' ? 'destructive' :
-                                                        deal.priority === 'medium' ? 'warning' : 'secondary'
-                                                }>
-                                                    {deal.priority || 'medium'}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="flex items-center gap-2">
-                                                <Calendar size={14} className="text-slate-400" />
-                                                {deal.deadline ? new Date(deal.deadline).toLocaleDateString() : 'No deadline'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => handleViewDeal(deal.id)}>
-                                                    View
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
-                                            No deals found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                        <div className="flex items-center gap-2 w-full lg:w-auto">
+                            <Select value={selectedStage} onValueChange={setSelectedStage}>
+                                <SelectTrigger className="h-10 min-w-[140px] rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-[9px] uppercase tracking-widest">
+                                    <div className="flex items-center gap-2">
+                                        <Filter size={12} className="text-slate-400" />
+                                        <SelectValue placeholder="All Sectors" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                    <SelectItem value="all" className="text-[10px] font-black uppercase">All Sectors</SelectItem>
+                                    {pipelineStages?.map(stage => (
+                                        <SelectItem key={stage} value={stage} className="text-[10px] font-black uppercase">{stage}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                                <SelectTrigger className="h-10 min-w-[140px] rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-[9px] uppercase tracking-widest">
+                                    <SelectValue placeholder="Priority Level" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                    <SelectItem value="all" className="text-[10px] font-black uppercase">All Priority</SelectItem>
+                                    <SelectItem value="high" className="text-[10px] font-black uppercase text-red-600">High Alert</SelectItem>
+                                    <SelectItem value="medium" className="text-[10px] font-black uppercase text-amber-600">Standard</SelectItem>
+                                    <SelectItem value="low" className="text-[10px] font-black uppercase text-slate-400">Low Risk</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid gap-4 md:grid-cols-2">
-                <Card className="border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold">Deal Statistics</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <p className="text-sm text-slate-500">Total Deals</p>
-                                <p className="text-2xl font-bold text-slate-900 dark:text-white">{dealStats.totalDeals}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm text-slate-500">Won Deals</p>
-                                <p className="text-2xl font-bold text-emerald-600">{dealStats.wonDeals}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm text-slate-500">Lost Deals</p>
-                                <p className="text-2xl font-bold text-red-600">{dealStats.lostDeals}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm text-slate-500">Active Deals</p>
-                                <p className="text-2xl font-bold text-blue-600">{dealStats.activeDeals}</p>
-                            </div>
-                        </div>
-                        <div className="mt-6 space-y-3">
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm text-slate-600 dark:text-slate-400">Total Pipeline Value</span>
-                                    <span className="text-sm font-bold text-slate-900 dark:text-white">₹{dealStats.totalValue.toLocaleString()}</span>
-                                </div>
-                                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full" style={{ width: `${Math.min(100, (dealStats.totalValue / (dealStats.totalValue * 2 || 1)) * 100)}%` }}></div>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-sm text-slate-500">Avg. Deal Value</p>
-                                    <p className="text-lg font-bold text-slate-900 dark:text-white">₹{dealStats.avgDealValue.toLocaleString()}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-sm text-slate-500">Win Rate</p>
-                                    <p className="text-lg font-bold text-slate-900 dark:text-white">{dealStats.winRate}%</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <TrendingUp size={16} className="text-emerald-500" />
-                                <span className="text-emerald-600 font-medium">+12% from last month</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold">Upcoming Deadlines</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="space-y-4">
-                            {filteredDeals
-                                .filter(d => d.status !== 'Won' && d.status !== 'Lost' && d.deadline)
-                                .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-                                .slice(0, 5)
-                                .map((deal) => (
-                                    <div key={deal.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                                        <div className="flex items-start gap-3">
-                                            <div className="mt-1">
-                                                <Clock size={16} className="text-amber-500" />
+            {/* Data Grid - Refined Density */}
+            <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden min-h-[400px]">
+                <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
+                    <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tactical Pipeline core</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    {/* Desktop View */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent border-slate-50 dark:border-slate-800">
+                                    <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Entity</TableHead>
+                                    <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Valuation</TableHead>
+                                    <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Deployment</TableHead>
+                                    <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Priority</TableHead>
+                                    <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredDeals.map((deal) => (
+                                    <TableRow key={deal.id} className="group cursor-pointer border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors" onClick={() => handleViewDeal(deal.id)}>
+                                        <TableCell className="px-6 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
+                                                    {deal.name?.substring(0, 1)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none mb-1">{deal.company || deal.name}</p>
+                                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Node ID: {String(deal.id).substring(0, 8)}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 className="text-sm font-medium text-slate-900 dark:text-white">{deal.company || deal.name}</h4>
-                                                <p className="text-xs text-slate-500 mt-0.5">{new Date(deal.deadline).toLocaleDateString()} • ₹{(deal.amount || 0).toLocaleString()}</p>
+                                        </TableCell>
+                                        <TableCell className="px-6 py-3">
+                                            <p className="text-sm font-black text-slate-900 dark:text-white leading-none">₹{(deal.amount || 0).toLocaleString()}</p>
+                                        </TableCell>
+                                        <TableCell className="px-6 py-3">
+                                            <Badge className={cn("border-none text-[8px] font-black uppercase tracking-widest h-5 px-2 rounded-lg", getStageColor(deal.status))}>
+                                                {deal.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="px-6 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn("size-2 rounded-full",
+                                                    deal.priority === 'high' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' :
+                                                        deal.priority === 'medium' ? 'bg-amber-500' : 'bg-slate-300')}
+                                                />
+                                                <span className="text-[9px] font-black uppercase text-slate-500">{deal.priority}</span>
                                             </div>
-                                        </div>
-                                        <Badge className={getStageColor(deal.status)}>
-                                            {deal.status}
-                                        </Badge>
-                                    </div>
+                                        </TableCell>
+                                        <TableCell className="px-6 py-3 text-right">
+                                            <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-white dark:hover:bg-slate-800">
+                                                <ArrowRight size={14} className="text-slate-400 group-hover:text-primary-600 group-hover:translate-x-0.5 transition-all" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-            </div>
-
-            {/* Deal Details Dialog */}
-            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle>{selectedDeal?.company || selectedDeal?.name}</DialogTitle>
-                        <DialogDescription>
-                            Deal Details & Information
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="grid gap-4 py-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-500">Amount</span>
-                            <span className="text-lg font-bold text-emerald-600">
-                                ₹{(selectedDeal?.amount || 0).toLocaleString()}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-500">Stage</span>
-                            <Badge className={selectedDeal ? getStageColor(selectedDeal.status) : ''}>
-                                {selectedDeal?.status}
-                            </Badge>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-500">Priority</span>
-                            <Badge variant="outline" className="capitalize">
-                                {selectedDeal?.priority || 'medium'}
-                            </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mt-2">
-                            <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                                <div className="flex items-center gap-2 mb-1 text-slate-500">
-                                    <User size={14} />
-                                    <span className="text-xs font-bold">Contact Person</span>
-                                </div>
-                                <p className="text-sm font-medium">{selectedDeal?.name}</p>
-                            </div>
-                            <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                                <div className="flex items-center gap-2 mb-1 text-slate-500">
-                                    <Building size={14} />
-                                    <span className="text-xs font-bold">Company</span>
-                                </div>
-                                <p className="text-sm font-medium">{selectedDeal?.company}</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 mt-2">
-                            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                <Mail size={16} />
-                                {selectedDeal?.email || 'N/A'}
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                <Phone size={16} />
-                                {selectedDeal?.mobile || 'N/A'}
-                            </div>
-                        </div>
-
-                        {selectedDeal?.notes && (
-                            <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg mt-2">
-                                <p className="text-xs font-bold text-slate-500 mb-1">Notes</p>
-                                <p className="text-sm text-slate-700 dark:text-slate-300">
-                                    {selectedDeal.notes}
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="text-xs text-slate-400 text-right mt-2">
-                            Source: {selectedDeal?.source || 'Unknown'} • ID: {selectedDeal?.id}
-                        </div>
+                            </TableBody>
+                        </Table>
                     </div>
 
-                    <DialogFooter>
-                        <Button variant="destructive" onClick={handleDeleteDeal}>Delete Deal</Button>
-                        <Button variant="outline" onClick={() => setIsViewOpen(false)}>Close</Button>
-                    </DialogFooter>
+                    {/* Mobile View */}
+                    <div className="md:hidden space-y-3 p-3">
+                        {filteredDeals.map((deal) => (
+                            <div key={deal.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-3" onClick={() => handleViewDeal(deal.id)}>
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="size-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center text-xs font-black text-primary-600">
+                                            {deal.name?.substring(0, 1)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none mb-1">{deal.company || deal.name}</p>
+                                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">₹{(deal.amount || 0).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <Badge className={cn("border-none text-[8px] font-black uppercase tracking-widest h-5 px-2 rounded-lg", getStageColor(deal.status))}>
+                                        {deal.status}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center justify-between pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
+                                    <div className="flex items-center gap-2">
+                                        <div className={cn("size-2 rounded-full", deal.priority === 'high' ? 'bg-red-500' : 'bg-slate-300')} />
+                                        <span className="text-[9px] font-black uppercase text-slate-400">{deal.priority} PRIORITY</span>
+                                    </div>
+                                    <ArrowRight size={14} className="text-slate-300" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {filteredDeals.length === 0 && (
+                        <div className="p-16 text-center space-y-4">
+                            <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                                <IndianRupee size={32} className="text-slate-200" />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="font-black text-slate-900 dark:text-white text-lg uppercase tracking-tight italic">No Tactical Matches</h3>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Adjust frequency filters to recalibrate detection</p>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Dialogs */}
+            {/* View Deal Dialog */}
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+                <DialogContent className="sm:max-w-[500px] rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900">
+                    <div className="h-28 bg-slate-900 p-8 flex flex-col justify-end relative overflow-hidden">
+                        <div className="absolute top-0 right-0 size-40 bg-primary-600/20 rounded-full blur-3xl -mr-20 -mt-20" />
+                        <h2 className="text-xl font-black text-white tracking-tight uppercase relative z-10">{selectedDeal?.company || selectedDeal?.name}</h2>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest relative z-10">Sector Operations Overview</p>
+                    </div>
+                    <div className="p-8 space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Market Valuation</p>
+                                <p className="text-xl font-black text-primary-600 leading-none">₹{(selectedDeal?.amount || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Deployment Stage</p>
+                                <Badge className={cn("border-none text-[8px] font-black uppercase h-6 px-2.5 rounded-lg w-fit", getStageColor(selectedDeal?.status))}>
+                                    {selectedDeal?.status}
+                                </Badge>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Personnel Linkages</h4>
+                            {[
+                                { icon: User, label: 'Operator', value: selectedDeal?.name },
+                                { icon: Mail, label: 'Hub', value: selectedDeal?.email || 'N/A' },
+                                { icon: Phone, label: 'Direct', value: selectedDeal?.mobile || 'N/A' }
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center gap-3">
+                                    <div className="size-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                        <item.icon size={14} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
+                                        <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{item.value}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <DialogFooter className="gap-2 pt-4 border-t border-slate-100">
+                            <Button variant="ghost" className="flex-1 h-10 rounded-xl text-red-500 font-black text-[9px] uppercase tracking-widest hover:bg-red-50" onClick={handleDeleteDeal}>
+                                Terminate
+                            </Button>
+                            <Button variant="outline" className="flex-1 h-10 rounded-xl text-primary-600 font-black text-[9px] uppercase tracking-widest" onClick={handleEditDeal}>
+                                Recalibrate
+                            </Button>
+                            <Button className="flex-1 h-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-primary-500/20" onClick={() => setIsViewOpen(false)}>
+                                Exit
+                            </Button>
+                        </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
 
             {/* Add Deal Dialog */}
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Create New Deal</DialogTitle>
-                        <DialogDescription>
-                            Add a new sales deal to your pipeline. Click save when you're done.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="clientName" className="text-right">
-                                Client
-                            </Label>
+                <DialogContent className="sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden font-sans">
+                    <div className="bg-primary-600 p-6 text-white">
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Initiate Acquisition</DialogTitle>
+                        <p className="text-[9px] font-black text-primary-100 uppercase tracking-[0.2em] mt-1 italic">New marketplace opportunity</p>
+                    </div>
+                    <div className="p-6 space-y-4 bg-white dark:bg-slate-900">
+                        <div className="space-y-1.5">
+                            <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Entity identifier</Label>
                             <Input
-                                id="clientName"
                                 value={newDealData.clientName}
                                 onChange={(e) => setNewDealData({ ...newDealData, clientName: e.target.value })}
-                                className="col-span-3"
-                                placeholder="Client/Company Name"
+                                className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm px-4"
+                                placeholder="Corporate Name"
                             />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="amount" className="text-right">
-                                Amount
-                            </Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                value={newDealData.amount}
-                                onChange={(e) => setNewDealData({ ...newDealData, amount: e.target.value })}
-                                className="col-span-3"
-                                placeholder="5000"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Market Valuation</Label>
+                                <Input
+                                    type="number"
+                                    value={newDealData.amount}
+                                    onChange={(e) => setNewDealData({ ...newDealData, amount: e.target.value })}
+                                    className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm px-4"
+                                    placeholder="Amount"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Priority</Label>
+                                <Select value={newDealData.priority} onValueChange={(val) => setNewDealData({ ...newDealData, priority: val })}>
+                                    <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none font-bold text-[10px] uppercase">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                        <SelectItem value="high">High Alert</SelectItem>
+                                        <SelectItem value="medium">Standard</SelectItem>
+                                        <SelectItem value="low">Low Risk</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="status" className="text-right">
-                                Status
-                            </Label>
-                            <Select
-                                value={newDealData.status}
-                                onValueChange={(val) => setNewDealData({ ...newDealData, status: val })}
-                            >
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select Status" />
+                        <div className="space-y-1.5">
+                            <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lifecycle Stage</Label>
+                            <Select value={newDealData.status} onValueChange={(val) => setNewDealData({ ...newDealData, status: val })}>
+                                <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none font-bold text-[10px] uppercase">
+                                    <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="New">New</SelectItem>
-                                    <SelectItem value="Contacted">Contacted</SelectItem>
-                                    <SelectItem value="Meeting Done">Meeting Done</SelectItem>
-                                    <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
-                                    <SelectItem value="Won">Won</SelectItem>
-                                    <SelectItem value="Lost">Lost</SelectItem>
+                                <SelectContent className="rounded-xl">
+                                    {pipelineStages.map(stage => (
+                                        <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="priority" className="text-right">
-                                Priority
-                            </Label>
-                            <Select
-                                value={newDealData.priority}
-                                onValueChange={(val) => setNewDealData({ ...newDealData, priority: val })}
-                            >
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select Priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="medium">Medium</SelectItem>
-                                    <SelectItem value="high">High</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <DialogFooter className="pt-4 flex gap-3">
+                            <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase tracking-widest">Abort</Button>
+                            <Button onClick={submitNewDeal} className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase tracking-widest bg-primary-600 hover:bg-primary-700 text-white shadow-lg">Confirm</Button>
+                        </DialogFooter>
                     </div>
-                    <DialogFooter>
-                        <Button type="submit" onClick={submitNewDeal}>Save Deal</Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+
+            {/* Edit Deal Dialog */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden font-sans">
+                    <div className="bg-slate-900 p-6 text-white">
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Recalibrate Parameters</DialogTitle>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1 italic">Updating tactical metadata</p>
+                    </div>
+                    <div className="p-6 space-y-4 bg-white dark:bg-slate-900">
+                        <div className="space-y-1.5">
+                            <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Entity name</Label>
+                            <Input
+                                value={editDealData.name}
+                                onChange={(e) => setEditDealData({ ...editDealData, name: e.target.value })}
+                                className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm px-4"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation (₹)</Label>
+                                <Input
+                                    type="number"
+                                    value={editDealData.amount}
+                                    onChange={(e) => setEditDealData({ ...editDealData, amount: e.target.value })}
+                                    className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm px-4"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Priority</Label>
+                                <Select value={editDealData.priority} onValueChange={(val) => setEditDealData({ ...editDealData, priority: val })}>
+                                    <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none font-bold text-[10px] uppercase">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                        <SelectItem value="high">High Alert</SelectItem>
+                                        <SelectItem value="medium">Standard</SelectItem>
+                                        <SelectItem value="low">Low Risk</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Stage</Label>
+                            <Select value={editDealData.status} onValueChange={(val) => setEditDealData({ ...editDealData, status: val })}>
+                                <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none font-bold text-[10px] uppercase">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    {pipelineStages.map(stage => (
+                                        <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DialogFooter className="pt-4 flex gap-3">
+                            <Button variant="ghost" onClick={() => setIsEditOpen(false)} className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase tracking-widest">Cancel</Button>
+                            <Button onClick={submitEditDeal} className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase tracking-widest bg-slate-900 hover:bg-slate-800 text-white">Apply Sync</Button>
+                        </DialogFooter>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 };
-
 
 export default Deals;

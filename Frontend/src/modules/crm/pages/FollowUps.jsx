@@ -13,7 +13,6 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Search, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import useCRMStore from '@/store/crmStore';
-
 import { cn } from '@/shared/utils/cn';
 
 const FollowUps = () => {
@@ -38,7 +37,6 @@ const FollowUps = () => {
     status: 'Scheduled',
   });
 
-  // Lead Search Autocomplete State
   const [leadSearch, setLeadSearch] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -67,10 +65,8 @@ const FollowUps = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validate lead selection
     if (!formData.leadId) {
-      alert("Please select a valid lead from the suggestions.");
+      alert("Please select a valid lead.");
       return;
     }
 
@@ -87,8 +83,6 @@ const FollowUps = () => {
       updateFollowUp(editingFollowUp.id, followUpData);
     } else {
       addFollowUp(followUpData);
-      // Auto-create task in task management system
-      console.log('Auto-creating task for follow-up:', followUpData);
     }
     resetForm();
     setOpen(false);
@@ -99,238 +93,161 @@ const FollowUps = () => {
     setFormData(followUp);
     setSelectedDate(new Date(followUp.scheduledAt));
     setTime(format(new Date(followUp.scheduledAt), 'HH:mm'));
-
-    // Set lead search input
     const lead = leads.find(l => l.id === followUp.leadId);
     if (lead) setLeadSearch(lead.name);
-
     setOpen(true);
   };
 
   const handleDelete = (followUpId) => {
-    if (confirm('Are you sure you want to delete this follow-up?')) {
+    if (confirm('Are you sure?')) {
       deleteFollowUp(followUpId);
     }
   };
 
   const handleStatusChange = (followUpId, status) => {
     updateFollowUp(followUpId, { status });
-    // Update task status in task management system
-    console.log('Updating task status:', status);
   };
 
   const resetForm = () => {
     setEditingFollowUp(null);
-    setFormData({
-      leadId: '',
-      type: 'Call',
-      notes: '',
-      status: 'Scheduled',
-    });
-    setLeadSearch(''); // Reset search
+    setFormData({ leadId: '', type: 'Call', notes: '', status: 'Scheduled' });
+    setLeadSearch('');
     setSelectedDate(new Date());
     setTime('12:00');
   };
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 px-1 sm:px-0">
-          <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+        <div className="flex items-center gap-3">
+          <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
             <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">Follow-ups <span className="text-primary-600">& Reminders</span></h1>
-            <p className="text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 font-medium tracking-wide mt-1 uppercase">Interaction schedule</p>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+              Follow-up <span className="text-primary-600">Terminal</span>
+            </h1>
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+              Node synchronization active
+            </p>
           </div>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="h-9 sm:h-11 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
               <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span>Schedule Follow-up</span>
+              <span>Initialize Sync</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>{editingFollowUp ? 'Edit Follow-up' : 'Schedule New Follow-up'}</DialogTitle>
-              <DialogDescription>
-                {editingFollowUp ? 'Update the follow-up information below.' : 'Enter the follow-up details below.'}
-              </DialogDescription>
+              <DialogTitle>{editingFollowUp ? 'Edit Sync' : 'Schedule Sync'}</DialogTitle>
+              <DialogDescription>Input tactical interaction details.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2 relative">
-                <Label htmlFor="leadId">Lead</Label>
-                <div className="relative">
-                  <Input
-                    placeholder="Search for a lead..."
-                    value={leadSearch}
-                    onChange={(e) => {
-                      setLeadSearch(e.target.value);
-                      setShowSuggestions(true);
-                      // Clear leadId if user changes input, forcing them to re-select
-                      if (formData.leadId) setFormData({ ...formData, leadId: '' });
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    // Delay hiding suggestions to allow clicking on an item
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                    className={cn(
-                      "w-full",
-                      !formData.leadId && leadSearch && "border-amber-500 focus-visible:ring-amber-500" // Highlight if searching but not selected
-                    )}
-                  />
-                  {formData.leadId && (
-                    <div className="absolute right-3 top-2.5 text-green-500">
-                      <CheckCircle2 size={16} />
-                    </div>
-                  )}
-                </div>
-
-                {showSuggestions && leadSearch && !formData.leadId && (
-                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {suggestedLeads.length > 0 ? (
-                      suggestedLeads.map((lead) => (
-                        <div
-                          key={lead.id}
-                          className="px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors flex flex-col gap-0.5"
-                          onMouseDown={(e) => {
-                            // Prevent default to ensure input doesn't blur immediately if we want to keep focus,
-                            // but here we actually likely want to allow the selection and then close.
-                            // The key is onMouseDown fires before onBlur.
-                            e.preventDefault();
-                            setFormData({ ...formData, leadId: lead.id });
-                            setLeadSearch(`${lead.name} (${lead.company})`); // Set full descriptive name
-                            setShowSuggestions(false);
-                          }}
-                        >
-                          <span className="text-sm font-medium text-slate-900 dark:text-white">{lead.name}</span>
-                          <span className="text-xs text-slate-500">{lead.company}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-3 text-sm text-slate-500 text-center">
-                        No leads found matching "{leadSearch}"
+                <Label>Lead Anchor</Label>
+                <Input
+                  placeholder="Search lead..."
+                  value={leadSearch}
+                  onChange={(e) => {
+                    setLeadSearch(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                />
+                {showSuggestions && leadSearch && (
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {suggestedLeads.map((lead) => (
+                      <div
+                        key={lead.id}
+                        className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setFormData({ ...formData, leadId: lead.id });
+                          setLeadSearch(lead.name);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        {lead.name} ({lead.company})
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {followUpTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date & Time</Label>
-                <div className="flex gap-4">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-[200px] justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(selectedDate, 'PPP')}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <div className="relative flex-1">
-                    <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="time"
-                      className="pl-8"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Add any additional notes"
-                />
-              </div>
-              {editingFollowUp && (
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
+                  <Label>Type</Label>
+                  <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {followUpStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
+                      {followUpTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label>Time</Label>
+                  <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <div className="border rounded-lg p-2 flex justify-center">
+                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+              </div>
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingFollowUp ? 'Update Follow-up' : 'Schedule Follow-up'}
-                </Button>
+                <Button type="submit" className="w-full sm:w-auto">Confirm Schedule</Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Schedule', value: followUps.length, color: 'primary' },
+          { label: 'Today Ops', value: followUps.filter(f => format(new Date(f.scheduledAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, color: 'amber' },
+          { label: 'Completed', value: followUps.filter(f => f.status === 'Completed').length, color: 'emerald' },
+          { label: 'Overdue Flow', value: followUps.filter(f => new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled').length, color: 'red' }
+        ].map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
+              <p className={cn("text-lg sm:text-xl font-black leading-none",
+                stat.color === 'primary' ? 'text-primary-600' :
+                  stat.color === 'amber' ? 'text-amber-600' :
+                    stat.color === 'emerald' ? 'text-emerald-600' : 'text-red-500'
+              )}>{stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
         <CardContent className="p-3 sm:p-5">
-          <div className="flex flex-col md:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-5">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
-                placeholder="Search follow-ups..."
-                className="pl-10 h-10 sm:h-11 bg-slate-50 border-none dark:bg-slate-800 rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-xs"
+                placeholder="Search..."
+                className="pl-9 h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-[10px] sm:text-xs"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full md:w-[180px] h-10 sm:h-11 bg-slate-50 border-none dark:bg-slate-800 rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-xs">
+              <SelectTrigger className="w-full sm:w-[140px] h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800">
-                <SelectItem value="all" className="text-xs font-bold font-black uppercase">All Statuses</SelectItem>
-                {followUpStatuses.map((status) => (
-                  <SelectItem key={status} value={status} className="text-xs font-bold font-black uppercase">
-                    {status}
-                  </SelectItem>
-                ))}
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                {followUpStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -338,95 +255,35 @@ const FollowUps = () => {
           <div className="overflow-x-auto hidden lg:block">
             <Table>
               <TableHeader>
-                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Lead Info</th>
-                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Type</th>
-                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Schedule</th>
-                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Status</th>
-                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Notes</th>
-                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
-                </tr>
+                <TableRow className="bg-slate-50/50 dark:bg-slate-800/30">
+                  <TableHead className="text-[10px] font-black tracking-widest uppercase">Lead Info</TableHead>
+                  <TableHead className="text-[10px] font-black tracking-widest uppercase">Type</TableHead>
+                  <TableHead className="text-[10px] font-black tracking-widest uppercase">Schedule</TableHead>
+                  <TableHead className="text-[10px] font-black tracking-widest uppercase">Status</TableHead>
+                  <TableHead className="text-right text-[10px] font-black tracking-widest uppercase">Actions</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFollowUps.map((followUp) => {
-                  const lead = leads.find(l => l.id === followUp.leadId);
+                {filteredFollowUps.map((f) => {
+                  const lead = leads.find(l => l.id === f.leadId);
                   return (
-                    <TableRow key={followUp.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/20 border-slate-100 dark:border-slate-800 transition-colors">
-                      <TableCell className="p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black uppercase text-slate-500">
-                            {lead?.name.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{lead?.name}</div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lead?.company}</div>
-                          </div>
-                        </div>
+                    <TableRow key={f.id} className="border-slate-50 dark:border-slate-800">
+                      <TableCell>
+                        <p className="font-bold text-xs">{lead?.name}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-tight">{lead?.company}</p>
                       </TableCell>
-                      <TableCell className="p-4">
-                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">{followUp.type}</Badge>
+                      <TableCell><Badge variant="outline" className="text-[9px] font-black">{f.type}</Badge></TableCell>
+                      <TableCell>
+                        <p className="font-black text-[10px] text-slate-700 dark:text-slate-300">{format(new Date(f.scheduledAt), 'MMM d, yyyy')}</p>
+                        <p className="text-[9px] text-slate-400 font-bold">{format(new Date(f.scheduledAt), 'HH:mm')}</p>
                       </TableCell>
-                      <TableCell className="p-4">
-                        <div className="flex flex-col gap-0.5">
-                          <div className="text-[11px] font-black text-slate-700 dark:text-slate-300">{format(new Date(followUp.scheduledAt), 'PPP')}</div>
-                          <div className="flex items-center gap-1 text-[9px] text-slate-400 font-medium">
-                            <Clock size={10} /> {format(new Date(followUp.scheduledAt), 'HH:mm')}
-                          </div>
-                        </div>
+                      <TableCell>
+                        <Badge className={cn("text-[9px] font-black h-5", f.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary-50 text-primary-600')}>{f.status}</Badge>
                       </TableCell>
-                      <TableCell className="p-4">
-                        <Badge
-                          className={cn(
-                            "text-[9px] font-black uppercase tracking-widest h-5 px-2",
-                            followUp.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 shadow-none border-none' :
-                              followUp.status === 'Missed' ? 'bg-red-50 text-red-600 shadow-none border-none' :
-                                'bg-primary-50 text-primary-600 shadow-none border-none'
-                          )}
-                        >
-                          {followUp.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="p-4 max-w-[150px] truncate text-[10px] text-slate-500 font-medium">
-                        {followUp.notes || '—'}
-                      </TableCell>
-                      <TableCell className="p-4 text-right">
+                      <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {followUp.status === 'Scheduled' && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-emerald-500 hover:bg-emerald-50 rounded-lg"
-                                onClick={() => handleStatusChange(followUp.id, 'Completed')}
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500 hover:bg-red-50 rounded-lg"
-                                onClick={() => handleStatusChange(followUp.id, 'Cancelled')}
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"
-                            onClick={() => handleEdit(followUp)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                            onClick={() => handleDelete(followUp.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(f)}><Edit size={12} /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(f.id)}><Trash2 size={12} /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -436,87 +293,26 @@ const FollowUps = () => {
             </Table>
           </div>
 
-          {/* Mobile Card List */}
           <div className="lg:hidden space-y-3">
-            {filteredFollowUps.map((followUp) => {
-              const lead = leads.find(l => l.id === followUp.leadId);
-              const isPast = new Date(followUp.scheduledAt) < new Date() && followUp.status === 'Scheduled';
+            {filteredFollowUps.map((f) => {
+              const lead = leads.find(l => l.id === f.leadId);
               return (
-                <div key={followUp.id} className="p-4 rounded-2xl bg-slate-50/30 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-950/30 text-primary-600 flex items-center justify-center text-[10px] font-black uppercase">
-                        {lead?.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-black text-slate-900 dark:text-white leading-tight">{lead?.name}</p>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{lead?.company}</p>
-                      </div>
-                    </div>
-                    <Badge
-                      className={cn(
-                        "text-[8px] font-black uppercase tracking-widest h-5 px-2",
-                        followUp.status === 'Completed' ? 'bg-emerald-100/50 text-emerald-600' :
-                          followUp.status === 'Missed' || isPast ? 'bg-red-100/50 text-red-600' :
-                            'bg-slate-100/80 dark:bg-slate-800 text-slate-500'
-                      )}
-                    >
-                      {isPast ? 'Overdue' : followUp.status}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900/50 rounded-xl shadow-sm">
+                <div key={f.id} className="p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Schedule</p>
-                      <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate">{format(new Date(followUp.scheduledAt), 'MMM d, yyyy')}</p>
-                      <p className="text-[9px] text-slate-500 truncate flex items-center gap-1"><Clock size={10} /> {format(new Date(followUp.scheduledAt), 'HH:mm')}</p>
+                      <p className="text-xs font-black uppercase text-slate-900 dark:text-white leading-none">{lead?.name}</p>
+                      <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mt-1">{lead?.company}</p>
                     </div>
-                    <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Interaction</p>
-                      <Badge variant="outline" className="text-[8px] font-black h-5 border-slate-100 dark:border-slate-800">{followUp.type}</Badge>
-                    </div>
+                    <Badge className="text-[8px] font-black h-4 px-1">{f.status}</Badge>
                   </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex gap-2">
-                      {followUp.status === 'Scheduled' && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 rounded-xl bg-white dark:bg-slate-900 text-emerald-600 font-black text-[9px] uppercase tracking-widest border-slate-100 dark:border-slate-800"
-                            onClick={() => handleStatusChange(followUp.id, 'Completed')}
-                          >
-                            Done
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 rounded-xl bg-white dark:bg-slate-900 text-red-500 font-black text-[9px] uppercase tracking-widest border-slate-100 dark:border-slate-800"
-                            onClick={() => handleStatusChange(followUp.id, 'Cancelled')}
-                          >
-                            Skip
-                          </Button>
-                        </>
-                      )}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[8px] font-black">{f.type}</Badge>
+                      <p className="text-[9px] font-black text-slate-500 uppercase">{format(new Date(f.scheduledAt), 'MMM d, HH:mm')}</p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                        onClick={() => handleEdit(followUp)}
-                      >
-                        <Edit size={12} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                        onClick={() => handleDelete(followUp.id)}
-                      >
-                        <Trash2 size={12} className="text-red-400" />
-                      </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(f)}><Edit size={10} /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => handleDelete(f.id)}><Trash2 size={10} /></Button>
                     </div>
                   </div>
                 </div>
@@ -524,9 +320,7 @@ const FollowUps = () => {
             })}
           </div>
           {filteredFollowUps.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No follow-ups found. Try adjusting your search or filters.
-            </div>
+            <div className="text-center py-10 text-[10px] font-black uppercase tracking-widest text-slate-400">No active schedule</div>
           )}
         </CardContent>
       </Card>

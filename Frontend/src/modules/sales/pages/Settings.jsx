@@ -12,7 +12,6 @@ import useAuthStore from '@/store/authStore';
 const SalesSettings = () => {
     const { user, updateProfile, changePassword } = useAuthStore();
 
-    // Profile State
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
@@ -20,7 +19,6 @@ const SalesSettings = () => {
         department: 'sales'
     });
 
-    // Password State
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
@@ -42,15 +40,15 @@ const SalesSettings = () => {
 
     const handleProfileUpdate = async () => {
         if (!profileData.name || !profileData.email) {
-            toast.error("Name and Email are required");
+            toast.error("Required fields missing");
             return;
         }
         setIsLoading(true);
         try {
             await updateProfile(profileData);
-            toast.success("Profile updated successfully");
+            toast.success("Profile synchronized");
         } catch (error) {
-            toast.error("Failed to update profile");
+            toast.error("Update failed");
         } finally {
             setIsLoading(false);
         }
@@ -58,175 +56,189 @@ const SalesSettings = () => {
 
     const handlePasswordChange = async () => {
         if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-            toast.error("All password fields are required");
+            toast.error("Password fields required");
             return;
         }
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            toast.error("New passwords do not match");
+            toast.error("Passwords mismatch");
             return;
         }
 
         setIsLoading(true);
         try {
             await changePassword(passwordData.currentPassword, passwordData.newPassword);
-            toast.success("Password changed successfully");
+            toast.success("Security keys updated");
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         } catch (error) {
-            toast.error("Failed to change password");
+            toast.error("Change failed");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Customize your sales account and preferences</p>
+        <div className="space-y-4 sm:space-y-6 pb-10">
+            {/* Header section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-3">
+                    <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                            System <span className="text-primary-600">Preferences</span>
+                        </h1>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+                            Configure your environment & security protocols
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-4 lg:grid-cols-3">
                 {/* Profile Information */}
-                <Card className="lg:col-span-2 border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                            <User size={20} className="text-primary-500" />
-                            Profile Information
+                <Card className="lg:col-span-2 border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                    <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
+                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2.5">
+                            <div className="size-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-primary-600">
+                                <User size={14} />
+                            </div>
+                            Identity Profile
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Full Name</Label>
+                    <CardContent className="p-5 sm:p-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</Label>
                                 <Input
-                                    id="name"
                                     value={profileData.name}
+                                    className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4"
                                     onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                                 />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email Address</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Primary Email</Label>
                                 <Input
-                                    id="email"
                                     type="email"
                                     value={profileData.email}
+                                    className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4"
                                     onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                                 />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="phone">Phone Number</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Line</Label>
                                 <Input
-                                    id="phone"
                                     value={profileData.phone}
+                                    className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4"
                                     onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                                 />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="department">Department</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Department Sector</Label>
                                 <Select
                                     value={profileData.department}
                                     onValueChange={(val) => setProfileData({ ...profileData, department: val })}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select department" />
+                                    <SelectTrigger className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4 ring-0 focus:ring-0">
+                                        <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="sales">Sales</SelectItem>
-                                        <SelectItem value="marketing">Marketing</SelectItem>
-                                        <SelectItem value="support">Support</SelectItem>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                                        <SelectItem value="sales" className="text-xs font-bold font-black">Sales & Revenue</SelectItem>
+                                        <SelectItem value="marketing" className="text-xs font-bold font-black">Growth Marketing</SelectItem>
+                                        <SelectItem value="support" className="text-xs font-bold font-black">Client Success</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="flex justify-end gap-3">
-                                <Button variant="outline" onClick={() => toast.info('Changes discarded')}>Cancel</Button>
-                                <Button onClick={handleProfileUpdate} disabled={isLoading}>
-                                    {isLoading ? 'Saving...' : 'Save Changes'}
-                                </Button>
-                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2.5 mt-6 pt-5 border-t border-slate-50 dark:border-slate-800">
+                            <Button variant="ghost" className="h-9 px-5 rounded-lg font-black text-[9px] uppercase tracking-widest text-slate-400">Abort</Button>
+                            <Button
+                                onClick={handleProfileUpdate}
+                                disabled={isLoading}
+                                className="h-9 px-6 rounded-lg bg-primary-600 hover:bg-primary-700 font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary-500/20 text-white"
+                            >
+                                {isLoading ? 'Processing...' : 'Sync Profile'}
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Account Actions */}
-                <Card className="border-none shadow-sm h-fit">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                            <Lock size={20} className="text-amber-500" />
-                            Security
+                {/* Security Actions */}
+                <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden h-fit">
+                    <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
+                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2.5">
+                            <div className="size-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600">
+                                <Lock size={14} />
+                            </div>
+                            Security Vault
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Change Password</h3>
-                            <div className="space-y-2">
+                    <CardContent className="p-5 sm:p-6 space-y-4">
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Current Password</Label>
                                 <Input
                                     type="password"
-                                    placeholder="Current Password"
+                                    className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4"
                                     value={passwordData.currentPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                                 />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">New Password</Label>
                                 <Input
                                     type="password"
-                                    placeholder="New Password"
+                                    className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4"
                                     value={passwordData.newPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                 />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm Security Key</Label>
                                 <Input
                                     type="password"
-                                    placeholder="Confirm New Password"
+                                    className="h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-sm px-4"
                                     value={passwordData.confirmPassword}
                                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                                 />
                             </div>
-                            <Button className="w-full" onClick={handlePasswordChange} disabled={isLoading}>
-                                Update Password
+                            <Button
+                                className="w-full h-10 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 font-black text-[9px] uppercase tracking-widest mt-2"
+                                onClick={handlePasswordChange}
+                                disabled={isLoading}
+                            >
+                                Update Security
                             </Button>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Preferences</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">Manage your email subscription settings.</p>
-                                <Button variant="outline" className="w-full h-8 text-xs" onClick={() => toast.info('Preference center not available in demo')}>
-                                    Manage Preferences
-                                </Button>
-                            </div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Notifications */}
-            <Card className="border-none shadow-sm">
-                <CardHeader>
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                        <Bell size={20} className="text-primary-500" />
-                        Notifications
+            {/* Notifications and Preferences */}
+            <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
+                    <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2.5">
+                        <div className="size-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-primary-600">
+                            <Bell size={14} />
+                        </div>
+                        Communication Protocols
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Notifications</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Receive email alerts for new deals and updates.</p>
+                <CardContent className="p-4 sm:p-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        {[
+                            { title: 'Email Alerts', desc: 'Real-time revenue updates', key: 'email' },
+                            { title: 'Deal Velocity', desc: 'Notification on stage advance', key: 'deals' },
+                            { title: 'Reminders', desc: 'Critical pending actions', key: 'reminders' }
+                        ].map((item, i) => (
+                            <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700 gap-3">
+                                <div className="space-y-0.5">
+                                    <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none">{item.title}</h3>
+                                    <p className="text-[7px] sm:text-[8px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider mt-1 leading-relaxed">{item.desc}</p>
+                                </div>
+                                <Switch className="data-[state=checked]:bg-primary-600 scale-75 sm:scale-90 align-self-end sm:align-self-auto" defaultChecked />
                             </div>
-                            <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Deal Updates</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Get notified when deals progress.</p>
-                            </div>
-                            <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Reminders</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Receive reminders for follow-ups.</p>
-                            </div>
-                            <Switch defaultChecked />
-                        </div>
+                        ))}
                     </div>
                 </CardContent>
             </Card>

@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/shared/components/ui/badge';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { Plus, UserPlus, Phone, Mail, Building, History } from 'lucide-react';
+import { Plus, UserPlus, Phone, Mail, Building, History, Search } from 'lucide-react';
 import useCRMStore from '@/store/crmStore';
+import { cn } from '@/shared/utils/cn';
 
 const Contacts = () => {
   const {
@@ -66,7 +67,7 @@ const Contacts = () => {
 
   const filteredContacts = useMemo(() => {
     return contacts.filter((contact) => {
-      const matchesSearch = 
+      const matchesSearch =
         contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contact.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -113,16 +114,25 @@ const Contacts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Contacts</h1>
-          <p className="text-muted-foreground">Manage your converted contacts</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+        <div className="flex items-center gap-3">
+          <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+            <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+              Contact <span className="text-primary-600">Assets</span>
+            </h1>
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+              Network synchronization active
+            </p>
+          </div>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Convert Lead to Contact
+            <Button className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
+              <UserPlus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Convert Lead</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
@@ -203,131 +213,113 @@ const Contacts = () => {
         </Dialog>
       </div>
 
-      {/* Available Leads for Conversion */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Available Leads for Conversion</CardTitle>
-          <CardDescription>Convert qualified leads to contacts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Lead ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leads.map((lead) => (
-                  <TableRow key={lead.id}>
-                    <TableCell className="font-medium">{lead.id}</TableCell>
-                    <TableCell>{lead.name}</TableCell>
-                    <TableCell>{lead.company}</TableCell>
-                    <TableCell>{lead.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="primary">{lead.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleConvertLead(lead)}
-                      >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Convert
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats Summary Panel */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {[
+          { label: 'Network Size', value: contacts.length, color: 'primary' },
+          { label: 'Converted Core', value: contacts.length, color: 'emerald' },
+          { label: 'Active Leads', value: leads.length, color: 'indigo' }
+        ].map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
+              <p className={cn("text-lg sm:text-xl font-black leading-none",
+                stat.color === 'primary' ? 'text-primary-600' : stat.color === 'emerald' ? 'text-emerald-600' : 'text-indigo-600'
+              )}>{stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {/* Contacts List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Contacts List</CardTitle>
-          <CardDescription>Manage your converted contacts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Search contacts by name, email, or company..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Available Leads for Conversion - Tactical View */}
+        <Card className="lg:col-span-5 border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden h-fit">
+          <CardHeader className="py-3 px-5 border-b border-slate-50 dark:border-slate-800">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Conversion Queue</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-slate-50 dark:divide-slate-800">
+              {leads.map((lead) => (
+                <div key={lead.id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-black text-slate-900 dark:text-white uppercase leading-tight">{lead.name}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{lead.company}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleConvertLead(lead)}
+                    className="h-7 px-3 rounded-lg text-primary-600 hover:bg-primary-50 font-black text-[9px] uppercase tracking-widest"
+                  >
+                    Deploy
+                  </Button>
+                </div>
+              ))}
+              {leads.length === 0 && <div className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase">Synchronized</div>}
             </div>
-            <Select value={filterOwner} onValueChange={setFilterOwner}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by owner" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Owners</SelectItem>
-                <SelectItem value="EMP-001">John Doe</SelectItem>
-                <SelectItem value="EMP-002">Jane Smith</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Contact ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Mobile</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>History</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id}>
-                    <TableCell className="font-medium">{contact.id}</TableCell>
-                    <TableCell>{contact.name}</TableCell>
-                    <TableCell>{contact.company}</TableCell>
-                    <TableCell>{contact.position}</TableCell>
-                    <TableCell>{contact.email}</TableCell>
-                    <TableCell>{contact.mobile}</TableCell>
-                    <TableCell>
-                      {contact.owner === 'EMP-001' ? 'John Doe' : 'Jane Smith'}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          // Show contact history
-                          console.log('Contact history:', getContactHistory(contact.id));
-                        }}
-                      >
-                        <History className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {filteredContacts.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No contacts found. Try adjusting your search or filters.
+        {/* Contacts List - High Density */}
+        <Card className="lg:col-span-7 border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="py-3 px-5 border-b border-slate-50 dark:border-slate-800">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Repository</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  placeholder="Search contacts..."
+                  className="pl-9 h-9 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-[10px]"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-slate-50 dark:border-slate-800">
+                    <TableHead className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Contact</TableHead>
+                    <TableHead className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Organization</TableHead>
+                    <TableHead className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.map((contact) => (
+                    <TableRow key={contact.id} className="group border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <TableCell className="px-4 py-2.5">
+                        <div className="space-y-0.5">
+                          <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase leading-none">{contact.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400">{contact.email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{contact.company}</p>
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-slate-400 hover:text-primary-600"
+                          onClick={() => console.log('History:', getContactHistory(contact.id))}
+                        >
+                          <History size={12} />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {filteredContacts.length === 0 && (
+              <div className="text-center py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Isolated Repository</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

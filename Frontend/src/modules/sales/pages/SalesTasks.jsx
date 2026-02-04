@@ -23,6 +23,8 @@ import useTaskStore from '@/store/taskStore';
 import useCRMStore from '@/store/crmStore';
 import useAuthStore from '@/store/authStore';
 import useSalesStore from '@/store/salesStore';
+import { cn } from '@/shared/utils/cn';
+import { toast } from 'sonner';
 
 const SalesTasks = () => {
     const { user } = useAuthStore();
@@ -30,7 +32,6 @@ const SalesTasks = () => {
     const { followUps, leads } = useCRMStore();
     const { tasks, addTask, updateTask, deleteTask } = useTaskStore();
 
-    // State for filtering and sorting tasks
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
@@ -38,19 +39,15 @@ const SalesTasks = () => {
     const [sortOrder, setSortOrder] = useState('asc');
     const [activeTab, setActiveTab] = useState('tasks');
 
-    // Get current sales rep data
     const salesRep = useMemo(() => {
         return getSalesRepByEmail(user?.email);
     }, [user?.email, getSalesRepByEmail]);
 
-    // Filter and sort sales tasks
     const filteredTasks = useMemo(() => {
         return tasks
             .filter(task => {
-                // Filter tasks assigned to the current sales rep
-                // Determine user ID - mock sales rep or auth user
                 const userId = salesRep?.id || user?.id || '1';
-                const isAssigned = task.assignedTo?.some(id => id === userId || id === '1'); // Allow '1' for demo visibility
+                const isAssigned = task.assignedTo?.some(id => id === userId || id === '1');
                 const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
                 const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus;
                 const matchesPriority = selectedPriority === 'all' || task.priority === selectedPriority;
@@ -87,7 +84,6 @@ const SalesTasks = () => {
             });
     }, [tasks, searchTerm, selectedStatus, selectedPriority, sortBy, sortOrder, salesRep?.id, user?.id]);
 
-    // Get recent sales activities (mapped from CRM followUps)
     const recentActivities = useMemo(() => {
         const sortedFollowUps = [...followUps].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -106,7 +102,6 @@ const SalesTasks = () => {
         });
     }, [followUps, leads]);
 
-    // Calculate task statistics
     const taskStats = useMemo(() => {
         const totalTasks = filteredTasks.length;
         const pendingTasks = filteredTasks.filter(t => t.status === 'pending').length;
@@ -114,13 +109,7 @@ const SalesTasks = () => {
         const completedTasks = filteredTasks.filter(t => t.status === 'completed').length;
         const highPriorityTasks = filteredTasks.filter(t => t.priority === 'high' || t.priority === 'urgent').length;
 
-        return {
-            totalTasks,
-            pendingTasks,
-            inProgressTasks,
-            completedTasks,
-            highPriorityTasks
-        };
+        return { totalTasks, pendingTasks, inProgressTasks, completedTasks, highPriorityTasks };
     }, [filteredTasks]);
 
     const handleSort = (field) => {
@@ -135,7 +124,6 @@ const SalesTasks = () => {
     const handleAddTask = () => {
         const title = window.prompt("Enter Task Title:");
         if (!title) return;
-
         const priority = window.prompt("Priority (low, medium, high):", "medium");
         const deadline = window.prompt("Deadline (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
 
@@ -149,7 +137,7 @@ const SalesTasks = () => {
             createdBy: user?.id
         };
         addTask(newTask);
-        alert('Task added successfully');
+        toast.success('Task synchronized successfully');
     };
 
     const handleTaskStatusChange = (taskId, newStatus) => {
@@ -158,205 +146,181 @@ const SalesTasks = () => {
 
     const getActivityIcon = (type) => {
         switch (type) {
-            case 'call':
-                return <PhoneCall size={16} className="text-blue-500" />;
-            case 'email':
-                return <Mail size={16} className="text-purple-500" />;
-            case 'meeting':
-                return <Calendar size={16} className="text-emerald-500" />;
-            default:
-                return <Clock size={16} className="text-slate-400" />;
+            case 'call': return <PhoneCall size={16} className="text-blue-500" />;
+            case 'email': return <Mail size={16} className="text-purple-500" />;
+            case 'meeting': return <Calendar size={16} className="text-emerald-500" />;
+            default: return <Clock size={16} className="text-slate-400" />;
         }
     };
 
     const getActivityColor = (type) => {
         switch (type) {
-            case 'call':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-            case 'email':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
-            case 'meeting':
-                return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
-            default:
-                return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400';
+            case 'call': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+            case 'meeting': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
+            default: return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400';
         }
     };
 
     const getPriorityBadgeVariant = (priority) => {
         switch (priority) {
             case 'high':
-            case 'urgent':
-                return 'destructive';
-            case 'medium':
-                return 'warning';
-            case 'low':
-                return 'secondary';
-            default:
-                return 'default';
+            case 'urgent': return 'destructive';
+            case 'medium': return 'warning';
+            case 'low': return 'secondary';
+            default: return 'default';
         }
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Sales Tasks & Activities</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your sales tasks and track client interactions</p>
+        <div className="space-y-4 sm:space-y-6 pb-10">
+            {/* Header section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-3">
+                    <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                            Sales <span className="text-primary-600">Operations</span>
+                        </h1>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+                            Coordinate tasks & tracking
+                        </p>
+                    </div>
                 </div>
-                <Button className="gap-2" onClick={handleAddTask}>
+                <Button
+                    variant="default"
+                    className="h-10 px-6 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                    onClick={handleAddTask}
+                >
                     <Plus size={16} />
-                    New Task
+                    <span>Deploy Task</span>
                 </Button>
             </div>
 
-            {/* Task Statistics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                <Card className="border-none shadow-sm">
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-slate-500">Total Tasks</div>
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white">{taskStats.totalTasks}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm">
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-slate-500">Pending</div>
-                        <div className="text-2xl font-bold text-amber-600">{taskStats.pendingTasks}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm">
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-slate-500">In Progress</div>
-                        <div className="text-2xl font-bold text-blue-600">{taskStats.inProgressTasks}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm">
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-slate-500">Completed</div>
-                        <div className="text-2xl font-bold text-emerald-600">{taskStats.completedTasks}</div>
-                    </CardContent>
-                </Card>
-                <Card className="border-none shadow-sm">
-                    <CardContent className="p-4">
-                        <div className="text-sm font-medium text-slate-500">High Priority</div>
-                        <div className="text-2xl font-bold text-red-600">{taskStats.highPriorityTasks}</div>
-                    </CardContent>
-                </Card>
+            {/* Compact High-Density Stats Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+                {[
+                    { label: 'Total Ops', value: taskStats.totalTasks, color: 'text-slate-600' },
+                    { label: 'Pending', value: taskStats.pendingTasks, color: 'text-amber-600' },
+                    { label: 'In Force', value: taskStats.inProgressTasks, color: 'text-blue-600' },
+                    { label: 'Resolved', value: taskStats.completedTasks, color: 'text-emerald-600' },
+                    { label: 'Urgent', value: taskStats.highPriorityTasks, color: 'text-red-600' }
+                ].map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group",
+                        i === 4 ? "col-span-2 sm:col-span-1" : ""
+                    )}>
+                        <CardContent className="p-3.5 sm:p-4 transition-transform group-hover:scale-[1.02]">
+                            <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5 sm:mb-2">{stat.label}</p>
+                            <p className={cn("text-lg sm:text-xl font-black leading-none", stat.color)}>{stat.value}</p>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
-            <Tabs defaultValue="tasks" onValueChange={setActiveTab}>
-                <TabsList>
-                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                    <TabsTrigger value="activities">Activities</TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="tasks" className="w-full" onValueChange={setActiveTab}>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+                    <TabsList className="bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-xl h-10 border border-slate-100 dark:border-slate-800">
+                        <TabsTrigger value="tasks" className="rounded-lg px-5 font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Task List</TabsTrigger>
+                        <TabsTrigger value="activities" className="rounded-lg px-5 font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Activity Feed</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="tasks">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg font-bold">My Sales Tasks</CardTitle>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <div className="relative">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-                                    <Input
-                                        placeholder="Search tasks..."
-                                        className="pl-8 w-[200px]"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                                    <SelectTrigger className="w-[120px]">
-                                        <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                                    <SelectTrigger className="w-[120px]">
-                                        <SelectValue placeholder="Priority" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Priorities</SelectItem>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Button variant="outline" size="icon">
-                                    <Filter size={16} />
-                                </Button>
+                    {activeTab === 'tasks' && (
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <div className="relative flex-1 sm:w-60 group">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 group-focus-within:text-primary-600 transition-colors" />
+                                <input
+                                    placeholder="Search operations..."
+                                    className="w-full h-9 pl-9 bg-white dark:bg-slate-800 border-none shadow-sm rounded-xl text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary-100"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
+                            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border-none shadow-sm bg-white dark:bg-slate-800 shrink-0">
+                                <Filter size={14} className="text-slate-600" />
+                            </Button>
+                        </div>
+                    )}
+                </div>
+
+                <TabsContent value="tasks" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                    <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                        <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Action Matrix</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Task ID</TableHead>
-                                            <TableHead>Title</TableHead>
-                                            <TableHead onClick={() => handleSort('priority')} className="cursor-pointer">
+                                        <TableRow className="border-b border-slate-50 dark:border-slate-800 hover:bg-transparent">
+                                            <TableHead className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Action Item</TableHead>
+                                            <TableHead className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest cursor-pointer group" onClick={() => handleSort('priority')}>
                                                 <div className="flex items-center gap-1">
-                                                    Priority
-                                                    {sortBy === 'priority' && (
-                                                        sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                                    )}
+                                                    Level
+                                                    <ArrowUpRight size={10} className={cn("transition-transform", sortBy === 'priority' && sortOrder === 'desc' && "rotate-90")} />
                                                 </div>
                                             </TableHead>
-                                            <TableHead onClick={() => handleSort('deadline')} className="cursor-pointer">
-                                                <div className="flex items-center gap-1">
-                                                    Deadline
-                                                    {sortBy === 'deadline' && (
-                                                        sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                                    )}
-                                                </div>
-                                            </TableHead>
-                                            <TableHead onClick={() => handleSort('status')} className="cursor-pointer">
-                                                <div className="flex items-center gap-1">
-                                                    Status
-                                                    {sortBy === 'status' && (
-                                                        sortOrder === 'asc' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />
-                                                    )}
-                                                </div>
-                                            </TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Deadline</TableHead>
+                                            <TableHead className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">State</TableHead>
+                                            <TableHead className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Execution</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {filteredTasks.map((task) => (
-                                            <TableRow key={task.id}>
-                                                <TableCell className="font-medium">{task.id}</TableCell>
-                                                <TableCell className="font-medium">{task.title}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={getPriorityBadgeVariant(task.priority)}>
+                                            <TableRow key={task.id} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => handleTaskStatusChange(task.id, task.status === 'completed' ? 'pending' : 'completed')}>
+                                                <TableCell className="px-6 py-3">
+                                                    <div>
+                                                        <p className="font-black text-sm text-slate-900 dark:text-white leading-tight uppercase tracking-tight">{task.title}</p>
+                                                        <p className="text-[8px] text-slate-400 font-black mt-1 uppercase tracking-widest italic">Node ID: {String(task.id).slice(-6)}</p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-3">
+                                                    <Badge className={cn(
+                                                        "rounded-lg border-none px-2 py-0.5 font-black text-[8px] uppercase tracking-widest",
+                                                        task.priority === 'urgent' ? 'bg-red-100 text-red-600' :
+                                                            task.priority === 'high' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'
+                                                    )}>
                                                         {task.priority}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell>{new Date(task.deadline).toLocaleDateString()}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={
-                                                        task.status === 'completed' ? 'default' :
-                                                            task.status === 'in_progress' ? 'secondary' : 'outline'
-                                                    }>
-                                                        {task.status}
+                                                <TableCell className="px-6 py-3">
+                                                    <div className="flex items-center gap-1.5 text-slate-400 font-black text-[9px] uppercase tracking-tighter">
+                                                        <Calendar size={10} />
+                                                        {new Date(task.deadline).toLocaleDateString()}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-3">
+                                                    <Badge className={cn(
+                                                        "rounded-lg border-none px-2 py-0.5 font-black text-[8px] uppercase tracking-widest",
+                                                        task.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-primary-50 text-primary-600'
+                                                    )}>
+                                                        {task.status.replace('_', ' ')}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleTaskStatusChange(task.id, task.status === 'completed' ? 'pending' : 'completed')}
-                                                        >
-                                                            {task.status === 'completed' ? 'Mark Pending' : 'Mark Complete'}
-                                                        </Button>
-                                                    </div>
+                                                <TableCell className="px-6 py-3 text-right">
+                                                    <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-white dark:hover:bg-slate-800">
+                                                        <ArrowUpRight size={14} className="text-slate-300 group-hover:text-primary-600 transition-all" />
+                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
+                                        {filteredTasks.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="p-16 text-center">
+                                                    <div className="space-y-3">
+                                                        <div className="size-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                                                            <CheckSquare size={32} className="text-slate-200" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <h3 className="font-black text-slate-900 dark:text-white text-base uppercase tracking-tight italic">Clear Horizon</h3>
+                                                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">No pending operations detected</p>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>
@@ -364,46 +328,36 @@ const SalesTasks = () => {
                     </Card>
                 </TabsContent>
 
-                <TabsContent value="activities">
-                    <Card className="border-none shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg font-bold">Recent Sales Activities</CardTitle>
-                            <Button variant="ghost" size="sm">View All</Button>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {recentActivities.map((activity) => (
-                                    <div key={activity.id} className="flex items-start gap-3 p-4 rounded-lg border border-slate-100 dark:border-slate-800">
-                                        <div className="mt-1">
+                <TabsContent value="activities" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                    <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden p-3 sm:p-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {recentActivities.map((activity) => (
+                                <div key={activity.id} className="group p-4 rounded-xl border border-slate-50 dark:border-slate-800 hover:border-primary-100 dark:hover:border-primary-900/30 bg-slate-50/30 dark:bg-slate-800/20 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className={cn("size-8 rounded-lg flex items-center justify-center shadow-sm", activity.type === 'call' ? 'bg-blue-50 text-blue-600' : activity.type === 'email' ? 'bg-purple-50 text-purple-600' : 'bg-emerald-50 text-emerald-600')}>
                                             {getActivityIcon(activity.type)}
                                         </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="text-sm font-medium text-slate-900 dark:text-white">{activity.title}</h4>
-                                                <Badge className={getActivityColor(activity.type)}>
-                                                    {activity.type}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-xs text-slate-500 mb-2">{activity.description}</p>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-                                                <div className="flex items-center gap-1">
-                                                    <Clock size={12} />
-                                                    {new Date(activity.date).toLocaleString()}
-                                                    {activity.duration && (
-                                                        <span>• {activity.duration} min</span>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Badge variant="secondary" size="sm">
-                                                        {activity.outcome}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <Badge className={cn("rounded-lg border-none px-2 py-0.5 font-black text-[8px] uppercase tracking-widest", getActivityColor(activity.type))}>
+                                            {activity.type}
+                                        </Badge>
                                     </div>
-                                ))}
+                                    <h4 className="text-[13px] font-black text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate">{activity.title}</h4>
+                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3 italic">{activity.outcome}</p>
+                                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+                                        <div className="flex items-center gap-1.5 text-slate-300 font-black text-[9px] uppercase tracking-tighter">
+                                            <Clock size={10} />
+                                            {new Date(activity.date).toLocaleDateString()}
+                                        </div>
+                                        <ArrowUpRight size={12} className="text-slate-200 group-hover:text-primary-500 transition-all" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {recentActivities.length === 0 && (
+                            <div className="p-16 text-center">
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] italic">Silence in the wire. No activity detected.</p>
                             </div>
-                        </CardContent>
+                        )}
                     </Card>
                 </TabsContent>
             </Tabs>

@@ -89,21 +89,25 @@ const LeadsManagement = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 px-1 sm:px-0">
-          <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+        <div className="flex items-center gap-3">
+          <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
             <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Leads <span className="text-primary-600">Management</span></h1>
-            <p className="text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 font-medium tracking-wide">Manage and track your customer acquisition pipeline</p>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+              Lead <span className="text-primary-600">Assets</span>
+            </h1>
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+              High-velocity acquisition active
+            </p>
           </div>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="h-9 sm:h-11 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
               <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span>Add New Lead</span>
+              <span>Initialize Lead</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
@@ -228,28 +232,44 @@ const LeadsManagement = () => {
           </DialogContent>
         </Dialog>
       </div>
+      {/* Stats Bar Addon */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Pool', value: leads.length, color: 'primary' },
+          { label: 'Interested', value: leads.filter(l => l.status === 'Interested').length, color: 'amber' },
+          { label: 'Strategic', value: leads.filter(l => l.status === 'Closed').length, color: 'emerald' },
+          { label: 'Lost Flow', value: leads.filter(l => l.status === 'Lost').length, color: 'slate' }
+        ].map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
+              <p className={cn("text-lg sm:text-xl font-black leading-none", stat.color === 'primary' ? 'text-primary-600' : stat.color === 'amber' ? 'text-amber-600' : stat.color === 'emerald' ? 'text-emerald-600' : 'text-slate-600')}>{stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+      <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
         <CardContent className="p-3 sm:p-5">
-          <div className="flex flex-col md:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-5">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
                 placeholder="Search leads..."
-                className="pl-10 h-10 sm:h-11 bg-slate-50 border-none dark:bg-slate-800 rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-xs"
+                className="pl-9 h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-[10px] sm:text-xs"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full md:w-[160px] h-10 sm:h-11 bg-slate-50 border-none dark:bg-slate-800 rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-xs">
+                <SelectTrigger className="w-full sm:w-[140px] h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800">
-                  <SelectItem value="all" className="text-xs font-bold">All Statuses</SelectItem>
+                  <SelectItem value="all" className="text-[10px] font-black uppercase">All</SelectItem>
                   {leadStatuses.map((status) => (
-                    <SelectItem key={status} value={status} className="text-xs font-bold">
+                    <SelectItem key={status} value={status} className="text-[10px] font-black uppercase">
                       {status}
                     </SelectItem>
                   ))}

@@ -19,15 +19,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Badge } from '@/shared/components/ui/badge';
+import { Switch } from '@/shared/components/ui/switch';
 import { toast } from 'sonner';
 import useSuperAdminStore from '@/store/superAdminStore';
 import { cn } from '@/shared/utils/cn';
 
 const PlansManagement = () => {
     const { plans, addPlan, deletePlan, updatePlan } = useSuperAdminStore();
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingPlanId, setEditingPlanId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [newPlan, setNewPlan] = useState({
+    const [planForm, setPlanForm] = useState({
         name: '',
         price: '',
         limit: '',
@@ -41,23 +44,10 @@ const PlansManagement = () => {
         plan.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleAddPlan = (e) => {
-        e.preventDefault();
-        if (!newPlan.name || !newPlan.price || !newPlan.limit) {
-            toast.error("Please fill in all required fields");
-            return;
-        }
-
-        addPlan({
-            ...newPlan,
-            price: Number(newPlan.price),
-            limit: Number(newPlan.limit),
-            trialDays: Number(newPlan.trialDays)
-        });
-
-        toast.success("Plan added successfully!");
-        setIsAddModalOpen(false);
-        setNewPlan({
+    const handleOpenAddModal = () => {
+        setIsEditMode(false);
+        setEditingPlanId(null);
+        setPlanForm({
             name: '',
             price: '',
             limit: '',
@@ -65,12 +55,60 @@ const PlansManagement = () => {
             trialDays: 0,
             features: []
         });
-        setFeatureInput('');
+        setIsModalOpen(true);
+    };
+
+    const handleOpenEditModal = (plan) => {
+        console.log("Opening edit modal for plan:", plan.id);
+        setIsEditMode(true);
+        setEditingPlanId(plan.id);
+        setPlanForm({
+            name: plan.name || '',
+            price: plan.price?.toString() || '0',
+            limit: plan.limit?.toString() || '1',
+            isActive: plan.isActive !== undefined ? plan.isActive : true,
+            trialDays: plan.trialDays?.toString() || '0',
+            features: Array.isArray(plan.features) ? [...plan.features] : []
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log("Submitting plan form. Mode:", isEditMode ? "Edit" : "Create");
+
+        if (!planForm.name || planForm.price === '' || planForm.limit === '') {
+            toast.error("Please fill in all required parameters");
+            return;
+        }
+
+        const planData = {
+            ...planForm,
+            price: Number(planForm.price),
+            limit: Number(planForm.limit),
+            trialDays: Number(planForm.trialDays)
+        };
+
+        try {
+            if (isEditMode) {
+                console.log("Updating plan:", editingPlanId, planData);
+                updatePlan(editingPlanId, planData);
+                toast.success(`${planData.name} tier recalibrated`);
+            } else {
+                console.log("Creating new plan:", planData);
+                addPlan(planData);
+                toast.success(`${planData.name} tier initialized`);
+            }
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Submission error:", error);
+            toast.error("Operation failed");
+        }
     };
 
     const addFeature = () => {
         if (!featureInput.trim()) return;
-        setNewPlan(prev => ({
+        setPlanForm(prev => ({
             ...prev,
             features: [...prev.features, featureInput.trim()]
         }));
@@ -78,132 +116,147 @@ const PlansManagement = () => {
     };
 
     const removeFeature = (idx) => {
-        setNewPlan(prev => ({
+        setPlanForm(prev => ({
             ...prev,
             features: prev.features.filter((_, i) => i !== idx)
         }));
     };
 
     const handleDeletePlan = (id, name) => {
-        if (window.confirm(`Are you sure you want to delete the ${name} plan?`)) {
+        if (window.confirm(`Initiate deletion of ${name} tier?`)) {
             deletePlan(id);
-            toast.success(`${name} plan deleted successfully`);
+            toast.success(`${name} tier decommissioned`);
         }
     };
 
     const togglePlanStatus = (id, currentStatus) => {
         updatePlan(id, { isActive: !currentStatus });
-        toast.success(`Plan ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+        toast.success(`${!currentStatus ? 'Activated' : 'Deactivated'} tier sync`);
     };
 
     return (
         <div className="space-y-8 pb-12">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        Subscription Plans <CreditCard className="text-primary-600" size={24} />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
+                <div className="space-y-1">
+                    <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3 tracking-tight uppercase">
+                        Protocol <span className="text-primary-600">Tiers</span> <CreditCard className="text-primary-600 animate-pulse" size={28} />
                     </h1>
-                    <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">
-                        Manage your platform's tiers
+                    <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-[0.2em] italic">
+                        Platform subscription nodes management
                     </p>
                 </div>
                 <Button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="bg-primary-600 hover:bg-primary-700 h-10 sm:h-11 px-5 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-primary-500/20 gap-2"
+                    onClick={handleOpenAddModal}
+                    className="bg-primary-600 hover:bg-primary-700 h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary-500/20 text-white gap-2 transition-all transform hover:scale-105 active:scale-95"
                 >
-                    <Plus size={18} /> Create Plan
+                    <Plus size={18} /> INITIALIZE NEW TIER
                 </Button>
             </div>
 
-            {/* Toolbar */}
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-                <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            {/* Tactical Search Toolbar */}
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-5 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl flex flex-col md:flex-row gap-5 items-center">
+                <div className="relative flex-1 group w-full">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={20} />
                     <Input
-                        placeholder="Search plans by name..."
-                        className="h-12 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none focus-visible:ring-primary-500/30"
+                        placeholder="SEARCH NODES..."
+                        className="h-12 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary-500/30 font-bold uppercase text-xs tracking-widest"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <Badge className="bg-primary-100 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 px-4 py-1.5 rounded-full border-none h-auto">
-                        {plans.length} Total Plans
+                <div className="flex items-center gap-3">
+                    <Badge className="bg-primary-100 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 px-5 py-2.5 rounded-2xl border-none h-auto font-black text-[10px] tracking-widest uppercase">
+                        {plans.length} ACTIVE NODES
                     </Badge>
                 </div>
             </div>
 
             {/* Plans Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 <AnimatePresence>
                     {filteredPlans.map((plan, index) => (
                         <motion.div
                             key={plan.id}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.2, delay: index * 0.1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
                         >
                             <Card className={cn(
-                                "overflow-hidden border-2 transition-all duration-300 rounded-[2.5rem]",
+                                "overflow-hidden border-2 transition-all duration-500 rounded-[3rem] group relative",
                                 plan.isActive
-                                    ? "border-slate-200 dark:border-slate-800 hover:border-primary-500/50"
-                                    : "border-slate-100 dark:border-slate-900 opacity-70 grayscale"
+                                    ? "border-slate-200/50 dark:border-slate-800/50 hover:border-primary-500/50 hover:shadow-2xl hover:shadow-primary-500/10"
+                                    : "border-slate-100 dark:border-slate-900 opacity-60 grayscale scale-95"
                             )}>
-                                <CardHeader className="p-5 sm:p-6 pb-2">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-primary-600 shadow-inner">
-                                            {plan.name === 'Enterprise' ? <ShieldCheck size={24} /> : plan.limit > 10 ? <Zap size={24} /> : <Briefcase size={24} />}
+                                <CardHeader className="p-8 pb-4">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800 text-primary-600 shadow-xl shadow-slate-200/50 dark:shadow-none group-hover:scale-110 transition-transform duration-500">
+                                            {plan.name === 'Enterprise' ? <ShieldCheck size={28} /> : plan.limit > 10 ? <Zap size={28} /> : <Briefcase size={28} />}
                                         </div>
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-2">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => togglePlanStatus(plan.id, plan.isActive)}
+                                                onClick={(e) => { e.stopPropagation(); handleOpenEditModal(plan); }}
+                                                className="w-10 h-10 rounded-2xl text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:scale-110 transition-all"
+                                                title="Edit Node"
+                                            >
+                                                <Edit2 size={18} />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={(e) => { e.stopPropagation(); togglePlanStatus(plan.id, plan.isActive); }}
                                                 className={cn(
-                                                    "w-8 h-8 rounded-full transition-colors",
-                                                    plan.isActive ? "text-emerald-500 hover:bg-emerald-50" : "text-amber-500 hover:bg-amber-50"
+                                                    "w-10 h-10 rounded-2xl transition-all hover:scale-110",
+                                                    plan.isActive ? "text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" : "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                                                 )}
                                             >
-                                                {plan.isActive ? <Check size={16} /> : <X size={16} />}
+                                                {plan.isActive ? <Check size={18} /> : <X size={18} />}
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => handleDeletePlan(plan.id, plan.name)}
-                                                className="w-8 h-8 rounded-full text-red-500 hover:bg-red-50"
+                                                onClick={(e) => { e.stopPropagation(); handleDeletePlan(plan.id, plan.name); }}
+                                                className="w-10 h-10 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-110 transition-all"
                                             >
-                                                <Trash2 size={16} />
+                                                <Trash2 size={18} />
                                             </Button>
                                         </div>
                                     </div>
-                                    <CardTitle className="text-xl font-black text-slate-900 dark:text-white">{plan.name}</CardTitle>
-                                    <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pricing Bundle</CardDescription>
+                                    <CardTitle className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">{plan.name}</CardTitle>
+                                    <CardDescription className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mt-1 italic opacity-70">Pricing Vector</CardDescription>
                                 </CardHeader>
-                                <CardContent className="p-5 sm:p-6 pt-2 space-y-6">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">₹{plan.price.toLocaleString('en-IN')}</span>
-                                        <span className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">/mo</span>
+                                <CardContent className="p-8 pt-2 space-y-8">
+                                    <div className="flex items-center gap-2">
+                                        <IndianRupee size={24} className="text-primary-600 font-black" />
+                                        <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                            {plan.price.toLocaleString('en-IN')}
+                                        </span>
+                                        <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest self-end pb-2 opacity-60">/ CYCLE</span>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3 text-xs font-bold text-slate-600 dark:text-slate-400">
-                                            <Users size={16} className="text-primary-500" />
-                                            Up to {plan.limit} Team Members
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-4 text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                                            <Users size={18} className="text-primary-500" />
+                                            CAPACITY: {plan.limit} NODES
                                         </div>
-                                        {plan.features?.slice(0, 4).map((feature, i) => (
-                                            <div key={i} className="flex items-center gap-3 text-xs font-bold text-slate-600 dark:text-slate-400">
-                                                <Check size={14} className="text-emerald-500" />
-                                                {feature}
-                                            </div>
-                                        ))}
+                                        <div className="space-y-3 pl-2">
+                                            {plan.features?.slice(0, 4).map((feature, i) => (
+                                                <div key={i} className="flex items-center gap-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                    <div className="size-1.5 rounded-full bg-emerald-500" />
+                                                    {feature}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     <Button
                                         variant="outline"
-                                        className="w-full h-10 rounded-xl border-slate-200 dark:border-slate-800 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        onClick={() => handleOpenEditModal(plan)}
+                                        className="w-full h-12 rounded-2xl border-2 border-slate-200 dark:border-slate-800 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all duration-300"
                                     >
-                                        Manage Plan
+                                        CALIBRATE DETAILS
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -212,76 +265,105 @@ const PlansManagement = () => {
                 </AnimatePresence>
             </div>
 
-            {/* Add Plan Modal */}
+            {/* Protocol Modal (Add/Edit) */}
             <AnimatePresence>
-                {isAddModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                {isModalOpen && (
+                    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setIsAddModalOpen(false)}
-                            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.9, y: 40 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                            exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] overflow-hidden max-h-[90vh] flex flex-col z-[501]"
                         >
-                            <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+                            <div className="p-8 sm:p-10 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
                                 <div>
-                                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Create New Plan</h2>
-                                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">Define price and limitations.</p>
+                                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase flex items-center gap-3">
+                                        <div className="size-3 rounded-full bg-primary-600 animate-pulse" />
+                                        {isEditMode ? 'NODE CALIBRATION' : 'INITIALIZE NODE'}
+                                    </h2>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure tier parameters and limits</p>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => setIsAddModalOpen(false)} className="rounded-full">
+                                <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="rounded-full size-10 hover:bg-slate-100 dark:hover:bg-slate-800">
                                     <X size={20} />
                                 </Button>
                             </div>
 
-                            <form onSubmit={handleAddPlan} className="p-6 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name" className="text-xs sm:text-sm font-bold ml-1 uppercase tracking-widest text-slate-400">Plan Name</Label>
+                            <form onSubmit={handleSubmit} className="p-8 sm:p-10 space-y-6 sm:space-y-8 overflow-y-auto custom-scrollbar">
+                                <div className="space-y-3">
+                                    <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">TIER IDENTIFIER</Label>
                                     <Input
                                         id="name"
-                                        placeholder="e.g. Starter, Pro, Enterprise"
-                                        className="h-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold"
-                                        value={newPlan.name}
-                                        onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                                        placeholder="e.g. STARTER, PRO, ENTERPRISE"
+                                        className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black uppercase text-xs tracking-widest px-6"
+                                        value={planForm.name}
+                                        onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="price" className="text-xs sm:text-sm font-bold ml-1 uppercase tracking-widest text-slate-400">Monthly Price (₹)</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">MONTHLY VALUE (₹)</Label>
                                         <Input
                                             id="price"
                                             type="number"
                                             placeholder="999"
-                                            className="h-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold"
-                                            value={newPlan.price}
-                                            onChange={(e) => setNewPlan({ ...newPlan, price: e.target.value })}
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
+                                            value={planForm.price}
+                                            onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="limit" className="text-xs sm:text-sm font-bold ml-1 uppercase tracking-widest text-slate-400">Member Limit</Label>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="limit" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">NODE CAPACITY</Label>
                                         <Input
                                             id="limit"
                                             type="number"
                                             placeholder="5"
-                                            className="h-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold"
-                                            value={newPlan.limit}
-                                            onChange={(e) => setNewPlan({ ...newPlan, limit: e.target.value })}
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
+                                            value={planForm.limit}
+                                            onChange={(e) => setPlanForm({ ...planForm, limit: e.target.value })}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs sm:text-sm font-bold ml-1 uppercase tracking-widest text-slate-400">Plan Features</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="trialDays" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">TRIAL NODES (DAYS)</Label>
+                                        <Input
+                                            id="trialDays"
+                                            type="number"
+                                            placeholder="0"
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
+                                            value={planForm.trialDays}
+                                            onChange={(e) => setPlanForm({ ...planForm, trialDays: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">DEPLOYMENT STATE</Label>
+                                        <div className="flex items-center gap-4 h-14 px-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 flex-1">Is Active</span>
+                                            <Switch
+                                                checked={planForm.isActive}
+                                                onCheckedChange={(checked) => setPlanForm({ ...planForm, isActive: checked })}
+                                                className="data-[state=checked]:bg-emerald-600"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">NODAL FEATURES</Label>
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder="e.g. 24/7 Support"
-                                            className="h-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold"
+                                            placeholder="e.g. 24/7 PRIORITY SUPPORT"
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-bold text-xs px-6 flex-1"
                                             value={featureInput}
                                             onChange={(e) => setFeatureInput(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
@@ -289,36 +371,36 @@ const PlansManagement = () => {
                                         <Button
                                             type="button"
                                             onClick={addFeature}
-                                            className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white"
+                                            className="h-14 w-14 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl shadow-slate-200 dark:shadow-none hover:scale-105 transition-all"
                                         >
-                                            <Plus size={20} />
+                                            <Plus size={24} />
                                         </Button>
                                     </div>
 
-                                    <div className="flex flex-wrap gap-2 mt-3">
-                                        {newPlan.features.map((feature, idx) => (
-                                            <Badge key={idx} className="bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 py-1.5 px-3 rounded-xl gap-2 text-xs font-bold border-none">
+                                    <div className="flex flex-wrap gap-2 mt-4">
+                                        {planForm.features.map((feature, idx) => (
+                                            <Badge key={idx} className="bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 py-2 px-4 rounded-xl gap-3 text-[9px] font-black uppercase tracking-widest border-none">
                                                 {feature}
-                                                <X size={14} className="cursor-pointer hover:text-red-500" onClick={() => removeFeature(idx)} />
+                                                <X size={14} className="cursor-pointer hover:text-red-500 transition-colors" onClick={() => removeFeature(idx)} />
                                             </Badge>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                                <div className="pt-8 flex flex-col sm:flex-row gap-4">
                                     <Button
                                         type="button"
                                         variant="ghost"
-                                        className="flex-1 h-12 rounded-2xl text-slate-500 font-bold hover:bg-slate-50"
-                                        onClick={() => setIsAddModalOpen(false)}
+                                        className="flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                        onClick={() => setIsModalOpen(false)}
                                     >
-                                        Cancel
+                                        TERMINATE
                                     </Button>
                                     <Button
                                         type="submit"
-                                        className="flex-1 h-12 rounded-2xl bg-primary-600 hover:bg-primary-700 font-black shadow-lg shadow-primary-500/20 text-white"
+                                        className="flex-1 h-14 rounded-2xl bg-primary-600 hover:bg-primary-700 font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-primary-500/30 text-white transform hover:scale-105 active:scale-95 transition-all"
                                     >
-                                        Create Plan
+                                        {isEditMode ? 'SYNCHRONIZE TIER' : 'INITIALIZE TIER'}
                                     </Button>
                                 </div>
                             </form>
