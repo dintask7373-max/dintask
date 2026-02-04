@@ -116,9 +116,9 @@ const Settings = () => {
                         variant={activeTab === tab.id ? 'default' : 'ghost'}
                         onClick={() => setSearchParams({ tab: tab.id })}
                         className={cn(
-                            "flex-1 h-10 sm:h-12 rounded-xl sm:rounded-2xl gap-2 font-black transition-all text-[10px] sm:text-sm uppercase tracking-widest",
+                            "flex-1 h-9 sm:h-10 rounded-xl gap-2 font-black transition-all text-[9px] sm:text-xs uppercase tracking-[0.1em]",
                             activeTab === tab.id
-                                ? "bg-primary-600 shadow-lg shadow-primary-500/20 text-white"
+                                ? "bg-primary-600 shadow-md shadow-primary-500/20 text-white"
                                 : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
                         )}
                     >
@@ -186,7 +186,7 @@ const Settings = () => {
                                         </div>
                                     </div>
                                     <div className="flex justify-end pt-2">
-                                        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto h-11 sm:h-14 px-8 rounded-xl sm:rounded-2xl font-black bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-500/20 text-[10px] sm:text-xs uppercase tracking-widest">
+                                        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto h-10 sm:h-11 px-6 rounded-xl font-black bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/10 text-[9px] sm:text-[10px] uppercase tracking-widest">
                                             {isSaving ? <RefreshCw className="animate-spin mr-2" size={14} /> : <Save className="mr-2" size={14} />}
                                             Update Profile
                                         </Button>
@@ -254,7 +254,7 @@ const Settings = () => {
                                     </div>
 
                                     <div className="flex justify-end pt-2">
-                                        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto h-11 sm:h-14 px-10 rounded-xl sm:rounded-2xl font-black bg-slate-900 dark:bg-white dark:text-slate-900 shadow-xl transition-all text-[10px] sm:text-xs uppercase tracking-widest">
+                                        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto h-10 sm:h-11 px-8 rounded-xl font-black bg-slate-900 dark:bg-white dark:text-slate-900 shadow-lg transition-all text-[9px] sm:text-[10px] uppercase tracking-widest">
                                             {isSaving ? <RefreshCw className="animate-spin mr-2" size={14} /> : <Shield className="mr-2" size={14} />}
                                             Update Password
                                         </Button>
@@ -266,30 +266,56 @@ const Settings = () => {
 
 
                     {activeTab === 'appearance' && (
-                        <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem]">
-                            <CardHeader className="p-8">
-                                <CardTitle className="text-2xl font-black">Theme Customization</CardTitle>
-                                <CardDescription className="font-bold text-slate-400">Choose your preferred dashboard style</CardDescription>
+                        <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+                            <CardHeader className="p-5 sm:p-8">
+                                <CardTitle className="text-lg sm:text-2xl font-black uppercase tracking-tight">Theme Customization</CardTitle>
+                                <CardDescription className="text-[10px] sm:text-sm font-bold text-slate-400">Choose your preferred dashboard style</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-8 pt-0">
-                                <div className="grid grid-cols-2 gap-6">
+                            <CardContent className="p-4 sm:p-8 pt-0">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-6">
                                     <div
                                         onClick={() => document.documentElement.classList.remove('dark')}
-                                        className="p-6 rounded-[2rem] border-4 border-slate-100 dark:border-slate-800 cursor-pointer hover:border-primary-500 transition-all group"
+                                        className={cn(
+                                            "p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 sm:border-4 cursor-pointer transition-all group relative",
+                                            !document.documentElement.classList.contains('dark')
+                                                ? "border-primary-500 bg-primary-50/30 dark:bg-primary-900/10"
+                                                : "border-slate-50 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                        )}
                                     >
-                                        <div className="aspect-video bg-slate-100 rounded-2xl mb-4 flex items-center justify-center">
-                                            <Check className="text-primary-500 opacity-0 group-hover:opacity-100" />
+                                        <div className="aspect-[4/3] sm:aspect-video bg-white shadow-inner rounded-xl sm:rounded-2xl mb-3 sm:mb-4 flex items-center justify-center relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-slate-100/50" />
+                                            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white shadow-sm z-10 flex items-center justify-center">
+                                                <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-slate-100" />
+                                            </div>
+                                            {!document.documentElement.classList.contains('dark') && (
+                                                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-4 h-4 sm:w-6 sm:h-6 bg-primary-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                                    <Check size={10} strokeWidth={4} className="sm:size-3.5" />
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className="text-center font-black uppercase tracking-widest text-slate-500">Light Mode</p>
+                                        <p className="text-center font-black uppercase tracking-[0.1em] text-[8px] sm:text-xs text-slate-500 dark:text-slate-400">Light Mode</p>
                                     </div>
                                     <div
                                         onClick={() => document.documentElement.classList.add('dark')}
-                                        className="p-6 rounded-[2rem] border-4 border-slate-100 dark:border-slate-800 cursor-pointer hover:border-primary-500 transition-all group"
+                                        className={cn(
+                                            "p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 sm:border-4 cursor-pointer transition-all group relative",
+                                            document.documentElement.classList.contains('dark')
+                                                ? "border-primary-500 bg-primary-900/10"
+                                                : "border-slate-50 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                        )}
                                     >
-                                        <div className="aspect-video bg-slate-900 rounded-2xl mb-4 flex items-center justify-center">
-                                            <Check className="text-primary-500 opacity-0 group-hover:opacity-100" />
+                                        <div className="aspect-[4/3] sm:aspect-video bg-slate-900 shadow-inner rounded-xl sm:rounded-2xl mb-3 sm:mb-4 flex items-center justify-center relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-slate-800" />
+                                            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-slate-900 shadow-sm z-10 flex items-center justify-center border border-slate-700">
+                                                <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-slate-800" />
+                                            </div>
+                                            {document.documentElement.classList.contains('dark') && (
+                                                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-4 h-4 sm:w-6 sm:h-6 bg-primary-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                                    <Check size={10} strokeWidth={4} className="sm:size-3.5" />
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className="text-center font-black uppercase tracking-widest text-slate-500">Dark Mode</p>
+                                        <p className="text-center font-black uppercase tracking-[0.1em] text-[8px] sm:text-xs text-slate-400">Dark Mode</p>
                                     </div>
                                 </div>
                             </CardContent>

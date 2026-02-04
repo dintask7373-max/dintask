@@ -200,33 +200,36 @@ const Reports = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Reports & Analytics</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Generate and export performance data.
-                    </p>
+                <div className="flex items-center gap-3 px-1 sm:px-0">
+                    <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">Reports <span className="text-primary-600">& Analytics</span></h1>
+                        <p className="text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 font-medium tracking-wide mt-1 uppercase">Performance tracking</p>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" className="flex items-center gap-2 border-slate-200 dark:border-slate-800 h-10 rounded-xl">
-                        <Printer size={16} />
+                    <Button variant="ghost" className="flex items-center gap-2 border border-slate-100 dark:border-slate-800 h-9 sm:h-10 rounded-xl font-black text-[10px] uppercase tracking-widest">
+                        <Printer size={14} />
                         <span className="hidden sm:inline">Print</span>
                     </Button>
                 </div>
             </div>
 
             {/* Report Type Selector */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-fit">
+            <div className="flex bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm border border-slate-100 dark:border-slate-800">
                 <Button
                     variant="ghost"
                     onClick={() => setReportType('overview')}
                     className={cn(
-                        "rounded-xl h-9 px-6 text-xs font-black uppercase tracking-widest transition-all duration-300",
+                        "flex-1 sm:flex-none rounded-[0.9rem] h-9 px-6 sm:px-8 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
                         reportType === 'overview'
-                            ? "bg-white dark:bg-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.08)] text-primary-600 dark:text-primary-400"
-                            : "text-slate-500 hover:text-slate-900"
+                            ? "bg-white dark:bg-slate-700 shadow-md shadow-slate-200/50 dark:shadow-none text-primary-600 dark:text-primary-400"
+                            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     )}
                 >
                     Overview
@@ -235,10 +238,10 @@ const Reports = () => {
                     variant="ghost"
                     onClick={() => setReportType('employees')}
                     className={cn(
-                        "rounded-xl h-9 px-6 text-xs font-black uppercase tracking-widest transition-all duration-300",
+                        "flex-1 sm:flex-none rounded-[0.9rem] h-9 px-6 sm:px-8 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
                         reportType === 'employees'
-                            ? "bg-white dark:bg-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.08)] text-primary-600 dark:text-primary-400"
-                            : "text-slate-500 hover:text-slate-900"
+                            ? "bg-white dark:bg-slate-700 shadow-md shadow-slate-200/50 dark:shadow-none text-primary-600 dark:text-primary-400"
+                            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     )}
                 >
                     Employees
@@ -247,10 +250,10 @@ const Reports = () => {
                     variant="ghost"
                     onClick={() => setReportType('managers')}
                     className={cn(
-                        "rounded-xl h-9 px-6 text-xs font-black uppercase tracking-widest transition-all duration-300",
+                        "flex-1 sm:flex-none rounded-[0.9rem] h-9 px-6 sm:px-8 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
                         reportType === 'managers'
-                            ? "bg-white dark:bg-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.08)] text-primary-600 dark:text-primary-400"
-                            : "text-slate-500 hover:text-slate-900"
+                            ? "bg-white dark:bg-slate-700 shadow-md shadow-slate-200/50 dark:shadow-none text-primary-600 dark:text-primary-400"
+                            : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     )}
                 >
                     Managers
@@ -258,89 +261,87 @@ const Reports = () => {
             </div>
 
             {/* Filters Bar */}
-            <Card className="border-none shadow-sm bg-white dark:bg-slate-900">
-                <CardContent className="p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold ml-1">Period</Label>
+            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
+                <CardContent className="p-4 sm:p-5">
+                    <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1">Period</Label>
                             <Select value={dateRange} onValueChange={setDateRange}>
-                                <SelectTrigger className="h-10 bg-slate-50 border-none dark:bg-slate-800">
+                                <SelectTrigger className="h-11 bg-slate-50/50 border-none dark:bg-slate-800/50 rounded-2xl text-[12px] font-bold px-5">
                                     <SelectValue placeholder="Select Period" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="7">Last 7 Days</SelectItem>
-                                    <SelectItem value="30">Last 30 Days</SelectItem>
-                                    <SelectItem value="90">Last Quarter</SelectItem>
-                                    <SelectItem value="365">This Year</SelectItem>
+                                <SelectContent className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-xl">
+                                    <SelectItem value="7" className="text-xs font-bold uppercase tracking-widest py-2.5">Last 7 Days</SelectItem>
+                                    <SelectItem value="30" className="text-xs font-bold uppercase tracking-widest py-2.5">Last 30 Days</SelectItem>
+                                    <SelectItem value="90" className="text-xs font-bold uppercase tracking-widest py-2.5">Last Quarter</SelectItem>
+                                    <SelectItem value="365" className="text-xs font-bold uppercase tracking-widest py-2.5">This Year</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div className="space-y-1.5 lg:col-span-1">
-                            <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold ml-1">Member</Label>
-                            <div className="flex gap-2">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1">Assigned</Label>
+                            <div className="flex gap-2.5">
                                 <Select value={selectedMember} onValueChange={setSelectedMember}>
-                                    <SelectTrigger className="h-10 bg-slate-50 border-none dark:bg-slate-800 flex-1">
-                                        <SelectValue placeholder="All Members" />
+                                    <SelectTrigger className="h-11 bg-slate-50/50 border-none dark:bg-slate-800/50 flex-1 rounded-2xl text-[12px] font-bold px-5">
+                                        <SelectValue placeholder="All" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Members</SelectItem>
+                                    <SelectContent className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-xl">
+                                        <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest py-2.5">All Members</SelectItem>
                                         {allMembersList.map(member => (
-                                            <SelectItem key={member.id} value={member.id}>
+                                            <SelectItem key={member.id} value={member.id} className="text-xs font-bold py-2.5">
                                                 <div className="flex items-center gap-2">
                                                     <span>{member.name}</span>
-                                                    <Badge variant="outline" className="text-[8px] h-4 px-1 opacity-50">{member.type}</Badge>
+                                                    <Badge variant="outline" className="text-[8px] h-3.5 px-1 opacity-50 border-none shadow-none uppercase font-black">{member.type.charAt(0)}</Badge>
                                                 </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 <Button
-                                    variant={selectedMember === user?.id ? "default" : "outline"}
-                                    size="sm"
+                                    variant={selectedMember === user?.id ? "default" : "secondary"}
                                     onClick={() => setSelectedMember(user?.id)}
                                     className={cn(
-                                        "h-10 px-3 rounded-xl border-none transition-all",
+                                        "h-11 px-6 rounded-full transition-all shrink-0 font-black text-[10px] uppercase tracking-widest",
                                         selectedMember === user?.id
-                                            ? "bg-primary-600 text-white shadow-md shadow-primary-200"
-                                            : "bg-slate-50 dark:bg-slate-800 text-slate-600 hover:bg-slate-100"
+                                            ? "bg-primary-600 text-white shadow-lg shadow-primary-500/30"
+                                            : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100 border border-slate-100 dark:border-slate-700"
                                     )}
                                 >
-                                    Own
+                                    Me
                                 </Button>
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold ml-1">Status</Label>
-                            <div className="flex gap-2">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1">Status</Label>
+                            <div className="flex gap-2.5">
                                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                                    <SelectTrigger className="h-10 bg-slate-50 border-none dark:bg-slate-800 flex-1">
-                                        <SelectValue placeholder="All Status" />
+                                    <SelectTrigger className="h-11 bg-slate-50/50 border-none dark:bg-slate-800/50 flex-1 rounded-2xl text-[12px] font-bold px-5">
+                                        <SelectValue placeholder="All" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectContent className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-xl">
+                                        <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest py-2.5">All Status</SelectItem>
+                                        <SelectItem value="pending" className="text-xs font-bold uppercase tracking-widest py-2.5">Pending</SelectItem>
+                                        <SelectItem value="completed" className="text-xs font-bold uppercase tracking-widest py-2.5">Completed</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button
                                     onClick={handleExportExcel}
-                                    className="h-10 px-4 shadow-lg shadow-primary-200 dark:shadow-none bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl border-none flex items-center gap-2"
+                                    className="h-11 w-11 shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl border-none shrink-0 flex items-center justify-center transition-all active:scale-95"
                                 >
-                                    <Download size={16} />
-                                    <span className="hidden 2xl:inline">Export</span>
+                                    <Download size={18} />
                                 </Button>
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold ml-1">Search</Label>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1">Search Analytics</Label>
                             <div className="relative">
-                                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
-                                    placeholder="Task name..."
-                                    className="pl-9 h-10 bg-slate-50 border-none dark:bg-slate-800"
+                                    placeholder="Filter by title..."
+                                    className="pl-11 h-11 bg-slate-50/50 border-none dark:bg-slate-800/50 rounded-2xl text-[12px] font-bold ring-offset-white focus-visible:ring-2 focus-visible:ring-primary-500/10 placeholder:text-slate-300 transition-all"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -351,27 +352,27 @@ const Reports = () => {
             </Card>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                 >
-                    <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-gradient-to-br from-indigo-600 to-indigo-800 text-white overflow-hidden relative group h-32">
-                        <div className="absolute top-0 right-0 p-4 opacity-20 transition-transform group-hover:scale-125 duration-500">
-                            <Activity size={80} />
+                    <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-gradient-to-br from-primary-600 to-primary-800 text-white overflow-hidden relative group h-24 lg:h-32">
+                        <div className="absolute top-0 right-0 p-2 lg:p-4 opacity-20 transition-transform group-hover:scale-125 duration-500">
+                            <Activity size={60} className="lg:size-[80px]" />
                         </div>
-                        <CardContent className="p-6 relative z-10 h-full flex flex-col justify-between">
+                        <CardContent className="p-4 lg:p-6 relative z-10 h-full flex flex-col justify-between">
                             <div>
-                                <p className="text-[10px] font-black text-indigo-100 uppercase tracking-[0.2em] opacity-80">Total Throughput</p>
-                                <div className="flex items-baseline gap-2 mt-1">
-                                    <span className="text-4xl font-black">{reportStats.total}</span>
-                                    <span className="text-xs font-bold text-indigo-200 opacity-60">Operations</span>
+                                <p className="text-[8px] lg:text-[10px] font-black text-indigo-100 uppercase tracking-[0.2em] opacity-80">Throughput</p>
+                                <div className="flex items-baseline gap-1 lg:gap-2 mt-0.5 sm:mt-1">
+                                    <span className="text-xl lg:text-4xl font-black">{reportStats.total}</span>
+                                    <span className="text-[8px] lg:text-xs font-bold text-indigo-200 opacity-60">Tasks</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-300">
-                                <TrendingUp size={12} />
-                                <span>+12.5% productivity increase</span>
+                            <div className="flex items-center gap-1 text-[8px] lg:text-[10px] font-bold text-emerald-300">
+                                <TrendingUp size={10} className="lg:size-3" />
+                                <span className="truncate">+12% productivity</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -382,19 +383,19 @@ const Reports = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                 >
-                    <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-gradient-to-br from-emerald-500 to-emerald-700 text-white overflow-hidden relative group h-32">
-                        <div className="absolute top-0 right-0 p-4 opacity-20 transition-transform group-hover:scale-125 duration-500">
-                            <CheckCircle size={80} />
+                    <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-gradient-to-br from-emerald-500 to-emerald-700 text-white overflow-hidden relative group h-24 lg:h-32">
+                        <div className="absolute top-0 right-0 p-2 lg:p-4 opacity-20 transition-transform group-hover:scale-125 duration-500">
+                            <CheckCircle size={60} className="lg:size-[80px]" />
                         </div>
-                        <CardContent className="p-6 relative z-10 h-full flex flex-col justify-between">
+                        <CardContent className="p-4 lg:p-6 relative z-10 h-full flex flex-col justify-between">
                             <div>
-                                <p className="text-[10px] font-black text-emerald-50 text-white/80 uppercase tracking-[0.2em]">Efficiency Metric</p>
-                                <div className="flex items-baseline gap-2 mt-1">
-                                    <span className="text-4xl font-black">{reportStats.completionRate}%</span>
-                                    <span className="text-xs font-bold text-emerald-100 opacity-60">Completion Rate</span>
+                                <p className="text-[8px] lg:text-[10px] font-black text-emerald-50 text-white/80 uppercase tracking-[0.2em]">Efficiency</p>
+                                <div className="flex items-baseline gap-1 lg:gap-2 mt-0.5 sm:mt-1">
+                                    <span className="text-xl lg:text-4xl font-black">{reportStats.completionRate}%</span>
+                                    <span className="text-[8px] lg:text-xs font-bold text-emerald-100 opacity-60">Success</span>
                                 </div>
                             </div>
-                            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden mt-2">
+                            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden mt-1 lg:mt-2">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${reportStats.completionRate}%` }}
@@ -407,18 +408,18 @@ const Reports = () => {
             </div>
 
             {/* Detailed Table */}
-            <Card className="border-none shadow-md shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6 border-b border-slate-50 dark:border-slate-800">
                     <div>
-                        <CardTitle className="text-lg font-bold">
-                            {reportType === 'overview' ? 'Task Details' : reportType === 'employees' ? 'Employee Performance' : 'Manager Performance'}
+                        <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-tight">
+                            {reportType === 'overview' ? 'Task Analysis' : reportType === 'employees' ? 'Staff Performance' : 'Leader Metrics'}
                         </CardTitle>
-                        <CardDescription>
-                            {reportType === 'overview' ? 'Line items based on selected filters' : 'Performance metrics for the selected period'}
+                        <CardDescription className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-0.5">
+                            Detailed performance deep-dive
                         </CardDescription>
                     </div>
-                    <Badge variant="outline" className="bg-primary-50 text-primary-600 border-primary-100">
-                        {reportType === 'overview' ? `${filteredData.length} Tasks` : reportType === 'employees' ? `${employees.length} Members` : `${managers.length} Leaders`}
+                    <Badge variant="outline" className="bg-primary-50 dark:bg-primary-900/10 text-primary-600 border-none shadow-none font-black text-[9px] uppercase tracking-widest px-2.5">
+                        {reportType === 'overview' ? `${filteredData.length} Items` : reportType === 'employees' ? `${employees.length} Staff` : `${managers.length} Lead`}
                     </Badge>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -426,20 +427,20 @@ const Reports = () => {
                         <Table>
                             <TableHeader>
                                 {reportType === 'overview' ? (
-                                    <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800">
-                                        <TableHead className="pl-4 md:pl-6 min-w-[250px]">Task Name</TableHead>
-                                        <TableHead className="min-w-[150px]">Assigned To</TableHead>
-                                        <TableHead className="min-w-[140px]">Created Date</TableHead>
-                                        <TableHead className="min-w-[120px]">Status</TableHead>
-                                        <TableHead className="text-right pr-4 md:pr-6 min-w-[100px]">Efficiency</TableHead>
+                                    <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                        <TableHead className="pl-4 md:pl-6 min-w-[200px] text-[10px] font-black uppercase tracking-widest text-slate-400">Name</TableHead>
+                                        <TableHead className="min-w-[140px] text-[10px] font-black uppercase tracking-widest text-slate-400">Assignment</TableHead>
+                                        <TableHead className="min-w-[120px] text-[10px] font-black uppercase tracking-widest text-slate-400">Schedule</TableHead>
+                                        <TableHead className="min-w-[100px] text-[10px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
+                                        <TableHead className="text-right pr-4 md:pr-6 min-w-[90px] text-[10px] font-black uppercase tracking-widest text-slate-400">Rate</TableHead>
                                     </TableRow>
                                 ) : (
-                                    <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800">
-                                        <TableHead className="pl-4 md:pl-6 min-w-[200px]">{reportType === 'employees' ? 'Employee' : 'Manager'}</TableHead>
-                                        <TableHead className="min-w-[150px]">Department</TableHead>
-                                        <TableHead className="min-w-[100px]">Total Tasks</TableHead>
-                                        <TableHead className="min-w-[100px]">Completed</TableHead>
-                                        <TableHead className="text-right pr-4 md:pr-6 min-w-[120px]">Success Rate</TableHead>
+                                    <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                        <TableHead className="pl-4 md:pl-6 min-w-[180px] text-[10px] font-black uppercase tracking-widest text-slate-400">{reportType === 'employees' ? 'Member' : 'Leader'}</TableHead>
+                                        <TableHead className="min-w-[140px] text-[10px] font-black uppercase tracking-widest text-slate-400">Dept.</TableHead>
+                                        <TableHead className="min-w-[80px] text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Tasks</TableHead>
+                                        <TableHead className="min-w-[80px] text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Done</TableHead>
+                                        <TableHead className="text-right pr-4 md:pr-6 min-w-[100px] text-[10px] font-black uppercase tracking-widest text-slate-400">Success</TableHead>
                                     </TableRow>
                                 )}
                             </TableHeader>
@@ -464,18 +465,17 @@ const Reports = () => {
                                                     transition={{ delay: index * 0.03 }}
                                                     className="border-slate-50 dark:border-slate-800 group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
                                                 >
-                                                    <TableCell className="pl-4 md:pl-6 font-bold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">
+                                                    <TableCell className="pl-4 md:pl-6 font-black text-xs text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors uppercase tracking-tight">
                                                         {data.title}
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-1.5">
-                                                            <div className="flex items-center gap-1 max-w-[140px] overflow-hidden">
+                                                            <div className="flex items-center gap-1 max-w-[130px] overflow-hidden">
                                                                 {data.assignedTo.slice(0, 2).map((id, i) => {
                                                                     const emp = employees.find(e => e.id === id);
                                                                     return (
-                                                                        <span key={id} className="text-[11px] font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                                                                        <span key={id} className="text-[9px] font-black text-slate-500 whitespace-nowrap bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                                                             {emp?.name.split(' ')[0]}
-                                                                            {i === 0 && data.assignedTo.length > 1 && data.assignedTo.length === 2 ? "" : ""}
                                                                         </span>
                                                                     );
                                                                 })}
@@ -513,19 +513,18 @@ const Reports = () => {
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-xs font-medium text-slate-500">
+                                                    <TableCell className="text-[10px] font-bold text-slate-400">
                                                         <div className="flex items-center gap-1.5">
-                                                            <Clock size={12} className="opacity-40" />
-                                                            {format(new Date(data.createdAt), 'MMM dd, yyyy')}
+                                                            {format(new Date(data.createdAt), 'MMM dd')}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant={data.status === 'completed' ? 'default' : 'secondary'} className={cn("text-[9px] font-black h-5 uppercase tracking-tighter", data.status === 'completed' ? "bg-emerald-500/90 hover:bg-emerald-600" : "")}>
+                                                        <Badge variant={data.status === 'completed' ? 'default' : 'secondary'} className={cn("text-[9px] font-black h-5 uppercase tracking-tighter px-1.5 border-none shadow-none", data.status === 'completed' ? "bg-emerald-50 text-emerald-600" : "bg-primary-50 text-primary-600")}>
                                                             {data.status}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right pr-4 md:pr-6">
-                                                        <span className={cn("text-xs font-black", data.priority === 'urgent' ? "text-red-500" : "text-slate-900 dark:text-slate-400")}>
+                                                        <span className={cn("text-[10px] font-black tracking-tight", data.priority === 'urgent' ? "text-red-500" : "text-slate-900 dark:text-slate-200")}>
                                                             {data.status === 'completed' ? '100%' : '25%'}
                                                         </span>
                                                     </TableCell>
@@ -542,36 +541,36 @@ const Reports = () => {
                                                 className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                             >
                                                 <TableCell className="pl-4 md:pl-6">
-                                                    <div className="flex items-center gap-3">
-                                                        <Avatar className="h-8 w-8 ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <Avatar className="h-7 w-7 ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm shrink-0">
                                                             <AvatarImage src={user.avatar} />
-                                                            <AvatarFallback className="font-bold">{user.name.charAt(0)}</AvatarFallback>
+                                                            <AvatarFallback className="font-black text-xs">{user.name.charAt(0)}</AvatarFallback>
                                                         </Avatar>
-                                                        <div>
-                                                            <p className="text-sm font-black text-slate-900 dark:text-white leading-none">{user.name}</p>
-                                                            <p className="text-[10px] text-slate-400 mt-1 italic font-medium">{user.role}</p>
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-black text-slate-900 dark:text-white leading-tight truncate">{user.name}</p>
+                                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{user.role}</p>
                                                         </div>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{user.department}</TableCell>
-                                                <TableCell className="text-xs font-black text-slate-900 dark:text-white">{user.totalTasks}</TableCell>
-                                                <TableCell className="text-xs font-black text-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/10 text-center w-20 rounded-md">
-                                                    {user.completedTasks}
+                                                <TableCell className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">{user.department}</TableCell>
+                                                <TableCell className="text-[11px] font-black text-slate-900 dark:text-white text-center">{user.totalTasks}</TableCell>
+                                                <TableCell className="text-[11px] font-black text-emerald-600 text-center">
+                                                    <span className="bg-emerald-50 dark:bg-emerald-900/10 px-2 py-0.5 rounded-md">{user.completedTasks}</span>
                                                 </TableCell>
                                                 <TableCell className="text-right pr-4 md:pr-6">
-                                                    <div className="flex items-center justify-end gap-3">
-                                                        <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block shadow-inner">
+                                                    <div className="flex items-center justify-end gap-2.5">
+                                                        <div className="w-12 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${user.completionRate}%` }}
                                                                 transition={{ duration: 1, ease: "easeOut" }}
                                                                 className={cn(
-                                                                    "h-full shadow-[0_0_8px_rgba(0,0,0,0.1)]",
+                                                                    "h-full",
                                                                     user.completionRate > 70 ? "bg-emerald-500" : user.completionRate > 40 ? "bg-amber-500" : "bg-red-500"
                                                                 )}
                                                             />
                                                         </div>
-                                                        <span className="text-xs font-black text-slate-900 dark:text-white">{user.completionRate}%</span>
+                                                        <span className="text-[10px] font-black text-slate-900 dark:text-white">{user.completionRate}%</span>
                                                     </div>
                                                 </TableCell>
                                             </motion.tr>

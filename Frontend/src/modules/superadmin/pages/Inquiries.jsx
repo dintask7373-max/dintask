@@ -20,6 +20,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -80,33 +81,45 @@ const Inquiries = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-3 items-center bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="relative w-full md:w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <Input
-                        placeholder="Search leads..."
-                        className="pl-9 h-10 bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary-500/30 text-sm font-medium"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto no-scrollbar py-0.5">
-                    {['all', 'new', 'replied', 'archived'].map((status) => (
-                        <Button
-                            key={status}
-                            variant={filterStatus === status ? 'default' : 'ghost'}
-                            size="sm"
-                            className={cn(
-                                "text-[10px] font-black uppercase tracking-widest h-8 rounded-lg",
-                                filterStatus === status ? 'bg-primary-600 shadow-md shadow-primary-500/20' : 'text-slate-500 dark:text-slate-400'
-                            )}
-                            onClick={() => setFilterStatus(status)}
-                        >
-                            {status}
-                        </Button>
-                    ))}
-                </div>
-            </div>
+            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
+                <CardContent className="p-4 sm:p-5">
+                    <div className="flex flex-col lg:flex-row gap-4 items-end">
+                        <div className="space-y-2 flex-1 w-full">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1">Search Leads</Label>
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                <Input
+                                    placeholder="Search by name, email or company..."
+                                    className="pl-11 h-11 bg-slate-50/50 dark:bg-slate-800/50 border-none rounded-2xl text-[12px] font-bold ring-offset-white focus-visible:ring-2 focus-visible:ring-primary-500/10 placeholder:text-slate-300 transition-all"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2 w-full lg:w-auto">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1 lg:hidden">Status Filter</Label>
+                            <div className="flex items-center gap-1.5 p-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-x-auto no-scrollbar">
+                                {['all', 'new', 'replied', 'archived'].map((status) => (
+                                    <Button
+                                        key={status}
+                                        variant={filterStatus === status ? 'default' : 'ghost'}
+                                        size="sm"
+                                        className={cn(
+                                            "text-[10px] font-black uppercase tracking-widest h-9 px-4 rounded-xl transition-all",
+                                            filterStatus === status
+                                                ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'
+                                        )}
+                                        onClick={() => setFilterStatus(status)}
+                                    >
+                                        {status}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 gap-4">
                 <AnimatePresence mode="popLayout">

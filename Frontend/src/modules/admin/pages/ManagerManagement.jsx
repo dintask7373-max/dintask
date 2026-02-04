@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { utils, writeFile } from 'xlsx';
+import { format } from 'date-fns';
 import useManagerStore from '@/store/managerStore';
 import useEmployeeStore from '@/store/employeeStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -44,8 +46,10 @@ const ManagerManagement = () => {
     const { employees } = useEmployeeStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [expandedManager, setExpandedManager] = useState(null);
     const [newManager, setNewManager] = useState({ name: '', email: '', department: '' });
+    const [editingManager, setEditingManager] = useState(null);
     const [parent] = useAutoAnimate();
 
     const filteredManagers = useMemo(() => {
@@ -67,6 +71,40 @@ const ManagerManagement = () => {
         setIsAddModalOpen(false);
     };
 
+    const handleExportExcel = () => {
+        const excelData = filteredManagers.map(mgr => ({
+            'Manager ID': mgr.id,
+            'Name': mgr.name,
+            'Email': mgr.email,
+            'Department': mgr.department,
+            'Team Size': employees.filter(e => e.managerId === mgr.id).length,
+            'Status': mgr.status.toUpperCase(),
+        }));
+
+        const worksheet = utils.json_to_sheet(excelData);
+        const workbook = utils.book_new();
+        utils.book_append_sheet(workbook, worksheet, "Managers");
+        writeFile(workbook, `Managers_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    };
+
+    const handleEditClick = (mgr) => {
+        setEditingManager({ ...mgr });
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdateManager = (e) => {
+        e.preventDefault();
+        if (editingManager) {
+            updateManager(editingManager.id, {
+                name: editingManager.name,
+                email: editingManager.email,
+                department: editingManager.department
+            });
+            setIsEditModalOpen(false);
+            setEditingManager(null);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -82,7 +120,11 @@ const ManagerManagement = () => {
                     </div>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1">
-                    <Button variant="outline" className="flex-1 md:flex-none h-9 sm:h-11 px-3 sm:px-4 gap-2 border-slate-100 dark:border-slate-800 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest whitespace-nowrap">
+                    <Button
+                        variant="outline"
+                        onClick={handleExportExcel}
+                        className="flex-1 md:flex-none h-9 sm:h-11 px-3 sm:px-4 gap-2 border-slate-100 dark:border-slate-800 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest whitespace-nowrap"
+                    >
                         <Download size={14} className="sm:w-[18px] sm:h-[18px]" />
                         <span>Export</span>
                     </Button>
@@ -204,7 +246,12 @@ const ManagerManagement = () => {
                                             </td>
                                             <td className="p-5 text-right">
                                                 <div className="flex justify-end gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"
+                                                        onClick={() => handleEditClick(mgr)}
+                                                    >
                                                         <Edit2 size={14} />
                                                     </Button>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" onClick={() => navigate('/admin/chat')}>
@@ -307,7 +354,15 @@ const ManagerManagement = () => {
                                 <div className="flex items-center justify-between pt-1">
                                     <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest h-5">Manager</Badge>
                                     <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-slate-400 hover:text-primary-600 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditClick(mgr);
+                                            }}
+                                        >
                                             <Edit2 size={12} />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 rounded-lg bg-slate-50 dark:bg-slate-800/50" onClick={() => navigate('/admin/chat')}>
@@ -376,6 +431,52 @@ const ManagerManagement = () => {
                             <Button type="submit" className="rounded-xl h-11 px-6 bg-primary-600 hover:bg-primary-700">Create Manager</Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Manager Dialog */}
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent className="sm:max-w-md rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Manager Details</DialogTitle>
+                        <DialogDescription>Update the information for {editingManager?.name}.</DialogDescription>
+                    </DialogHeader>
+                    {editingManager && (
+                        <form onSubmit={handleUpdateManager} className="space-y-4 py-4">
+                            <div className="grid gap-2 text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
+                                <Input
+                                    value={editingManager.name}
+                                    onChange={(e) => setEditingManager({ ...editingManager, name: e.target.value })}
+                                    className="rounded-xl h-11"
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2 text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Email Address</label>
+                                <Input
+                                    type="email"
+                                    value={editingManager.email}
+                                    onChange={(e) => setEditingManager({ ...editingManager, email: e.target.value })}
+                                    className="rounded-xl h-11"
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2 text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Department</label>
+                                <Input
+                                    value={editingManager.department}
+                                    onChange={(e) => setEditingManager({ ...editingManager, department: e.target.value })}
+                                    className="rounded-xl h-11"
+                                    required
+                                />
+                            </div>
+                            <DialogFooter className="pt-4">
+                                <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl h-11 px-6">Cancel</Button>
+                                <Button type="submit" className="rounded-xl h-11 px-6 bg-primary-600 hover:bg-primary-700">Save Changes</Button>
+                            </DialogFooter>
+                        </form>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
