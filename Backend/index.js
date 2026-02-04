@@ -17,7 +17,7 @@ const app = express();
 dbConnect();
 
 // ✅ CORS
-app.use(cors({ origin: "*" }));
+app.use(cors());
 
 
 // ============================
@@ -30,6 +30,9 @@ app.post(
 );
 
 
+app.get("/test", (req, res) => {
+  res.send("Main router working");
+});
 // ============================
 // ✅ Normal Middlewares AFTER webhook
 // ============================

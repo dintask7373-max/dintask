@@ -10,8 +10,9 @@ import {
   changePassword,
   teamMembers,
   getTeamProgressData,
-  getManagerReports
+  getManagerReports,
 } from "../Controllers/ManagerCtrl.js";
+import { joinWorkspace } from "../Controllers/AuthCtrl.js";
 
 const router = express.Router();
 
@@ -31,5 +32,6 @@ router.post("/changePassword", ManagerMiddleware, isManager, changePassword);
 router.get("/teamMembers", ManagerMiddleware, isManager, teamMembers);
 router.get("/teamProgress", ManagerMiddleware, isManager, getTeamProgressData);
 router.get("/managerReports", ManagerMiddleware, isManager, getManagerReports);
+router.post("/join-workspace", ManagerMiddleware, joinWorkspace);
 
 export default router;

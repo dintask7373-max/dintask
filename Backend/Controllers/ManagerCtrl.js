@@ -68,6 +68,7 @@ export const createManager = async (req, res) => {
       success: true,
       message: "Manager created successfully",
       data: manager,
+      password: password
     });
   } catch (error) {
     res
@@ -92,7 +93,7 @@ export const getAllManagers = async (req, res) => {
 
         const totalTeam = teamMembers.length;
         const activeTeam = teamMembers.filter(emp => emp.isActive).length;
-        const employeeCount = totalTeam; 
+        const employeeCount = totalTeam;
 
         return {
           ...manager.toObject(),
@@ -501,11 +502,11 @@ export const getManagerReports = async (req, res) => {
     const dayWiseCompleted = {};
 
     weekCompletedTasks.forEach(task => {
-      const day = dayjs(task.updatedAt).format("dddd"); 
+      const day = dayjs(task.updatedAt).format("dddd");
       dayWiseCompleted[day] = (dayWiseCompleted[day] || 0) + 1;
     });
 
-    const weekDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const weekDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
     const weeklyReport = weekDays.map(day => ({
       day,

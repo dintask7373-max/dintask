@@ -31,9 +31,10 @@ export const isEmployee = asyncHandler(async (req, res, next) => {
 
   const { email } = req.user;
   const user = await Employee.findOne({ email });
-  if (!user || user.role !== "employee") {
-    return res.status(401).json({ message: "You are not an employee!" });
+  // Allow if role is 'employee' OR 'sales'
+  if (!user || (user.role !== "employee" && user.role !== "sales")) {
+    return res.status(401).json({ message: "You are not an employee or sales user!" });
   }
-  
+
   next();
 });

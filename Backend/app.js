@@ -9,6 +9,8 @@ import SubscriptionRouter from "./Routers/SubscriptionRouter.js";
 import EventRouter from "./Routers/EventRouter.js";
 import NotesRouter from "./Routers/NotesRouter.js";
 import DashboardRouter from "./Routers/DashboardRouter.js";
+import SalesRouter from "./Routers/SalesRouter.js"
+
 
 
 import { subscriptionExpiryCron } from "./Cron/SubscriptionCron.js";
@@ -27,5 +29,7 @@ router.use("/api/v1/subscription", SubscriptionRouter);
 router.use("/api/v1/event", EventRouter);
 router.use("/api/v1/notes", NotesRouter);
 router.use("/api/v1/dashboard", DashboardRouter);
+router.use("/api/v1/sales", SalesRouter);
+
 
 export default router;

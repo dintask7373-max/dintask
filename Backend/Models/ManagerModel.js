@@ -7,7 +7,7 @@ const managerSchema = new mongoose.Schema(
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
-      required: true,
+      // required: true, // Made optional for invite flow
     },
 
     fullName: {
@@ -48,6 +48,10 @@ const managerSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: "",
+    },
+    isWorkspaceVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
