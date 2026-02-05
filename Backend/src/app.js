@@ -1,0 +1,53 @@
+const express = require('express');
+const dotenv = require('dotenv');
+const cors = require('cors');
+const connectDB = require('./config/db');
+
+// Load env vars
+dotenv.config();
+
+// Connect to database
+connectDB();
+
+const app = express();
+
+const errorHandler = require('./middleware/error');
+
+// Body parser
+app.use(express.json());
+
+// Enable CORS
+app.use(cors());
+
+// Routes files
+const auth = require('./routes/authRoutes');
+const employee = require('./routes/employeeRoutes');
+const sales = require('./routes/salesExecutiveRoutes');
+const manager = require('./routes/managerRoutes');
+const admin = require('./routes/adminRoutes');
+const superAdmin = require('./routes/superAdminRoutes');
+
+// Mount routers
+app.use('/api/v1/auth', auth);
+app.use('/api/v1/employee', employee);
+app.use('/api/v1/sales', sales);
+app.use('/api/v1/manager', manager);
+app.use('/api/v1/admin', admin);
+app.use('/api/v1/superadmin', superAdmin);
+
+app.use(errorHandler);
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to DinTask API' });
+});
+
+// Basic Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    error: err.message || 'Server Error'
+  });
+});
+
+module.exports = app;
