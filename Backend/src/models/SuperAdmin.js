@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const SuperAdminSchema = new mongoose.Schema({
   name: {
@@ -19,6 +20,10 @@ const SuperAdminSchema = new mongoose.Schema({
     select: false
   },
   phoneNumber: String,
+  profileImage: {
+    type: String,
+    default: 'https://res.cloudinary.com/demo/image/upload/v1574026613/profile.jpg' // Default Cloudinary image or similar
+  },
   role: {
     type: String,
     default: 'super_admin'
@@ -26,7 +31,9 @@ const SuperAdminSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date
 }, { timestamps: true });
 
 SuperAdminSchema.pre('save', async function (next) {
@@ -37,6 +44,23 @@ SuperAdminSchema.pre('save', async function (next) {
 
 SuperAdminSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generate and hash password token
+SuperAdminSchema.methods.getResetPasswordToken = function () {
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set expire (10 minutes)
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 module.exports = mongoose.model('SuperAdmin', SuperAdminSchema);
