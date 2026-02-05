@@ -134,7 +134,7 @@ const LandingPage = () => {
 
                     {/* Desktop Nav */}
                     <div className="hidden lg:flex items-center gap-8">
-                        {['Features', 'Demo', 'Pricing', 'Resources', 'Contact'].map((item) => (
+                        {['Features', 'Pricing', 'Contact'].map((item) => (
                             <button
                                 key={item}
                                 onClick={() => item === 'Contact' ? navigate('/contact') : document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}
@@ -149,7 +149,7 @@ const LandingPage = () => {
                         <Button variant="ghost" onClick={() => navigate('/admin/login')} className="font-bold uppercase tracking-widest text-xs">
                             Login
                         </Button>
-                        <Button onClick={() => navigate('/employee/register')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
+                        <Button onClick={() => navigate('/admin/login')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
                             Try For Free
                         </Button>
                     </div>
@@ -169,7 +169,7 @@ const LandingPage = () => {
                             exit={{ opacity: 0, height: 0 }}
                             className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-8 space-y-6"
                         >
-                            {['Features', 'Demo', 'Pricing', 'Resources', 'Contact'].map((item) => (
+                            {['Features', 'Pricing', 'Contact'].map((item) => (
                                 <button
                                     key={item}
                                     onClick={() => {
@@ -186,7 +186,7 @@ const LandingPage = () => {
                                 <Button variant="outline" onClick={() => navigate('/admin/login')} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest">
                                     Login
                                 </Button>
-                                <Button onClick={() => navigate('/employee/register')} className="w-full h-12 rounded-xl bg-primary-600 font-bold uppercase tracking-widest">
+                                <Button onClick={() => navigate('/admin/login')} className="w-full h-12 rounded-xl bg-primary-600 font-bold uppercase tracking-widest">
                                     Sign Up
                                 </Button>
                             </div>
@@ -196,7 +196,7 @@ const LandingPage = () => {
             </nav>
 
             {/* Hero Section */}
-            <section id="features" className="pt-40 pb-24 px-6 overflow-hidden bg-white dark:bg-slate-950">
+            <section className="pt-40 pb-24 px-6 overflow-hidden bg-white dark:bg-slate-950">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
                     {/* Left Side: Strategic Ecosystem Infographic */}
                     <motion.div
@@ -216,7 +216,7 @@ const LandingPage = () => {
                             An all-in-one workspace designed to break down silos and boost efficiency. Experience total control over your business operations.
                         </p>
                         {/* Strategic Ecosystem Infographic */}
-                        <div className="relative mt-16 h-[520px] w-full group scale-[0.8] lg:scale-[0.85] origin-left flex">
+                        <div id="features" className="relative mt-16 h-[520px] w-full group scale-[0.8] lg:scale-[0.85] origin-left flex scroll-mt-24">
                             {/* Left Side: The Infographic Core */}
                             <div className="relative w-[500px] shrink-0">
                                 {/* Infographic Path (Semi-circle) */}
@@ -414,117 +414,88 @@ const LandingPage = () => {
             </section>
 
             {/* Product Slider Section - Refined Tactical Interface */}
-            <section id="tactical" className="py-12 bg-slate-50 dark:bg-slate-900/30 overflow-hidden">
-                <div className="max-w-7xl mx-auto px-6 mb-8 flex items-end justify-between">
-                    <div>
-                        <Badge className="bg-primary-600/10 text-primary-600 border-none px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest mb-3">
+            <section id="tactical" className="py-24 bg-white dark:bg-slate-950 overflow-hidden scroll-mt-20">
+                <div className="max-w-7xl mx-auto px-6">
+                    {/* Centered Header */}
+                    <div className="text-center mb-20">
+                        <Badge className="bg-primary-600/10 text-primary-600 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest mb-4">
                             Tactical Preview
                         </Badge>
-                        <h2 className="text-3xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                        <h2 className="text-5xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter mb-8 leading-[1.1]">
                             The Tactical <span className="text-primary-600 italic">Interface.</span>
                         </h2>
+                        <div className="flex justify-center gap-2">
+                            {showcaseImages.map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`h-1.5 rounded-full transition-all duration-500 ${currentImage === i ? 'w-10 bg-primary-600' : 'w-3 bg-slate-200 dark:bg-slate-800'}`}
+                                />
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex gap-1.5 pb-2">
-                        {showcaseImages.map((_, i) => (
-                            <div
-                                key={i}
-                                className={`h-1 rounded-full transition-all duration-500 ${currentImage === i ? 'w-8 bg-primary-600' : 'w-2 bg-slate-300 dark:bg-slate-700'}`}
-                            />
-                        ))}
-                    </div>
-                </div>
 
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="relative h-[300px] lg:h-[480px] w-full">
-                        <AnimatePresence mode='wait'>
-                            <motion.div
-                                key={currentImage}
-                                initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.98, y: -10 }}
-                                transition={{ duration: 0.6, ease: "easeOut" }}
-                                className="absolute inset-0 h-full w-full"
+                    <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16 items-center">
+                        {/* Left Side: Video (No background/card) */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="relative overflow-hidden max-w-sm mx-auto lg:max-w-none"
+                        >
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal"
                             >
-                                {/* Browser Frame Style */}
-                                <div className="w-full h-full rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col">
-                                    {/* Handlebar/Header */}
-                                    <div className="h-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 gap-1.5">
-                                        <div className="size-2 rounded-full bg-red-400/50" />
-                                        <div className="size-2 rounded-full bg-amber-400/50" />
-                                        <div className="size-2 rounded-full bg-emerald-400/50" />
-                                        <div className="ml-4 h-4 w-48 bg-slate-200/50 dark:bg-slate-700/50 rounded-full" />
-                                    </div>
-                                    <div className="relative flex-1 overflow-hidden">
-                                        <img
-                                            src={showcaseImages[currentImage]}
-                                            alt="Dashboard Preview"
-                                            className="w-full h-full object-cover object-top"
-                                        />
-                                        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
-                                            <div>
-                                                <p className="text-[10px] font-black text-primary-400 uppercase tracking-widest mb-1">Module 0{currentImage + 1}</p>
-                                                <h3 className="text-xl font-black text-white italic tracking-tighter">Live System Analytics</h3>
+                                <source src="/src/assets/team-meeting-animation-gif-download-14066386.mp4" type="video/mp4" />
+                            </video>
+                        </motion.div>
+
+                        <div className="space-y-6">
+
+                            <div className="relative h-[300px] lg:h-[450px] w-full">
+                                <AnimatePresence mode='wait'>
+                                    <motion.div
+                                        key={currentImage}
+                                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                                        transition={{ duration: 0.6, ease: "easeOut" }}
+                                        className="absolute inset-0 h-full w-full"
+                                    >
+                                        {/* Browser Frame Style */}
+                                        <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col">
+                                            {/* Handlebar/Header */}
+                                            <div className="h-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center px-3 gap-1">
+                                                <div className="size-1.5 rounded-full bg-red-400/50" />
+                                                <div className="size-1.5 rounded-full bg-amber-400/50" />
+                                                <div className="size-1.5 rounded-full bg-emerald-400/50" />
+                                            </div>
+                                            <div className="relative flex-1 overflow-hidden">
+                                                <img
+                                                    src={showcaseImages[currentImage]}
+                                                    alt="Dashboard Preview"
+                                                    className="w-full h-full object-cover object-top"
+                                                />
+                                                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-6">
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-primary-400 uppercase tracking-widest mb-0.5">Module 0{currentImage + 1}</p>
+                                                        <h3 className="text-sm font-black text-white italic tracking-tighter">Live System Analytics</h3>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </AnimatePresence>
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* Impact Section Inspired by Image 2 */}
-            <section className="py-32 bg-blue-600 relative overflow-hidden">
-                <div className="absolute top-0 right-0 h-full w-1/3 opacity-10 pointer-events-none">
-                    <svg viewBox="0 0 400 600" className="h-full w-full object-cover">
-                        <path d="M100 0 L400 0 L400 600 L0 600 Z" fill="white" />
-                    </svg>
-                </div>
 
-                <div className="max-w-7xl mx-auto px-6 relative z-10 text-white">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="max-w-3xl mb-24"
-                    >
-                        <h2 className="text-5xl lg:text-7xl font-black leading-tight tracking-tighter mb-8">
-                            Made in Innovation. <br />
-                            Made for the Worldwide Enterprise.
-                        </h2>
-                    </motion.div>
-
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-24">
-                        {[
-                            { val: '25k+', label: 'Users Globally' },
-                            { val: '80+', label: 'Countries Served' },
-                            { val: '1.2M+', label: 'Tasks Completed' },
-                            { val: '24/7', label: 'Tactical Support' }
-                        ].map((stat, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.1 }}
-                                className="space-y-4"
-                            >
-                                <div className="text-5xl lg:text-7xl font-black tracking-tighter border-b-4 border-white inline-block pb-2">
-                                    {stat.val}
-                                </div>
-                                <p className="text-xl font-bold opacity-80 uppercase tracking-widest">{stat.label}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    <div className="mt-24">
-                        <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 h-16 px-10 rounded-2xl font-black text-lg transition-all group">
-                            MORE ABOUT DINTASK <ArrowRight className="ml-3 group-hover:translate-x-2" />
-                        </Button>
-                    </div>
-                </div>
-            </section>
 
             {/* Testimonial inspired by Image 1 */}
             <section id="demo" className="py-20 bg-[#ffcc00] relative overflow-hidden">
@@ -580,7 +551,7 @@ const LandingPage = () => {
 
 
             {/* Pricing Section */}
-            <section id="pricing" className="relative py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden">
+            <section id="pricing" className="relative py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden scroll-mt-20">
                 {/* Background Two-Tone */}
                 < div className="absolute top-0 left-0 w-full h-[50%] bg-[#6374f2] dark:bg-[#4f5ed9]" />
 
@@ -647,13 +618,14 @@ const LandingPage = () => {
 
                                     {/* Action Button */}
                                     <Button
+                                        onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact') : navigate('/employee/register')}
                                         variant={plan.variant}
                                         className={`w-full h-11 rounded-md font-bold text-[10px] uppercase tracking-widest transition-all duration-300 ${plan.popular || i === 0
                                             ? 'bg-[#6374f2] hover:bg-[#4f5ed9] text-white shadow-md'
                                             : 'border-2 border-[#6374f2] text-[#6374f2] bg-transparent hover:bg-[#6374f2] hover:text-white'
                                             }`}
                                     >
-                                        {plan.name === 'Free' ? 'SUBSCRIBE NOW' : 'SUBSCRIBE'}
+                                        {plan.cta}
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -677,7 +649,7 @@ const LandingPage = () => {
                                     Join thousands of managers who have optimized their workforce with DinTask's integrated suite.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <Button onClick={() => navigate('/employee/register')} className="h-16 px-10 bg-primary-600 text-white rounded-2xl font-black text-lg">
+                                    <Button onClick={() => navigate('/admin/login')} className="h-16 px-10 bg-primary-600 text-white rounded-2xl font-black text-lg">
                                         START FREE TRIAL
                                     </Button>
                                     <Button onClick={() => navigate('/contact')} variant="outline" className="h-16 px-10 border-slate-700 text-white dark:text-slate-900 dark:border-slate-200 rounded-2xl font-black text-lg">
@@ -738,7 +710,12 @@ const LandingPage = () => {
                                 <ul className="space-y-4">
                                     {col.links.map(link => (
                                         <li key={link}>
-                                            <a href="#" className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors">{link}</a>
+                                            <button
+                                                onClick={() => link === 'Contact' ? navigate('/contact') : document.getElementById(link.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}
+                                                className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                                            >
+                                                {link}
+                                            </button>
                                         </li>
                                     ))}
                                 </ul>

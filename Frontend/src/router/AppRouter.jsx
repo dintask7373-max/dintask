@@ -120,6 +120,7 @@ import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview'
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
+import ContactPage from '@/modules/public/pages/ContactPage';
 
 // Layouts
 import CRMLayout from '@/shared/layouts/CRMLayout';
@@ -129,6 +130,7 @@ const AppRouter = () => {
         <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/employee/splash" element={<SplashScreen />} />
             <Route path="/employee/success-join" element={<SuccessJoin />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
