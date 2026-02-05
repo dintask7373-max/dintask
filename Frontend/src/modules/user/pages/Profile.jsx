@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     User,
@@ -23,22 +23,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avat
 import { Switch } from "@/shared/components/ui/switch";
 import { Separator } from "@/shared/components/ui/separator";
 import useAuthStore from '@/store/authStore';
-import useEmployeeStore from '@/store/employeeStore';
 import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
 
 const EmployeeProfile = () => {
-    const { user, logout, updateUser } = useAuthStore();
-    const { employees } = useEmployeeStore(); // Re-adding missing import usage if needed, or ignoring if unnecessary context
+    const { user, logout } = useAuthStore();
     const navigate = useNavigate();
     const [isSyncing, setIsSyncing] = useState(false);
-    const fileInputRef = React.useRef(null);
-
-    // Find detailed employee profile based on logged-in user ID
-    const employeeDetails = employees?.find(e => e.id === user?.id) || {
-        role: 'Employee',
-        department: 'General Staff',
-        stats: { rating: 0, tasksCompleted: 0 }
-    };
 
     const handleLogout = async () => {
         const logoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
@@ -51,24 +41,10 @@ const EmployeeProfile = () => {
 
         await logoutPromise;
         logout();
+        // The router will likely redirect to /employee/login automatically due to ProtectedRoute
+        // but explicit navigation is safer for UX transitions
+        // navigate('/employee/login'); 
     };
-
-    const handleImageUpload = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                // In a real app, you would upload 'file' to a server here.
-                // For this demo, we'll use the base64 string directly.
-                const base64String = reader.result;
-                updateUser({ avatar: base64String });
-                toast.success('Profile picture updated!');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    // ... menuItems definition ...
 
     const menuItems = [
         { icon: <User size={18} className="text-blue-500" />, label: 'Personal Information', sub: 'Name, email, and phone', path: '/employee/profile/account' },
@@ -115,30 +91,22 @@ const EmployeeProfile = () => {
                             <div className="relative mb-3">
                                 <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
                                     <Avatar className="h-20 w-20 ring-4 ring-white dark:ring-slate-900 shadow-xl">
-                                        <AvatarImage src={user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
+                                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
                                         <AvatarFallback className="bg-primary-600 text-white font-black text-xl">{user?.name?.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 </motion.div>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleImageUpload}
-                                    className="hidden"
-                                    accept="image/*"
-                                />
-                                <motion.button
+                                <motion.div
                                     whileHover={{ scale: 1.2 }}
                                     whileTap={{ scale: 0.9 }}
                                     className="absolute bottom-0 right-0 cursor-pointer"
-                                    onClick={() => fileInputRef.current.click()}
                                 >
                                     <div className="h-7 w-7 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
                                         <Camera size={14} className="text-slate-900 dark:text-white" />
                                     </div>
-                                </motion.button>
+                                </motion.div>
                             </div>
                             <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{user?.name}</h3>
-                            <p className="text-xs text-slate-500 font-medium">Employee • Marketing Team</p>
+                            <p className="text-xs text-slate-500 font-medium">Employee â€¢ Marketing Team</p>
 
                             <div className="flex gap-4 mt-6 w-full">
                                 <div className="flex-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -233,7 +201,7 @@ const EmployeeProfile = () => {
 
             <div className="text-center pb-8">
                 <p className="text-[10px] text-slate-400 font-medium">Version 1.0.4 (Build 82910)</p>
-                <p className="text-[10px] text-slate-400">© 2026 DinTask CRM Inc.</p>
+                <p className="text-[10px] text-slate-400">Â© 2026 DinTask CRM Inc.</p>
             </div>
         </div>
     );

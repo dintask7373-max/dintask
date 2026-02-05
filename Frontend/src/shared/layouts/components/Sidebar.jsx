@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -24,7 +24,11 @@ import {
     TrendingUp,
     UserPlus,
     MessageSquare,
-    Lock
+    Lock,
+    LifeBuoy,
+    History,
+    Receipt,
+    Activity
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Button } from '@/shared/components/ui/button';
@@ -107,6 +111,10 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Dashboard', path: '/superadmin', icon: LayoutDashboard },
                 { name: 'Inquiries', path: '/superadmin/inquiries', icon: ListChecks },
                 { name: 'Admins', path: '/superadmin/admins', icon: Users },
+                { name: 'Global Users', path: '/superadmin/users', icon: Activity },
+                { name: 'Billing', path: '/superadmin/billing', icon: Receipt },
+                { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
+                { name: 'History', path: '/superadmin/history', icon: History },
                 { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
                 { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
             ]
@@ -150,14 +158,14 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                     {!isCollapsed && (
                         <div className="flex items-center gap-3 font-black text-xl text-slate-900 dark:text-white tracking-tighter">
                             <div className="h-9 w-9 rounded-xl overflow-hidden shadow-sm border border-slate-100">
-                                <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
                             </div>
                             <span>DinTask</span>
                         </div>
                     )}
                     {isCollapsed && (
                         <div className="h-10 w-10 rounded-xl overflow-hidden mx-auto shadow-sm border border-slate-100">
-                            <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
                         </div>
                     )}
 

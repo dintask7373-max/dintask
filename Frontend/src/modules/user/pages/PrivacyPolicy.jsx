@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -40,7 +40,7 @@ const PrivacyPolicy = () => {
                         </div>
                         <div>
                             <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-2">2. How We Use Your Information</h3>
-                            <p>We use the information we collect to provide, maintain, and improve our services, to develop new ones, and to protect DinTask and our users. We also use this information to offer you tailored content – like giving you more relevant search results and ads.</p>
+                            <p>We use the information we collect to provide, maintain, and improve our services, to develop new ones, and to protect DinTask and our users. We also use this information to offer you tailored content â€“ like giving you more relevant search results and ads.</p>
                         </div>
                         <div>
                             <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-2">3. Data Security</h3>

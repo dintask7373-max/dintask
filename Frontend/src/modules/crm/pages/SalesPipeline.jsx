@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -219,7 +219,7 @@ const SalesPipeline = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 sm:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
         <div className="flex items-center gap-3 px-1">
           <div className="lg:hidden size-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-            <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
           </div>
           <div>
             <h1 className="text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">Sales <span className="text-primary-600">Pipeline</span></h1>
@@ -279,7 +279,7 @@ const SalesPipeline = () => {
                   )} style={{ width: '100%' }} />
                 </div>
                 <div className="mt-2 text-[10px] font-black text-slate-400 flex items-center gap-1 uppercase tracking-widest">
-                  Val: <span className="text-slate-900 dark:text-white">₹{totalValue.toLocaleString()}</span>
+                  Val: <span className="text-slate-900 dark:text-white">â‚¹{totalValue.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -336,7 +336,7 @@ const SalesPipeline = () => {
                           {Number(lead.amount || 0).toLocaleString()}
                         </div>
                         <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest whitespace-nowrap">
-                          {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : '—'}
+                          {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : 'â€”'}
                         </div>
                       </div>
                     </div>
@@ -353,7 +353,7 @@ const SalesPipeline = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedLead?.status === 'Won' ? '🎉 Deal Won!' : 'Deal Lost'}
+              {selectedLead?.status === 'Won' ? 'ðŸŽ‰ Deal Won!' : 'Deal Lost'}
             </DialogTitle>
             <DialogDescription>
               Please provide a reason or notes for this outcome to verify.
@@ -409,7 +409,7 @@ const SalesPipeline = () => {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amount" className="text-right">Value (₹)</Label>
+              <Label htmlFor="amount" className="text-right">Value (â‚¹)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -471,7 +471,7 @@ const SalesPipeline = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-amount" className="text-right">Value (₹)</Label>
+                <Label htmlFor="edit-amount" className="text-right">Value (â‚¹)</Label>
                 <Input
                   id="edit-amount"
                   type="number"

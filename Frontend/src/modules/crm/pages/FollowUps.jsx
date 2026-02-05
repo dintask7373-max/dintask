@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -14,6 +14,7 @@ import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Search, E
 import { format } from 'date-fns';
 import useCRMStore from '@/store/crmStore';
 import { cn } from '@/shared/utils/cn';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const FollowUps = () => {
   const {
@@ -121,7 +122,7 @@ const FollowUps = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
         <div className="flex items-center gap-3">
           <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-            <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
@@ -294,33 +295,114 @@ const FollowUps = () => {
           </div>
 
           <div className="lg:hidden space-y-3">
-            {filteredFollowUps.map((f) => {
-              const lead = leads.find(l => l.id === f.leadId);
-              return (
-                <div key={f.id} className="p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="text-xs font-black uppercase text-slate-900 dark:text-white leading-none">{lead?.name}</p>
-                      <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mt-1">{lead?.company}</p>
+            <AnimatePresence mode="popLayout">
+              {filteredFollowUps.map((f) => {
+                const lead = leads.find(l => l.id === f.leadId);
+                const isOverdue = new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled';
+
+                return (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    key={f.id}
+                    className="group relative overflow-hidden p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "size-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110",
+                          f.type === 'Call' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20" :
+                            f.type === 'Meeting' ? "bg-amber-50 text-amber-600 dark:bg-amber-900/20" :
+                              f.type === 'Email' ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20" :
+                                "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20"
+                        )}>
+                          {f.type === 'Call' ? <Clock size={18} /> :
+                            f.type === 'Meeting' ? <CalendarIcon size={18} /> :
+                              f.type === 'Email' ? <Search size={18} /> :
+                                <CheckCircle2 size={18} />}
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tight">{lead?.name}</p>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{lead?.company}</p>
+                        </div>
+                      </div>
+                      <Badge className={cn(
+                        "text-[8px] font-black uppercase tracking-widest h-5 px-2",
+                        f.status === 'Completed' ? "bg-emerald-50 text-emerald-600 shadow-none border-none" :
+                          f.status === 'Missed' ? "bg-red-50 text-red-600 shadow-none border-none" :
+                            "bg-primary-50 text-primary-600 shadow-none border-none"
+                      )}>
+                        {f.status}
+                      </Badge>
                     </div>
-                    <Badge className="text-[8px] font-black h-4 px-1">{f.status}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[8px] font-black">{f.type}</Badge>
-                      <p className="text-[9px] font-black text-slate-500 uppercase">{format(new Date(f.scheduledAt), 'MMM d, HH:mm')}</p>
+
+                    <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800">
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Schedule</p>
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={10} className="text-slate-400" />
+                          <p className={cn(
+                            "text-[10px] font-black uppercase tracking-tight",
+                            isOverdue ? "text-red-500" : "text-slate-700 dark:text-slate-200"
+                          )}>
+                            {format(new Date(f.scheduledAt), 'MMM d, HH:mm')}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Interaction</p>
+                        <Badge variant="outline" className="text-[8px] font-black uppercase h-5 border-slate-200 dark:border-slate-700">
+                          {f.type}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(f)}><Edit size={10} /></Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => handleDelete(f.id)}><Trash2 size={10} /></Button>
+
+                    <div className="flex items-center justify-between mt-4 pt-1">
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter italic">
+                        #{f.id.toString().slice(-4)}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                          onClick={() => handleEdit(f)}
+                        >
+                          <Edit size={14} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                          onClick={() => handleDelete(f.id)}
+                        >
+                          <Trash2 size={14} className="text-red-400" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-emerald-500 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                          onClick={() => handleStatusChange(f.id, 'Completed')}
+                        >
+                          <CheckCircle2 size={14} />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
           {filteredFollowUps.length === 0 && (
-            <div className="text-center py-10 text-[10px] font-black uppercase tracking-widest text-slate-400">No active schedule</div>
+            <div className="text-center py-16">
+              <div className="size-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CalendarIcon size={24} className="text-slate-200 dark:text-slate-700" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Zero Operations Found</p>
+              <p className="text-[9px] font-black text-slate-300 mt-1 uppercase">Schedule clear for synchronization</p>
+            </div>
           )}
         </CardContent>
       </Card>

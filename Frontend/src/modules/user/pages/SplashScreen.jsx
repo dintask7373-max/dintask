@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
@@ -91,7 +91,7 @@ const SplashScreen = () => {
                 transition={{ delay: 1.5, duration: 1 }}
                 className="absolute bottom-6 text-xs text-slate-400 dark:text-slate-600 font-medium"
             >
-                v1.0.0 • Powered by DinTask
+                v1.0.0 â€¢ Powered by DinTask
             </motion.div>
         </div>
     );

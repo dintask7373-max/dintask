@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import {
     Plus,
     Search,
@@ -133,7 +133,7 @@ const SalesManagement = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 px-1 sm:px-0">
                     <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
                     </div>
                     <div>
                         <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Sales <span className="text-primary-600">Management</span></h1>
@@ -153,7 +153,7 @@ const SalesManagement = () => {
                         {[
                             { label: 'Total Reps', value: salesReps.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
                             { label: 'Active Deals', value: salesReps.reduce((acc, curr) => acc + (curr.activeDeals || 0), 0), icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                            { label: 'Revenue', value: `₹${(salesReps.reduce((acc, curr) => acc + (curr.totalSales || 0), 0) / 1000).toFixed(0)}K`, icon: IndianRupee, color: 'text-purple-600', bg: 'bg-purple-50' },
+                            { label: 'Revenue', value: `â‚¹${(salesReps.reduce((acc, curr) => acc + (curr.totalSales || 0), 0) / 1000).toFixed(0)}K`, icon: IndianRupee, color: 'text-purple-600', bg: 'bg-purple-50' },
                             { label: 'Conversion', value: `${salesReps.length > 0 ? (salesReps.reduce((acc, curr) => acc + (curr.conversionRate || 0), 0) / salesReps.length).toFixed(0) : 0}%`, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' }
                         ].map((stat, i) => (
                             <Card key={i} className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
@@ -229,7 +229,7 @@ const SalesManagement = () => {
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <IndianRupee size={12} className="text-emerald-500 stroke-[2.5px]" />
-                                                    <span className="text-xs font-black text-emerald-600 tracking-tight">₹{(rep.totalSales || 0).toLocaleString()}</span>
+                                                    <span className="text-xs font-black text-emerald-600 tracking-tight">â‚¹{(rep.totalSales || 0).toLocaleString()}</span>
                                                 </div>
                                             </td>
                                             <td className="p-4">
@@ -380,7 +380,7 @@ const SalesManagement = () => {
                                                     </div>
                                                     <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest">
                                                         <Calendar size={9} />
-                                                        {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : '—'}
+                                                        {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : 'â€”'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -435,7 +435,7 @@ const SalesManagement = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="amount">Value (₹)</Label>
+                                <Label htmlFor="amount">Value (â‚¹)</Label>
                                 <Input id="amount" type="number" value={newDealData.amount} onChange={(e) => setNewDealData({ ...newDealData, amount: e.target.value })} placeholder="50000" />
                             </div>
                             <div className="grid gap-2">

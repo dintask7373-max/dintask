@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, FileText, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -138,8 +138,8 @@ const HelpCenter = () => {
                             <div className="p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl mt-12 space-y-4">
                                 <p className="text-xs font-bold text-center">Was this article helpful?</p>
                                 <div className="flex justify-center gap-4">
-                                    <button className="px-6 py-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm text-xs font-bold hover:bg-slate-100 transition-colors">👍 Yes</button>
-                                    <button className="px-6 py-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm text-xs font-bold hover:bg-slate-100 transition-colors">👎 No</button>
+                                    <button className="px-6 py-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm text-xs font-bold hover:bg-slate-100 transition-colors">ðŸ‘ Yes</button>
+                                    <button className="px-6 py-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm text-xs font-bold hover:bg-slate-100 transition-colors">ðŸ‘Ž No</button>
                                 </div>
                             </div>
                         </motion.div>

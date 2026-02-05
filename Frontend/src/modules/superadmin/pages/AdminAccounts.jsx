@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
     Building2,
     Search,
@@ -11,7 +11,9 @@ import {
     Eye,
     Trash2,
     ChevronRight,
-    UserPlus
+    UserPlus,
+    Plus,
+    ArrowUpRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,6 +44,23 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/shared/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/shared/components/ui/select";
+import { Label } from "@/shared/components/ui/label";
 
 import useSuperAdminStore from '@/store/superAdminStore';
 import { cn } from '@/shared/utils/cn';
@@ -74,6 +93,34 @@ const AdminAccounts = () => {
         suspended: "bg-red-50 text-red-600 border-red-100"
     };
 
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newAdmin, setNewAdmin] = useState({
+        name: '',
+        owner: '',
+        email: '',
+        plan: 'Starter',
+        status: 'pending'
+    });
+
+    const handleAddAdmin = (e) => {
+        e.preventDefault();
+        if (!newAdmin.name || !newAdmin.owner || !newAdmin.email) {
+            toast.error("Please fill all required fields");
+            return;
+        }
+
+        useSuperAdminStore.getState().addAdmin(newAdmin);
+        toast.success("Company account created successfully");
+        setIsAddModalOpen(false);
+        setNewAdmin({
+            name: '',
+            owner: '',
+            email: '',
+            plan: 'Starter',
+            status: 'pending'
+        });
+    };
+
     return (
         <motion.div
             initial="initial"
@@ -90,6 +137,77 @@ const AdminAccounts = () => {
                         Manage client companies & access
                     </p>
                 </div>
+
+                <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="h-11 px-6 bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center gap-2">
+                            <Plus size={18} /> ADD COMPANY
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-8 border-none bg-white dark:bg-slate-900 shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase leading-tight">
+                                Create <span className="text-primary-600">New Admin</span>
+                            </DialogTitle>
+                            <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                Manually provision a new company account
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleAddAdmin} className="space-y-5 pt-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Company Name</Label>
+                                <Input
+                                    placeholder="Enter company name..."
+                                    className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                    value={newAdmin.name}
+                                    onChange={(e) => setNewAdmin({ ...newAdmin, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
+                                    <Input
+                                        placeholder="Full name..."
+                                        className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                        value={newAdmin.owner}
+                                        onChange={(e) => setNewAdmin({ ...newAdmin, owner: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Subscription Plan</Label>
+                                    <Select
+                                        value={newAdmin.plan}
+                                        onValueChange={(val) => setNewAdmin({ ...newAdmin, plan: val })}
+                                    >
+                                        <SelectTrigger className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-xl">
+                                            {useSuperAdminStore.getState().plans.map(plan => (
+                                                <SelectItem key={plan.id} value={plan.name} className="text-xs font-bold rounded-lg">{plan.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</Label>
+                                <Input
+                                    type="email"
+                                    placeholder="admin@company.com"
+                                    className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                    value={newAdmin.email}
+                                    onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                                />
+                            </div>
+                            <div className="pt-2">
+                                <Button type="submit" className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all">
+                                    PROVISION ACCOUNT <ArrowUpRight className="ml-2" size={16} />
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </motion.div>
 
             <motion.div variants={fadeInUp}>
@@ -146,7 +264,7 @@ const AdminAccounts = () => {
                                                         <div className="space-y-0.5 py-0.5">
                                                             <p className="font-black text-slate-900 dark:text-white leading-tight text-[13px] tracking-tight">{adm.name}</p>
                                                             <p className="text-[9px] text-slate-400 flex items-center gap-1 font-bold">
-                                                                {adm.owner} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">•</span> <span className="hidden md:inline">{adm.email}</span>
+                                                                {adm.owner} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">â€¢</span> <span className="hidden md:inline">{adm.email}</span>
                                                             </p>
                                                         </div>
                                                     </TableCell>
@@ -156,7 +274,7 @@ const AdminAccounts = () => {
                                                                 {adm.plan}
                                                             </Badge>
                                                             <p className="text-[10px] text-slate-400 font-bold ml-1">
-                                                                ₹{useSuperAdminStore.getState().plans.find(p => p.name === adm.plan)?.price.toLocaleString('en-IN') || '0'}/mo
+                                                                â‚¹{useSuperAdminStore.getState().plans.find(p => p.name === adm.plan)?.price.toLocaleString('en-IN') || '0'}/mo
                                                             </p>
                                                         </div>
                                                     </TableCell>

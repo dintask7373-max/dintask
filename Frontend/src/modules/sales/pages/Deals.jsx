@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import {
     CheckSquare,
     Filter,
@@ -228,7 +228,7 @@ const Deals = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
                 <div className="flex items-center gap-3">
                     <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
                     </div>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
@@ -255,7 +255,7 @@ const Deals = () => {
                 {[
                     { label: 'Active Pipeline', value: dealStats.activeDeals, icon: IndianRupee, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: 'Force Strength' },
                     { label: 'Strategic Wins', value: dealStats.wonDeals, icon: CheckSquare, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20', trend: 'Conversion' },
-                    { label: 'Total Value', value: `₹${(dealStats.totalValue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', trend: 'Portfolio' },
+                    { label: 'Total Value', value: `â‚¹${(dealStats.totalValue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', trend: 'Portfolio' },
                     { label: 'Efficiency', value: `${dealStats.winRate}%`, icon: ArrowUpRight, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10', trend: 'Success Rate' }
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
@@ -355,7 +355,7 @@ const Deals = () => {
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-6 py-3">
-                                            <p className="text-sm font-black text-slate-900 dark:text-white leading-none">₹{(deal.amount || 0).toLocaleString()}</p>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white leading-none">â‚¹{(deal.amount || 0).toLocaleString()}</p>
                                         </TableCell>
                                         <TableCell className="px-6 py-3">
                                             <Badge className={cn("border-none text-[8px] font-black uppercase tracking-widest h-5 px-2 rounded-lg", getStageColor(deal.status))}>
@@ -393,7 +393,7 @@ const Deals = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none mb-1">{deal.company || deal.name}</p>
-                                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">₹{(deal.amount || 0).toLocaleString()}</p>
+                                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">â‚¹{(deal.amount || 0).toLocaleString()}</p>
                                         </div>
                                     </div>
                                     <Badge className={cn("border-none text-[8px] font-black uppercase tracking-widest h-5 px-2 rounded-lg", getStageColor(deal.status))}>
@@ -438,7 +438,7 @@ const Deals = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Market Valuation</p>
-                                <p className="text-xl font-black text-primary-600 leading-none">₹{(selectedDeal?.amount || 0).toLocaleString()}</p>
+                                <p className="text-xl font-black text-primary-600 leading-none">â‚¹{(selectedDeal?.amount || 0).toLocaleString()}</p>
                             </div>
                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Deployment Stage</p>
@@ -563,7 +563,7 @@ const Deals = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation (₹)</Label>
+                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation (â‚¹)</Label>
                                 <Input
                                     type="number"
                                     value={editDealData.amount}

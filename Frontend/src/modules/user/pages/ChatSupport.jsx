@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, MessageCircle } from 'lucide-react';
 import { Card } from '@/shared/components/ui/card';

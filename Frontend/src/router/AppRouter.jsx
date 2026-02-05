@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import useAuthStore from '@/store/authStore';
@@ -6,7 +6,7 @@ import useAuthStore from '@/store/authStore';
 const NotFoundRedirect = () => {
     const { isAuthenticated, role } = useAuthStore();
 
-    if (!isAuthenticated) return <Navigate to="/employee/splash" replace />;
+    if (!isAuthenticated) return <Navigate to="/" replace />;
 
     const defaultRoute = role === 'superadmin'
         ? '/superadmin'
@@ -113,6 +113,13 @@ import AdminAccounts from '@/modules/superadmin/pages/AdminAccounts';
 import PlansManagement from '@/modules/superadmin/pages/PlansManagement';
 import SuperAdminSettings from '@/modules/superadmin/pages/Settings';
 import Inquiries from '@/modules/superadmin/pages/Inquiries';
+import SuperAdminSupport from '@/modules/superadmin/pages/SupportTickets';
+import SubscriptionHistory from '@/modules/superadmin/pages/SubscriptionHistory';
+import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
+import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
+
+// Public Pages
+import LandingPage from '@/modules/public/pages/LandingPage';
 
 // Layouts
 import CRMLayout from '@/shared/layouts/CRMLayout';
@@ -121,6 +128,7 @@ const AppRouter = () => {
     return (
         <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/employee/splash" element={<SplashScreen />} />
             <Route path="/employee/success-join" element={<SuccessJoin />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
@@ -163,7 +171,7 @@ const AppRouter = () => {
             </Route>
 
             {/* --- EMPLOYEE ROUTES --- */}
-            {/* Main Employee Panel */}
+            {/* Unified Employee Panel including CRM */}
             <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
                 <Route index element={<EmployeeDashboard />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />
@@ -185,15 +193,15 @@ const AppRouter = () => {
                 <Route path="profile/help/terms" element={<TermsOfService />} />
                 <Route path="profile/help/center" element={<HelpCenter />} />
                 <Route path="profile/help/chat" element={<ChatSupport />} />
-            </Route>
 
-            {/* Employee CRM Panel */}
-            <Route path="/employee/crm" element={<ProtectedRoute allowedRoles={['employee']}><CRMLayout role="employee" /></ProtectedRoute>}>
-                <Route index element={<EmployeeCRM />} />
-                <Route path="leads" element={<LeadsManagement />} />
-                <Route path="pipeline" element={<SalesPipeline />} />
-                <Route path="follow-ups" element={<FollowUps />} />
-                <Route path="contacts" element={<Contacts />} />
+                {/* Embedded CRM Routes for Employee */}
+                <Route path="crm">
+                    <Route index element={<EmployeeCRM />} />
+                    <Route path="leads" element={<LeadsManagement />} />
+                    <Route path="pipeline" element={<SalesPipeline />} />
+                    <Route path="follow-ups" element={<FollowUps />} />
+                    <Route path="contacts" element={<Contacts />} />
+                </Route>
             </Route>
 
 
@@ -202,8 +210,12 @@ const AppRouter = () => {
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['superadmin', 'superadmin_employee']}><AdminLayout role="superadmin" /></ProtectedRoute>}>
                 <Route index element={<SuperAdminDashboard />} />
                 <Route path="admins" element={<AdminAccounts />} />
+                <Route path="users" element={<GlobalUsersOverview />} />
                 <Route path="plans" element={<PlansManagement />} />
+                <Route path="billing" element={<BillingPayments />} />
                 <Route path="inquiries" element={<Inquiries />} />
+                <Route path="support" element={<SuperAdminSupport />} />
+                <Route path="history" element={<SubscriptionHistory />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
                 <Route path="calendar" element={<div>System Calendar (Coming Soon)</div>} />

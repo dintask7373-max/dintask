@@ -82,6 +82,22 @@ const useSuperAdminStore = create(
                 }));
             },
 
+            addAdmin: (newAdmin) => {
+                set((state) => ({
+                    admins: [
+                        {
+                            ...newAdmin,
+                            id: `adm-${Date.now()}`,
+                            joinedDate: new Date().toISOString().split('T')[0],
+                            employees: 0,
+                            tasks: 0,
+                            status: newAdmin.status || 'pending'
+                        },
+                        ...state.admins
+                    ]
+                }));
+            },
+
             addPlan: (newPlan) => {
                 set((state) => ({
                     plans: [...state.plans, { ...newPlan, id: `p${Date.now()}` }]

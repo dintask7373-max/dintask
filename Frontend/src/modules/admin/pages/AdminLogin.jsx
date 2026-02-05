@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { Briefcase, KeyRound } from 'lucide-react';
@@ -34,7 +34,7 @@ const AdminLogin = () => {
                 <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
                 <div className="relative z-10 text-white space-y-6 max-w-md">
                     <div className="h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-900/30">
-                        <img src="/src/assets/logo.png" alt="DinTask" className="h-9 w-9 object-contain" />
+                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-9 w-9 object-contain" />
                     </div>
                     <h1 className="text-4xl font-bold tracking-tight">Manage your team with confidence.</h1>
                     <p className="text-slate-400 text-lg">Streamline operations, track performance, and boost productivity with DinTask for Business.</p>
@@ -74,7 +74,7 @@ const AdminLogin = () => {
                                     <Input
                                         id="password"
                                         type="password"
-                                        placeholder="••••••••"
+                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="h-11 rounded-lg"

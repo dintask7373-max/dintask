@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Crown, Star, Shield, ArrowRight } from 'lucide-react';
+import { Check, Crown, Star, Shield, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import ContactSalesModal from '../components/ContactSalesModal';
@@ -45,26 +45,42 @@ const Subscription = () => {
             name: "Pro",
             price: "$12",
             duration: "member / month",
-            description: "Perfect for growing teams and businesses.",
+            description: "Perfect for growing teams.",
             features: [
                 "Everything in Free",
                 "Google SSO",
                 "Unlimited Message History",
-                "Advanced Reporting",
-                "Priority Support"
+                "Advanced Reporting"
             ],
             cta: "Upgrade",
             ctaVariant: "default",
-            popular: true,
+            popular: false,
             icon: Crown
+        },
+        {
+            name: "Pro Plus",
+            price: "$29",
+            duration: "member / month",
+            description: "Advanced features for professionals.",
+            features: [
+                "Everything in Pro",
+                "Custom Branding",
+                "Priority Support",
+                "Advanced Security",
+                "Team Analytics"
+            ],
+            cta: "Get Started",
+            ctaVariant: "default",
+            popular: true,
+            icon: Zap
         },
         {
             name: "Enterprise",
             price: "Custom",
             duration: "pricing",
-            description: "Advanced controls & support for large orgs.",
+            description: "Advanced controls for large orgs.",
             features: [
-                "Everything in Pro",
+                "Everything in Pro Plus",
                 "White Labeling",
                 "Enterprise API",
                 "Audit Log",
@@ -120,11 +136,11 @@ const Subscription = () => {
                     {workspace ? 'Workspace Subscription' : 'Upgrade your Workspace'}
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                    {workspace ? 'Your team’s current active plan and benefits.' : 'Choose the plan that best fits your team\'s needs and scale without limits.'}
+                    {workspace ? 'Your teamâ€™s current active plan and benefits.' : 'Choose the plan that best fits your team\'s needs and scale without limits.'}
                 </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3 md:gap-4 max-w-5xl mx-auto">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 md:gap-4 max-w-7xl mx-auto">
                 {plans.map((plan, index) => (
                     <motion.div
                         key={plan.name}

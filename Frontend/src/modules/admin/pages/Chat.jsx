@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Search,
     Send,
@@ -103,7 +103,7 @@ const AdminChat = () => {
                     <div className="p-4 lg:p-6 border-b border-slate-50 dark:border-slate-800">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="lg:hidden w-8 h-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                                <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
                             </div>
                             <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight">Messenger</h1>
                         </div>

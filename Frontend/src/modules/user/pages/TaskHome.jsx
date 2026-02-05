@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Bell,
@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import TaskCardNew from '../components/TaskCardNew';
 import useTaskStore from '@/store/taskStore';
 import useAuthStore from '@/store/authStore';
-import useManagerStore from '@/store/managerStore';
 import useNotificationStore from '@/store/notificationStore';
 import { cn } from '@/shared/utils/cn';
 import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
@@ -25,40 +24,24 @@ const TaskHome = () => {
     const navigate = useNavigate();
     const { tasks } = useTaskStore();
     const { user } = useAuthStore();
-    const { managers } = useManagerStore();
     const { notifications } = useNotificationStore();
     const [activeTab, setActiveTab] = useState('today');
-    const [filterCategory, setFilterCategory] = useState('all'); // 'all', 'direct', 'delegated'
     const [listRef] = useAutoAnimate();
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     // -- Summary Stats Logic --
     const stats = useMemo(() => {
-        if (!user?.id) return { today: 0, pending: 0, done: 0 };
-
-        const userTasks = tasks.filter(t => t.assignedTo?.includes(user.id));
-
-        const todayCount = userTasks.filter(t => {
-            const date = typeof t.deadline === 'string' ? parseISO(t.deadline) : t.deadline;
-            return isToday(date) && t.status !== 'completed';
-        }).length;
-
-        const pendingCount = userTasks.filter(t => t.status !== 'completed').length;
-        const doneCount = userTasks.filter(t => t.status === 'completed').length;
+        const todayCount = tasks.filter(t => isToday(parseISO(t.deadline)) && t.status !== 'completed').length;
+        const pendingCount = tasks.filter(t => t.status !== 'completed').length;
+        const doneCount = tasks.filter(t => t.status === 'completed').length;
         return { today: todayCount, pending: pendingCount, done: doneCount };
-    }, [tasks, user]);
+    }, [tasks]);
 
     // -- Filtering Logic --
     const filteredTasks = useMemo(() => {
-        if (!user?.id) return [];
-
         return tasks.filter(task => {
-            // Filter by current user assignment
-            if (!task.assignedTo?.includes(user.id)) return false;
-
-            const taskDate = typeof task.deadline === 'string' ? parseISO(task.deadline) : task.deadline;
-
+            const taskDate = parseISO(task.deadline);
             if (activeTab === 'today') {
                 return isToday(taskDate) && task.status !== 'completed';
             }
@@ -68,14 +51,9 @@ const TaskHome = () => {
             if (activeTab === 'completed') {
                 return task.status === 'completed';
             }
-            const matchesCategory = filterCategory === 'all'
-                ? true
-                : filterCategory === 'direct'
-                    ? !task.delegatedBy
-                    : !!task.delegatedBy;
-            return matchesCategory;
+            return true;
         });
-    }, [tasks, activeTab, filterCategory, user]);
+    }, [tasks, activeTab]);
 
     return (
         <div className="bg-background-light dark:bg-background-dark min-h-screen w-full font-display text-text-main dark:text-white pb-28">
@@ -91,7 +69,7 @@ const TaskHome = () => {
                         Good Morning, {user?.name?.split(' ')[0] || 'User'}
                     </h2>
                     <p className="text-text-secondary dark:text-gray-400 text-sm font-medium">
-                        {format(new Date(), 'EEEE, MMM dd')} • {stats.today} tasks today
+                        {format(new Date(), 'EEEE, MMM dd')} â€¢ {stats.today} tasks today
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -177,7 +155,6 @@ const TaskHome = () => {
                             >
                                 <TaskCardNew
                                     task={task}
-                                    managers={managers}
                                     onClick={() => navigate(`/employee/tasks/${task.id}`)}
                                 />
                             </motion.div>

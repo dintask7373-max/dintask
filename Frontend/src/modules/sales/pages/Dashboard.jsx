@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -79,7 +79,7 @@ const SalesDashboard = () => {
     }, [selectedPeriod, individualTargets, teamTargets, actualPerformance, calculateIndividualProgress, calculateTeamProgress]);
 
     const stats = useMemo(() => [
-        { title: 'Total Revenue', value: `₹${realStats.totalSales.toLocaleString()}`, icon: IndianRupee, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: '+12.4%', label: 'Velocity' },
+        { title: 'Total Revenue', value: `â‚¹${realStats.totalSales.toLocaleString()}`, icon: IndianRupee, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: '+12.4%', label: 'Velocity' },
         { title: 'Active Pipeline', value: realStats.activeDeals.toString(), icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10', trend: '3 Critical', label: 'Priority' },
         { title: 'Won Deals', value: realStats.conversionRate + '%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20', trend: '+5.2%', label: 'Conversion' },
         { title: 'Total Clients', value: realStats.clientsCount.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', trend: 'Portfolio', label: 'Network' }
@@ -92,14 +92,14 @@ const SalesDashboard = () => {
                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-0.5 sm:space-y-1">
                     <div className="flex items-center gap-3">
                         <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                            <img src="/src/assets/logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
                         </div>
                         <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                             Command <span className="text-primary-600">Center</span>
                         </h1>
                     </div>
                     <p className="text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
-                        Intelligence feed for <span className="text-slate-900 dark:text-white font-bold">{user?.name}</span> • Real-time telemetry active
+                        Intelligence feed for <span className="text-slate-900 dark:text-white font-bold">{user?.name}</span> â€¢ Real-time telemetry active
                     </p>
                 </motion.div>
 
@@ -287,7 +287,7 @@ const SalesDashboard = () => {
                                         <div className="space-y-1 min-w-0">
                                             <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{sale.client}</h4>
                                             <div className="flex items-center gap-2 sm:gap-3">
-                                                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">₹{sale.amount.toLocaleString()}</p>
+                                                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">â‚¹{sale.amount.toLocaleString()}</p>
                                                 <Badge className={cn(
                                                     "border-none rounded-md px-1.5 py-0 h-3.5 sm:h-4 text-[7px] sm:text-[8px] font-black uppercase tracking-widest",
                                                     sale.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary-50 text-primary-600'
@@ -338,7 +338,7 @@ const SalesDashboard = () => {
                                             <span className="text-[10px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">{monthData.month}</span>
                                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">Sector High Performance</p>
                                         </div>
-                                        <span className="text-[10px] sm:text-xs font-black text-primary-600 tabular-nums tracking-tighter">₹{(monthData.revenue / 1000).toFixed(1)}K</span>
+                                        <span className="text-[10px] sm:text-xs font-black text-primary-600 tabular-nums tracking-tighter">â‚¹{(monthData.revenue / 1000).toFixed(1)}K</span>
                                     </div>
                                     <div className="h-1.5 sm:h-2 rounded-full bg-slate-50 dark:bg-slate-800 overflow-hidden group/bar relative">
                                         <motion.div
