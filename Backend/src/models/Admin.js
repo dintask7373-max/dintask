@@ -1,7 +1,18 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const crypto = require('crypto');
+
 const AdminSchema = new mongoose.Schema({
+  companyName: {
+    type: String,
+    required: [true, 'Please add a company name']
+  },
+  subscriptionPlan: {
+    type: String,
+    enum: ['Starter', 'Pro', 'Enterprise'],
+    default: 'Starter'
+  },
   name: {
     type: String,
     required: [true, 'Please add a name']
@@ -19,6 +30,10 @@ const AdminSchema = new mongoose.Schema({
     select: false
   },
   phoneNumber: String,
+  profileImage: {
+    type: String,
+    default: 'https://res.cloudinary.com/demo/image/upload/v1574026613/profile.jpg'
+  },
   role: {
     type: String,
     default: 'admin'
@@ -26,7 +41,9 @@ const AdminSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date
 }, { timestamps: true });
 
 AdminSchema.pre('save', async function (next) {
@@ -37,6 +54,23 @@ AdminSchema.pre('save', async function (next) {
 
 AdminSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generate and hash password token
+AdminSchema.methods.getResetPasswordToken = function () {
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set expire (10 minutes)
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 module.exports = mongoose.model('Admin', AdminSchema);

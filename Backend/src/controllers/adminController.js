@@ -4,6 +4,9 @@ const Manager = require('../models/Manager');
 const Admin = require('../models/Admin');
 const SuperAdmin = require('../models/SuperAdmin');
 const ErrorResponse = require('../utils/errorResponse');
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
+const jwt = require('jsonwebtoken'); // Needed for token response logic if we duplicate it
 
 // @desc    Get all users across all collections
 // @route   GET /api/v1/admin/users

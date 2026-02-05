@@ -1,8 +1,11 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth');
-const { getAllUsers, deleteUser } = require('../controllers/adminController');
+const { getAllUsers, deleteUser, forgotPassword, resetPassword } = require('../controllers/adminController');
 
 const router = express.Router();
+
+router.post('/forgotpassword', forgotPassword);
+router.put('/resetpassword/:resettoken', resetPassword);
 
 // Only Admin and Super Admin can access these routes
 router.use(protect);

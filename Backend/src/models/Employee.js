@@ -19,6 +19,10 @@ const EmployeeSchema = new mongoose.Schema({
     select: false
   },
   phoneNumber: String,
+  profileImage: {
+    type: String,
+    default: 'https://res.cloudinary.com/demo/image/upload/v1574026613/profile.jpg'
+  },
   role: {
     type: String,
     default: 'employee'
