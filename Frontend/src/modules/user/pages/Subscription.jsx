@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Crown, Star, Shield, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -136,7 +136,7 @@ const Subscription = () => {
                     {workspace ? 'Workspace Subscription' : 'Upgrade your Workspace'}
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                    {workspace ? 'Your teamâ€™s current active plan and benefits.' : 'Choose the plan that best fits your team\'s needs and scale without limits.'}
+                    {workspace ? 'Your team’s current active plan and benefits.' : 'Choose the plan that best fits your team\'s needs and scale without limits.'}
                 </p>
             </div>
 

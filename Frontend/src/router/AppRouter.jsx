@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import useAuthStore from '@/store/authStore';
@@ -121,6 +121,9 @@ import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview'
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
 import ContactPage from '@/modules/public/pages/ContactPage';
+import Privacy from '@/modules/public/pages/Privacy';
+import Terms from '@/modules/public/pages/Terms';
+import Cookies from '@/modules/public/pages/Cookies';
 
 // Layouts
 import CRMLayout from '@/shared/layouts/CRMLayout';
@@ -131,6 +134,9 @@ const AppRouter = () => {
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="/employee/splash" element={<SplashScreen />} />
             <Route path="/employee/success-join" element={<SuccessJoin />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
@@ -267,7 +273,6 @@ const AppRouter = () => {
             </Route>
 
             {/* Default Redirection */}
-            <Route path="/" element={<NotFoundRedirect />} />
             <Route path="*" element={<NotFoundRedirect />} />
         </Routes >
     );

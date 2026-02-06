@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
     CreditCard,
     Check,
@@ -32,6 +32,7 @@ const Subscription = () => {
     const [loadingPlan, setLoadingPlan] = React.useState(null);
     const [downloadingId, setDownloadingId] = React.useState(null);
 
+<<<<<<< HEAD
     React.useEffect(() => {
         fetchPlans();
         fetchBillingHistory();
@@ -55,6 +56,43 @@ const Subscription = () => {
             toast.error('Razorpay SDK failed to load. Are you online?');
             setLoadingPlan(null);
             return;
+=======
+    const currentPlan = {
+        name: 'Pro Team',
+        price: '₹2,499/mo',
+        billing: 'Monthly',
+        nextBill: 'Feb 15, 2026',
+        features: [
+            'Up to 5 Team Members',
+            'Advanced Reports',
+            'Custom Task Priority',
+            'Location Tracking',
+            '5GB File Storage'
+        ]
+    };
+
+    const plans = [
+        {
+            name: 'Starter',
+            price: '₹999/mo',
+            limit: 2,
+            features: ['Basic Task Mgmt', 'Mobile App', 'Email Reports'],
+            current: false
+        },
+        {
+            name: 'Pro Team',
+            price: '₹2,499/mo',
+            limit: 5,
+            features: ['Everything in Starter', 'Advanced Analytics', 'Location Verification'],
+            current: true
+        },
+        {
+            name: 'Business',
+            price: '₹4,999/mo',
+            limit: 20,
+            features: ['Everything in Pro', 'Custom Branding', 'API Access', '24/7 Support'],
+            current: false
+>>>>>>> eef3f26dcdb07bf5b1c5608f82f1301e46dfd486
         }
 
         // Create Order
@@ -178,7 +216,7 @@ const Subscription = () => {
                                     </div>
                                     <Progress value={usagePercentage} className="h-2 bg-slate-100 dark:bg-slate-800" />
                                     <p className="text-[10px] text-slate-400 italic">
-                                        {usagePercentage > 80 ? "âš ï¸ You are running out of seats." : "You have room for more team members."}
+                                        {usagePercentage > 80 ? "⚠️ You are running out of seats." : "You have room for more team members."}
                                     </p>
                                 </div>
                             </div>

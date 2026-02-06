@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
@@ -278,7 +278,7 @@ const EmployeeDashboard = () => {
                         </div>
                         <div>
                           <p className="text-[11px] font-black uppercase tracking-tight text-slate-900 dark:text-white">{lead?.name}</p>
-                          <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest mt-1">{followUp.type} â€¢ {format(new Date(followUp.scheduledAt), 'HH:mm')}</p>
+                          <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest mt-1">{followUp.type} • {format(new Date(followUp.scheduledAt), 'HH:mm')}</p>
                         </div>
                       </div>
                       <Button size="sm" className="h-7 w-7 rounded-lg bg-emerald-500 hover:bg-emerald-600 p-0">

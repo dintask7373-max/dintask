@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { Shield, Lock, Briefcase, KeyRound } from 'lucide-react';
@@ -40,7 +40,7 @@ const SuperAdminLogin = () => {
 
                 <div className="relative z-10 text-white space-y-6 max-w-md">
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center mb-6 shadow-2xl shadow-primary-900/50">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-10 w-10 object-contain" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-10 w-10 object-contain" />
                     </div>
                     <h1 className="text-5xl font-black tracking-tighter">
                         Master Control <br />
@@ -110,7 +110,7 @@ const SuperAdminLogin = () => {
                                             <Input
                                                 id="admin-password"
                                                 type="password"
-                                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                                placeholder="••••••••••••"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 className="h-11 rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-primary-500"
@@ -151,7 +151,7 @@ const SuperAdminLogin = () => {
                                             <Input
                                                 id="emp-password"
                                                 type="password"
-                                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                                placeholder="••••••••••••"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 className="h-11 rounded-lg bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-blue-500"

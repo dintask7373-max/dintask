@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -204,7 +204,7 @@ const TaskCompletion = () => {
                                             />
                                             <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
                                                 <MapPin size={24} className="text-red-500 mb-2 animate-bounce" />
-                                                <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">28.6139Â° N, 77.2090Â° E</p>
+                                                <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">28.6139° N, 77.2090° E</p>
                                                 <p className="text-[9px] text-slate-500">New Delhi, India</p>
                                             </div>
                                             <Button variant="secondary" size="sm" className="absolute bottom-2 right-2 h-7 text-[10px] gap-1 shadow-lg">

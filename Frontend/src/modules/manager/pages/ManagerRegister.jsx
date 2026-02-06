@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useEmployeeStore from '@/store/employeeStore';
 import { ShieldCheck, UserPlus, Link2, User, Mail, Lock, Shield, Zap, Terminal } from 'lucide-react';
@@ -153,7 +153,7 @@ const ManagerRegister = () => {
                                         <Input
                                             id="password"
                                             type="password"
-                                            placeholder="â€¢â€¢â€¢â€¢"
+                                            placeholder="••••"
                                             value={formData.password}
                                             onChange={handleChange}
                                             className="h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"
@@ -167,7 +167,7 @@ const ManagerRegister = () => {
                                         <Input
                                             id="confirmPassword"
                                             type="password"
-                                            placeholder="â€¢â€¢â€¢â€¢"
+                                            placeholder="••••"
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
                                             className="h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"

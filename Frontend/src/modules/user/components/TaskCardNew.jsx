@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { Clock, MessageSquare, Paperclip, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';

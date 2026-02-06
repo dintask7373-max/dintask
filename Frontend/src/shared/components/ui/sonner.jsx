@@ -1,4 +1,4 @@
-﻿import {
+import {
   CircleCheckIcon,
   InfoIcon,
   Loader2Icon,

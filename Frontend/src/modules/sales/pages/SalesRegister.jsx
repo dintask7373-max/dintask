@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, UserPlus, Link2 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
@@ -144,7 +144,7 @@ const SalesRegister = () => {
                                 <Input
                                     id="password"
                                     type="password"
-                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                    placeholder="••••••••"
                                     value={formData.password}
                                     onChange={handleChange}
                                     className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
@@ -155,7 +155,7 @@ const SalesRegister = () => {
                                 <Input
                                     id="confirmPassword"
                                     type="password"
-                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                    placeholder="••••••••"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"

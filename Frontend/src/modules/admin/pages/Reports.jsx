@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     FileText,
     Download,
@@ -204,7 +204,7 @@ const Reports = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 px-1 sm:px-0">
                     <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                     </div>
                     <div>
                         <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">Reports <span className="text-primary-600">& Analytics</span></h1>

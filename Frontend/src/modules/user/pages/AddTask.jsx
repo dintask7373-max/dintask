@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Calendar as CalendarIcon, Flag, AlignLeft, Tag, Plus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
