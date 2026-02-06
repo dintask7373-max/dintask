@@ -156,7 +156,7 @@ const LandingPage = () => {
                         <Button variant="ghost" onClick={() => navigate('/admin/login')} className="font-bold uppercase tracking-widest text-xs">
                             Login
                         </Button>
-                        <Button onClick={() => navigate('/admin/login')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
+                        <Button onClick={() => navigate('/admin/register')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
                             Try For Free
                         </Button>
                     </div>
@@ -194,7 +194,7 @@ const LandingPage = () => {
                                 <Button variant="outline" onClick={() => navigate('/admin/login')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200">
                                     Login
                                 </Button>
-                                <Button onClick={() => navigate('/admin/login')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
+                                <Button onClick={() => navigate('/admin/register')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
                                     Sign Up
                                 </Button>
                             </div>
@@ -238,7 +238,7 @@ const LandingPage = () => {
                                         <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter italic">Din<span className="text-primary-600">Task</span></span>
 
                                         <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:gap-2">
-                                            <button onClick={() => navigate('/admin/login')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
+                                            <button onClick={() => navigate('/admin/register')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
                                             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-2 sm:px-3 py-1 sm:py-1.5 border border-primary-600 text-primary-600 text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 transition-all active:scale-90 uppercase tracking-widest">BUY NOW</button>
                                         </div>
                                     </div>
@@ -626,7 +626,7 @@ const LandingPage = () => {
 
                                     {/* Action Button */}
                                     <Button
-                                        onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact') : navigate('/employee/register')}
+                                        onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact', { state: { plan: 'Enterprise', source: 'pricing_page' } }) : navigate('/employee/register')}
                                         variant={plan.variant}
                                         className={`w-full h-8 sm:h-11 rounded-md font-bold text-[7px] sm:text-[10px] uppercase tracking-widest transition-all duration-300 ${plan.popular || i === 0
                                             ? 'bg-[#6374f2] hover:bg-[#4f5ed9] text-white shadow-md'
@@ -657,7 +657,7 @@ const LandingPage = () => {
                                     Join thousands of managers who have optimized their workforce with DinTask's integrated suite.
                                 </p>
                                 <div className="flex flex-row gap-2 sm:gap-4">
-                                    <Button onClick={() => navigate('/admin/login')} className="h-10 sm:h-16 px-3 sm:px-10 bg-primary-600 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-primary-700 transition-colors">
+                                    <Button onClick={() => navigate('/admin/register')} className="h-10 sm:h-16 px-3 sm:px-10 bg-primary-600 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-primary-700 transition-colors">
                                         START FREE TRIAL
                                     </Button>
                                     <Button onClick={() => navigate('/contact')} className="h-10 sm:h-16 px-3 sm:px-10 bg-white text-slate-900 dark:bg-slate-900 dark:text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">

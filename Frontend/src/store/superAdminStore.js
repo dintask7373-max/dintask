@@ -289,6 +289,34 @@ const useSuperAdminStore = create(
                 }));
             },
 
+            fetchInquiries: async () => {
+                set({ loading: true });
+                try {
+                    const response = await apiRequest('/support/admin/support-leads');
+                    if (response.success) {
+                        set({ inquiries: response.data, loading: false });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch inquiries:', err);
+                    set({ loading: false });
+                }
+            },
+
+            fetchInquiryDetails: async (id) => {
+                set({ loading: true });
+                try {
+                    const response = await apiRequest(`/support/admin/support-leads/${id}`);
+                    if (response.success) {
+                        set({ loading: false });
+                        return response.data;
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch inquiry details:', err);
+                    set({ loading: false });
+                }
+                return null;
+            },
+
             fetchBillingStats: async () => {
                 try {
                     const response = await apiRequest('/superadmin/billing/stats');

@@ -33,6 +33,7 @@ import EmployeeLogin from '@/modules/user/pages/EmployeeLogin';
 import EmployeeRegister from '@/modules/user/pages/EmployeeRegister';
 import ForgotPassword from '@/modules/user/pages/ForgotPassword';
 import AdminLogin from '@/modules/admin/pages/AdminLogin';
+import AdminRegister from '@/modules/admin/pages/AdminRegister';
 import SuperAdminLogin from '@/modules/superadmin/pages/SuperAdminLogin';
 
 // Admin Pages
@@ -146,6 +147,7 @@ const AppRouter = () => {
             <Route path="/manager/register" element={<ManagerRegister />} />
             <Route path="/manager/forgot-password" element={<ForgotPassword returnPath="/manager/login" />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
             <Route path="/admin/forgot-password" element={<ForgotPassword returnPath="/admin/login" />} />
             <Route path="/superadmin/login" element={<SuperAdminLogin />} />
             <Route path="/superadmin/forgot-password" element={<ForgotPassword returnPath="/superadmin/login" />} />

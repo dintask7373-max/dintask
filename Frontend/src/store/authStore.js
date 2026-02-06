@@ -30,10 +30,15 @@ const useAuthStore = create(
                         });
                     }
 
+
                     if (response.success) {
+                        const rawRole = response.user.role || selectedRole;
+                        // Frontend expects 'superadmin', backend might send 'super_admin'
+                        const normalizedRole = rawRole === 'super_admin' ? 'superadmin' : rawRole;
+
                         set({
                             user: response.user,
-                            role: response.user.role || selectedRole,
+                            role: normalizedRole,
                             token: response.token,
                             isAuthenticated: true,
                             loading: false,
@@ -57,14 +62,22 @@ const useAuthStore = create(
 
                 try {
                     let response;
-                    if (role === 'superadmin') {
+                    if (role === 'superadmin' || role === 'super_admin') {
                         response = await apiRequest('/superadmin/me');
                     } else {
                         response = await apiRequest('/auth/me');
                     }
 
                     if (response.success) {
-                        set({ user: response.data || response.user });
+                        const rawRole = response.data.role || response.user.role;
+                        // Helper to keep role consistent
+                        const normalizedRole = rawRole === 'super_admin' ? 'superadmin' : rawRole;
+
+                        // If role changed (e.g. from super_admin to superadmin), update it
+                        set({
+                            user: response.data || response.user,
+                            role: normalizedRole
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch user profile:', err);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Mail,
@@ -13,11 +13,15 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
-import useSuperAdminStore from '@/store/superAdminStore';
+import api from '@/lib/api';
+// import useSuperAdminStore from '@/store/superAdminStore'; // Removed as we use API directly
 
 const ContactPage = () => {
     const navigate = useNavigate();
-    const addInquiry = useSuperAdminStore(state => state.addInquiry);
+    const location = useLocation();
+    const fromPlan = location.state?.plan;
+    const fromSource = location.state?.source;
+    // const addInquiry = useSuperAdminStore(state => state.addInquiry);
 
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +35,8 @@ const ContactPage = () => {
         jobTitle: '',
         companySize: '',
         industry: '',
-        requirements: ''
+        requirements: fromPlan ? `Inquiry regarding ${fromPlan} Plan` : '',
+        interestedPlan: fromPlan || ''
     });
 
     const handleInputChange = (e) => {
@@ -42,24 +47,30 @@ const ContactPage = () => {
     const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        setTimeout(() => {
-            addInquiry({
-                ...formData,
-                id: `inq-${Date.now()}`,
-                date: new Date().toISOString(),
-                status: 'new'
+        try {
+            await api('/support/lead', {
+                method: 'POST',
+                body: {
+                    ...formData,
+                    source: fromSource || 'contact_form'
+                }
             });
+
             setIsSubmitting(false);
             setIsSubmitted(true);
 
             setTimeout(() => {
                 navigate('/');
             }, 5000);
-        }, 1500);
+        } catch (error) {
+            console.error('Failed to submit inquiry:', error);
+            setIsSubmitting(false);
+            // Optionally add toast error here
+        }
     };
 
     const steps = [
@@ -98,8 +109,8 @@ const ContactPage = () => {
                                     )}
 
                                     <div className={`size-10 rounded-full flex items-center justify-center text-sm font-black shrink-0 transition-all duration-300 border-2 ${currentStep >= step.id
-                                            ? 'bg-white text-[#2563EB] border-white'
-                                            : 'bg-transparent text-white/50 border-white/20'
+                                        ? 'bg-white text-[#2563EB] border-white'
+                                        : 'bg-transparent text-white/50 border-white/20'
                                         }`}>
                                         {currentStep > step.id ? <CheckCircle2 size={18} /> : step.id}
                                     </div>
@@ -152,8 +163,8 @@ const ContactPage = () => {
                     <div className="px-10 pt-10 pb-6 flex items-center gap-8 border-b border-slate-50 dark:border-slate-800 overflow-x-auto no-scrollbar">
                         {['General', 'Business', 'Requirements'].map((tab, i) => (
                             <div key={i} className={`text-sm font-black whitespace-nowrap pb-2 border-b-2 transition-all duration-300 ${currentStep === (i + 1)
-                                    ? 'text-[#2563EB] border-[#2563EB]'
-                                    : 'text-slate-400 border-transparent'
+                                ? 'text-[#2563EB] border-[#2563EB]'
+                                : 'text-slate-400 border-transparent'
                                 }`}>
                                 {tab}
                             </div>
@@ -264,11 +275,11 @@ const ContactPage = () => {
                                                         className="w-full h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 px-4 rounded-md text-sm font-medium focus:ring-1 focus:ring-[#2563EB] outline-none"
                                                     >
                                                         <option value="">Select the range</option>
-                                                        <option value="1-10">1-10 Employees</option>
-                                                        <option value="11-50">11-50 Employees</option>
-                                                        <option value="51-200">51-200 Employees</option>
-                                                        <option value="201-500">201-500 Employees</option>
-                                                        <option value="500+">500+ Employees</option>
+                                                        <option value="1-10 Employees">1-10 Employees</option>
+                                                        <option value="11-50 Employees">11-50 Employees</option>
+                                                        <option value="51-200 Employees">51-200 Employees</option>
+                                                        <option value="201-500 Employees">201-500 Employees</option>
+                                                        <option value="500+ Employees">500+ Employees</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
@@ -280,12 +291,12 @@ const ContactPage = () => {
                                                         className="w-full h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 px-4 rounded-md text-sm font-medium focus:ring-1 focus:ring-[#2563EB] outline-none"
                                                     >
                                                         <option value="">Select the industry</option>
-                                                        <option value="tech">Technology</option>
-                                                        <option value="finance">Finance</option>
-                                                        <option value="healthcare">Healthcare</option>
-                                                        <option value="education">Education</option>
-                                                        <option value="manufacturing">Manufacturing</option>
-                                                        <option value="others">Others</option>
+                                                        <option value="Technology">Technology</option>
+                                                        <option value="Finance">Finance</option>
+                                                        <option value="Healthcare">Healthcare</option>
+                                                        <option value="Education">Education</option>
+                                                        <option value="Manufacturing">Manufacturing</option>
+                                                        <option value="Others">Others</option>
                                                     </select>
                                                 </div>
                                             </div>
