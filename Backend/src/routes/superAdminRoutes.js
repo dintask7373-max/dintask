@@ -9,7 +9,12 @@ const {
     changePassword,
     updateProfileImage,
     getMe,
-    updateProfile
+    updateProfile,
+    getSummary,
+    getRoleDistribution,
+    getUserGrowth,
+    getHourlyActivity,
+    getRecentLogins
 } = require('../controllers/superAdminController');
 const upload = require('../middleware/upload');
 
@@ -27,5 +32,12 @@ router.put('/changepassword', changePassword);
 router.put('/updateprofileimage', upload.single('image'), updateProfileImage);
 router.get('/stats', getStats);
 router.get('/admins', getAdmins);
+
+// Dashboard Routes
+router.get('/dashboard/summary', getSummary);
+router.get('/dashboard/role-distribution', getRoleDistribution);
+router.get('/dashboard/user-growth', getUserGrowth);
+router.get('/dashboard/hourly-activity', getHourlyActivity);
+router.get('/dashboard/recent-logins', getRecentLogins);
 
 module.exports = router;
