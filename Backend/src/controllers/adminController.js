@@ -67,7 +67,8 @@ exports.deleteUser = async (req, res, next) => {
     next(err);
   }
 };
-// @desc    Forgot Password
+
+// @desc    Forgot Password (Admin)
 // @route   POST /api/v1/admin/forgotpassword
 // @access  Public
 exports.forgotPassword = async (req, res, next) => {
@@ -75,7 +76,7 @@ exports.forgotPassword = async (req, res, next) => {
     const user = await Admin.findOne({ email: req.body.email });
 
     if (!user) {
-      return next(new ErrorResponse('There is no admin with that email', 404));
+      return next(new ErrorResponse('There is no user with that email', 404));
     }
 
     // Get reset token
@@ -83,8 +84,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // Create reset url (frontend)
-    // NOTE: This should ideally point to the frontend reset page
+    // Create reset url
     const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/admin/resetpassword/${resetToken}`;
 
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
@@ -111,7 +111,7 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-// @desc    Reset Password
+// @desc    Reset Password (Admin)
 // @route   PUT /api/v1/admin/resetpassword/:resettoken
 // @access  Public
 exports.resetPassword = async (req, res, next) => {
@@ -138,11 +138,27 @@ exports.resetPassword = async (req, res, next) => {
 
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: 'Password reset successful'
-    });
+    sendTokenResponse(user, 200, res);
   } catch (err) {
     next(err);
   }
+};
+
+// Helper to get token from model, create cookie and send response
+const sendTokenResponse = (user, statusCode, res) => {
+  // Create token
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: '30d'
+  });
+
+  res.status(statusCode).json({
+    success: true,
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  });
 };

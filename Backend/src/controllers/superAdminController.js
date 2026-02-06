@@ -1,5 +1,9 @@
 const SuperAdmin = require('../models/SuperAdmin');
 const Admin = require('../models/Admin');
+const Manager = require('../models/Manager');
+const SalesExecutive = require('../models/SalesExecutive');
+const Employee = require('../models/Employee');
+const LoginActivity = require('../models/LoginActivity');
 const ErrorResponse = require('../utils/errorResponse');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -269,6 +273,151 @@ exports.updateProfile = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Dashboard Summary (Total Users, Active, Growth)
+// @route   GET /api/v1/superadmin/dashboard/summary
+// @access  Private (Super Admin)
+exports.getSummary = async (req, res, next) => {
+  try {
+    const [adminCount, managerCount, salesCount, employeeCount] = await Promise.all([
+      Admin.countDocuments(),
+      Manager.countDocuments(),
+      SalesExecutive.countDocuments(),
+      Employee.countDocuments()
+    ]);
+
+    const totalUsers = adminCount + managerCount + salesCount + employeeCount;
+
+    // Active Users (Logged in within last 24 hours)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const activeUsersCount = await LoginActivity.distinct('userId', {
+      loginAt: { $gte: twentyFourHoursAgo },
+      role: { $ne: 'super_admin' }
+    }).then(ids => ids.length);
+
+    // Mocking growth data
+    const monthlyGrowthPercentage = 12.5;
+
+    // Average Session Duration
+    const avgSessionAgg = await LoginActivity.aggregate([
+      { $match: { role: { $ne: 'super_admin' }, sessionDuration: { $exists: true } } },
+      { $group: { _id: null, avgDuration: { $avg: '$sessionDuration' } } }
+    ]);
+    const averageSessionTimeInMinutes = avgSessionAgg.length > 0 ? Math.round(avgSessionAgg[0].avgDuration) : 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUsers,
+        activeUsers: activeUsersCount,
+        monthlyGrowthPercentage,
+        averageSessionTimeInMinutes
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Role Distribution
+// @route   GET /api/v1/superadmin/dashboard/role-distribution
+// @access  Private (Super Admin)
+exports.getRoleDistribution = async (req, res, next) => {
+  try {
+    const [admins, managers, sales, employees] = await Promise.all([
+      Admin.countDocuments(),
+      Manager.countDocuments(),
+      SalesExecutive.countDocuments(),
+      Employee.countDocuments()
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        total: admins + managers + sales + employees,
+        admins,
+        managers,
+        sales,
+        employees
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get User Growth Analysis
+// @route   GET /api/v1/superadmin/dashboard/user-growth
+// @access  Private (Super Admin)
+exports.getUserGrowth = async (req, res, next) => {
+  try {
+    // Mock data for chart
+    const growthData = [
+      { month: 'Jan', count: 10 },
+      { month: 'Feb', count: 15 },
+      { month: 'Mar', count: 25 },
+      { month: 'Apr', count: 30 },
+      { month: 'May', count: 45 },
+      { month: 'Jun', count: 60 }
+    ];
+
+    res.status(200).json({
+      success: true,
+      data: growthData
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Hourly Peak Activity
+// @route   GET /api/v1/superadmin/dashboard/hourly-activity
+// @access  Private (Super Admin)
+exports.getHourlyActivity = async (req, res, next) => {
+  try {
+    const hourlyActivity = await LoginActivity.aggregate([
+      { $match: { role: { $ne: 'super_admin' } } },
+      {
+        $group: {
+          _id: { $hour: '$loginAt' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const formattedActivity = Array.from({ length: 24 }, (_, i) => {
+      const found = hourlyActivity.find(item => item._id === i);
+      return { hour: i, count: found ? found.count : 0 };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedActivity
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Recent Login Activity
+// @route   GET /api/v1/superadmin/dashboard/recent-logins
+// @access  Private (Super Admin)
+exports.getRecentLogins = async (req, res, next) => {
+  try {
+    const logs = await LoginActivity.find({ role: { $ne: 'super_admin' } })
+      .sort({ loginAt: -1 })
+      .limit(10)
+      .populate('userId', 'name email companyName');
+
+    res.status(200).json({
+      success: true,
+      data: logs
     });
   } catch (err) {
     next(err);
