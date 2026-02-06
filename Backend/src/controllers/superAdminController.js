@@ -44,6 +44,50 @@ exports.getAdmins = async (req, res, next) => {
   }
 };
 
+// @desc    Login Super Admin
+// @route   POST /api/v1/superadmin/login
+// @access  Public
+exports.login = async (req, res, next) => {
+  try {
+    const { adminId, secureKey } = req.body;
+
+    // Validate adminId & secureKey
+    if (!adminId || !secureKey) {
+      return next(new ErrorResponse('Please provide Administrator ID and Secure Key', 400));
+    }
+
+    // Check for user
+    const superAdmin = await SuperAdmin.findOne({ email: adminId }).select('+password');
+
+    if (!superAdmin) {
+      return next(new ErrorResponse('Invalid credentials', 401));
+    }
+
+    // Check password
+    const isMatch = await superAdmin.matchPassword(secureKey);
+
+    if (!isMatch) {
+      return next(new ErrorResponse('Invalid credentials', 401));
+    }
+
+    // Create token
+    const token = jwt.sign({ id: superAdmin._id, role: 'superadmin' }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE
+    });
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        ...superAdmin.toObject(),
+        role: 'superadmin' // Normalize for frontend ('super_admin' -> 'superadmin')
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Create Admin (Provision Account)
 // @route   POST /api/v1/superadmin/admins
 // @access  Private (Super Admin)
@@ -403,7 +447,10 @@ exports.getMe = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: user
+      data: {
+        ...user.toObject(),
+        role: 'superadmin' // Normalize for frontend
+      }
     });
   } catch (err) {
     next(err);

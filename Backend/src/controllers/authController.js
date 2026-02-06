@@ -13,7 +13,8 @@ const models = {
   sales_executive: SalesExecutive,
   manager: Manager,
   admin: Admin,
-  super_admin: SuperAdmin
+  admin: Admin,
+  superadmin: SuperAdmin
 };
 
 // @desc    Register user
@@ -47,7 +48,7 @@ exports.register = async (req, res, next) => {
       email,
       password,
       role,
-      adminId: role !== 'admin' && role !== 'super_admin' ? adminId : undefined
+      adminId: role !== 'admin' && role !== 'superadmin' ? adminId : undefined
     });
 
     await sendTokenResponse(user, 201, res);

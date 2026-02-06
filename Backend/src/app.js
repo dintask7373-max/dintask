@@ -27,6 +27,7 @@ const manager = require('./routes/managerRoutes');
 const admin = require('./routes/adminRoutes');
 const superAdmin = require('./routes/superAdminRoutes');
 const support = require('./routes/supportLeadRoutes');
+const supportTickets = require('./routes/supportTicketRoutes');
 const payment = require('./routes/paymentRoutes');
 
 // Mount routers
@@ -37,6 +38,7 @@ app.use('/api/v1/manager', manager);
 app.use('/api/v1/admin', admin);
 app.use('/api/v1/superadmin', superAdmin);
 app.use('/api/v1/support', support);
+app.use('/api/v1/support-tickets', supportTickets);
 app.use('/api/v1/payments', payment);
 
 app.use(errorHandler);

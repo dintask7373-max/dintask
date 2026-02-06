@@ -26,7 +26,7 @@ const SuperAdminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'super_admin'
+    default: 'superadmin'
   },
   isActive: {
     type: Boolean,

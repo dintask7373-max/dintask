@@ -14,7 +14,9 @@ exports.submitLead = async (req, res, next) => {
             jobTitle,
             companySize,
             industry,
-            requirements
+            requirements,
+            source,
+            interestedPlan
         } = req.body;
 
         const lead = await SupportLead.create({
@@ -25,7 +27,9 @@ exports.submitLead = async (req, res, next) => {
             jobTitle,
             companySize,
             industry,
-            requirements
+            requirements,
+            source,
+            interestedPlan
         });
 
         res.status(201).json({
@@ -43,14 +47,15 @@ exports.submitLead = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getLeads = async (req, res, next) => {
     try {
-        // Pagination
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
 
         const total = await SupportLead.countDocuments();
 
+        // Summary API: Select only necessary fields for the table
         const leads = await SupportLead.find()
+            .select('name businessEmail phone companyName interestedPlan status source createdAt')
             .sort({ createdAt: -1 })
             .skip(startIndex)
             .limit(limit);
@@ -65,6 +70,26 @@ exports.getLeads = async (req, res, next) => {
                 pages: Math.ceil(total / limit)
             },
             data: leads
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Get single lead details
+// @route   GET /api/v1/admin/support-leads/:id
+// @access  Private (Super Admin)
+exports.getLead = async (req, res, next) => {
+    try {
+        const lead = await SupportLead.findById(req.params.id);
+
+        if (!lead) {
+            return next(new ErrorResponse(`Lead not found with id of ${req.params.id}`, 404));
+        }
+
+        res.status(200).json({
+            success: true,
+            data: lead
         });
     } catch (err) {
         next(err);

@@ -8,6 +8,37 @@ const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const jwt = require('jsonwebtoken'); // Needed for token response logic if we duplicate it
 
+// @desc    Register a new Admin (Self-service)
+// @route   POST /api/v1/admin/register
+// @access  Public
+exports.registerAdmin = async (req, res, next) => {
+  try {
+    const { name, email, password, companyName, phoneNumber } = req.body;
+
+    // Check if user exists
+    const userExists = await Admin.findOne({ email });
+
+    if (userExists) {
+      return next(new ErrorResponse('User already exists', 400));
+    }
+
+    // Create user
+    const user = await Admin.create({
+      name,
+      email,
+      password,
+      companyName,
+      phoneNumber,
+      role: 'admin',
+      subscriptionStatus: 'active' // Default to active for now
+    });
+
+    sendTokenResponse(user, 201, res);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Get all users across all collections
 // @route   GET /api/v1/admin/users
 // @access  Private (Admin)

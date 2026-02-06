@@ -1,10 +1,11 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth');
-const { getAllUsers, deleteUser, forgotPassword, resetPassword } = require('../controllers/adminController');
+const { getAllUsers, deleteUser, forgotPassword, resetPassword, registerAdmin } = require('../controllers/adminController');
 const { getPlans } = require('../controllers/planController');
 
 const router = express.Router();
 
+router.post('/register', registerAdmin);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:resettoken', resetPassword);
 

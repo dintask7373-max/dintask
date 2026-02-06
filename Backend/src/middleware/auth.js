@@ -10,7 +10,8 @@ const models = {
   sales_executive: SalesExecutive,
   manager: Manager,
   admin: Admin,
-  super_admin: SuperAdmin
+  super_admin: SuperAdmin, // Support legacy/db role
+  superadmin: SuperAdmin
 };
 
 // Protect routes
@@ -41,6 +42,11 @@ exports.protect = async (req, res, next) => {
 
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    // NORMALIZE ROLE: Ensure downstream middleware sees 'superadmin' even if DB says 'super_admin'
+    if (req.user.role === 'super_admin') {
+      req.user.role = 'superadmin';
     }
 
     next();

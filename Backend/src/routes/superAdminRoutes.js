@@ -41,7 +41,7 @@ router.put('/resetpassword/:resettoken', resetPassword);
 
 // ONLY Super Admin can access
 router.use(protect);
-router.use(authorize('super_admin', 'superadmin')); // Supporting both role names if divergent
+router.use(authorize('superadmin'));
 
 router.put('/changepassword', changePassword);
 router.put('/updateprofileimage', upload.single('image'), updateProfileImage);
