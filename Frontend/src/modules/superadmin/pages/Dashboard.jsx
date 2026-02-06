@@ -11,8 +11,10 @@ import {
     Zap,
     MoreVertical,
     ChevronRight,
-    Clock
+    Clock,
+    Calendar
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
     AreaChart,
@@ -397,31 +399,33 @@ const SuperAdminDashboard = () => {
                                             onClick={() => navigate('/superadmin/admins')}
                                         >
                                             <TableCell className="pl-8 py-3 font-black text-slate-900 dark:text-white text-xs">
-                                                {adm.name}
+                                                {adm.companyName}
                                             </TableCell>
                                             <TableCell className="py-3">
                                                 <div className="flex items-center gap-2">
                                                     <Avatar className="h-6 w-6 border-2 border-white dark:border-slate-800 shadow-sm">
-                                                        <AvatarFallback className="text-[9px] font-black bg-primary-50 text-primary-600 uppercase">{adm.owner.charAt(0)}</AvatarFallback>
+                                                        <AvatarFallback className="text-[9px] font-black bg-primary-50 text-primary-600 uppercase">
+                                                            {(adm.name || 'A').charAt(0)}
+                                                        </AvatarFallback>
                                                     </Avatar>
-                                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[100px]">{adm.owner}</span>
+                                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[100px]">{adm.name}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-3">
                                                 <Badge variant="outline" className="text-[9px] font-black border-none bg-primary-50 dark:bg-primary-900/10 text-primary-600 uppercase tracking-widest px-2 py-0.5 rounded-md">
-                                                    {adm.plan}
+                                                    {adm.subscriptionPlan || 'No Plan'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="py-3 text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                                                {adm.joinedDate}
+                                                {adm.createdAt ? format(new Date(adm.createdAt), 'MMM dd, yyyy') : 'N/A'}
                                             </TableCell>
                                             <TableCell className="py-3 text-right pr-8">
                                                 <Badge className={cn(
                                                     "text-[8px] h-5 px-2 font-black uppercase tracking-widest rounded-full",
-                                                    adm.status === 'active' ? "bg-emerald-500" :
-                                                        adm.status === 'pending' ? "bg-amber-500" : "bg-red-500"
+                                                    (adm.subscriptionStatus || 'pending') === 'active' ? "bg-emerald-500" :
+                                                        (adm.subscriptionStatus || 'pending') === 'pending' ? "bg-amber-500" : "bg-red-500"
                                                 )}>
-                                                    {adm.status}
+                                                    {adm.subscriptionStatus || 'pending'}
                                                 </Badge>
                                             </TableCell>
                                         </TableRow>
@@ -440,30 +444,34 @@ const SuperAdminDashboard = () => {
                                 >
                                     <div className="flex justify-between items-start">
                                         <div className="space-y-0.5">
-                                            <h4 className="font-black text-slate-900 dark:text-white text-sm">{adm.name}</h4>
+                                            <h4 className="font-black text-slate-900 dark:text-white text-sm">{adm.companyName}</h4>
                                             <div className="flex items-center gap-2">
                                                 <Avatar className="h-5 w-5 border border-white dark:border-slate-800 shadow-sm">
-                                                    <AvatarFallback className="text-[8px] font-black bg-primary-50 text-primary-600 uppercase">{adm.owner.charAt(0)}</AvatarFallback>
+                                                    <AvatarFallback className="text-[8px] font-black bg-primary-50 text-primary-600 uppercase">
+                                                        {(adm.name || 'A').charAt(0)}
+                                                    </AvatarFallback>
                                                 </Avatar>
-                                                <span className="text-[11px] font-bold text-slate-500">{adm.owner}</span>
+                                                <span className="text-[11px] font-bold text-slate-500">{adm.name}</span>
                                             </div>
                                         </div>
                                         <Badge className={cn(
                                             "text-[8px] h-5 px-2 font-black uppercase tracking-widest rounded-full",
-                                            adm.status === 'active' ? "bg-emerald-500" :
-                                                adm.status === 'pending' ? "bg-amber-500" : "bg-red-500"
+                                            (adm.subscriptionStatus || 'pending') === 'active' ? "bg-emerald-500" :
+                                                (adm.subscriptionStatus || 'pending') === 'pending' ? "bg-amber-500" : "bg-red-500"
                                         )}>
-                                            {adm.status}
+                                            {adm.subscriptionStatus || 'pending'}
                                         </Badge>
                                     </div>
                                     <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest border-t border-slate-50 dark:border-slate-800/50 pt-2 text-wrap">
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-slate-400">PLAN:</span>
-                                            <span className="text-primary-600">{adm.plan}</span>
+                                            <span className="text-primary-600">{adm.subscriptionPlan || 'No Plan'}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-slate-400">JOINED:</span>
-                                            <span className="text-slate-600 dark:text-slate-300">{adm.joinedDate}</span>
+                                            <span className="text-slate-600 dark:text-slate-300">
+                                                {adm.createdAt ? format(new Date(adm.createdAt), 'MMM dd') : 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

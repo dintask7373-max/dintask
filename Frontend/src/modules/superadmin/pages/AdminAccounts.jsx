@@ -13,8 +13,10 @@ import {
     ChevronRight,
     UserPlus,
     Plus,
-    ArrowUpRight
+    ArrowUpRight,
+    Calendar
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -245,7 +247,12 @@ const AdminAccounts = () => {
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-xl">
                                             {plans.map(plan => (
-                                                <SelectItem key={plan._id} value={plan.name} className="text-xs font-bold rounded-lg">{plan.name}</SelectItem>
+                                                <SelectItem key={plan._id} value={plan.name} className="text-xs font-bold rounded-lg px-3 py-2">
+                                                    <div className="flex flex-col">
+                                                        <span>{plan.name}</span>
+                                                        <span className="text-[10px] text-slate-400">₹{plan.price.toLocaleString()} for {plan.duration} days</span>
+                                                    </div>
+                                                </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -296,6 +303,7 @@ const AdminAccounts = () => {
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[90px]">Team Size</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Tasks</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Status</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[120px]">Expiry Node</TableHead>
                                         <TableHead className="text-right pr-8 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[50px]">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -335,7 +343,7 @@ const AdminAccounts = () => {
                                                                 {adm.subscriptionPlan || 'No Plan'}
                                                             </Badge>
                                                             <p className="text-[10px] text-slate-400 font-bold ml-1">
-                                                                â‚¹{plans.find(p => p.name === adm.subscriptionPlan)?.price.toLocaleString('en-IN') || '0'}/mo
+                                                                ₹{plans.find(p => p.name === adm.subscriptionPlan)?.price.toLocaleString('en-IN') || '0'} / {plans.find(p => p.name === adm.subscriptionPlan)?.duration || 30}d
                                                             </p>
                                                         </div>
                                                     </TableCell>
@@ -353,6 +361,22 @@ const AdminAccounts = () => {
                                                             {statusIcons[adm.subscriptionStatus || 'pending']}
                                                             {adm.subscriptionStatus}
                                                         </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                                <Calendar size={12} className="text-primary-500" />
+                                                                {adm.subscriptionExpiry ? format(new Date(adm.subscriptionExpiry), 'MMM dd, yyyy') : 'PERMANENT'}
+                                                            </div>
+                                                            {adm.subscriptionExpiry && (
+                                                                <p className={cn(
+                                                                    "text-[8px] font-bold uppercase tracking-widest ml-4",
+                                                                    new Date(adm.subscriptionExpiry) < new Date() ? "text-red-500" : "text-slate-400"
+                                                                )}>
+                                                                    {new Date(adm.subscriptionExpiry) < new Date() ? 'DECOMMISSIONED' : 'OPERATIONAL'}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell className="text-right pr-8">
                                                         <DropdownMenu>
@@ -444,8 +468,10 @@ const AdminAccounts = () => {
                                                 <p className="text-[10px] font-black text-primary-600 uppercase tracking-tight">{adm.plan}</p>
                                             </div>
                                             <div className="space-y-0.5 text-right">
-                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Team Size</p>
-                                                <p className="text-[10px] font-bold text-slate-900 dark:text-white">{adm.employees} Members</p>
+                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Expiration</p>
+                                                <p className="text-[10px] font-bold text-slate-900 dark:text-white">
+                                                    {adm.subscriptionExpiry ? format(new Date(adm.subscriptionExpiry), 'MMM dd, yyyy') : 'Permanent'}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

@@ -27,7 +27,7 @@ exports.createOrder = async (req, res) => {
       admin.subscriptionPlan = plan.name;
       admin.subscriptionPlanId = plan._id;
       admin.subscriptionStatus = 'active';
-      admin.subscriptionExpiry = null; // No expiry for free? or set some date
+      admin.subscriptionExpiry = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
       await admin.save();
 
       return res.status(200).json({
@@ -107,9 +107,8 @@ exports.verifyPayment = async (req, res) => {
         admin.subscriptionPlanId = plan._id;
         admin.subscriptionStatus = 'active';
 
-        // Calculate expiry (30 days from now)
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 30);
+        // Calculate expiry based on plan duration
+        const expiryDate = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
         admin.subscriptionExpiry = expiryDate;
 
         await admin.save();

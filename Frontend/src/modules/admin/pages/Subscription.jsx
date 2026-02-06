@@ -32,7 +32,6 @@ const Subscription = () => {
     const [loadingPlan, setLoadingPlan] = React.useState(null);
     const [downloadingId, setDownloadingId] = React.useState(null);
 
-<<<<<<< HEAD
     React.useEffect(() => {
         fetchPlans();
         fetchBillingHistory();
@@ -56,43 +55,6 @@ const Subscription = () => {
             toast.error('Razorpay SDK failed to load. Are you online?');
             setLoadingPlan(null);
             return;
-=======
-    const currentPlan = {
-        name: 'Pro Team',
-        price: '₹2,499/mo',
-        billing: 'Monthly',
-        nextBill: 'Feb 15, 2026',
-        features: [
-            'Up to 5 Team Members',
-            'Advanced Reports',
-            'Custom Task Priority',
-            'Location Tracking',
-            '5GB File Storage'
-        ]
-    };
-
-    const plans = [
-        {
-            name: 'Starter',
-            price: '₹999/mo',
-            limit: 2,
-            features: ['Basic Task Mgmt', 'Mobile App', 'Email Reports'],
-            current: false
-        },
-        {
-            name: 'Pro Team',
-            price: '₹2,499/mo',
-            limit: 5,
-            features: ['Everything in Starter', 'Advanced Analytics', 'Location Verification'],
-            current: true
-        },
-        {
-            name: 'Business',
-            price: '₹4,999/mo',
-            limit: 20,
-            features: ['Everything in Pro', 'Custom Branding', 'API Access', '24/7 Support'],
-            current: false
->>>>>>> eef3f26dcdb07bf5b1c5608f82f1301e46dfd486
         }
 
         // Create Order
@@ -152,8 +114,8 @@ const Subscription = () => {
     const currentPlan = {
         name: user?.subscriptionPlan || 'Starter',
         price: '---',
-        billing: 'Monthly',
-        nextRenewal: user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString() : 'N/A',
+        billing: user?.planDetails?.duration ? `${user.planDetails.duration} Days` : 'Monthly',
+        nextRenewal: user?.subscriptionExpiry ? format(new Date(user.subscriptionExpiry), 'MMM dd, yyyy') : 'N/A',
         features: user?.planDetails?.features || ['Basic Features']
     };
 
@@ -196,7 +158,7 @@ const Subscription = () => {
                             </div>
                             <div className="text-left sm:text-right">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Price</p>
-                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">â‚¹{user?.planDetails?.price || 0}</h3>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">₹{user?.planDetails?.price || 0}</h3>
                                 <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 sm:justify-end">
                                     <Clock size={10} /> Next renewal: {currentPlan.nextRenewal}
                                 </p>
@@ -340,8 +302,8 @@ const Subscription = () => {
                                 {isCurrent && <Badge className="w-fit mb-2 bg-primary-600">Current Plan</Badge>}
                                 <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
                                 <CardDescription className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                                    â‚¹{plan.price}
-                                    <span className="text-sm font-normal text-slate-400">/mo</span>
+                                    ₹{plan.price}
+                                    <span className="text-sm font-normal text-slate-400">/{plan.duration || 30}d</span>
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -404,7 +366,7 @@ const Subscription = () => {
                                             {payment.planId?.name || '---'}
                                         </td>
                                         <td className="p-4 text-[11px] font-black text-slate-900 dark:text-white tracking-tight">
-                                            â‚¹{payment.amount.toLocaleString()}
+                                            ₹{payment.amount.toLocaleString()}
                                         </td>
                                         <td className="p-4">
                                             <Badge className={cn(

@@ -35,7 +35,8 @@ const PlansManagement = () => {
         price: '',
         userLimit: '',
         isActive: true,
-        features: []
+        features: [],
+        duration: '30'
     });
     const [featureInput, setFeatureInput] = useState('');
 
@@ -55,7 +56,8 @@ const PlansManagement = () => {
             price: '',
             userLimit: '',
             isActive: true,
-            features: []
+            features: [],
+            duration: '30'
         });
         setIsModalOpen(true);
     };
@@ -68,7 +70,8 @@ const PlansManagement = () => {
             price: plan.price?.toString() || '0',
             userLimit: plan.userLimit?.toString() || '1',
             isActive: plan.isActive !== undefined ? plan.isActive : true,
-            features: Array.isArray(plan.features) ? [...plan.features] : []
+            features: Array.isArray(plan.features) ? [...plan.features] : [],
+            duration: plan.duration?.toString() || '30'
         });
         setIsModalOpen(true);
     };
@@ -76,7 +79,7 @@ const PlansManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!planForm.name || planForm.price === '' || planForm.userLimit === '') {
+        if (!planForm.name || planForm.price === '' || planForm.userLimit === '' || planForm.duration === '') {
             toast.error("Please fill in all required parameters");
             return;
         }
@@ -84,7 +87,8 @@ const PlansManagement = () => {
         const planData = {
             ...planForm,
             price: Number(planForm.price),
-            userLimit: Number(planForm.userLimit)
+            userLimit: Number(planForm.userLimit),
+            duration: Number(planForm.duration)
         };
 
         const success = isEditMode
@@ -226,7 +230,7 @@ const PlansManagement = () => {
                                         <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
                                             {(plan.price || 0).toLocaleString('en-IN')}
                                         </span>
-                                        <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest self-end pb-2 opacity-60">/ CYCLE</span>
+                                        <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest self-end pb-2 opacity-60">/ {plan.duration || 30} DAYS</span>
                                     </div>
 
                                     <div className="space-y-4">
@@ -312,14 +316,25 @@ const PlansManagement = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div className="space-y-3">
-                                        <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">MONTHLY VALUE (₹)</Label>
+                                        <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">PLAN VALUE (₹)</Label>
                                         <Input
                                             id="price"
                                             type="number"
-                                            placeholder="999"
+                                            placeholder="2999"
                                             className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
                                             value={planForm.price}
                                             onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="duration" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">VALIDITY (DAYS)</Label>
+                                        <Input
+                                            id="duration"
+                                            type="number"
+                                            placeholder="30"
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
+                                            value={planForm.duration}
+                                            onChange={(e) => setPlanForm({ ...planForm, duration: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-3">

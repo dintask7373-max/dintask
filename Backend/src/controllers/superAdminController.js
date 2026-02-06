@@ -8,6 +8,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
+const Plan = require('../models/Plan');
 
 // @desc    Get system stats
 // @route   GET /api/v1/superadmin/stats
@@ -59,6 +60,18 @@ exports.createAdmin = async (req, res, next) => {
     // Default password if not provided
     const adminPassword = password || 'DinTask@123';
 
+    // Calculate subscription expiry
+    let subscriptionExpiry = null;
+    if (req.body.subscriptionPlanId) {
+      const plan = await Plan.findById(req.body.subscriptionPlanId);
+      if (plan) {
+        subscriptionExpiry = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
+      }
+    } else {
+      // Default to 30 days if no plan ID provided (e.g. Starter)
+      subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    }
+
     const admin = await Admin.create({
       companyName,
       name,
@@ -66,7 +79,8 @@ exports.createAdmin = async (req, res, next) => {
       subscriptionPlan,
       subscriptionPlanId: req.body.subscriptionPlanId,
       password: adminPassword,
-      subscriptionStatus: 'active'
+      subscriptionStatus: 'active',
+      subscriptionExpiry
     });
 
     // Send email to new admin
@@ -153,11 +167,21 @@ exports.updateAdminPlan = async (req, res, next) => {
   try {
     const { planId, planName } = req.body;
 
+    // Get plan duration
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      return next(new ErrorResponse(`Plan not found with id of ${planId}`, 404));
+    }
+
+    const subscriptionExpiry = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
+
     const admin = await Admin.findByIdAndUpdate(
       req.params.id,
       {
         subscriptionPlanId: planId,
-        subscriptionPlan: planName
+        subscriptionPlan: planName,
+        subscriptionExpiry,
+        subscriptionStatus: 'active'
       },
       { new: true, runValidators: true }
     );

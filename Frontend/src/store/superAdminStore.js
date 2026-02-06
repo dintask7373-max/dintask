@@ -135,7 +135,7 @@ const useSuperAdminStore = create(
                     if (response.success) {
                         set((state) => ({
                             admins: state.admins.map((adm) =>
-                                adm._id === id ? { ...adm, subscriptionStatus: status } : adm
+                                adm._id === id ? response.data : adm
                             ),
                         }));
                         return true;
@@ -261,7 +261,7 @@ const useSuperAdminStore = create(
                     if (response.success) {
                         set((state) => ({
                             admins: state.admins.map(adm =>
-                                adm._id === adminId ? { ...adm, subscriptionPlanId: planId, subscriptionPlan: planName } : adm
+                                adm._id === adminId ? response.data : adm
                             )
                         }));
                         return true;
