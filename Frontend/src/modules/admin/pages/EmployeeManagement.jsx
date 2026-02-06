@@ -49,6 +49,7 @@ import { cn } from '@/shared/utils/cn';
 import { Progress } from '@/shared/components/ui/progress';
 
 import useSalesStore from '@/store/salesStore';
+import useAuthStore from '@/store/authStore';
 
 const EmployeeManagement = () => {
     const navigate = useNavigate();

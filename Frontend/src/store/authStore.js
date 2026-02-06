@@ -23,6 +23,15 @@ const useAuthStore = create(
                             method: 'POST',
                             body: { adminId: email, secureKey: password }
                         });
+                    } else if (['employee', 'manager', 'sales'].includes(selectedRole)) {
+                        // Mock login for non-admin roles as requested
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        const mockUser = mockUsers[selectedRole];
+                        response = {
+                            success: true,
+                            user: { ...mockUser, email }, // Allow login with any email but use role structure
+                            token: 'mock-jwt-token'
+                        };
                     } else {
                         response = await apiRequest('/auth/login', {
                             method: 'POST',
@@ -64,6 +73,14 @@ const useAuthStore = create(
                     let response;
                     if (role === 'superadmin' || role === 'super_admin') {
                         response = await apiRequest('/superadmin/me');
+                    } else if (['employee', 'manager', 'sales'].includes(role)) {
+                        // Mock profile fetch
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        const mockUser = mockUsers[role];
+                        response = {
+                            success: true,
+                            data: { ...mockUser, ...get().user } // Keep current user data (like email)
+                        };
                     } else {
                         response = await apiRequest('/auth/me');
                     }
