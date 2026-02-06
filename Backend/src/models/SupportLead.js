@@ -19,11 +19,11 @@ const SupportLeadSchema = new mongoose.Schema({
     },
     jobTitle: {
         type: String,
-        required: [true, 'Please provide your job title']
+        required: false // Optional for Pricing/Register leads
     },
     companySize: {
         type: String,
-        required: [true, 'Please select company size'],
+        required: false, // Optional
         enum: [
             '1-10 Employees',
             '11-50 Employees',
@@ -34,7 +34,7 @@ const SupportLeadSchema = new mongoose.Schema({
     },
     industry: {
         type: String,
-        required: [true, 'Please select industry'],
+        required: false, // Optional
         enum: [
             'Technology',
             'Finance',
@@ -47,6 +47,9 @@ const SupportLeadSchema = new mongoose.Schema({
     requirements: {
         type: String
     },
+    interestedPlan: {
+        type: String // e.g., 'Starter', 'Pro', 'Enterprise'
+    },
     status: {
         type: String,
         enum: ['new', 'contacted', 'converted', 'closed'],
@@ -54,7 +57,7 @@ const SupportLeadSchema = new mongoose.Schema({
     },
     source: {
         type: String,
-        default: 'support_form'
+        default: 'contact_form' // 'contact_form' or 'pricing_page'
     },
     createdAt: {
         type: Date,

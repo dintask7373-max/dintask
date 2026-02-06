@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import mockUsers from '../data/mockUsers.json';
+import apiRequest from '../lib/api';
 
 const useAuthStore = create(
     persist(
-        (set) => ({
+        (set, get) => ({
             user: null,
             role: null,
+            token: null,
             isAuthenticated: false,
             loading: false,
             error: null,
@@ -14,42 +16,71 @@ const useAuthStore = create(
             login: async (email, password, selectedRole) => {
                 set({ loading: true, error: null });
 
-                // Simulate API delay
-                await new Promise((resolve) => setTimeout(resolve, 800));
+                try {
+                    let response;
+                    if (selectedRole === 'superadmin') {
+                        response = await apiRequest('/superadmin/login', {
+                            method: 'POST',
+                            body: { adminId: email, secureKey: password }
+                        });
+                    } else {
+                        response = await apiRequest('/auth/login', {
+                            method: 'POST',
+                            body: { email, password, role: selectedRole }
+                        });
+                    }
 
-                let user;
-                let userData;
 
-                if (selectedRole === 'manager') {
-                    // Import manager data dynamically or use from a store if available
-                    // For now, checking mockUsers.json which I updated to include 'manager'
-                    user = mockUsers[selectedRole];
-                } else {
-                    user = mockUsers[selectedRole];
-                }
+                    if (response.success) {
+                        const rawRole = response.user.role || selectedRole;
+                        // Frontend expects 'superadmin', backend might send 'super_admin'
+                        const normalizedRole = rawRole === 'super_admin' ? 'superadmin' : rawRole;
 
-                if (user && user.email === email && user.password === password) {
-                    userData = {
-                        id: selectedRole === 'employee' ? '103' :
-                            selectedRole === 'manager' ? 'M001' :
-                                selectedRole === 'sales' ? 'S001' : selectedRole,
-                        name: user.name,
-                        email: user.email,
-                    };
-
+                        set({
+                            user: response.user,
+                            role: normalizedRole,
+                            token: response.token,
+                            isAuthenticated: true,
+                            loading: false,
+                        });
+                        return true;
+                    } else {
+                        throw new Error(response.error || 'Login failed');
+                    }
+                } catch (err) {
                     set({
-                        user: userData,
-                        role: selectedRole,
-                        isAuthenticated: true,
                         loading: false,
-                    });
-                    return true;
-                } else {
-                    set({
-                        loading: false,
-                        error: 'Invalid credentials for chosen role',
+                        error: err.message || 'Login failed',
                     });
                     return false;
+                }
+            },
+
+            fetchProfile: async () => {
+                const { role, token } = get();
+                if (!token) return;
+
+                try {
+                    let response;
+                    if (role === 'superadmin' || role === 'super_admin') {
+                        response = await apiRequest('/superadmin/me');
+                    } else {
+                        response = await apiRequest('/auth/me');
+                    }
+
+                    if (response.success) {
+                        const rawRole = response.data.role || response.user.role;
+                        // Helper to keep role consistent
+                        const normalizedRole = rawRole === 'super_admin' ? 'superadmin' : rawRole;
+
+                        // If role changed (e.g. from super_admin to superadmin), update it
+                        set({
+                            user: response.data || response.user,
+                            role: normalizedRole
+                        });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch user profile:', err);
                 }
             },
 
@@ -57,6 +88,7 @@ const useAuthStore = create(
                 set({
                     user: null,
                     role: null,
+                    token: null,
                     isAuthenticated: false,
                     error: null,
                 });
@@ -64,26 +96,67 @@ const useAuthStore = create(
 
             updateProfile: async (updatedData) => {
                 set({ loading: true });
-                // Simulate API delay
-                await new Promise((resolve) => setTimeout(resolve, 800));
+                const { role } = get();
 
-                set((state) => ({
-                    user: { ...state.user, ...updatedData },
-                    loading: false
-                }));
-                return true;
+                try {
+                    if (role === 'superadmin') {
+                        // Handle form data if it contains a file
+                        let body = updatedData;
+                        let headers = {};
+
+                        if (updatedData instanceof FormData) {
+                            // Fetch will handle Content-Type for FormData
+                        }
+
+                        const response = await apiRequest('/superadmin/updateprofile', {
+                            method: 'PUT',
+                            body
+                        });
+
+                        if (response.success) {
+                            set({ user: response.data, loading: false });
+                            return true;
+                        }
+                    }
+
+                    // Mock for others
+                    await new Promise((resolve) => setTimeout(resolve, 800));
+                    set((state) => ({
+                        user: { ...state.user, ...updatedData },
+                        loading: false
+                    }));
+                    return true;
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return false;
+                }
             },
 
             changePassword: async (currentPassword, newPassword) => {
                 set({ loading: true });
-                // Simulate API delay
-                await new Promise((resolve) => setTimeout(resolve, 800));
+                const { role } = get();
 
-                // In a real app, we would verify currentPassword here.
-                // For this mock, we'll just assume success.
+                try {
+                    if (role === 'superadmin') {
+                        const response = await apiRequest('/superadmin/changepassword', {
+                            method: 'PUT',
+                            body: { currentPassword, newPassword }
+                        });
 
-                set({ loading: false });
-                return true;
+                        if (response.success) {
+                            set({ loading: false });
+                            return true;
+                        }
+                    }
+
+                    // Mock for others
+                    await new Promise((resolve) => setTimeout(resolve, 800));
+                    set({ loading: false });
+                    return true;
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return false;
+                }
             },
 
             clearError: () => set({ error: null }),

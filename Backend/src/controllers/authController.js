@@ -5,12 +5,16 @@ const Manager = require('../models/Manager');
 const Admin = require('../models/Admin');
 const SuperAdmin = require('../models/SuperAdmin');
 
+const checkUserLimit = require('../utils/checkUserLimit');
+const ErrorResponse = require('../utils/errorResponse');
+
 const models = {
   employee: Employee,
   sales_executive: SalesExecutive,
   manager: Manager,
   admin: Admin,
-  super_admin: SuperAdmin
+  admin: Admin,
+  superadmin: SuperAdmin
 };
 
 // @desc    Register user
@@ -18,10 +22,22 @@ const models = {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, adminId } = req.body;
 
     if (!role || !models[role]) {
-      return res.status(400).json({ success: false, error: 'Please provide a valid role' });
+      return next(new ErrorResponse('Please provide a valid role', 400));
+    }
+
+    // Check user limit if creating restricted roles
+    if (['manager', 'sales_executive', 'employee'].includes(role)) {
+      if (!adminId) {
+        return next(new ErrorResponse('Please provide an Admin ID for this user', 400));
+      }
+
+      const limitCheck = await checkUserLimit(adminId);
+      if (!limitCheck.allowed) {
+        return next(new ErrorResponse(limitCheck.error, 403));
+      }
     }
 
     const UserModel = models[role];
@@ -31,12 +47,13 @@ exports.register = async (req, res, next) => {
       name,
       email,
       password,
-      role // role is still kept in schema for convenience in auth middleware logic
+      role,
+      adminId: role !== 'admin' && role !== 'superadmin' ? adminId : undefined
     });
 
-    sendTokenResponse(user, 201, res);
+    await sendTokenResponse(user, 201, res);
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    next(err);
   }
 };
 
@@ -80,27 +97,67 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    sendTokenResponse(user, 200, res);
+    await sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
 };
 
+// @desc    Get current logged in user
+// @route   GET /api/v1/auth/me
+// @access  Private
+exports.getMe = async (req, res, next) => {
+  try {
+    const user = await req.user.populate('subscriptionPlanId');
+
+    let userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    if (user.role === 'admin') {
+      userData.subscriptionPlan = user.subscriptionPlan;
+      userData.planDetails = user.subscriptionPlanId;
+      userData.subscriptionStatus = user.subscriptionStatus;
+      userData.subscriptionExpiry = user.subscriptionExpiry;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: userData
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 // Get token from model, create cookie and send response
-const sendTokenResponse = (user, statusCode, res) => {
+const sendTokenResponse = async (user, statusCode, res) => {
   // Create token with role included
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: '30d'
   });
 
+  let userData = {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role
+  };
+
+  // Include plan details for Admins
+  if (user.role === 'admin') {
+    // We need to populate it if not already
+    await user.populate('subscriptionPlanId');
+    userData.subscriptionPlan = user.subscriptionPlan;
+    userData.planDetails = user.subscriptionPlanId;
+  }
+
   res.status(statusCode).json({
     success: true,
     token,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }
+    user: userData
   });
 };

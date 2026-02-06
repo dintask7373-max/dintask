@@ -167,10 +167,42 @@ const SuperAdminSettings = () => {
                                         <CardContent className="p-5 sm:p-8 space-y-6 sm:space-y-8">
                                             <div className="flex items-center gap-4 sm:gap-8">
                                                 <div className="relative group">
-                                                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-xl sm:text-3xl font-black text-white shadow-xl">
-                                                        {user?.name?.charAt(0)}
+                                                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-xl sm:text-3xl font-black text-white shadow-xl overflow-hidden">
+                                                        {user?.profileImage ? (
+                                                            <img
+                                                                src={user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000/${user.profileImage}`}
+                                                                alt={user.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            user?.name?.charAt(0)
+                                                        )}
                                                     </div>
-                                                    <button className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 p-1.5 sm:p-2 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary-600 transition-colors">
+                                                    <input
+                                                        type="file"
+                                                        id="profile-image-input"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files[0];
+                                                            if (file) {
+                                                                const formData = new FormData();
+                                                                formData.append('image', file);
+                                                                formData.append('name', user.name);
+                                                                formData.append('email', user.email);
+
+                                                                setIsSaving(true);
+                                                                const success = await updateProfile(formData);
+                                                                setIsSaving(false);
+                                                                if (success) toast.success('Profile image updated');
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById('profile-image-input').click()}
+                                                        className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 p-1.5 sm:p-2 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary-600 transition-colors"
+                                                    >
                                                         <Camera size={14} className="sm:w-4 sm:h-4" />
                                                     </button>
                                                 </div>

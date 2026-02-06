@@ -13,7 +13,9 @@ import {
     Search,
     Filter,
     ChevronRight,
-    MessageSquare
+    MessageSquare,
+    Briefcase,
+    Users
 } from 'lucide-react';
 import useSuperAdminStore from '@/store/superAdminStore';
 import { Button } from '@/shared/components/ui/button';
@@ -37,17 +39,26 @@ import { format } from 'date-fns';
 import { cn } from '@/shared/utils/cn';
 
 const Inquiries = () => {
-    const { inquiries, updateInquiryStatus } = useSuperAdminStore();
+    const { inquiries, fetchInquiries, fetchInquiryDetails, updateInquiryStatus } = useSuperAdminStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [selectedInquiry, setSelectedInquiry] = useState(null);
 
+    React.useEffect(() => {
+        fetchInquiries();
+    }, []);
+
     const filteredInquiries = inquiries.filter(inq => {
+        const firstName = inq.firstName || inq.name?.split(' ')[0] || '';
+        const lastName = inq.lastName || inq.name?.split(' ').slice(1).join(' ') || '';
+        const company = inq.company || inq.companyName || '';
+        const workEmail = inq.workEmail || inq.businessEmail || '';
+
         const matchesSearch =
-            inq.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            inq.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            inq.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            inq.workEmail.toLowerCase().includes(searchTerm.toLowerCase());
+            firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            workEmail.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesFilter = filterStatus === 'all' || inq.status === filterStatus;
 
@@ -126,7 +137,7 @@ const Inquiries = () => {
                     {filteredInquiries.length > 0 ? (
                         filteredInquiries.map((inq, index) => (
                             <motion.div
-                                key={inq.id}
+                                key={inq._id || inq.id || index}
                                 layout
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -144,39 +155,48 @@ const Inquiries = () => {
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div className="flex items-center gap-2.5 min-w-0">
                                                         <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-slate-800 dark:text-white font-black text-xs md:text-lg shrink-0">
-                                                            {inq.firstName[0]}{inq.lastName[0]}
+                                                            {(inq.firstName?.[0] || inq.name?.[0] || 'U')}{(inq.lastName?.[0] || inq.name?.split(' ')[1]?.[0] || '')}
                                                         </div>
                                                         <div className="min-w-0">
                                                             <div className="flex flex-col sm:flex-row sm:items-center gap-1">
                                                                 <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white leading-tight truncate">
-                                                                    {inq.firstName} {inq.lastName}
+                                                                    {inq.firstName ? `${inq.firstName} ${inq.lastName}` : inq.name}
                                                                 </h3>
                                                                 <div className="flex items-center">
                                                                     {getStatusBadge(inq.status)}
                                                                 </div>
                                                             </div>
                                                             <p className="text-[10px] md:text-xs font-black text-primary-600 dark:text-primary-400 flex items-center gap-1 mt-0.5 uppercase tracking-tight truncate">
-                                                                <Building2 size={10} strokeWidth={3} /> {inq.company}
+                                                                <Building2 size={10} strokeWidth={3} /> {inq.company || inq.companyName}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="lg:hidden shrink-0">
-                                                        <InquiryActions inq={inq} updateStatus={updateInquiryStatus} />
+                                                        <InquiryActions inq={inq} updateStatus={updateInquiryStatus} onView={() => setSelectedInquiry(inq)} />
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-2 gap-x-4 pt-1">
                                                     <div className="flex items-center gap-2 text-[11px] md:text-sm font-bold text-slate-500 dark:text-slate-400">
                                                         <Mail size={14} className="text-slate-400 shrink-0" />
-                                                        <span className="truncate">{inq.workEmail}</span>
+                                                        <span className="truncate">{inq.workEmail || inq.businessEmail}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[11px] md:text-sm font-bold text-slate-500 dark:text-slate-400">
                                                         <Phone size={14} className="text-slate-400 shrink-0" />
                                                         <span>{inq.phone}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[11px] md:text-sm font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight">
-                                                        <Calendar size={14} className="text-slate-400 shrink-0" />
-                                                        <span>{inq.planSelected} Plan</span>
+                                                        {inq.source === 'pricing_page' || inq.interestedPlan ? (
+                                                            <>
+                                                                <Calendar size={14} className="text-slate-400 shrink-0" />
+                                                                <span>{inq.planSelected || inq.interestedPlan} Plan</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <MessageSquare size={14} className="text-slate-400 shrink-0" />
+                                                                <span>General Inquiry</span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -194,13 +214,13 @@ const Inquiries = () => {
                                                         <Clock size={10} /> Received
                                                     </div>
                                                     <div className="text-[11px] md:text-sm font-black text-slate-700 dark:text-slate-300 flex flex-col lg:items-end">
-                                                        {format(new Date(inq.date), 'MMM dd, yyyy')}
-                                                        <span className="text-[10px] font-bold text-slate-400">{format(new Date(inq.date), 'HH:mm aaa')}</span>
+                                                        {format(new Date(inq.date || inq.createdAt), 'MMM dd, yyyy')}
+                                                        <span className="text-[10px] font-bold text-slate-400">{format(new Date(inq.date || inq.createdAt), 'HH:mm aaa')}</span>
                                                     </div>
                                                 </div>
 
                                                 <div className="hidden lg:block w-full">
-                                                    <InquiryActions inq={inq} updateStatus={updateInquiryStatus} fullWidth />
+                                                    <InquiryActions inq={inq} updateStatus={updateInquiryStatus} onView={() => setSelectedInquiry(inq)} fullWidth />
                                                 </div>
                                             </div>
                                         </div>
@@ -225,15 +245,30 @@ const Inquiries = () => {
             <InquiryDetailModal
                 isOpen={!!selectedInquiry}
                 onOpenChange={(open) => !open && setSelectedInquiry(null)}
-                inquiry={selectedInquiry}
+                inquiryId={selectedInquiry?._id || selectedInquiry?.id}
+                initialData={selectedInquiry}
                 updateStatus={updateInquiryStatus}
             />
         </div>
     );
 };
 
-const InquiryActions = ({ inq, updateStatus, fullWidth = false }) => (
+const InquiryActions = ({ inq, updateStatus, onView, fullWidth = false }) => (
     <div className={fullWidth ? "w-full space-y-2" : "flex items-center gap-1"}>
+        <Button
+            size="sm"
+            variant="outline"
+            className={cn(
+                "font-black text-[9px] uppercase tracking-tighter border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg shrink-0",
+                fullWidth ? "w-full h-10" : "h-7 px-2"
+            )}
+            onClick={(e) => {
+                e.stopPropagation();
+                onView();
+            }}
+        >
+            <Users size={10} className="mr-1" /> View
+        </Button>
         <Button
             size="sm"
             className={cn(
@@ -279,15 +314,32 @@ const InquiryActions = ({ inq, updateStatus, fullWidth = false }) => (
     </div>
 );
 
-const InquiryDetailModal = ({ isOpen, onOpenChange, inquiry, updateStatus }) => {
+const InquiryDetailModal = ({ isOpen, onOpenChange, inquiryId, initialData, updateStatus }) => {
+    const { fetchInquiryDetails } = useSuperAdminStore();
+    const [fullInquiry, setFullInquiry] = useState(initialData);
+    const [isLoading, setIsLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (isOpen && inquiryId) {
+            setIsLoading(true);
+            setFullInquiry(initialData);
+
+            fetchInquiryDetails(inquiryId).then(data => {
+                if (data) setFullInquiry(data);
+                setIsLoading(false);
+            });
+        }
+    }, [isOpen, inquiryId]);
+
+    const inquiry = fullInquiry || initialData;
     if (!inquiry) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl font-sans">
+                {/* Header */}
                 <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 text-white relative">
                     <div className="absolute top-4 right-4 flex gap-2">
-                        {/* Badge */}
                         <Badge className={cn(
                             "border-none px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
                             inquiry.status === 'new' ? "bg-primary-500" : inquiry.status === 'replied' ? "bg-emerald-500" : "bg-slate-500"
@@ -298,31 +350,38 @@ const InquiryDetailModal = ({ isOpen, onOpenChange, inquiry, updateStatus }) => 
 
                     <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl sm:text-3xl font-black border border-white/20 shadow-xl">
-                            {inquiry.firstName[0]}{inquiry.lastName[0]}
+                            {(inquiry.firstName?.[0] || 'U')}{(inquiry.lastName?.[0] || '')}
                         </div>
                         <div className="space-y-1 text-center sm:text-left">
                             <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{inquiry.firstName} {inquiry.lastName}</h2>
                             <p className="text-primary-400 font-bold flex items-center justify-center sm:justify-start gap-2">
-                                <Building2 size={18} /> {inquiry.company}
+                                <Building2 size={18} /> {inquiry.company || inquiry.companyName}
                             </p>
                         </div>
                     </div>
                 </div>
 
+                {/* Content */}
                 <div className="p-6 sm:p-8 space-y-6 sm:space-y-8 bg-white dark:bg-slate-900">
+                    {isLoading && <div className="text-center text-xs font-bold text-slate-400">Loading full details...</div>}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-                        <DetailItem icon={Mail} label="Work Email" value={inquiry.workEmail} />
+                        <DetailItem icon={Mail} label="Work Email" value={inquiry.workEmail || inquiry.businessEmail} />
                         <DetailItem icon={Phone} label="Phone Number" value={inquiry.phone} />
-                        <DetailItem icon={Calendar} label="Plan Interested" value={inquiry.planSelected} />
-                        <DetailItem icon={Clock} label="Received Date" value={format(new Date(inquiry.date), 'MMM dd, yyyy HH:mm')} />
+                        <DetailItem icon={Calendar} label="Plan Interested" value={inquiry.planSelected || inquiry.interestedPlan} />
+                        <DetailItem icon={Clock} label="Received Date" value={inquiry.createdAt || inquiry.date ? format(new Date(inquiry.createdAt || inquiry.date), 'MMM dd, yyyy HH:mm') : 'N/A'} />
+                        {/* Extra Details Loaded from API */}
+                        {inquiry.industry && <DetailItem icon={Building2} label="Industry" value={inquiry.industry} />}
+                        {inquiry.companySize && <DetailItem icon={Users} label="Company Size" value={inquiry.companySize} />}
+                        {inquiry.jobTitle && <DetailItem icon={Briefcase} label="Job Title" value={inquiry.jobTitle} />}
                     </div>
 
                     <div className="space-y-3">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Message / Questions</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Message / Requirements</p>
                         <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 relative">
                             <MessageSquare className="absolute -top-3 -left-3 p-1.5 w-8 h-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-primary-500 shadow-lg" />
                             <p className="text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed">
-                                "{inquiry.questions || 'No specific questions provided.'}"
+                                "{inquiry.requirements || inquiry.questions || 'No specific details provided.'}"
                             </p>
                         </div>
                     </div>
@@ -330,7 +389,7 @@ const InquiryDetailModal = ({ isOpen, onOpenChange, inquiry, updateStatus }) => 
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <Button
                             className="flex-1 h-12 sm:h-14 rounded-2xl bg-primary-600 hover:bg-primary-700 font-black text-base sm:text-lg gap-3"
-                            onClick={() => window.open(`mailto:${inquiry.workEmail}?subject=DinTask Inquiry`)}
+                            onClick={() => window.open(`mailto:${inquiry.workEmail || inquiry.businessEmail}?subject=DinTask Inquiry`)}
                         >
                             <Mail size={20} /> Reply via Email
                         </Button>
@@ -339,7 +398,7 @@ const InquiryDetailModal = ({ isOpen, onOpenChange, inquiry, updateStatus }) => 
                                 variant="outline"
                                 className="h-12 sm:h-14 rounded-2xl border-slate-200 dark:border-slate-700 font-bold px-6"
                                 onClick={() => {
-                                    updateStatus(inquiry.id, 'replied');
+                                    updateStatus(inquiry.id || inquiry._id, 'replied');
                                     onOpenChange(false);
                                 }}
                             >

@@ -22,11 +22,11 @@ const SuperAdminSchema = new mongoose.Schema({
   phoneNumber: String,
   profileImage: {
     type: String,
-    default: 'https://res.cloudinary.com/demo/image/upload/v1574026613/profile.jpg' // Default Cloudinary image or similar
+    default: '' // Use empty string to trigger frontend fallback
   },
   role: {
     type: String,
-    default: 'super_admin'
+    default: 'superadmin'
   },
   isActive: {
     type: Boolean,

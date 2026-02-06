@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import useAuthStore from '@/store/authStore';
@@ -27,14 +27,12 @@ import EmployeeLayout from '@/shared/layouts/EmployeeLayout';
 import ManagerLayout from '@/shared/layouts/ManagerLayout';
 
 // Auth Pages
-// Auth Pages
 import SplashScreen from '@/modules/user/pages/SplashScreen';
 import EmployeeLogin from '@/modules/user/pages/EmployeeLogin';
 import EmployeeRegister from '@/modules/user/pages/EmployeeRegister';
 import ForgotPassword from '@/modules/user/pages/ForgotPassword';
 import AdminLogin from '@/modules/admin/pages/AdminLogin';
 import AdminRegister from '@/modules/admin/pages/AdminRegister';
-import AdminForgotPassword from '@/modules/admin/pages/AdminForgotPassword';
 import SuperAdminLogin from '@/modules/superadmin/pages/SuperAdminLogin';
 import SuperAdminRegister from '@/modules/superadmin/pages/SuperAdminRegister';
 import SuperAdminForgotPassword from '@/modules/superadmin/pages/SuperAdminForgotPassword';
@@ -152,7 +150,7 @@ const AppRouter = () => {
             <Route path="/manager/forgot-password" element={<ForgotPassword returnPath="/manager/login" />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/register" element={<AdminRegister />} />
-            <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword returnPath="/admin/login" />} />
             <Route path="/superadmin/login" element={<SuperAdminLogin />} />
             <Route path="/superadmin/register" element={<SuperAdminRegister />} />
             <Route path="/superadmin/forgot-password" element={<SuperAdminForgotPassword />} />

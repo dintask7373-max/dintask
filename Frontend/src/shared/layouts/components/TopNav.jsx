@@ -83,7 +83,7 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-tighter">{role}</p>
                                 </div>
                                 <Avatar className="h-9 w-9 border-2 border-primary-100 dark:border-primary-900">
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
+                                    <AvatarImage src={user?.profileImage ? (user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000/${user.profileImage}`) : `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
                                     <AvatarFallback className="bg-primary-600 text-white font-bold">{user?.name?.charAt(0)}</AvatarFallback>
                                 </Avatar>
                             </Button>
