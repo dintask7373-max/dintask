@@ -39,10 +39,16 @@ const LandingPage = () => {
     ];
 
     React.useEffect(() => {
+        // Ensure body is scrollable when landing page mounts
+        document.body.style.overflow = 'auto';
+        document.body.style.overflowX = 'hidden';
+
         const timer = setInterval(() => {
             setCurrentImage((prev) => (prev + 1) % showcaseImages.length);
         }, 3000);
-        return () => clearInterval(timer);
+        return () => {
+            clearInterval(timer);
+        };
     }, []);
 
     const modules = [
@@ -121,23 +127,24 @@ const LandingPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white">
+        <main className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white overflow-x-clip">
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-10 w-10" />
-                        <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">
-                            Din<span className="text-primary-600">Task</span>
-                        </span>
+                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-24 sm:h-28 w-24 sm:w-28 object-contain" />
                     </div>
 
                     {/* Desktop Nav */}
                     <div className="hidden lg:flex items-center gap-8">
-                        {['Features', 'Pricing', 'Contact'].map((item) => (
+                        {['Features', 'Pricing', 'About', 'Contact'].map((item) => (
                             <button
                                 key={item}
-                                onClick={() => item === 'Contact' ? navigate('/contact') : document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}
+                                onClick={() => {
+                                    if (item === 'Contact') navigate('/contact');
+                                    else if (item === 'About') document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                                    else document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
+                                }}
                                 className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors uppercase tracking-widest"
                             >
                                 {item}
@@ -169,24 +176,25 @@ const LandingPage = () => {
                             exit={{ opacity: 0, height: 0 }}
                             className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-8 space-y-6"
                         >
-                            {['Features', 'Pricing', 'Contact'].map((item) => (
+                            {['Features', 'Pricing', 'About', 'Contact'].map((item) => (
                                 <button
                                     key={item}
                                     onClick={() => {
                                         setIsMenuOpen(false);
                                         if (item === 'Contact') navigate('/contact');
+                                        else if (item === 'About') document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
                                         else document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
                                     }}
-                                    className="block text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest text-left w-full"
+                                    className="block text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest text-center w-full py-2 hover:text-primary-600 transition-colors"
                                 >
                                     {item}
                                 </button>
                             ))}
-                            <div className="pt-6 flex flex-col gap-4">
-                                <Button variant="outline" onClick={() => navigate('/admin/login')} className="w-full h-12 rounded-xl font-bold uppercase tracking-widest">
+                            <div className="pt-4 flex flex-row gap-2">
+                                <Button variant="outline" onClick={() => navigate('/admin/login')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200">
                                     Login
                                 </Button>
-                                <Button onClick={() => navigate('/admin/login')} className="w-full h-12 rounded-xl bg-primary-600 font-bold uppercase tracking-widest">
+                                <Button onClick={() => navigate('/admin/login')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
                                     Sign Up
                                 </Button>
                             </div>
@@ -196,8 +204,8 @@ const LandingPage = () => {
             </nav>
 
             {/* Hero Section */}
-            <section className="pt-40 pb-24 px-6 overflow-hidden bg-white dark:bg-slate-950">
-                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+            <section className="pt-20 md:pt-40 pb-12 md:pb-24 px-4 md:px-6 overflow-x-clip bg-white dark:bg-slate-950 relative">
+                <div className="max-w-7xl mx-auto grid grid-cols-2 gap-4 sm:gap-12 md:gap-16 lg:gap-24 items-start">
                     {/* Left Side: Strategic Ecosystem Infographic */}
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
@@ -207,31 +215,31 @@ const LandingPage = () => {
                         className="flex flex-col"
                     >
 
-                        <h1 className="text-5xl lg:text-7xl font-black text-slate-900 dark:text-white leading-[0.9] tracking-tighter mb-8 italic">
+                        <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-7xl font-black text-slate-900 dark:text-white leading-[0.9] tracking-tighter mb-4 md:mb-8 italic">
                             Your work, <br />
                             <span className="text-primary-600">Powered</span> by <br />
                             our life's work.
                         </h1>
-                        <p className="text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-12 max-w-lg">
+                        <p className="text-[10px] sm:text-xs md:text-base lg:text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6 md:mb-12 max-w-lg">
                             An all-in-one workspace designed to break down silos and boost efficiency. Experience total control over your business operations.
                         </p>
                         {/* Strategic Ecosystem Infographic */}
-                        <div id="features" className="relative mt-16 h-[520px] w-full group scale-[0.8] lg:scale-[0.85] origin-left flex scroll-mt-24">
+                        <div id="features" className="relative mt-4 md:mt-16 h-[220px] sm:h-[350px] md:h-[520px] w-[250%] md:w-full group scale-[0.4] sm:scale-[0.6] md:scale-[0.8] lg:scale-[0.85] origin-left flex scroll-mt-24">
                             {/* Left Side: The Infographic Core */}
-                            <div className="relative w-[500px] shrink-0">
+                            <div className="relative w-full md:max-w-[500px]">
                                 {/* Infographic Path (Semi-circle) */}
                                 <div className="absolute left-[-40px] top-1/2 -translate-y-1/2 w-64 h-[480px] border-[3px] border-dashed border-primary-200 dark:border-primary-900/30 rounded-r-full -z-0" />
 
                                 {/* Digital Core Branding */}
                                 <div className="absolute left-[-60px] top-1/2 -translate-y-1/2 z-10">
-                                    <div className="size-44 rounded-full bg-white dark:bg-slate-900 border-[10px] border-slate-50 dark:border-slate-800 shadow-[20px_20px_60px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center p-6 relative overflow-hidden group/core">
+                                    <div className="size-32 sm:size-44 rounded-full bg-white dark:bg-slate-900 border-[8px] sm:border-[10px] border-slate-50 dark:border-slate-800 shadow-[20px_20px_60px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center p-4 sm:p-6 relative overflow-hidden group/core">
                                         <div className="absolute inset-0 bg-primary-600/5" />
-                                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.2em] mb-2">Ecosystem</span>
-                                        <span className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter italic">Din<span className="text-primary-600">Task</span></span>
+                                        <span className="text-[8px] sm:text-[10px] font-black text-primary-600 uppercase tracking-[0.2em] mb-1 sm:mb-2">Ecosystem</span>
+                                        <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter italic">Din<span className="text-primary-600">Task</span></span>
 
-                                        <div className="mt-4 flex flex-col gap-2">
-                                            <button onClick={() => navigate('/admin/login')} className="px-3 py-1.5 bg-primary-600 text-white text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
-                                            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-3 py-1.5 border border-primary-600 text-primary-600 text-[8px] font-black rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 transition-all active:scale-90 uppercase tracking-widest">BUY NOW</button>
+                                        <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:gap-2">
+                                            <button onClick={() => navigate('/admin/login')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
+                                            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-2 sm:px-3 py-1 sm:py-1.5 border border-primary-600 text-primary-600 text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 transition-all active:scale-90 uppercase tracking-widest">BUY NOW</button>
                                         </div>
                                     </div>
                                 </div>
@@ -251,14 +259,14 @@ const LandingPage = () => {
                                                 <div className={`absolute left-[-24px] top-1/2 w-20 h-[2px] bg-gradient-to-r ${activeModule === idx ? 'from-primary-600 to-transparent' : 'from-slate-200 dark:from-slate-800 to-transparent'
                                                     } -z-10`} />
 
-                                                <div className={`size-12 rounded-full flex items-center justify-center text-sm font-black transition-all duration-700 border-2 relative ${activeModule === idx
+                                                <div className={`size-10 sm:size-12 rounded-full flex items-center justify-center text-xs sm:text-sm font-black transition-all duration-700 border-2 relative ${activeModule === idx
                                                     ? 'bg-primary-600 text-white border-primary-400 shadow-[0_0_30px_rgba(99,116,242,0.3)] ring-8 ring-primary-500/5'
                                                     : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
                                                     }`}>
                                                     0{idx + 1}
                                                 </div>
 
-                                                <div className={`flex items-center gap-6 px-10 py-5 rounded-[2.5rem] transition-all duration-500 w-[380px] border-2 relative overflow-hidden ${activeModule === idx
+                                                <div className={`flex items-center gap-4 sm:gap-6 px-6 sm:px-10 py-3 sm:py-5 rounded-[2.5rem] transition-all duration-500 w-[240px] sm:w-[320px] md:w-[380px] border-2 relative overflow-hidden ${activeModule === idx
                                                     ? 'bg-primary-600 border-primary-400 shadow-2xl translate-x-1'
                                                     : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-800'
                                                     }`}>
@@ -291,30 +299,30 @@ const LandingPage = () => {
                                                         initial={{ opacity: 0, x: 20 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         exit={{ opacity: 0, x: 10 }}
-                                                        className="absolute left-[580px] w-[450px] hidden xl:block"
+                                                        className="absolute left-[400px] sm:left-[380px] md:left-[480px] lg:left-[580px] w-[480px] sm:w-[350px] md:w-[450px] lg:w-[450px] block"
                                                     >
                                                         <div className="relative">
                                                             {/* Ghostly Watermark Title */}
-                                                            <div className="absolute -top-20 -left-10 text-[10rem] font-black text-slate-100 dark:text-slate-800/20 uppercase tracking-tighter opacity-50 -z-10 pointer-events-none select-none">
+                                                            <div className="absolute -top-10 sm:-top-20 -left-6 lg:-left-10 text-[3rem] sm:text-[6rem] lg:text-[10rem] font-black text-slate-100 dark:text-slate-800/20 uppercase tracking-tighter opacity-50 -z-10 pointer-events-none select-none">
                                                                 {module.title.split(' ')[0]}
                                                             </div>
 
-                                                            <div className="space-y-8">
-                                                                <div className="space-y-3">
-                                                                    <div className="flex items-center gap-4 mb-3">
-                                                                        <div className="h-[3px] w-12 bg-primary-600" />
-                                                                        <span className="text-[13px] font-black text-primary-600 uppercase tracking-[0.2em]">TACTICAL SPECS</span>
+                                                            <div className="space-y-3 sm:space-y-6 lg:space-y-8">
+                                                                <div className="space-y-1 sm:space-y-3">
+                                                                    <div className="flex items-center gap-2 sm:gap-4 mb-1 sm:mb-3">
+                                                                        <div className="h-[1px] sm:h-[3px] w-6 lg:w-12 bg-primary-600" />
+                                                                        <span className="text-[6px] sm:text-[10px] lg:text-[13px] font-black text-primary-600 uppercase tracking-[0.2em]">TACTICAL SPECS</span>
                                                                     </div>
-                                                                    <p className="text-xl font-bold text-slate-500 dark:text-slate-400 leading-tight uppercase tracking-tight">
+                                                                    <p className="text-[8px] sm:text-lg lg:text-xl font-bold text-slate-500 dark:text-slate-400 leading-tight uppercase tracking-tight">
                                                                         {module.description}
                                                                     </p>
                                                                 </div>
 
-                                                                <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                                                                <div className="grid grid-cols-2 gap-y-2 sm:gap-y-4 gap-x-3 sm:gap-x-8">
                                                                     {module.features.map((feat, fIdx) => (
-                                                                        <div key={fIdx} className="flex flex-col border-l-2 border-slate-100 dark:border-slate-800 pl-4 hover:border-primary-500 transition-colors">
-                                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">0{fIdx + 1}</span>
-                                                                            <span className="text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight">{feat}</span>
+                                                                        <div key={fIdx} className="flex flex-col border-l-2 border-slate-100 dark:border-slate-800 pl-2 lg:pl-4 hover:border-primary-500 transition-colors">
+                                                                            <span className="text-[5px] sm:text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 sm:mb-1.5">0{fIdx + 1}</span>
+                                                                            <span className="text-[6px] sm:text-[11px] lg:text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight line-clamp-1">{feat}</span>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -336,7 +344,7 @@ const LandingPage = () => {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1 }}
-                        className="relative pt-12"
+                        className="relative pt-0 sm:pt-6 md:pt-12"
                     >
                         <div className="relative z-10">
                             <video
@@ -344,7 +352,7 @@ const LandingPage = () => {
                                 loop
                                 muted
                                 playsInline
-                                className="w-full h-auto object-contain rounded-[3rem]"
+                                className="w-full h-auto object-contain rounded-2xl sm:rounded-[3rem]"
                             >
                                 <source src="/src/assets/meeting-animation-gif-download-5327521.mp4" type="video/mp4" />
                                 Your browser does not support the video tag.
@@ -355,9 +363,9 @@ const LandingPage = () => {
             </section>
 
             {/* Strategic Options Section - Based on Reference Image */}
-            <section className="py-24 bg-white dark:bg-slate-950 overflow-hidden">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="grid md:grid-cols-3 gap-16 lg:gap-24">
+            <section className="py-12 sm:py-24 bg-white dark:bg-slate-950 overflow-x-clip">
+                <div className="max-w-7xl mx-auto px-2 sm:px-6">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-16 lg:gap-24">
                         {[
                             {
                                 id: '01',
@@ -387,23 +395,23 @@ const LandingPage = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: i * 0.2 }}
-                                className="relative flex items-center justify-center py-10"
+                                className="relative flex items-center justify-center py-4 sm:py-10"
                             >
                                 {/* Top-Left Solid Block */}
-                                <div className={`absolute top-0 left-0 w-32 h-32 ${opt.bg} opacity-100 -z-0`} />
+                                <div className={`absolute top-0 left-0 w-8 sm:w-32 h-8 sm:h-32 ${opt.bg} opacity-100 -z-0`} />
 
                                 {/* Bottom-Right Outlined Frame */}
-                                <div className={`absolute bottom-0 right-0 w-48 h-48 border-[6px] ${opt.border} -z-0`} />
+                                <div className={`absolute bottom-0 right-0 w-12 sm:w-48 h-12 sm:h-48 border-[2px] sm:border-[6px] ${opt.border} -z-0`} />
 
                                 {/* Main White Card */}
-                                <Card className="w-full bg-white dark:bg-slate-900 border-none shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none relative z-10 px-6 py-10 text-center">
-                                    <div className={`mb-4 flex justify-center ${opt.color}`}>
-                                        <opt.icon size={36} strokeWidth={1.5} />
+                                <Card className="w-full bg-white dark:bg-slate-900 border-none shadow-[0_10px_25px_rgba(0,0,0,0.15)] sm:shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none relative z-10 px-2 sm:px-6 py-4 sm:py-10 text-center">
+                                    <div className={`mb-1 sm:mb-4 flex justify-center ${opt.color}`}>
+                                        <opt.icon className="size-4 sm:size-9" strokeWidth={1.5} />
                                     </div>
-                                    <h3 className={`text-xl font-black uppercase tracking-widest mb-4 ${opt.color}`}>
+                                    <h3 className={`text-[6px] sm:text-xl font-black uppercase tracking-widest mb-1 sm:mb-4 ${opt.color}`}>
                                         OPTIONS {opt.id}
                                     </h3>
-                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    <p className="text-[5px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
                                         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
                                     </p>
                                 </Card>
@@ -414,7 +422,7 @@ const LandingPage = () => {
             </section>
 
             {/* Product Slider Section - Refined Tactical Interface */}
-            <section id="tactical" className="py-24 bg-white dark:bg-slate-950 overflow-hidden scroll-mt-20">
+            <section id="tactical" className="py-24 bg-white dark:bg-slate-950 overflow-x-clip scroll-mt-20">
                 <div className="max-w-7xl mx-auto px-6">
                     {/* Centered Header */}
                     <div className="text-center mb-20">
@@ -434,13 +442,13 @@ const LandingPage = () => {
                         </div>
                     </div>
 
-                    <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16 items-center">
+                    <div className="grid grid-cols-2 gap-4 sm:gap-8 md:gap-16 items-center">
                         {/* Left Side: Video (No background/card) */}
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
-                            className="relative overflow-hidden max-w-sm mx-auto lg:max-w-none"
+                            className="relative overflow-hidden w-full mx-auto"
                         >
                             <video
                                 autoPlay
@@ -498,7 +506,7 @@ const LandingPage = () => {
 
 
             {/* Testimonial inspired by Image 1 */}
-            <section id="demo" className="py-20 bg-[#ffcc00] relative overflow-hidden">
+            <section id="about" className="py-20 bg-[#ffcc00] relative overflow-x-clip">
                 <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
                     <motion.div
                         initial={{ opacity: 0, x: -50, y: 20 }}
@@ -570,7 +578,7 @@ const LandingPage = () => {
                     </motion.div>
                 </div>
 
-                <div className="max-w-6xl mx-auto px-6 relative z-10 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     {plans.map((plan, i) => (
                         <motion.div
                             key={plan.name}
@@ -580,38 +588,38 @@ const LandingPage = () => {
                             transition={{ delay: i * 0.1, duration: 0.5 }}
                         >
                             <Card className={`h-full border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl`}>
-                                <CardContent className="px-6 py-8 flex flex-col h-full items-center text-center">
+                                <CardContent className="px-3 sm:px-6 py-6 sm:py-8 flex flex-col h-full items-center text-center">
                                     {/* Header */}
-                                    <h3 className="text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-[0.2em] mb-4">{plan.name}</h3>
+                                    <h3 className="text-[7px] sm:text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-2 sm:mb-4">{plan.name}</h3>
 
                                     {/* Enhanced Icon - No Background */}
-                                    <div className="mb-6 flex items-center justify-center text-primary-600">
-                                        {i === 0 && <Users size={40} strokeWidth={1.5} />}
-                                        {i === 1 && <Target size={40} strokeWidth={1.5} />}
-                                        {i === 2 && <Zap size={40} strokeWidth={1.5} />}
-                                        {i === 3 && <Briefcase size={40} strokeWidth={1.5} />}
+                                    <div className="mb-3 sm:mb-6 flex items-center justify-center text-primary-600">
+                                        {i === 0 && <Users className="size-6 sm:size-10" strokeWidth={1.5} />}
+                                        {i === 1 && <Target className="size-6 sm:size-10" strokeWidth={1.5} />}
+                                        {i === 2 && <Zap className="size-6 sm:size-10" strokeWidth={1.5} />}
+                                        {i === 3 && <Briefcase className="size-6 sm:size-10" strokeWidth={1.5} />}
                                     </div>
 
                                     {/* Price */}
-                                    <div className="mb-6">
-                                        <div className="flex items-center justify-center gap-1">
-                                            <span className="text-3xl font-bold text-slate-800 dark:text-white">
+                                    <div className="mb-3 sm:mb-6">
+                                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+                                            <span className="text-sm sm:text-3xl font-bold text-slate-800 dark:text-white">
                                                 {plan.name === 'Enterprise' ? 'Custom' : `₹${parseInt(plan.price.replace('$', '')) * 80 || 0}`}
                                             </span>
                                             {plan.name !== 'Enterprise' && (
-                                                <span className="text-xs font-medium text-slate-400 uppercase tracking-tighter">/ month</span>
+                                                <span className="text-[7px] sm:text-xs font-medium text-slate-400 uppercase tracking-tighter">/ month</span>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Features List */}
-                                    <div className="space-y-3 mb-8 flex-1 w-full text-left border-t border-slate-100 dark:border-slate-800 pt-6">
+                                    <div className="space-y-1.5 sm:space-y-3 mb-4 sm:mb-8 flex-1 w-full text-left border-t border-slate-100 dark:border-slate-800 pt-3 sm:pt-6">
                                         {plan.features.map(f => (
-                                            <div key={f} className="flex items-start gap-3">
-                                                <div className="size-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
-                                                    <CheckCircle2 size={10} />
+                                            <div key={f} className="flex items-start gap-1.5 sm:gap-3">
+                                                <div className="size-3 sm:size-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+                                                    <CheckCircle2 className="size-2 sm:size-[10px]" />
                                                 </div>
-                                                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">{f}</span>
+                                                <span className="text-[8px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">{f}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -620,9 +628,9 @@ const LandingPage = () => {
                                     <Button
                                         onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact') : navigate('/employee/register')}
                                         variant={plan.variant}
-                                        className={`w-full h-11 rounded-md font-bold text-[10px] uppercase tracking-widest transition-all duration-300 ${plan.popular || i === 0
+                                        className={`w-full h-8 sm:h-11 rounded-md font-bold text-[7px] sm:text-[10px] uppercase tracking-widest transition-all duration-300 ${plan.popular || i === 0
                                             ? 'bg-[#6374f2] hover:bg-[#4f5ed9] text-white shadow-md'
-                                            : 'border-2 border-[#6374f2] text-[#6374f2] bg-transparent hover:bg-[#6374f2] hover:text-white'
+                                            : 'border border-[#6374f2] sm:border-2 text-[#6374f2] bg-transparent hover:bg-[#6374f2] hover:text-white'
                                             }`}
                                     >
                                         {plan.cta}
@@ -635,7 +643,7 @@ const LandingPage = () => {
             </section>
 
             {/* Demo CTA Section */}
-            <section className="py-20 px-6">
+            <section className="py-20 px-6 relative overflow-x-clip">
                 <div className="max-w-7xl mx-auto">
                     <div className="bg-slate-900 dark:bg-white rounded-[3rem] p-12 lg:p-24 relative overflow-hidden group">
                         <div className="absolute -bottom-20 -right-20 size-80 bg-primary-600/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000" />
@@ -648,26 +656,26 @@ const LandingPage = () => {
                                 <p className="text-xl text-slate-400 dark:text-slate-500 mb-12 max-w-md">
                                     Join thousands of managers who have optimized their workforce with DinTask's integrated suite.
                                 </p>
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <Button onClick={() => navigate('/admin/login')} className="h-16 px-10 bg-primary-600 text-white rounded-2xl font-black text-lg">
+                                <div className="flex flex-row gap-2 sm:gap-4">
+                                    <Button onClick={() => navigate('/admin/login')} className="h-10 sm:h-16 px-3 sm:px-10 bg-primary-600 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-primary-700 transition-colors">
                                         START FREE TRIAL
                                     </Button>
-                                    <Button onClick={() => navigate('/contact')} variant="outline" className="h-16 px-10 border-slate-700 text-white dark:text-slate-900 dark:border-slate-200 rounded-2xl font-black text-lg">
+                                    <Button onClick={() => navigate('/contact')} className="h-10 sm:h-16 px-3 sm:px-10 bg-white text-slate-900 dark:bg-slate-900 dark:text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                                         BOOK A DEMO
                                     </Button>
                                 </div>
                             </div>
-                            <div className="relative hidden lg:block translate-x-12">
-                                <Monitor className="text-white/10 dark:text-slate-900/5 size-[500px] absolute -right-20 -top-60" />
-                                <div className="grid grid-cols-2 gap-4 translate-y-12">
+                            <div className="relative translate-y-8 sm:translate-y-12 lg:translate-x-12">
+                                <Monitor className="text-white/10 dark:text-slate-900/5 size-[200px] sm:size-[400px] lg:size-[500px] absolute -right-4 sm:-right-20 -top-24 sm:-top-60" />
+                                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                                     {[1, 2, 3, 4].map(i => (
                                         <motion.div
                                             key={i}
                                             animate={{ y: [0, -10, 0] }}
                                             transition={{ duration: 4, delay: i * 0.5, repeat: Infinity }}
-                                            className="h-40 rounded-3xl bg-white/5 border border-white/10 p-6 flex items-end backdrop-blur-sm"
+                                            className="h-20 sm:h-40 rounded-2xl sm:rounded-3xl bg-white/5 border border-white/10 p-3 sm:p-6 flex items-end backdrop-blur-sm"
                                         >
-                                            <div className="h-2 w-1/2 bg-white/20 rounded-full" />
+                                            <div className="h-1 sm:h-2 w-1/2 bg-white/20 rounded-full" />
                                         </motion.div>
                                     ))}
                                 </div>
@@ -680,38 +688,50 @@ const LandingPage = () => {
             {/* Footer */}
             <footer className="bg-slate-50 dark:bg-slate-950 pt-32 pb-12 px-6">
                 <div className="max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-800 pt-16">
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
-                        <div className="col-span-2 lg:col-span-2 space-y-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 text-center sm:text-left">
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6 sm:space-y-8 flex flex-col items-center sm:items-start">
                             <div className="flex items-center gap-3">
-                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-12 w-12" />
-                                <span className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white italic uppercase">
+                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-16 sm:h-20 w-16 sm:w-20 object-contain" />
+                                <span className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white italic uppercase whitespace-nowrap">
                                     Din<span className="text-primary-600">Task</span>
                                 </span>
                             </div>
-                            <p className="text-slate-500 max-w-sm font-medium leading-relaxed">
+                            <p className="text-slate-500 max-w-sm font-medium leading-relaxed text-sm sm:text-base">
                                 Empowering teams with tactical workspace solutions since 2026. Built by engineers, for engineers.
                             </p>
                             <div className="flex gap-4">
-                                {[Globe, Monitor, Smartphone, LocksIcon].map((Icon, i) => (
-                                    <button key={i} className="size-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:shadow-lg transition-all border border-slate-100 dark:border-slate-800">
-                                        <Icon size={18} />
-                                    </button>
-                                ))}
+                                {/* Icons removed as per user request to only show text links */}
                             </div>
                         </div>
 
+                        {/* Link Columns */}
                         {[
-                            { title: 'Product', links: ['Features', 'Pricing', 'Demo', 'Docs'] },
-                            { title: 'Company', links: ['About Us', 'Careers', 'Contact', 'Blog'] },
-                            { title: 'Legal', links: ['Privacy', 'Terms', 'Security', 'Cookies'] }
+                            { title: 'Product', links: ['Features', 'Pricing'] },
+                            { title: 'Company', links: ['About', 'Contact'] },
+                            { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
                         ].map(col => (
-                            <div key={col.title}>
-                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white mb-8">{col.title}</h4>
+                            <div key={col.title} className="flex flex-col items-center sm:items-start">
+                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white mb-6 sm:mb-8">{col.title}</h4>
                                 <ul className="space-y-4">
                                     {col.links.map(link => (
                                         <li key={link}>
                                             <button
-                                                onClick={() => link === 'Contact' ? navigate('/contact') : document.getElementById(link.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}
+                                                onClick={() => {
+                                                    const pathMap = {
+                                                        'Privacy': '/privacy',
+                                                        'Terms': '/terms',
+                                                        'Cookies': '/cookies',
+                                                        'Contact': '/contact'
+                                                    };
+                                                    if (pathMap[link]) {
+                                                        navigate(pathMap[link]);
+                                                        window.scrollTo(0, 0);
+                                                    } else if (link === 'About') {
+                                                        document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                                                    } else {
+                                                        document.getElementById(link.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
+                                                    }
+                                                }}
                                                 className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
                                             >
                                                 {link}
@@ -733,7 +753,7 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
-        </div>
+        </main>
     );
 };
 
