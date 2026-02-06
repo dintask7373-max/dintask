@@ -65,6 +65,26 @@ const useAuthStore = create(
                 }
             },
 
+            register: async (userData) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest('/auth/register', {
+                        method: 'POST',
+                        body: userData
+                    });
+
+                    if (response.success) {
+                        set({ loading: false });
+                        return true;
+                    } else {
+                        throw new Error(response.error || 'Registration failed');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return false;
+                }
+            },
+
             fetchProfile: async () => {
                 const { role, token } = get();
                 if (!token) return;

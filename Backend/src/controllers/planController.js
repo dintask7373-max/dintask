@@ -3,10 +3,17 @@ const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all plans
 // @route   GET /api/v1/superadmin/plans
-// @access  Private (Super Admin)
+// @access  Private (Super Admin / Admin)
 exports.getPlans = async (req, res, next) => {
   try {
-    const plans = await Plan.find();
+    let query = {};
+
+    // If user is Admin, do not show the free plan (amount 0)
+    if (req.user && req.user.role === 'admin') {
+      query.price = { $ne: 0 };
+    }
+
+    const plans = await Plan.find(query);
     res.status(200).json({
       success: true,
       count: plans.length,
@@ -42,6 +49,14 @@ exports.getPlan = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.createPlan = async (req, res, next) => {
   try {
+    // Check if trying to create a free plan
+    if (Number(req.body.price) === 0) {
+      const existingFreePlan = await Plan.findOne({ price: 0 });
+      if (existingFreePlan) {
+        return next(new ErrorResponse('You can only create one free plan (Amount 0).', 400));
+      }
+    }
+
     const plan = await Plan.create(req.body);
 
     res.status(201).json({

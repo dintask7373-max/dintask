@@ -84,6 +84,23 @@ const PlansManagement = () => {
             return;
         }
 
+        // Validate Free Plan Limit (Amount 0)
+        if (Number(planForm.price) === 0) {
+            const existingFreePlan = plans.find(p => (p.price === 0 || p.price === '0'));
+
+            // Case 1: Creating a new plan
+            if (!isEditMode && existingFreePlan) {
+                toast.error("System only supports one Free Tier (Amount 0). Please edit the existing one.");
+                return;
+            }
+
+            // Case 2: Editing a plan to be free, but another one exists
+            if (isEditMode && existingFreePlan && existingFreePlan._id !== editingPlanId) {
+                toast.error("Another Free Tier already exists. Only one allowed.");
+                return;
+            }
+        }
+
         const planData = {
             ...planForm,
             price: Number(planForm.price),

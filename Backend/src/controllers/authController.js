@@ -8,11 +8,12 @@ const SuperAdmin = require('../models/SuperAdmin');
 const checkUserLimit = require('../utils/checkUserLimit');
 const ErrorResponse = require('../utils/errorResponse');
 
+const Plan = require('../models/Plan');
+
 const models = {
   employee: Employee,
   sales_executive: SalesExecutive,
   manager: Manager,
-  admin: Admin,
   admin: Admin,
   superadmin: SuperAdmin
 };
@@ -22,7 +23,7 @@ const models = {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role, adminId } = req.body;
+    const { name, email, password, role, adminId, companyName } = req.body;
 
     if (!role || !models[role]) {
       return next(new ErrorResponse('Please provide a valid role', 400));
@@ -41,6 +42,23 @@ exports.register = async (req, res, next) => {
     }
 
     const UserModel = models[role];
+    let extraData = {};
+
+    // If registering as Admin, assign the Free Plan (Amount 0)
+    if (role === 'admin') {
+      const freePlan = await Plan.findOne({ price: 0 });
+      if (freePlan) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + (freePlan.duration || 30));
+
+        extraData = {
+          subscriptionPlan: freePlan.name,
+          subscriptionPlanId: freePlan._id,
+          subscriptionStatus: 'active',
+          subscriptionExpiry: expiryDate
+        };
+      }
+    }
 
     // Create user in specific collection
     const user = await UserModel.create({
@@ -48,7 +66,9 @@ exports.register = async (req, res, next) => {
       email,
       password,
       role,
-      adminId: role !== 'admin' && role !== 'superadmin' ? adminId : undefined
+      adminId: role !== 'admin' && role !== 'superadmin' ? adminId : undefined,
+      companyName: role === 'admin' ? companyName : undefined,
+      ...extraData
     });
 
     await sendTokenResponse(user, 201, res);

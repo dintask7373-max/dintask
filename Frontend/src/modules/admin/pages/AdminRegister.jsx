@@ -10,6 +10,10 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 
 const AdminRegister = () => {
+    const { register, error, loading: storeLoading } = useAuthStore();
+    const [localLoading, setLocalLoading] = useState(false);
+    const loading = storeLoading || localLoading;
+
     const [formData, setFormData] = useState({
         companyName: '',
         adminName: '',
@@ -18,7 +22,6 @@ const AdminRegister = () => {
         confirmPassword: ''
     });
 
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -28,6 +31,8 @@ const AdminRegister = () => {
             [id]: value
         }));
     };
+
+    // ... existing handleChange ...
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -43,17 +48,29 @@ const AdminRegister = () => {
             return;
         }
 
-        setLoading(true);
+        setLocalLoading(true);
 
         try {
-            // Simulate API registration
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            toast.success('Business Account Created! Please Login.');
-            navigate('/admin/login');
-        } catch {
+            const payload = {
+                name: adminName,
+                email,
+                password,
+                role: 'admin',
+                companyName
+            };
+
+            const success = await register(payload);
+
+            if (success) {
+                toast.success('Business Account Created! Please Login.');
+                navigate('/admin/login');
+            } else {
+                toast.error(useAuthStore.getState().error || 'Registration failed');
+            }
+        } catch (err) {
             toast.error('Registration failed. Please try again.');
         } finally {
-            setLoading(false);
+            setLocalLoading(false);
         }
     };
 
