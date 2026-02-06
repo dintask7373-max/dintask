@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Plus,
     Search,
@@ -210,7 +210,7 @@ const TaskManagement = () => {
                 <div className="flex items-center justify-between w-full md:w-auto">
                     <div className="flex items-center gap-3 px-1 sm:px-0">
                         <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                         </div>
                         <div>
                             <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">Task <span className="text-primary-600">Management</span></h1>
@@ -616,7 +616,7 @@ const TaskManagement = () => {
                                         {comment.text}
                                     </div>
                                     <span className="text-[10px] text-slate-400 font-bold px-1">
-                                        {comment.sender} â€¢ {format(new Date(comment.createdAt), 'h:mm a')}
+                                        {comment.sender} • {format(new Date(comment.createdAt), 'h:mm a')}
                                     </span>
                                 </div>
                             ))

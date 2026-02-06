@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { ShieldCheck, LogIn, Lock } from 'lucide-react';
@@ -44,7 +44,7 @@ const SalesLogin = () => {
                     <div className="flex justify-center mb-6">
                         <div className="size-16 rounded-[1.5rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center p-3 relative group">
                             <div className="absolute inset-0 bg-primary-500/20 rounded-[1.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="size-full object-contain relative z-10" />
+                            <img src="/dintask-logo.png" alt="DinTask" className="size-full object-contain relative z-10" />
                         </div>
                     </div>
                     <CardTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
@@ -79,7 +79,7 @@ const SalesLogin = () => {
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="h-12 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"

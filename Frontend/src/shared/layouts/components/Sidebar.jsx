@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -158,14 +158,14 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                     {!isCollapsed && (
                         <div className="flex items-center gap-3 font-black text-xl text-slate-900 dark:text-white tracking-tighter">
                             <div className="h-9 w-9 rounded-xl overflow-hidden shadow-sm border border-slate-100">
-                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                                <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                             </div>
                             <span>DinTask</span>
                         </div>
                     )}
                     {isCollapsed && (
                         <div className="h-10 w-10 rounded-xl overflow-hidden mx-auto shadow-sm border border-slate-100">
-                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                         </div>
                     )}
 

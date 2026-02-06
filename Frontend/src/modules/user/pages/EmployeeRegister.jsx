@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import useEmployeeStore from '@/store/employeeStore';
@@ -138,7 +138,7 @@ const EmployeeRegister = () => {
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
                                 className="bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
@@ -150,7 +150,7 @@ const EmployeeRegister = () => {
                             <Input
                                 id="confirmPassword"
                                 type="password"
-                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                placeholder="••••••••"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 className="bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"

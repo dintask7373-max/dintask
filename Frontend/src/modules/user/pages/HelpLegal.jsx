@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageCircle, FileText, HelpCircle, Shield, Info, BookOpen, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -79,7 +79,7 @@ const HelpLegal = () => {
                 ))}
 
                 <div className="text-center pt-8">
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Designed with â¤ï¸ for Teams</p>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Designed with ❤️ for Teams</p>
                     <p className="text-[10px] text-slate-400">DinTask CRM Version 1.0.4</p>
                 </div>
             </div>

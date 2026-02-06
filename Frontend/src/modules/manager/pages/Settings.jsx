@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     Save,
@@ -94,7 +94,7 @@ const ManagerSettings = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
                     <div className="flex items-center gap-3">
                         <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                         </div>
                         <div>
                             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
@@ -199,7 +199,7 @@ const ManagerSettings = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
                 <div className="flex items-center gap-3">
                     <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                     </div>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
@@ -276,15 +276,15 @@ const ManagerSettings = () => {
                             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 items-end">
                                 <div className="space-y-1.5">
                                     <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Current Cipher</Label>
-                                    <Input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
+                                    <Input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} placeholder="••••••••" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">New Sequence</Label>
-                                    <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
+                                    <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm Sequence</Label>
-                                    <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
+                                    <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
                                 </div>
                             </div>
                             <div className="flex justify-end">

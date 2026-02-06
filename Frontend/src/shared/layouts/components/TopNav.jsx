@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Search, User as UserIcon, Menu, X, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';

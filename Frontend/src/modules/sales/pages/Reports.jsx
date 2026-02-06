@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BarChart3, PieChart, LineChart, Download, Filter, Search, TrendingUp, TrendingDown, Target, Users, FileText, Clock, IndianRupee } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -123,7 +123,7 @@ const SalesReports = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 mb-2">
                 <div className="flex items-center gap-3">
                     <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
                     </div>
                     <div>
                         <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
@@ -161,9 +161,9 @@ const SalesReports = () => {
             {/* Summary Grid - Premium Look */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
                 {[
-                    { label: 'Revenue Velocity', value: `â‚¹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary' },
+                    { label: 'Revenue Velocity', value: `₹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary' },
                     { label: 'Tactical Wins', value: reportMetrics.totalDeals, change: reportMetrics.dealsChange, icon: <Target size={16} />, color: 'emerald' },
-                    { label: 'Mean Value', value: `â‚¹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue' }
+                    { label: 'Mean Value', value: `₹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue' }
                 ].map((stat, i) => (
                     <Card key={i} className={cn(
                         "border-none shadow-sm sm:shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group",
@@ -273,10 +273,10 @@ const SalesReports = () => {
                                                 <div className="space-y-0.5">
                                                     <p className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">{metric}</p>
                                                     <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">
-                                                        {metric === 'revenue' ? `â‚¹${(actual / 1000).toFixed(1)}k` : actual}
+                                                        {metric === 'revenue' ? `₹${(actual / 1000).toFixed(1)}k` : actual}
                                                     </p>
                                                 </div>
-                                                <p className="hidden sm:block text-[8px] font-black text-slate-400 uppercase tracking-widest">of {metric === 'revenue' ? `â‚¹${target?.toLocaleString()}` : target}</p>
+                                                <p className="hidden sm:block text-[8px] font-black text-slate-400 uppercase tracking-widest">of {metric === 'revenue' ? `₹${target?.toLocaleString()}` : target}</p>
                                             </div>
                                             <div className="space-y-1">
                                                 <Progress value={progress} className="h-1 sm:h-1.5 bg-slate-50 dark:bg-slate-800" />
@@ -318,10 +318,10 @@ const SalesReports = () => {
                                                 <div className="space-y-0.5">
                                                     <p className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">{metric}</p>
                                                     <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">
-                                                        {metric === 'revenue' ? `â‚¹${(actual / 1000).toFixed(1)}k` : actual}
+                                                        {metric === 'revenue' ? `₹${(actual / 1000).toFixed(1)}k` : actual}
                                                     </p>
                                                 </div>
-                                                <p className="hidden sm:block text-[8px] font-black text-slate-400 uppercase tracking-widest">of {metric === 'revenue' ? `â‚¹${target?.toLocaleString()}` : target}</p>
+                                                <p className="hidden sm:block text-[8px] font-black text-slate-400 uppercase tracking-widest">of {metric === 'revenue' ? `₹${target?.toLocaleString()}` : target}</p>
                                             </div>
                                             <div className="space-y-1">
                                                 <Progress value={progress} indicatorClassName="bg-emerald-500" className="h-1 sm:h-1.5 bg-slate-50 dark:bg-slate-800" />

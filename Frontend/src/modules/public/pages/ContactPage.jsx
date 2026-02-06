@@ -83,7 +83,7 @@ const ContactPage = () => {
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-16 cursor-pointer" onClick={() => navigate('/')}>
-                            <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-10 w-10 brightness-0 invert" />
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-10 w-10 brightness-0 invert" />
                             <span className="text-2xl font-black tracking-tighter uppercase italic">
                                 Din<span className="text-blue-200">Task</span>
                             </span>

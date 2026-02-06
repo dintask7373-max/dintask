@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     User,
@@ -106,7 +106,7 @@ const EmployeeProfile = () => {
                                 </motion.div>
                             </div>
                             <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{user?.name}</h3>
-                            <p className="text-xs text-slate-500 font-medium">Employee â€¢ Marketing Team</p>
+                            <p className="text-xs text-slate-500 font-medium">Employee • Marketing Team</p>
 
                             <div className="flex gap-4 mt-6 w-full">
                                 <div className="flex-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -201,7 +201,7 @@ const EmployeeProfile = () => {
 
             <div className="text-center pb-8">
                 <p className="text-[10px] text-slate-400 font-medium">Version 1.0.4 (Build 82910)</p>
-                <p className="text-[10px] text-slate-400">Â© 2026 DinTask CRM Inc.</p>
+                <p className="text-[10px] text-slate-400">© 2026 DinTask CRM Inc.</p>
             </div>
         </div>
     );

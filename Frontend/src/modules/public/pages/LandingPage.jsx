@@ -132,7 +132,7 @@ const LandingPage = () => {
             <nav className="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-24 sm:h-28 w-24 sm:w-28 object-contain" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-24 sm:h-28 w-24 sm:w-28 object-contain" />
                     </div>
 
                     {/* Desktop Nav */}
@@ -354,7 +354,7 @@ const LandingPage = () => {
                                 playsInline
                                 className="w-full h-auto object-contain rounded-2xl sm:rounded-[3rem]"
                             >
-                                <source src="/src/assets/meeting-animation-gif-download-5327521.mp4" type="video/mp4" />
+                                <source src="/meeting-animation.mp4" type="video/mp4" />
                                 Your browser does not support the video tag.
                             </video>
                         </div>
@@ -457,7 +457,7 @@ const LandingPage = () => {
                                 playsInline
                                 className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal"
                             >
-                                <source src="/src/assets/team-meeting-animation-gif-download-14066386.mp4" type="video/mp4" />
+                                <source src="/team-meeting-animation.mp4" type="video/mp4" />
                             </video>
                         </motion.div>
 
@@ -691,7 +691,7 @@ const LandingPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 text-center sm:text-left">
                         <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6 sm:space-y-8 flex flex-col items-center sm:items-start">
                             <div className="flex items-center gap-3">
-                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-16 sm:h-20 w-16 sm:w-20 object-contain" />
+                                <img src="/dintask-logo.png" alt="DinTask" className="h-16 sm:h-20 w-16 sm:w-20 object-contain" />
                                 <span className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white italic uppercase whitespace-nowrap">
                                     Din<span className="text-primary-600">Task</span>
                                 </span>

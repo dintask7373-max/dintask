@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Building2,
     Search,
@@ -264,7 +264,7 @@ const AdminAccounts = () => {
                                                         <div className="space-y-0.5 py-0.5">
                                                             <p className="font-black text-slate-900 dark:text-white leading-tight text-[13px] tracking-tight">{adm.name}</p>
                                                             <p className="text-[9px] text-slate-400 flex items-center gap-1 font-bold">
-                                                                {adm.owner} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">â€¢</span> <span className="hidden md:inline">{adm.email}</span>
+                                                                {adm.owner} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">•</span> <span className="hidden md:inline">{adm.email}</span>
                                                             </p>
                                                         </div>
                                                     </TableCell>
@@ -274,7 +274,7 @@ const AdminAccounts = () => {
                                                                 {adm.plan}
                                                             </Badge>
                                                             <p className="text-[10px] text-slate-400 font-bold ml-1">
-                                                                â‚¹{useSuperAdminStore.getState().plans.find(p => p.name === adm.plan)?.price.toLocaleString('en-IN') || '0'}/mo
+                                                                ₹{useSuperAdminStore.getState().plans.find(p => p.name === adm.plan)?.price.toLocaleString('en-IN') || '0'}/mo
                                                             </p>
                                                         </div>
                                                     </TableCell>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, Send, KeyRound, Lock, CheckCircle2, Shield, Zap, Terminal } from 'lucide-react';
 import { toast } from 'sonner';
@@ -142,7 +142,7 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
                                         <Input
                                             id="otp"
                                             type="text"
-                                            placeholder="â€¢ â€¢ â€¢ â€¢ â€¢ â€¢"
+                                            placeholder="• • • • • •"
                                             value={otp}
                                             onChange={(e) => setOtp(e.target.value)}
                                             className="h-12 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-black text-lg tracking-[0.3em] uppercase text-center"
@@ -180,7 +180,7 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
                                             <Input
                                                 id="new-pass"
                                                 type="password"
-                                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                                placeholder="••••••••"
                                                 value={newPassword}
                                                 onChange={(e) => setNewPassword(e.target.value)}
                                                 className="h-12 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"
@@ -194,7 +194,7 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
                                             <Input
                                                 id="confirm-pass"
                                                 type="password"
-                                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                                placeholder="••••••••"
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                                 className="h-12 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"

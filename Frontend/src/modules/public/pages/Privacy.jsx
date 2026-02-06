@@ -20,7 +20,7 @@ const Privacy = () => {
                         <span className="text-sm font-bold uppercase tracking-widest">Back to Home</span>
                     </button>
                     <div className="flex items-center gap-3">
-                        <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-8 w-8" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-8 w-8" />
                         <span className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">
                             Din<span className="text-primary-600">Task</span>
                         </span>

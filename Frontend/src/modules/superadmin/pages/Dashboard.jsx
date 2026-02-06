@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
     Users,
     Building2,
@@ -79,7 +79,7 @@ const SuperAdminDashboard = () => {
     const summaryCards = [
         {
             title: 'Total Revenue',
-            value: `â‚¹${stats.totalRevenue.toLocaleString('en-IN')}`,
+            value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`,
             trend: '+12.5%',
             icon: <IndianRupee className="text-emerald-500" size={20} />,
             bg: 'bg-emerald-50 dark:bg-emerald-900/10',
@@ -127,7 +127,7 @@ const SuperAdminDashboard = () => {
                                     </div>
                                 </div>
                                 <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Revenue</p>
-                                <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">â‚¹{stats.totalRevenue > 100000 ? `${(stats.totalRevenue / 100000).toFixed(1)}L` : stats.totalRevenue.toLocaleString('en-IN')}</h3>
+                                <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">₹{stats.totalRevenue > 100000 ? `${(stats.totalRevenue / 100000).toFixed(1)}L` : stats.totalRevenue.toLocaleString('en-IN')}</h3>
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -218,7 +218,7 @@ const SuperAdminDashboard = () => {
                                             </Avatar>
                                             <div className="min-w-0">
                                                 <h4 className="font-black text-slate-900 dark:text-white text-[11px] sm:text-sm leading-tight truncate">{adm.name}</h4>
-                                                <p className="text-[8px] font-bold text-slate-400 truncate uppercase tracking-tighter mt-0.5">{adm.owner} â€¢ {adm.email}</p>
+                                                <p className="text-[8px] font-bold text-slate-400 truncate uppercase tracking-tighter mt-0.5">{adm.owner} • {adm.email}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1.5 shrink-0">

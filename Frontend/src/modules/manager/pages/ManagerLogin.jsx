@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { ShieldCheck, LogIn, Lock, Shield, Zap, Terminal, Globe } from 'lucide-react';
@@ -52,7 +52,7 @@ const ManagerLogin = () => {
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full scale-150 group-hover:bg-primary-500/30 transition-all" />
                                 <div className="relative p-4 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl border border-slate-50 dark:border-slate-800 transition-transform group-hover:scale-110">
-                                    <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="DinTask" className="h-12 w-12 object-contain" />
+                                    <img src="/dintask-logo.png" alt="DinTask" className="h-12 w-12 object-contain" />
                                 </div>
                                 <div className="absolute -bottom-2 -right-2 p-1.5 rounded-xl bg-slate-900 text-white shadow-xl">
                                     <Shield size={14} className="fill-current" />
@@ -96,7 +96,7 @@ const ManagerLogin = () => {
                                     <Input
                                         id="password"
                                         type="password"
-                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                        placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="h-12 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"
@@ -140,7 +140,7 @@ const ManagerLogin = () => {
                                 </div>
                             </div>
                             <div className="absolute top-0 right-0 p-2 opacity-10 blur-sm pointer-events-none group-hover:scale-150 transition-transform">
-                                <img src="/src/assets/dintask_logo_-removebg-preview.png" alt="" className="size-16 grayscale" />
+                                <img src="/dintask-logo.png" alt="" className="size-16 grayscale" />
                             </div>
                         </div>
                     </CardContent>

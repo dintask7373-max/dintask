@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Bell,
@@ -69,7 +69,7 @@ const TaskHome = () => {
                         Good Morning, {user?.name?.split(' ')[0] || 'User'}
                     </h2>
                     <p className="text-text-secondary dark:text-gray-400 text-sm font-medium">
-                        {format(new Date(), 'EEEE, MMM dd')} â€¢ {stats.today} tasks today
+                        {format(new Date(), 'EEEE, MMM dd')} • {stats.today} tasks today
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
