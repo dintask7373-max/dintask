@@ -35,48 +35,41 @@ import {
     Pie
 } from 'recharts';
 
+import useSuperAdminStore from '@/store/superAdminStore';
+
 const GlobalUsersOverview = () => {
-    // Mock Data for Monitoring
-    const stats = {
-        totalUsers: 1720,
-        activeNow: 428,
-        growthThisMonth: '+12%',
-        avgSessionTime: '24m'
+    const {
+        stats,
+        roleDistribution,
+        growthData,
+        hourlyActivity,
+        recentLogins,
+        fetchDashboardStats,
+        fetchRoleDistribution,
+        fetchUserGrowth,
+        fetchHourlyActivity,
+        fetchRecentLogins
+    } = useSuperAdminStore();
+
+    React.useEffect(() => {
+        fetchDashboardStats();
+        fetchRoleDistribution();
+        fetchUserGrowth();
+        fetchHourlyActivity();
+        fetchRecentLogins();
+    }, []);
+
+    const roleIcons = {
+        'Admins': Shield,
+        'Managers': Briefcase,
+        'Sales': Target,
+        'Employees': Users
     };
 
-    const roleDistribution = [
-        { name: 'Admins', value: 120, color: '#6366f1', icon: Shield },
-        { name: 'Managers', value: 300, color: '#a855f7', icon: Briefcase },
-        { name: 'Sales', value: 800, color: '#f59e0b', icon: Target },
-        { name: 'Employees', value: 500, color: '#10b981', icon: Users }
-    ];
-
-    const growthData = [
-        { month: 'Sep', users: 800 },
-        { month: 'Oct', users: 950 },
-        { month: 'Nov', users: 1100 },
-        { month: 'Dec', users: 1350 },
-        { month: 'Jan', users: 1580 },
-        { month: 'Feb', users: 1720 }
-    ];
-
-    const activityData = [
-        { time: '08:00', active: 120 },
-        { time: '10:00', active: 340 },
-        { time: '12:00', active: 420 },
-        { time: '14:00', active: 380 },
-        { time: '16:00', active: 450 },
-        { time: '18:00', active: 290 },
-        { time: '20:00', active: 150 }
-    ];
-
-    const recentLogins = [
-        { id: 1, user: 'John Smith', role: 'Sales', company: 'Tech Solutions', time: '2 mins ago', status: 'Active' },
-        { id: 2, user: 'Sarah Wilson', role: 'Manager', company: 'Creative Agency', time: '5 mins ago', status: 'Active' },
-        { id: 3, user: 'Michael Brown', role: 'Admin', company: 'Global Logistics', time: '12 mins ago', status: 'In-active' },
-        { id: 4, user: 'Emma Davis', role: 'Employee', company: 'Tech Solutions', time: '15 mins ago', status: 'Active' },
-        { id: 5, user: 'Robert Johnson', role: 'Sales', company: 'Logistics Pro', time: '22 mins ago', status: 'Active' }
-    ];
+    const roleDistWithIcons = roleDistribution.map(role => ({
+        ...role,
+        icon: roleIcons[role.name] || Users
+    }));
 
     return (
         <div className="p-6 space-y-8 bg-slate-50/50 min-h-screen">
@@ -103,10 +96,10 @@ const GlobalUsersOverview = () => {
             {/* Tactical Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total Users', value: stats.totalUsers, icon: Users, trend: '+12%', color: 'from-blue-600 to-indigo-600' },
-                    { label: 'Active Now', value: stats.activeNow, icon: Activity, trend: 'Live', color: 'from-emerald-500 to-teal-600' },
-                    { label: 'Growth', value: stats.growthThisMonth, icon: TrendingUp, trend: 'Monthly', color: 'from-amber-500 to-orange-600' },
-                    { label: 'Avg Session', value: stats.avgSessionTime, icon: MousePointer2, trend: '-2m', color: 'from-purple-600 to-pink-600' }
+                    { label: 'Total Users', value: stats.totalUsers || 0, icon: Users, trend: `${stats.monthlyGrowthPercentage > 0 ? '+' : ''}${stats.monthlyGrowthPercentage}%`, color: 'from-blue-600 to-indigo-600' },
+                    { label: 'Active Now', value: stats.activeUsers || 0, icon: Activity, trend: 'Live', color: 'from-emerald-500 to-teal-600' },
+                    { label: 'Growth', value: `${stats.monthlyGrowthPercentage || 0}%`, icon: TrendingUp, trend: 'Monthly', color: 'from-amber-500 to-orange-600' },
+                    { label: 'Avg Session', value: '24m', icon: MousePointer2, trend: '-2m', color: 'from-purple-600 to-pink-600' }
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-xl shadow-slate-200/50 overflow-hidden group">
                         <CardContent className="p-0">
@@ -145,13 +138,13 @@ const GlobalUsersOverview = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={roleDistribution}
+                                        data={roleDistWithIcons}
                                         innerRadius={60}
                                         outerRadius={80}
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {roleDistribution.map((entry, index) => (
+                                        {roleDistWithIcons.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
@@ -161,12 +154,12 @@ const GlobalUsersOverview = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none italic">{stats.totalUsers}</span>
+                                <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none italic">{stats.totalUsers || 0}</span>
                                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Total</span>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-6">
-                            {roleDistribution.map((role, i) => (
+                            {roleDistWithIcons.map((role, i) => (
                                 <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 transition-all hover:scale-105">
                                     <div className="size-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${role.color}15`, color: role.color }}>
                                         <role.icon size={16} />
@@ -245,7 +238,7 @@ const GlobalUsersOverview = () => {
                     <CardContent className="p-6">
                         <div className="h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={activityData}>
+                                <BarChart data={hourlyActivity}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                     <XAxis
                                         dataKey="time"
@@ -259,7 +252,7 @@ const GlobalUsersOverview = () => {
                                         cursor={{ fill: '#f8fafc' }}
                                     />
                                     <Bar dataKey="active" radius={[4, 4, 0, 0]}>
-                                        {activityData.map((entry, index) => (
+                                        {hourlyActivity.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.active > 400 ? '#6366f1' : '#cbd5e1'} />
                                         ))}
                                     </Bar>
@@ -289,8 +282,8 @@ const GlobalUsersOverview = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recentLogins.map((login) => (
-                                        <tr key={login.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                                    {recentLogins.map((login, idx) => (
+                                        <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 group-hover:bg-primary-600 group-hover:text-white transition-all">
@@ -304,9 +297,9 @@ const GlobalUsersOverview = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <Badge className={`${login.role === 'Admin' ? 'bg-indigo-50 text-indigo-600' :
-                                                        login.role === 'Manager' ? 'bg-purple-50 text-purple-600' :
-                                                            login.role === 'Sales' ? 'bg-amber-50 text-amber-600' :
-                                                                'bg-emerald-50 text-emerald-600'
+                                                    login.role === 'Manager' ? 'bg-purple-50 text-purple-600' :
+                                                        login.role === 'Sales' ? 'bg-amber-50 text-amber-600' :
+                                                            'bg-emerald-50 text-emerald-600'
                                                     } border-none font-black text-[9px] uppercase tracking-widest px-2 py-0.5`}>
                                                     {login.role}
                                                 </Badge>

@@ -10,8 +10,11 @@ const AdminSchema = new mongoose.Schema({
   },
   subscriptionPlan: {
     type: String,
-    enum: ['Starter', 'Pro', 'Enterprise'],
     default: 'Starter'
+  },
+  subscriptionPlanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plan'
   },
   name: {
     type: String,
@@ -32,7 +35,7 @@ const AdminSchema = new mongoose.Schema({
   phoneNumber: String,
   profileImage: {
     type: String,
-    default: 'https://res.cloudinary.com/demo/image/upload/v1574026613/profile.jpg'
+    default: ''
   },
   role: {
     type: String,
@@ -41,6 +44,14 @@ const AdminSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  subscriptionStatus: {
+    type: String,
+    enum: ['active', 'inactive', 'expired', 'pending', 'suspended'],
+    default: 'active'
+  },
+  subscriptionExpiry: {
+    type: Date
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date

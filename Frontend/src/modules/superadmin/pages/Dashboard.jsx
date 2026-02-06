@@ -57,9 +57,14 @@ import useAuthStore from '@/store/authStore';
 
 const SuperAdminDashboard = () => {
     const navigate = useNavigate();
-    const { admins, plans, stats, updateAdminStatus } = useSuperAdminStore();
+    const { admins, stats, fetchAdmins, fetchDashboardStats, updateAdminStatus } = useSuperAdminStore();
     const { role } = useAuthStore();
     const isSuperAdmin = role === 'superadmin';
+
+    React.useEffect(() => {
+        fetchDashboardStats();
+        fetchAdmins();
+    }, [fetchDashboardStats, fetchAdmins]);
 
     const chartData = [
         { name: 'Jul', revenue: 250000, growth: 12 },
@@ -211,7 +216,7 @@ const SuperAdminDashboard = () => {
                         <CardContent className="p-0">
                             <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {admins.filter(a => a.status === 'pending').map((adm) => (
-                                    <div key={adm.id} className="p-2 sm:p-4 flex items-center justify-between gap-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <div key={adm._id} className="p-2 sm:p-4 flex items-center justify-between gap-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <div className="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
                                             <Avatar className="h-7 w-7 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
                                                 <AvatarFallback className="bg-amber-100 text-amber-600 font-black text-[9px] tracking-tighter">{adm.name.charAt(0)}</AvatarFallback>
@@ -227,7 +232,7 @@ const SuperAdminDashboard = () => {
                                                 className="h-7 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-black text-[9px] gap-1 text-white border-none"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    updateAdminStatus(adm.id, 'active');
+                                                    updateAdminStatus(adm._id, 'active');
                                                     toast.success("Account Approved!");
                                                 }}
                                             >
@@ -387,7 +392,7 @@ const SuperAdminDashboard = () => {
                                 <TableBody>
                                     {admins.slice(0, 3).map((adm) => (
                                         <TableRow
-                                            key={adm.id}
+                                            key={adm._id}
                                             className="border-slate-50 dark:border-slate-800 group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-shadow duration-300"
                                             onClick={() => navigate('/superadmin/admins')}
                                         >
@@ -429,7 +434,7 @@ const SuperAdminDashboard = () => {
                         <div className="md:hidden divide-y divide-slate-50 dark:divide-slate-800">
                             {admins.slice(0, 3).map((adm) => (
                                 <div
-                                    key={adm.id}
+                                    key={adm._id}
                                     className="p-4 space-y-3 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors"
                                     onClick={() => navigate('/superadmin/admins')}
                                 >

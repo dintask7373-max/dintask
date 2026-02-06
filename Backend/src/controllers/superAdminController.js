@@ -27,13 +27,148 @@ exports.getStats = async (req, res, next) => {
 // @desc    Maintain Admins (Create/Delete/Update Admins specifically)
 // @route   GET /api/v1/superadmin/admins
 // @access  Private (Super Admin)
+// @desc    Get All Admins
+// @route   GET /api/v1/superadmin/admins
+// @access  Private (Super Admin)
 exports.getAdmins = async (req, res, next) => {
   try {
-    const admins = await Admin.find();
+    const admins = await Admin.find().populate('subscriptionPlanId');
     res.status(200).json({
       success: true,
       count: admins.length,
       data: admins
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Create Admin (Provision Account)
+// @route   POST /api/v1/superadmin/admins
+// @access  Private (Super Admin)
+exports.createAdmin = async (req, res, next) => {
+  try {
+    const { companyName, name, email, subscriptionPlan, password } = req.body;
+
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return next(new ErrorResponse('Admin with this email already exists', 400));
+    }
+
+    // Default password if not provided
+    const adminPassword = password || 'DinTask@123';
+
+    const admin = await Admin.create({
+      companyName,
+      name,
+      email,
+      subscriptionPlan,
+      subscriptionPlanId: req.body.subscriptionPlanId,
+      password: adminPassword,
+      subscriptionStatus: 'active'
+    });
+
+    // Send email to new admin
+    const message = `Hello ${name},\n\nYour company account for ${companyName} has been provisioned at DinTask.\n\nLogin Credentials:\nEmail: ${email}\nPassword: ${adminPassword}\n\nPlease login at ${process.env.FRONTEND_URL || 'http://localhost:5173'} and change your password immediately.\n\nRegards,\nDinTask Team`;
+
+    try {
+      await sendEmail({
+        email: admin.email,
+        subject: 'Account Provisioned - DinTask',
+        message
+      });
+    } catch (err) {
+      console.error('Account Provisioning Email Error:', err);
+    }
+
+    res.status(201).json({
+      success: true,
+      data: admin
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Update Admin (Name, Email, Status)
+// @route   PUT /api/v1/superadmin/admins/:id
+// @access  Private (Super Admin)
+exports.updateAdmin = async (req, res, next) => {
+  try {
+    const { companyName, name, email, subscriptionStatus } = req.body;
+
+    const admin = await Admin.findByIdAndUpdate(
+      req.params.id,
+      {
+        companyName,
+        name,
+        email,
+        subscriptionStatus
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!admin) {
+      return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: admin
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Delete Admin
+// @route   DELETE /api/v1/superadmin/admins/:id
+// @access  Private (Super Admin)
+exports.deleteAdmin = async (req, res, next) => {
+  try {
+    const admin = await Admin.findById(req.params.id);
+
+    if (!admin) {
+      return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
+    }
+
+    // Optionally: Delete related managers, employees, etc. 
+    // For now just delete the admin account
+    await Admin.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Update Admin Plan
+// @route   PUT /api/v1/superadmin/admins/:id/plan
+// @access  Private (Super Admin)
+exports.updateAdminPlan = async (req, res, next) => {
+  try {
+    const { planId, planName } = req.body;
+
+    const admin = await Admin.findByIdAndUpdate(
+      req.params.id,
+      {
+        subscriptionPlanId: planId,
+        subscriptionPlan: planName
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!admin) {
+      return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: admin
     });
   } catch (err) {
     next(err);
@@ -418,6 +553,97 @@ exports.getRecentLogins = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: logs
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const Payment = require('../models/Payment');
+
+// @desc    Get Billing Stats (Total Revenue, Active Subs, etc.)
+// @route   GET /api/v1/superadmin/billing/stats
+// @access  Private (Super Admin)
+exports.getBillingStats = async (req, res, next) => {
+  try {
+    const totalRevenue = await Payment.aggregate([
+      { $match: { status: 'paid' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    const activeSubscriptions = await Admin.countDocuments({
+      subscriptionStatus: 'active'
+    });
+
+    const pendingRefunds = 0; // Placeholder for now
+    const churnRate = 2.4; // Placeholder for now
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
+        activeSubscriptions,
+        pendingRefunds,
+        churnRate
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get All Transactions
+// @route   GET /api/v1/superadmin/billing/transactions
+// @access  Private (Super Admin)
+exports.getAllTransactions = async (req, res, next) => {
+  try {
+    const transactions = await Payment.find()
+      .populate('adminId', 'name companyName email')
+      .populate('planId', 'name price')
+      .sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      count: transactions.length,
+      data: transactions
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Subscription History (Admin plans with validity)
+// @route   GET /api/v1/superadmin/subscription-history
+// @access  Private (Super Admin)
+exports.getSubscriptionHistory = async (req, res, next) => {
+  try {
+    const admins = await Admin.find()
+      .populate('subscriptionPlanId')
+      .sort('-subscriptionExpiry');
+
+    const history = admins.map(admin => {
+      let daysRemaining = 0;
+      if (admin.subscriptionExpiry) {
+        const today = new Date();
+        const diff = admin.subscriptionExpiry - today;
+        daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      }
+
+      return {
+        _id: admin._id,
+        companyName: admin.companyName,
+        planName: admin.subscriptionPlan,
+        status: admin.subscriptionStatus,
+        expiryDate: admin.subscriptionExpiry,
+        startDate: admin.updatedAt, // Assuming last update was renewal/activation
+        daysRemaining,
+        revenue: admin.subscriptionPlanId?.price || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: history
     });
   } catch (err) {
     next(err);

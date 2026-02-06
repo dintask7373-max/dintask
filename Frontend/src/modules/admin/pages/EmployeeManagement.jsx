@@ -48,11 +48,15 @@ import useManagerStore from '@/store/managerStore';
 import { cn } from '@/shared/utils/cn';
 import { Progress } from '@/shared/components/ui/progress';
 
+import useSalesStore from '@/store/salesStore';
+
 const EmployeeManagement = () => {
     const navigate = useNavigate();
     const { employees, deleteEmployee, addEmployee, updateEmployee } = useEmployeeStore();
+    const { user } = useAuthStore();
     const { tasks } = useTaskStore();
     const { managers } = useManagerStore();
+    const { salesExecutives } = useSalesStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -60,9 +64,9 @@ const EmployeeManagement = () => {
     const [newEmployee, setNewEmployee] = useState({ name: '', email: '', role: '', managerId: '' });
     const [parent] = useAutoAnimate();
 
-    // Mock limit for free/pro plan
-    const EMPLOYEE_LIMIT = 15;
-    const currentCount = employees.length;
+    // Limit based on plan from authStore
+    const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2; // Default to 2 if not found
+    const currentCount = employees.length + managers.length + (salesExecutives?.length || 0);
     const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
 
     const employeeStats = useMemo(() => {

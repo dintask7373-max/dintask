@@ -40,10 +40,15 @@ import {
 } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/utils/cn';
 
+import useAuthStore from '@/store/authStore';
+import useSalesStore from '@/store/salesStore';
+
 const ManagerManagement = () => {
     const navigate = useNavigate();
     const { managers, addManager, updateManager, deleteManager } = useManagerStore();
     const { employees } = useEmployeeStore();
+    const { salesExecutives } = useSalesStore();
+    const { user } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -51,6 +56,11 @@ const ManagerManagement = () => {
     const [newManager, setNewManager] = useState({ name: '', email: '', department: '' });
     const [editingManager, setEditingManager] = useState(null);
     const [parent] = useAutoAnimate();
+
+    // Limit tracking
+    const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2;
+    const currentCount = managers.length + employees.length + (salesExecutives?.length || 0);
+    const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
 
     const filteredManagers = useMemo(() => {
         return managers.filter(m =>
@@ -130,6 +140,7 @@ const ManagerManagement = () => {
                     </Button>
                     <Button
                         onClick={() => setIsAddModalOpen(true)}
+                        disabled={isLimitReached}
                         className="flex-1 md:flex-none h-9 sm:h-11 px-3 sm:px-4 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest whitespace-nowrap"
                     >
                         <Plus size={14} className="sm:w-[18px] sm:h-[18px]" />
@@ -138,7 +149,14 @@ const ManagerManagement = () => {
                 </div>
             </div>
 
-            {/* Stats Overview */}
+            {/* Subscription Alert */}
+            <div className="bg-blue-50/30 border border-blue-100/50 dark:bg-blue-900/10 dark:border-blue-900/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-6 flex items-center gap-3">
+                <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+                <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400 font-bold uppercase tracking-widest">
+                    Used <span className="text-blue-900 dark:text-white">{currentCount}</span> / <span className="text-blue-900 dark:text-white">{EMPLOYEE_LIMIT}</span> platform slots.
+                    {isLimitReached && <span className="ml-2 text-red-500 animate-pulse">Limit reached!</span>}
+                </p>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
                 {[
                     { label: 'Managers', value: managers.length, icon: Shield, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10' },

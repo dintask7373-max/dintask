@@ -30,6 +30,10 @@ const ManagerSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin'
   }
 }, { timestamps: true });
 

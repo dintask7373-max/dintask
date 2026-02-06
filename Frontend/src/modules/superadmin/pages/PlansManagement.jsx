@@ -25,7 +25,7 @@ import useSuperAdminStore from '@/store/superAdminStore';
 import { cn } from '@/shared/utils/cn';
 
 const PlansManagement = () => {
-    const { plans, addPlan, deletePlan, updatePlan } = useSuperAdminStore();
+    const { plans, fetchPlans, addPlan, deletePlan, updatePlan, loading } = useSuperAdminStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingPlanId, setEditingPlanId] = useState(null);
@@ -33,15 +33,18 @@ const PlansManagement = () => {
     const [planForm, setPlanForm] = useState({
         name: '',
         price: '',
-        limit: '',
+        userLimit: '',
         isActive: true,
-        trialDays: 0,
         features: []
     });
     const [featureInput, setFeatureInput] = useState('');
 
-    const filteredPlans = plans.filter(plan =>
-        plan.name.toLowerCase().includes(searchTerm.toLowerCase())
+    React.useEffect(() => {
+        fetchPlans();
+    }, []);
+
+    const filteredPlans = (plans || []).filter(plan =>
+        plan?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleOpenAddModal = () => {
@@ -50,34 +53,30 @@ const PlansManagement = () => {
         setPlanForm({
             name: '',
             price: '',
-            limit: '',
+            userLimit: '',
             isActive: true,
-            trialDays: 0,
             features: []
         });
         setIsModalOpen(true);
     };
 
     const handleOpenEditModal = (plan) => {
-        console.log("Opening edit modal for plan:", plan.id);
         setIsEditMode(true);
-        setEditingPlanId(plan.id);
+        setEditingPlanId(plan._id);
         setPlanForm({
             name: plan.name || '',
             price: plan.price?.toString() || '0',
-            limit: plan.limit?.toString() || '1',
+            userLimit: plan.userLimit?.toString() || '1',
             isActive: plan.isActive !== undefined ? plan.isActive : true,
-            trialDays: plan.trialDays?.toString() || '0',
             features: Array.isArray(plan.features) ? [...plan.features] : []
         });
         setIsModalOpen(true);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Submitting plan form. Mode:", isEditMode ? "Edit" : "Create");
 
-        if (!planForm.name || planForm.price === '' || planForm.limit === '') {
+        if (!planForm.name || planForm.price === '' || planForm.userLimit === '') {
             toast.error("Please fill in all required parameters");
             return;
         }
@@ -85,23 +84,17 @@ const PlansManagement = () => {
         const planData = {
             ...planForm,
             price: Number(planForm.price),
-            limit: Number(planForm.limit),
-            trialDays: Number(planForm.trialDays)
+            userLimit: Number(planForm.userLimit)
         };
 
-        try {
-            if (isEditMode) {
-                console.log("Updating plan:", editingPlanId, planData);
-                updatePlan(editingPlanId, planData);
-                toast.success(`${planData.name} tier recalibrated`);
-            } else {
-                console.log("Creating new plan:", planData);
-                addPlan(planData);
-                toast.success(`${planData.name} tier initialized`);
-            }
+        const success = isEditMode
+            ? await updatePlan(editingPlanId, planData)
+            : await addPlan(planData);
+
+        if (success) {
+            toast.success(`${planData.name} tier ${isEditMode ? 'recalibrated' : 'initialized'}`);
             setIsModalOpen(false);
-        } catch (error) {
-            console.error("Submission error:", error);
+        } else {
             toast.error("Operation failed");
         }
     };
@@ -122,16 +115,16 @@ const PlansManagement = () => {
         }));
     };
 
-    const handleDeletePlan = (id, name) => {
+    const handleDeletePlan = async (id, name) => {
         if (window.confirm(`Initiate deletion of ${name} tier?`)) {
-            deletePlan(id);
-            toast.success(`${name} tier decommissioned`);
+            const success = await deletePlan(id);
+            if (success) toast.success(`${name} tier decommissioned`);
         }
     };
 
-    const togglePlanStatus = (id, currentStatus) => {
-        updatePlan(id, { isActive: !currentStatus });
-        toast.success(`${!currentStatus ? 'Activated' : 'Deactivated'} tier sync`);
+    const togglePlanStatus = async (id, currentStatus) => {
+        const success = await updatePlan(id, { isActive: !currentStatus });
+        if (success) toast.success(`${!currentStatus ? 'Activated' : 'Deactivated'} tier sync`);
     };
 
     return (
@@ -176,7 +169,7 @@ const PlansManagement = () => {
                 <AnimatePresence>
                     {filteredPlans.map((plan, index) => (
                         <motion.div
-                            key={plan.id}
+                            key={plan._id}
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9 }}
@@ -191,7 +184,7 @@ const PlansManagement = () => {
                                 <CardHeader className="p-8 pb-4">
                                     <div className="flex justify-between items-start mb-6">
                                         <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800 text-primary-600 shadow-xl shadow-slate-200/50 dark:shadow-none group-hover:scale-110 transition-transform duration-500">
-                                            {plan.name === 'Enterprise' ? <ShieldCheck size={28} /> : plan.limit > 10 ? <Zap size={28} /> : <Briefcase size={28} />}
+                                            {plan.name === 'Enterprise' ? <ShieldCheck size={28} /> : (plan.userLimit || 0) > 10 ? <Zap size={28} /> : <Briefcase size={28} />}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Button
@@ -206,7 +199,7 @@ const PlansManagement = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={(e) => { e.stopPropagation(); togglePlanStatus(plan.id, plan.isActive); }}
+                                                onClick={(e) => { e.stopPropagation(); togglePlanStatus(plan._id, plan.isActive); }}
                                                 className={cn(
                                                     "w-10 h-10 rounded-2xl transition-all hover:scale-110",
                                                     plan.isActive ? "text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" : "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20"
@@ -217,7 +210,7 @@ const PlansManagement = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={(e) => { e.stopPropagation(); handleDeletePlan(plan.id, plan.name); }}
+                                                onClick={(e) => { e.stopPropagation(); handleDeletePlan(plan._id, plan.name); }}
                                                 className="w-10 h-10 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-110 transition-all"
                                             >
                                                 <Trash2 size={18} />
@@ -231,7 +224,7 @@ const PlansManagement = () => {
                                     <div className="flex items-center gap-2">
                                         <IndianRupee size={24} className="text-primary-600 font-black" />
                                         <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                            {plan.price.toLocaleString('en-IN')}
+                                            {(plan.price || 0).toLocaleString('en-IN')}
                                         </span>
                                         <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest self-end pb-2 opacity-60">/ CYCLE</span>
                                     </div>
@@ -239,7 +232,7 @@ const PlansManagement = () => {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-4 text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
                                             <Users size={18} className="text-primary-500" />
-                                            CAPACITY: {plan.limit} NODES
+                                            CAPACITY: {plan.userLimit || 0} NODES
                                         </div>
                                         <div className="space-y-3 pl-2">
                                             {plan.features?.slice(0, 4).map((feature, i) => (
@@ -263,6 +256,15 @@ const PlansManagement = () => {
                         </motion.div>
                     ))}
                 </AnimatePresence>
+                {filteredPlans.length === 0 && (
+                    <div className="col-span-full py-20 text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                        <div className="inline-flex items-center justify-center size-20 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-6">
+                            <Search size={40} />
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">No Tiers Found</h3>
+                        <p className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2 italic">Search criteria returned 0 protocol nodes</p>
+                    </div>
+                )}
             </div>
 
             {/* Protocol Modal (Add/Edit) */}
@@ -321,40 +323,27 @@ const PlansManagement = () => {
                                         />
                                     </div>
                                     <div className="space-y-3">
-                                        <Label htmlFor="limit" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">NODE CAPACITY</Label>
+                                        <Label htmlFor="userLimit" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">NODE CAPACITY</Label>
                                         <Input
-                                            id="limit"
+                                            id="userLimit"
                                             type="number"
                                             placeholder="5"
                                             className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
-                                            value={planForm.limit}
-                                            onChange={(e) => setPlanForm({ ...planForm, limit: e.target.value })}
+                                            value={planForm.userLimit}
+                                            onChange={(e) => setPlanForm({ ...planForm, userLimit: e.target.value })}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <Label htmlFor="trialDays" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">TRIAL NODES (DAYS)</Label>
-                                        <Input
-                                            id="trialDays"
-                                            type="number"
-                                            placeholder="0"
-                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
-                                            value={planForm.trialDays}
-                                            onChange={(e) => setPlanForm({ ...planForm, trialDays: e.target.value })}
+                                <div className="space-y-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">DEPLOYMENT STATE</Label>
+                                    <div className="flex items-center gap-4 h-14 px-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 flex-1">Is Active</span>
+                                        <Switch
+                                            checked={planForm.isActive}
+                                            onCheckedChange={(checked) => setPlanForm({ ...planForm, isActive: checked })}
+                                            className="data-[state=checked]:bg-emerald-600"
                                         />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">DEPLOYMENT STATE</Label>
-                                        <div className="flex items-center gap-4 h-14 px-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 flex-1">Is Active</span>
-                                            <Switch
-                                                checked={planForm.isActive}
-                                                onCheckedChange={(checked) => setPlanForm({ ...planForm, isActive: checked })}
-                                                className="data-[state=checked]:bg-emerald-600"
-                                            />
-                                        </div>
                                     </div>
                                 </div>
 
@@ -394,7 +383,7 @@ const PlansManagement = () => {
                                         className="flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                                         onClick={() => setIsModalOpen(false)}
                                     >
-                                        TERMINATE
+                                        CANCEL
                                     </Button>
                                     <Button
                                         type="submit"

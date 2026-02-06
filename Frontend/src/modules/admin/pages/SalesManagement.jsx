@@ -39,9 +39,16 @@ import { cn } from '@/shared/utils/cn';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
+import useAuthStore from '@/store/authStore';
+import useEmployeeStore from '@/store/employeeStore';
+import useManagerStore from '@/store/managerStore';
+
 const SalesManagement = () => {
     const { salesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
     const { leads, getPipelineData, moveLead, addLead, assignLead } = useCRMStore();
+    const { employees } = useEmployeeStore();
+    const { managers } = useManagerStore();
+    const { user } = useAuthStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddRepModalOpen, setIsAddRepModalOpen] = useState(false);
@@ -59,6 +66,11 @@ const SalesManagement = () => {
 
     const [parent] = useAutoAnimate();
     const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
+
+    // Limit tracking
+    const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2;
+    const currentCount = (salesReps?.length || 0) + (employees?.length || 0) + (managers?.length || 0);
+    const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
 
     const filteredReps = useMemo(() => {
         return salesReps.filter(rep =>
@@ -142,6 +154,15 @@ const SalesManagement = () => {
                 </div>
             </div>
 
+            {/* Subscription Alert */}
+            <div className="bg-blue-50/30 border border-blue-100/50 dark:bg-blue-900/10 dark:border-blue-900/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-2 flex items-center gap-3">
+                <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+                <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400 font-bold uppercase tracking-widest">
+                    Used <span className="text-blue-900 dark:text-white">{currentCount}</span> / <span className="text-blue-900 dark:text-white">{EMPLOYEE_LIMIT}</span> platform slots.
+                    {isLimitReached && <span className="ml-2 text-red-500 animate-pulse">Limit reached!</span>}
+                </p>
+            </div>
+
             <Tabs defaultValue="team" className="space-y-4 sm:space-y-6">
                 <TabsList className="bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-slate-800 rounded-xl h-auto w-full sm:w-auto">
                     <TabsTrigger value="team" className="flex-1 sm:flex-none rounded-lg px-4 sm:px-8 py-2 data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700 font-black text-[10px] sm:text-xs uppercase tracking-widest">Team</TabsTrigger>
@@ -185,7 +206,11 @@ const SalesManagement = () => {
                                 <Download size={14} />
                                 <span className="hidden sm:inline">Export</span>
                             </Button>
-                            <Button onClick={() => setIsAddRepModalOpen(true)} className="flex-1 sm:flex-none gap-2 bg-primary-600 hover:bg-primary-700 h-9 sm:h-10 rounded-xl shadow-lg shadow-primary-500/20 text-[10px] font-black uppercase tracking-widest">
+                            <Button
+                                onClick={() => setIsAddRepModalOpen(true)}
+                                disabled={isLimitReached}
+                                className="flex-1 sm:flex-none gap-2 bg-primary-600 hover:bg-primary-700 h-9 sm:h-10 rounded-xl shadow-lg shadow-primary-500/20 text-[10px] font-black uppercase tracking-widest"
+                            >
                                 <Plus size={14} />
                                 <span>Add Rep</span>
                             </Button>

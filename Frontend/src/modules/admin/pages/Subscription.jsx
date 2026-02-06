@@ -11,6 +11,7 @@ import {
     History,
     Download
 } from 'lucide-react';
+import { format } from 'date-fns';
 
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/shared/components/ui/card';
@@ -20,54 +21,111 @@ import { Progress } from "@/shared/components/ui/progress";
 import useEmployeeStore from '@/store/employeeStore';
 import { cn } from '@/shared/utils/cn';
 
+import { useNavigate } from 'react-router-dom';
+import useSubscriptionStore from '@/store/subscriptionStore';
+import useAuthStore from '@/store/authStore';
+
 const Subscription = () => {
     const { employees, subscriptionLimit } = useEmployeeStore();
-    const usagePercentage = (employees.length / subscriptionLimit) * 100;
+    const { user, fetchProfile } = useAuthStore();
+    const { plans, fetchPlans, createOrder, verifyPayment, billingHistory, fetchBillingHistory, downloadInvoice } = useSubscriptionStore();
+    const [loadingPlan, setLoadingPlan] = React.useState(null);
+    const [downloadingId, setDownloadingId] = React.useState(null);
 
-    const currentPlan = {
-        name: 'Pro Team',
-        price: 'â‚¹2,499/mo',
-        billing: 'Monthly',
-        nextBill: 'Feb 15, 2026',
-        features: [
-            'Up to 5 Team Members',
-            'Advanced Reports',
-            'Custom Task Priority',
-            'Location Tracking',
-            '5GB File Storage'
-        ]
+    React.useEffect(() => {
+        fetchPlans();
+        fetchBillingHistory();
+    }, []);
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
     };
 
-    const plans = [
-        {
-            name: 'Starter',
-            price: 'â‚¹999/mo',
-            limit: 2,
-            features: ['Basic Task Mgmt', 'Mobile App', 'Email Reports'],
-            current: false
-        },
-        {
-            name: 'Pro Team',
-            price: 'â‚¹2,499/mo',
-            limit: 5,
-            features: ['Everything in Starter', 'Advanced Analytics', 'Location Verification'],
-            current: true
-        },
-        {
-            name: 'Business',
-            price: 'â‚¹4,999/mo',
-            limit: 20,
-            features: ['Everything in Pro', 'Custom Branding', 'API Access', '24/7 Support'],
-            current: false
+    const handlePayment = async (plan) => {
+        setLoadingPlan(plan._id);
+        const res = await loadRazorpayScript();
+
+        if (!res) {
+            toast.error('Razorpay SDK failed to load. Are you online?');
+            setLoadingPlan(null);
+            return;
         }
-    ];
+
+        // Create Order
+        const orderRes = await createOrder(plan._id);
+
+        if (orderRes.success && orderRes.free) {
+            toast.success('Plan activated successfully!');
+            await fetchProfile();
+            setLoadingPlan(null);
+            return;
+        }
+
+        if (!orderRes.success) {
+            toast.error(orderRes.error || 'Failed to initiate payment');
+            setLoadingPlan(null);
+            return;
+        }
+
+        const options = {
+            key: 'rzp_test_8sYbzHWidwe5Zw', // Should ideally be in env
+            amount: orderRes.data.amount,
+            currency: orderRes.data.currency,
+            name: 'DinTask CRM',
+            description: `Payment for ${plan.name} Plan`,
+            order_id: orderRes.data.id,
+            handler: async (response) => {
+                const verifyRes = await verifyPayment({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature
+                });
+
+                if (verifyRes.success) {
+                    toast.success('Subscription upgraded successfully!');
+                    await fetchProfile(); // Refresh user data to get new plan
+                } else {
+                    toast.error(verifyRes.error || 'Payment verification failed');
+                }
+                setLoadingPlan(null);
+            },
+            prefill: {
+                name: user?.name,
+                email: user?.email,
+            },
+            theme: {
+                color: '#2563eb'
+            }
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+        setLoadingPlan(null);
+    };
+
+    const usagePercentage = (employees.length / (user?.planDetails?.userLimit || subscriptionLimit)) * 100;
+
+    const currentPlan = {
+        name: user?.subscriptionPlan || 'Starter',
+        price: '---',
+        billing: 'Monthly',
+        nextRenewal: user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString() : 'N/A',
+        features: user?.planDetails?.features || ['Basic Features']
+    };
 
     const [selectedRole, setSelectedRole] = React.useState('employee');
     const referralLinks = {
-        employee: 'https://dintask.com/employee/register?ref=ADM-99X2',
-        manager: 'https://dintask.com/manager/register?ref=ADM-99X2',
-        sales: 'https://dintask.com/sales/register?ref=ADM-99X2'
+        employee: `https://dintask.com/employee/register?adminId=${user?.id}`,
+        manager: `https://dintask.com/manager/register?adminId=${user?.id}`,
+        sales: `https://dintask.com/sales/register?adminId=${user?.id}`
     };
+
 
     return (
         <div className="space-y-6 pb-12">
@@ -100,9 +158,9 @@ const Subscription = () => {
                             </div>
                             <div className="text-left sm:text-right">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Price</p>
-                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{currentPlan.price}</h3>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">â‚¹{user?.planDetails?.price || 0}</h3>
                                 <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 sm:justify-end">
-                                    <Clock size={10} /> Next renewal: {currentPlan.nextBill}
+                                    <Clock size={10} /> Next renewal: {currentPlan.nextRenewal}
                                 </p>
                             </div>
                         </div>
@@ -229,45 +287,127 @@ const Subscription = () => {
                 </div>
             </div>
 
-            {/* Upgrade Options Table placeholder */}
+            {/* Upgrade Options Table */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-                {plans.map((plan, i) => (
-                    <Card key={i} className={cn(
-                        "border-2 transition-all duration-300",
-                        plan.current
-                            ? "border-primary-500 shadow-xl shadow-primary-100 dark:shadow-none bg-white dark:bg-slate-900"
-                            : "border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
-                    )}>
-                        <CardHeader>
-                            {plan.current && <Badge className="w-fit mb-2 bg-primary-600">Current Plan</Badge>}
-                            <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                            <CardDescription className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                                {plan.price}
-                                <span className="text-sm font-normal text-slate-400">/mo</span>
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="space-y-3">
-                                {plan.features.map((f, idx) => (
-                                    <li key={idx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                                        <Check size={14} className="text-emerald-500" />
-                                        {f}
+                {(plans || []).map((plan, i) => {
+                    const isCurrent = user?.subscriptionPlanId === plan._id;
+                    return (
+                        <Card key={i} className={cn(
+                            "border-2 transition-all duration-300",
+                            isCurrent
+                                ? "border-primary-500 shadow-xl shadow-primary-100 dark:shadow-none bg-white dark:bg-slate-900"
+                                : "border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                        )}>
+                            <CardHeader>
+                                {isCurrent && <Badge className="w-fit mb-2 bg-primary-600">Current Plan</Badge>}
+                                <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
+                                <CardDescription className="text-2xl font-black text-slate-900 dark:text-white mt-2">
+                                    â‚¹{plan.price}
+                                    <span className="text-sm font-normal text-slate-400">/mo</span>
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="space-y-3">
+                                    {plan.features?.map((f, idx) => (
+                                        <li key={idx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                            <Check size={14} className="text-emerald-500" />
+                                            {f}
+                                        </li>
+                                    ))}
+                                    <li className="flex items-center gap-2 text-xs text-slate-900 font-bold">
+                                        <Users size={14} className="text-primary-500" />
+                                        Up to {plan.userLimit} Users
                                     </li>
-                                ))}
-                            </ul>
-                        </CardContent>
-                        <CardFooter>
-                            <Button
-                                variant={plan.current ? "default" : "outline"}
-                                className="w-full font-bold"
-                                disabled={plan.current}
-                            >
-                                {plan.current ? 'Your Active Plan' : `Upgrade to ${plan.name}`}
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                ))}
+                                </ul>
+                            </CardContent>
+                            <CardFooter>
+                                <Button
+                                    variant={isCurrent ? "default" : "outline"}
+                                    className="w-full font-bold"
+                                    disabled={isCurrent || loadingPlan === plan._id}
+                                    onClick={() => handlePayment(plan)}
+                                >
+                                    {loadingPlan === plan._id ? 'Processing...' : (isCurrent ? 'Your Active Plan' : `Upgrade to ${plan.name}`)}
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    );
+                })}
             </div>
+
+            {/* Billing History */}
+            <Card className="border-none shadow-md shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 mt-8">
+                <CardHeader>
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                        <History size={20} className="text-primary-500" />
+                        Billing History
+                    </CardTitle>
+                    <CardDescription>View your past transactions and download invoices.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                    <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Plan</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Invoice</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(billingHistory || []).map((payment) => (
+                                    <tr key={payment._id} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                        <td className="p-4 text-[11px] font-bold text-slate-600">
+                                            {format(new Date(payment.createdAt), 'MMM dd, yyyy')}
+                                        </td>
+                                        <td className="p-4 text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                                            {payment.planId?.name || '---'}
+                                        </td>
+                                        <td className="p-4 text-[11px] font-black text-slate-900 dark:text-white tracking-tight">
+                                            â‚¹{payment.amount.toLocaleString()}
+                                        </td>
+                                        <td className="p-4">
+                                            <Badge className={cn(
+                                                "text-[8px] font-black uppercase tracking-widest h-5 px-2 shadow-none border-none",
+                                                payment.status === 'paid' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                            )}>
+                                                {payment.status}
+                                            </Badge>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn(
+                                                    "h-8 w-8",
+                                                    downloadingId === payment._id ? "text-primary-600 animate-pulse" : "text-slate-400 hover:text-primary-600"
+                                                )}
+                                                disabled={downloadingId === payment._id}
+                                                onClick={async () => {
+                                                    setDownloadingId(payment._id);
+                                                    await downloadInvoice(payment._id, payment.razorpayOrderId);
+                                                    setDownloadingId(null);
+                                                }}
+                                            >
+                                                <Download size={14} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {(!billingHistory || billingHistory.length === 0) && (
+                                    <tr>
+                                        <td colSpan={5} className="p-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                            No transaction history found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };
