@@ -140,9 +140,6 @@ const BillingPayments = () => {
                     <Button variant="outline" className="h-11 px-6 rounded-xl border-slate-200 bg-white font-bold text-xs uppercase tracking-widest gap-2">
                         <Download size={16} /> Export Reports
                     </Button>
-                    <Button className="h-11 px-6 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs uppercase tracking-widest gap-2">
-                        <DollarSign size={16} /> Settlement Info
-                    </Button>
                 </div>
             </header>
 
@@ -225,7 +222,7 @@ const BillingPayments = () => {
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Gateway</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount (incl. GST)</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</th>
+
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -277,19 +274,7 @@ const BillingPayments = () => {
                                                 <div className="text-[9px] font-bold text-rose-400 mt-1 uppercase pl-1">{payment.error}</div>
                                             )}
                                         </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Button variant="ghost" size="sm" className="size-9 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
-                                                    <Download size={16} />
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="size-9 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
-                                                    <FileText size={16} />
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="size-9 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-rose-600 border border-transparent hover:border-slate-100">
-                                                    <RotateCcw size={16} />
-                                                </Button>
-                                            </div>
-                                        </td>
+
                                     </motion.tr>
                                 ))}
                             </AnimatePresence>
@@ -297,85 +282,10 @@ const BillingPayments = () => {
                     </table>
                 </div>
 
-                {/* Pagination Placeholder */}
-                <div className="p-6 border-t border-slate-50 bg-slate-50/20 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Showing 1 to {filteredPayments.length} of {filteredPayments.length} entries</p>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" disabled className="h-8 px-4 rounded-lg font-black text-[10px] border-slate-200">PREV</Button>
-                        <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg font-black text-[10px] bg-white border-slate-200 text-primary-600 shadow-sm">1</Button>
-                        <Button variant="outline" size="sm" disabled className="h-8 px-4 rounded-lg font-black text-[10px] border-slate-200">NEXT</Button>
-                    </div>
-                </div>
+
             </div>
 
-            {/* Refund & Settings Section */}
-            <div className="grid lg:grid-cols-2 gap-8">
-                {/* Gateway Logs */}
-                <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-                    <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <RefreshCw className="text-indigo-600" size={20} />
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Payment Gateway Logs</h2>
-                        </div>
-                        <Button variant="ghost" size="sm" className="text-xs font-black text-primary-600 uppercase tracking-widest hover:bg-primary-50">View All</Button>
-                    </div>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-50">
-                            {[
-                                { event: 'Webhook Received', provider: 'Razorpay', status: 'delivered', time: '2 mins ago' },
-                                { event: 'Token Created', provider: 'Stripe', status: 'success', time: '14 mins ago' },
-                                { event: 'Refund Processed', provider: 'Razorpay', status: 'failed', time: '1 hour ago' },
-                                { event: 'Payment Intent Created', provider: 'PayPal', status: 'success', time: '3 hours ago' }
-                            ].map((log, i) => (
-                                <div key={i} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight">{log.event}</span>
-                                        <span className="text-[9px] font-bold text-slate-400 mt-0.5">{log.provider} • {log.status}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[10px] font-bold text-slate-400">{log.time}</span>
-                                        <ExternalLink size={12} className="text-slate-300" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
 
-                {/* Refund & Policy Quick Actions */}
-                <div className="space-y-6">
-                    <Card className="bg-primary-600 border-none shadow-xl shadow-primary-500/20 rounded-[2rem] text-white overflow-hidden relative group">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                            <ShieldCheck size={120} />
-                        </div>
-                        <CardContent className="p-8 relative z-10">
-                            <div className="size-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
-                                <RotateCcw size={28} />
-                            </div>
-                            <h3 className="text-2xl font-black tracking-tight mb-2">Automated Refunds</h3>
-                            <p className="text-primary-50 opacity-80 text-sm font-medium mb-8 max-w-xs">
-                                Manage double payments and failed upgrades instantly through our tactical refund portal.
-                            </p>
-                            <Button className="bg-white text-primary-600 hover:bg-primary-50 h-12 px-8 rounded-xl font-black text-xs uppercase tracking-widest">
-                                Open Refund Portal
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
-                            <FileText className="text-slate-400 mb-3" size={24} />
-                            <h4 className="text-xs font-black text-slate-900 uppercase">GST Templates</h4>
-                            <p className="text-[10px] font-medium text-slate-500 mt-1">Manage invoice layouts</p>
-                        </div>
-                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
-                            <RefreshCw className="text-slate-400 mb-3" size={24} />
-                            <h4 className="text-xs font-black text-slate-900 uppercase">Auto Renewal</h4>
-                            <p className="text-[10px] font-medium text-slate-500 mt-1">Subscription cycles</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };

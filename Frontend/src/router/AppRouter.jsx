@@ -33,7 +33,11 @@ import EmployeeLogin from '@/modules/user/pages/EmployeeLogin';
 import EmployeeRegister from '@/modules/user/pages/EmployeeRegister';
 import ForgotPassword from '@/modules/user/pages/ForgotPassword';
 import AdminLogin from '@/modules/admin/pages/AdminLogin';
+import AdminRegister from '@/modules/admin/pages/AdminRegister';
+import AdminForgotPassword from '@/modules/admin/pages/AdminForgotPassword';
 import SuperAdminLogin from '@/modules/superadmin/pages/SuperAdminLogin';
+import SuperAdminRegister from '@/modules/superadmin/pages/SuperAdminRegister';
+import SuperAdminForgotPassword from '@/modules/superadmin/pages/SuperAdminForgotPassword';
 
 // Admin Pages
 import AdminDashboard from '@/modules/admin/pages/Dashboard';
@@ -117,6 +121,7 @@ import SuperAdminSupport from '@/modules/superadmin/pages/SupportTickets';
 import SubscriptionHistory from '@/modules/superadmin/pages/SubscriptionHistory';
 import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
+import SupportCenter from '@/modules/shared/pages/SupportCenter';
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -146,9 +151,11 @@ const AppRouter = () => {
             <Route path="/manager/register" element={<ManagerRegister />} />
             <Route path="/manager/forgot-password" element={<ForgotPassword returnPath="/manager/login" />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/forgot-password" element={<ForgotPassword returnPath="/admin/login" />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
+            <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
             <Route path="/superadmin/login" element={<SuperAdminLogin />} />
-            <Route path="/superadmin/forgot-password" element={<ForgotPassword returnPath="/superadmin/login" />} />
+            <Route path="/superadmin/register" element={<SuperAdminRegister />} />
+            <Route path="/superadmin/forgot-password" element={<SuperAdminForgotPassword />} />
             <Route path="/sales/login" element={<SalesLogin />} />
             <Route path="/sales/register" element={<SalesRegister />} />
             <Route path="/sales/forgot-password" element={<ForgotPassword returnPath="/sales/login" />} />
@@ -168,6 +175,7 @@ const AppRouter = () => {
                 <Route path="subscription" element={<AdminSubscription />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="requests" element={<JoinRequests />} />
+                <Route path="support" element={<SupportCenter />} />
             </Route>
 
             {/* Admin CRM Panel */}
@@ -201,6 +209,7 @@ const AppRouter = () => {
                 <Route path="profile/help/terms" element={<TermsOfService />} />
                 <Route path="profile/help/center" element={<HelpCenter />} />
                 <Route path="profile/help/chat" element={<ChatSupport />} />
+                <Route path="support" element={<SupportCenter />} />
 
                 {/* Embedded CRM Routes for Employee */}
                 <Route path="crm">
@@ -222,7 +231,7 @@ const AppRouter = () => {
                 <Route path="plans" element={<PlansManagement />} />
                 <Route path="billing" element={<BillingPayments />} />
                 <Route path="inquiries" element={<Inquiries />} />
-                <Route path="support" element={<SuperAdminSupport />} />
+                <Route path="support" element={<SupportCenter />} />
                 <Route path="history" element={<SubscriptionHistory />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
@@ -249,6 +258,7 @@ const AppRouter = () => {
                 <Route path="settings/security" element={<ManagerSettings />} />
                 <Route path="settings/customization" element={<ManagerSettings />} />
                 <Route path="settings/language" element={<ManagerSettings />} />
+                <Route path="support" element={<SupportCenter />} />
             </Route>
 
             {/* --- SALES ROUTES --- */}
@@ -261,6 +271,7 @@ const AppRouter = () => {
                 <Route path="schedule" element={<Schedule />} />
                 <Route path="reports" element={<SalesReports />} />
                 <Route path="settings" element={<SalesSettings />} />
+                <Route path="support" element={<SupportCenter />} />
             </Route>
 
             {/* Sales CRM Panel */}

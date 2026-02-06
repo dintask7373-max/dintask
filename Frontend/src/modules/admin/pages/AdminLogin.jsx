@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { Briefcase, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
@@ -90,7 +90,7 @@ const AdminLogin = () => {
                                 </Button>
                             </form>
 
-                            <div className="text-center pt-2">
+                            <div className="text-center pt-2 space-y-4">
                                 <div className="inline-block p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-left w-full">
                                     <div className="flex items-center gap-3 text-xs">
                                         <KeyRound className="shrink-0 text-slate-400" size={16} />
@@ -99,6 +99,13 @@ const AdminLogin = () => {
                                             <span className="font-mono text-slate-500">admin@dintask.com / admin123</span>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-2">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Need a platform for your team?</span>
+                                    <Link to="/admin/register" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-600 hover:text-primary-700 underline decoration-2 underline-offset-4">
+                                        Register Now
+                                    </Link>
                                 </div>
                             </div>
                         </CardContent>

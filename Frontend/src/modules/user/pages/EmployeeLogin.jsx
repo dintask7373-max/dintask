@@ -97,10 +97,20 @@ const EmployeeLogin = () => {
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4 pb-6 border-t border-slate-100 dark:border-slate-800 pt-6 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="text-center">
+                    <div className="text-center w-full flex flex-col gap-3">
                         <p className="text-xs text-slate-500">
                             Don't have an account? <Link to="/employee/register" className="font-bold text-slate-900 dark:text-white hover:underline">Create Account</Link>
                         </p>
+                        <div className="flex items-center gap-2 py-2">
+                            <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800" />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Or</span>
+                            <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800" />
+                        </div>
+                        <Link to="/sales/login" className="w-full">
+                            <Button variant="outline" className="w-full h-10 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white dark:hover:bg-slate-800">
+                                Login as Sales
+                            </Button>
+                        </Link>
                     </div>
                     <div className="w-full p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Demo Credentials</span>

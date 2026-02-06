@@ -10,25 +10,19 @@ import {
     Star,
     Zap,
     HelpCircle,
-    FileText,
-    Mail,
-    Smartphone
+    FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { Switch } from "@/shared/components/ui/switch";
-import { Separator } from "@/shared/components/ui/separator";
 import useAuthStore from '@/store/authStore';
-import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
 
 const EmployeeProfile = () => {
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
-    const [isSyncing, setIsSyncing] = useState(false);
 
     const handleLogout = async () => {
         const logoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
@@ -41,9 +35,6 @@ const EmployeeProfile = () => {
 
         await logoutPromise;
         logout();
-        // The router will likely redirect to /employee/login automatically due to ProtectedRoute
-        // but explicit navigation is safer for UX transitions
-        // navigate('/employee/login'); 
     };
 
     const menuItems = [
@@ -69,30 +60,20 @@ const EmployeeProfile = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="px-4 pt-6 pb-32 space-y-6">
+            {/* Profile Header Card */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="px-1"
             >
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white">Profile</h2>
-                <p className="text-xs text-slate-500 font-medium">Manage your account & settings</p>
-            </motion.div>
-
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-            >
-                <Card className="border-none shadow-md shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-3xl overflow-hidden relative group">
-                    <div className="h-20 bg-primary-600 w-full" />
-                    <CardContent className="pt-0 -mt-10 px-6 pb-6">
+                <Card className="border-none shadow-lg shadow-primary-500/20 dark:shadow-none bg-gradient-to-br from-primary-600 to-purple-700 rounded-3xl overflow-hidden">
+                    <CardContent className="p-8">
                         <div className="flex flex-col items-center text-center">
-                            <div className="relative mb-3">
+                            <div className="relative mb-4">
                                 <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
-                                    <Avatar className="h-20 w-20 ring-4 ring-white dark:ring-slate-900 shadow-xl">
+                                    <Avatar className="h-24 w-24 ring-4 ring-white/30 shadow-2xl">
                                         <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
-                                        <AvatarFallback className="bg-primary-600 text-white font-black text-xl">{user?.name?.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback className="bg-white/20 text-white font-black text-2xl">{user?.name?.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 </motion.div>
                                 <motion.div
@@ -100,25 +81,27 @@ const EmployeeProfile = () => {
                                     whileTap={{ scale: 0.9 }}
                                     className="absolute bottom-0 right-0 cursor-pointer"
                                 >
-                                    <div className="h-7 w-7 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
-                                        <Camera size={14} className="text-slate-900 dark:text-white" />
+                                    <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-lg">
+                                        <Camera size={16} className="text-primary-600" />
                                     </div>
                                 </motion.div>
                             </div>
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{user?.name}</h3>
-                            <p className="text-xs text-slate-500 font-medium">Employee • Marketing Team</p>
 
-                            <div className="flex gap-4 mt-6 w-full">
-                                <div className="flex-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <p className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">Performance</p>
-                                    <div className="flex items-center justify-center gap-1.5 font-black text-slate-900 dark:text-white">
-                                        <Star size={14} className="text-amber-400 fill-amber-400" />
-                                        <span>4.9</span>
+                            <h3 className="text-xl font-black text-white leading-tight mb-1">{user?.name}</h3>
+                            <p className="text-sm text-white/80 font-medium mb-6">Employee • Marketing Team</p>
+
+                            {/* Stats Row */}
+                            <div className="flex gap-8 w-full justify-center">
+                                <div className="text-center">
+                                    <div className="flex items-center justify-center gap-1.5 font-black text-white mb-1">
+                                        <Star size={16} className="text-amber-400 fill-amber-400" />
+                                        <span className="text-xl">4.9</span>
                                     </div>
+                                    <p className="text-xs text-white/70 font-medium">Performance</p>
                                 </div>
-                                <div className="flex-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <p className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">Tasks Monthly</p>
-                                    <div className="font-black text-slate-900 dark:text-white">42</div>
+                                <div className="text-center">
+                                    <p className="text-xl font-black text-white mb-1">42</p>
+                                    <p className="text-xs text-white/70 font-medium">Tasks Monthly</p>
                                 </div>
                             </div>
                         </div>
@@ -126,6 +109,7 @@ const EmployeeProfile = () => {
                 </Card>
             </motion.div>
 
+            {/* Settings Section */}
             <motion.div
                 className="space-y-4"
                 initial="hidden"
@@ -159,6 +143,7 @@ const EmployeeProfile = () => {
                 </Card>
             </motion.div>
 
+            {/* Privacy & Support */}
             <motion.div
                 className="space-y-4"
                 initial="hidden"
@@ -183,6 +168,7 @@ const EmployeeProfile = () => {
                 </div>
             </motion.div>
 
+            {/* Logout Button */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -199,6 +185,7 @@ const EmployeeProfile = () => {
                 </Button>
             </motion.div>
 
+            {/* Footer */}
             <div className="text-center pb-8">
                 <p className="text-[10px] text-slate-400 font-medium">Version 1.0.4 (Build 82910)</p>
                 <p className="text-[10px] text-slate-400">© 2026 DinTask CRM Inc.</p>

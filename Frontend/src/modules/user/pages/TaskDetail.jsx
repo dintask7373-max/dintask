@@ -143,9 +143,9 @@ const TaskDetail = () => {
     const pConfig = priorityConfig[task.priority] || priorityConfig.low;
 
     return (
-        <div className="bg-background-light dark:bg-background-dark min-h-screen pb-32 font-display text-text-main dark:text-gray-100">
+        <div className="bg-white dark:bg-slate-950 min-h-screen pb-32 font-display text-text-main dark:text-gray-100">
             {/* Top Navigation */}
-            <div className="sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+            <div className="sticky top-0 z-20 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
                 <div className="flex items-center p-4 justify-between">
                     <div className="flex items-center gap-2">
                         <button
@@ -165,39 +165,39 @@ const TaskDetail = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="max-w-[1280px] mx-auto px-4 md:px-8 pt-2">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="max-w-[1280px] mx-auto px-4 md:px-6 pt-2">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-8 items-start">
 
                     {/* Main Column */}
-                    <div className="lg:col-span-8 space-y-8">
+                    <div className="lg:col-span-8 space-y-4 md:space-y-6">
                         {/* Header Section */}
                         <div className="mb-2">
                             <div className="flex flex-wrap gap-2 mb-3">
-                                <div className={cn("flex h-7 items-center justify-center rounded-full px-3", pConfig.color)}>
-                                    <p className="text-xs font-bold uppercase tracking-wider">{pConfig.label}</p>
+                                <div className={cn("flex h-6 md:h-7 items-center justify-center rounded-full px-2.5 md:px-3", pConfig.color)}>
+                                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider">{pConfig.label}</p>
                                 </div>
                                 {task.labels && task.labels.map((label, i) => (
-                                    <div key={i} className="flex h-7 items-center justify-center rounded-full bg-primary/10 px-3">
-                                        <p className="text-primary text-xs font-bold uppercase tracking-wider">{label}</p>
+                                    <div key={i} className="flex h-6 md:h-7 items-center justify-center rounded-full bg-primary/10 px-2.5 md:px-3">
+                                        <p className="text-primary text-[10px] md:text-xs font-bold uppercase tracking-wider">{label}</p>
                                     </div>
                                 ))}
                             </div>
-                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-text-main dark:text-white">
+                            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-extrabold leading-tight tracking-tight text-text-main dark:text-white">
                                 {task.title}
                             </h1>
                         </div>
 
                         {/* Description */}
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/50">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Description</h3>
-                            <p className="text-text-main dark:text-gray-200 text-base leading-relaxed">
+                        <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/50">
+                            <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 md:mb-4">Description</h3>
+                            <p className="text-text-main dark:text-gray-200 text-sm md:text-base leading-relaxed">
                                 {task.description}
                             </p>
                         </div>
 
                         {/* Activity Feed */}
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/50">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Activity Feed</h3>
+                        <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/50">
+                            <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4 md:mb-6">Activity Feed</h3>
                             <div className="relative space-y-8 before:content-[''] before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100 dark:before:bg-slate-700/50">
                                 {/* Render Mock Activity or Empty State */}
                                 {task.activity && task.activity.length > 0 ? (
@@ -243,10 +243,10 @@ const TaskDetail = () => {
                     </div>
 
                     {/* Side Column */}
-                    <div className="lg:col-span-4 space-y-6">
+                    <div className="lg:col-span-4 space-y-4 md:space-y-6">
                         {/* Task Hierarchy Visualization */}
-                        <Card className="rounded-3xl border-none shadow-sm bg-slate-50 dark:bg-slate-900 overflow-hidden">
-                            <CardContent className="p-6 space-y-4">
+                        <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-slate-50 dark:bg-slate-900 overflow-hidden">
+                            <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Assignment Path</h4>
                                 <div className="flex items-center gap-3">
                                     <div className="flex flex-col items-center gap-1">
@@ -298,9 +298,9 @@ const TaskDetail = () => {
                         </Card>
 
                         {/* Quick Info Cards */}
-                        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-                            <Card className="rounded-3xl border-none shadow-sm bg-white dark:bg-slate-900">
-                                <CardContent className="p-5">
+                        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 md:gap-4">
+                            <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-white dark:bg-slate-900">
+                                <CardContent className="p-4 md:p-5">
                                     <div className="flex items-center gap-2 mb-3 text-slate-400">
                                         <div className="p-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600">
                                             <CalendarIcon size={14} />
@@ -339,8 +339,8 @@ const TaskDetail = () => {
                         </div>
 
                         {/* Collaborators */}
-                        <Card className="rounded-3xl border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
-                            <CardContent className="p-6">
+                        <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+                            <CardContent className="p-4 md:p-6">
                                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Collaborators</h3>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <div className="flex -space-x-3">

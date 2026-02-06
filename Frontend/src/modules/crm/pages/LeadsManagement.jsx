@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -7,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Badge } from '@/shared/components/ui/badge';
 import { Label } from '@/shared/components/ui/label';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileUp } from 'lucide-react';
 import useCRMStore from '@/store/crmStore';
 import { cn } from '@/shared/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +22,8 @@ const LeadsManagement = () => {
     deleteLead,
     assignLead,
   } = useCRMStore();
+
+  const fileInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -88,6 +92,54 @@ const LeadsManagement = () => {
     });
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          toast.error('Excel file is empty');
+          return;
+        }
+
+        let importedCount = 0;
+        jsonData.forEach((row) => {
+          // Robust mapping for common Excel column names
+          const leadData = {
+            name: row.Name || row.name || row['Full Name'] || 'Unnamed Lead',
+            mobile: String(row.Mobile || row.mobile || row.Phone || row.phone || row['Contact Number'] || ''),
+            email: row.Email || row.email || row['Email ID'] || '',
+            company: row.Company || row.company || row['Organization'] || '',
+            source: row.Source || row.source || 'Excel Import',
+            owner: 'EMP-001', // Default system owner
+            status: 'New',
+            notes: row.Notes || row.notes || row['Comments'] || '',
+          };
+
+          if (leadData.name && (leadData.mobile || leadData.email)) {
+            addLead(leadData);
+            importedCount++;
+          }
+        });
+
+        toast.success(`Successfully imported ${importedCount} leads from Excel`);
+      } catch (error) {
+        console.error('Excel Import Error:', error);
+        toast.error('Failed to parse Excel file. Ensure it is a valid .xlsx or .csv');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = null; // Clear input for next use
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
@@ -104,134 +156,151 @@ const LeadsManagement = () => {
             </p>
           </div>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
-              <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span>Initialize Lead</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>{editingLead ? 'Edit Lead' : 'Add New Lead'}</DialogTitle>
-              <DialogDescription>
-                {editingLead ? 'Update the lead information below.' : 'Enter the lead details below.'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept=".xlsx, .xls, .csv"
+            className="hidden"
+          />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="h-9 px-4 sm:px-6 border-slate-200 dark:border-slate-800 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <FileUp className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
+            <span>Import Assets</span>
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
+                <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Initialize Lead</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>{editingLead ? 'Edit Lead' : 'Add New Lead'}</DialogTitle>
+                <DialogDescription>
+                  {editingLead ? 'Update the lead information below.' : 'Enter the lead details below.'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile">Mobile Number</Label>
+                    <Input
+                      id="mobile"
+                      value={formData.mobile}
+                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company Name</Label>
+                    <Input
+                      id="company"
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="source">Lead Source</Label>
+                    <Select
+                      value={formData.source}
+                      onValueChange={(value) => setFormData({ ...formData, source: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leadSources.map((source) => (
+                          <SelectItem key={source} value={source}>
+                            {source}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Lead Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => setFormData({ ...formData, status: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leadStatuses.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input
-                    id="mobile"
-                    value={formData.mobile}
-                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company Name</Label>
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="source">Lead Source</Label>
+                  <Label htmlFor="owner">Lead Owner</Label>
                   <Select
-                    value={formData.source}
-                    onValueChange={(value) => setFormData({ ...formData, source: value })}
+                    value={formData.owner}
+                    onValueChange={(value) => setFormData({ ...formData, owner: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select source" />
+                      <SelectValue placeholder="Select owner" />
                     </SelectTrigger>
                     <SelectContent>
-                      {leadSources.map((source) => (
-                        <SelectItem key={source} value={source}>
-                          {source}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="EMP-001">John Doe (Sales Rep 1)</SelectItem>
+                      <SelectItem value="EMP-002">Jane Smith (Sales Rep 2)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Lead Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Add any additional notes"
+                  />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="owner">Lead Owner</Label>
-                <Select
-                  value={formData.owner}
-                  onValueChange={(value) => setFormData({ ...formData, owner: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select owner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EMP-001">John Doe (Sales Rep 1)</SelectItem>
-                    <SelectItem value="EMP-002">Jane Smith (Sales Rep 2)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Input
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Add any additional notes"
-                />
-              </div>
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingLead ? 'Update Lead' : 'Add Lead'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingLead ? 'Update Lead' : 'Add Lead'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       {/* Stats Bar Addon */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -6,7 +6,8 @@ import {
     StickyNote,
     User,
     Bell,
-    Crown
+    Crown,
+    LifeBuoy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,13 +26,14 @@ const EmployeeLayout = () => {
         { name: 'Upgrade', path: '/employee/subscription', icon: Crown },
         { name: 'Notes', path: '/employee/notes', icon: StickyNote },
         { name: 'Profile', path: '/employee/profile', icon: User },
+        { name: 'Support', path: '/employee/support', icon: LifeBuoy },
     ];
 
-    const mainPaths = ['/employee', '/employee/calendar', '/employee/notes', '/employee/profile', '/employee/subscription'];
+    const mainPaths = ['/employee', '/employee/calendar', '/employee/notes', '/employee/profile', '/employee/subscription', '/employee/support'];
     const showFooter = mainPaths.includes(location.pathname);
 
     return (
-        <div className="fixed inset-0 h-[100dvh] w-full flex flex-col bg-background-light dark:bg-background-dark font-display transition-colors duration-300 overflow-hidden">
+        <div className="fixed inset-0 h-[100dvh] w-full flex flex-col bg-white dark:bg-slate-950 font-display transition-colors duration-300 overflow-hidden">
             {/* Page Content */}
             <main className="flex-1 overflow-y-auto no-scrollbar relative w-full">
                 <div className={cn(

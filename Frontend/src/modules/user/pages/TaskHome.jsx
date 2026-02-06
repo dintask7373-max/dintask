@@ -56,7 +56,7 @@ const TaskHome = () => {
     }, [tasks, activeTab]);
 
     return (
-        <div className="bg-background-light dark:bg-background-dark min-h-screen w-full font-display text-text-main dark:text-white pb-28">
+        <div className="bg-white dark:bg-slate-950 min-h-screen w-full font-display text-text-main dark:text-white pb-28">
             {/* -- Header Section -- */}
             <motion.header
                 variants={fadeInUp}

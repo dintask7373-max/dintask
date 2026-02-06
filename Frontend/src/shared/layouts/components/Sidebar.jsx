@@ -76,6 +76,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Schedule', path: '/manager/schedule', icon: CalendarIcon },
                 { name: 'Settings', path: '/manager/settings', icon: SettingsIcon },
                 { name: 'Reports', path: '/manager/reports', icon: BarChart3 },
+                { name: 'Support', path: '/manager/support', icon: LifeBuoy },
             ]
             : []),
         ...(role === 'sales'
@@ -88,6 +89,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
                 { name: 'Schedule', path: '/sales/schedule', icon: CalendarIcon },
                 { name: 'Settings', path: '/sales/settings', icon: SettingsIcon },
+                { name: 'Support', path: '/sales/support', icon: LifeBuoy },
             ]
             : []),
         ...(role === 'admin'
@@ -103,6 +105,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Chat', path: '/admin/chat', icon: MessageSquare },
                 { name: 'Calendar', path: `/${role}/calendar`, icon: CalendarIcon },
                 { name: 'Subscription', path: '/admin/subscription', icon: CreditCard },
+                { name: 'Support', path: '/admin/support', icon: LifeBuoy },
                 { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
             ]
             : []),
