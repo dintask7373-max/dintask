@@ -293,7 +293,7 @@ const LandingPageManager = () => {
                             </Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">ID</label>
                                     <input
@@ -391,7 +391,7 @@ const LandingPageManager = () => {
                             </Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">ID</label>
                                     <input
@@ -507,7 +507,7 @@ const LandingPageManager = () => {
                             </Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">Name</label>
                                     <input
@@ -573,7 +573,7 @@ const LandingPageManager = () => {
                                     placeholder="Everything in Free, Advanced CRM, Google SSO"
                                 />
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">CTA Text</label>
                                     <input
@@ -601,17 +601,18 @@ const LandingPageManager = () => {
                                         <option value="outline">Outline</option>
                                     </select>
                                 </div>
-                                <div className="flex items-center pt-7">
+                                <div className="flex items-center pt-2 sm:pt-7">
                                     <input
                                         type="checkbox"
+                                        id={`popular-${index}`}
                                         checked={plan.popular || false}
                                         onChange={(e) => {
                                             const updated = { ...plan, popular: e.target.checked };
                                             updateArrayItem('pricing', 'plans', index, updated);
                                         }}
-                                        className="mr-2"
+                                        className="mr-2 cursor-pointer"
                                     />
-                                    <label className="text-sm font-bold text-slate-700">Popular</label>
+                                    <label htmlFor={`popular-${index}`} className="text-sm font-bold text-slate-700 cursor-pointer">Popular</label>
                                 </div>
                             </div>
                         </CardContent>
@@ -801,7 +802,7 @@ const LandingPageManager = () => {
                         rows={3}
                     />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Author Name</label>
                         <input
@@ -896,33 +897,34 @@ const LandingPageManager = () => {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
+                                        <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto items-stretch">
                                             <Button
                                                 size="sm"
-                                                className={`w-full justify-start ${t.isApproved ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300" : "bg-green-600 hover:bg-green-700 text-white"}`}
+                                                className={`flex-1 md:w-full justify-center md:justify-start px-2 md:px-3 ${t.isApproved ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300" : "bg-green-600 hover:bg-green-700 text-white"}`}
                                                 onClick={() => handleToggleApproval(t._id, t.isApproved)}
                                             >
-                                                {t.isApproved ? <EyeOff size={16} className="mr-2" /> : <CheckCircle size={16} className="mr-2" />}
-                                                {t.isApproved ? 'Unapprove' : 'Approve'}
+                                                {t.isApproved ? <EyeOff size={14} className="md:mr-2" /> : <CheckCircle size={14} className="md:mr-2" />}
+                                                <span className="hidden xs:inline">{t.isApproved ? 'Unapprove' : 'Approve'}</span>
                                             </Button>
 
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className={`w-full justify-start ${t.highlighted ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100" : ""}`}
+                                                className={`flex-1 md:w-full justify-center md:justify-start px-2 md:px-3 ${t.highlighted ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100" : ""}`}
                                                 onClick={() => handleToggleHighlight(t._id)}
                                             >
-                                                {t.highlighted ? <CheckCircle size={16} className="mr-2" /> : <Plus size={16} className="mr-2" />}
-                                                {t.highlighted ? 'Highlighted' : 'Highlight'}
+                                                {t.highlighted ? <CheckCircle size={14} className="md:mr-2" /> : <Plus size={14} className="md:mr-2" />}
+                                                <span className="hidden xs:inline">Highlight</span>
                                             </Button>
 
                                             <Button
                                                 size="sm"
                                                 variant="destructive"
-                                                className="w-full justify-start"
+                                                className="flex-1 md:w-full justify-center md:justify-start px-2 md:px-3"
                                                 onClick={() => handleDeleteTestimonial(t._id)}
                                             >
-                                                <Trash2 size={16} className="mr-2" /> Delete
+                                                <Trash2 size={14} className="md:mr-2" />
+                                                <span className="hidden xs:inline">Delete</span>
                                             </Button>
                                         </div>
                                     </div>
@@ -961,7 +963,7 @@ const LandingPageManager = () => {
                         placeholder="Join thousands of managers who have optimized their workforce..."
                     />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Primary Button Text</label>
                         <input
@@ -988,7 +990,7 @@ const LandingPageManager = () => {
                     <h3 className="text-lg font-bold text-slate-900 mb-4">Floating Images (Command Center)</h3>
                     <p className="text-sm text-slate-500 mb-4">Upload or paste URLs for the 4 floating dashboard preview images.</p>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                         {[0, 1, 2, 3].map((index) => (
                             <div key={index} className="space-y-2">
                                 <label className="block text-xs font-bold text-slate-600">Image {index + 1}</label>
@@ -1232,29 +1234,31 @@ const LandingPageManager = () => {
                 className="max-w-7xl mx-auto"
             >
                 {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                         <div>
-                            <h1 className="text-4xl font-black text-slate-900 mb-2">
+                            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mb-1 sm:mb-2">
                                 Landing Page Manager
                             </h1>
-                            <p className="text-slate-600 font-medium">
-                                Edit and manage all sections of the landing page
+                            <p className="text-sm sm:text-slate-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                                Edit and manage landing page sections
                             </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
                             <Button
                                 onClick={initializeDefaultContent}
                                 variant="outline"
-                                className="border-2 border-slate-300 hover:border-primary-600"
+                                size="sm"
+                                className="border-2 border-slate-300 hover:border-primary-600 flex-1 sm:flex-none"
                             >
-                                <RefreshCw size={18} className="mr-2" /> Reset to Default
+                                <RefreshCw size={16} className="mr-2" /> <span className="hidden xs:inline">Reset</span><span className="xs:hidden">Default</span>
                             </Button>
                             <Button
                                 onClick={() => window.open('/', '_blank')}
-                                className="bg-slate-700 hover:bg-slate-800"
+                                size="sm"
+                                className="bg-slate-700 hover:bg-slate-800 flex-1 sm:flex-none"
                             >
-                                <Eye size={18} className="mr-2" /> Preview
+                                <Eye size={16} className="mr-2" /> Preview
                             </Button>
                         </div>
                     </div>
@@ -1273,52 +1277,53 @@ const LandingPageManager = () => {
                     )}
                 </div>
 
-                <div className="grid grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20 sm:pb-0">
                     {/* Sidebar - Section Selector */}
-                    <Card className="col-span-3 border-2 border-slate-200">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Sections</CardTitle>
+                    <Card className="col-span-1 lg:col-span-3 border-2 border-slate-200 h-fit lg:sticky lg:top-8 overflow-x-auto lg:overflow-visible no-scrollbar">
+                        <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+                            <CardTitle className="text-base sm:text-lg">Sections</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
+                        <CardContent className="p-4 sm:p-6 pt-0 space-y-2 flex lg:block items-center gap-2 lg:gap-0 lg:space-y-1">
                             {sectionNames.map((section) => (
                                 <button
                                     key={section.id}
                                     onClick={() => setActiveSection(section.id)}
-                                    className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-all ${activeSection === section.id
+                                    className={`whitespace-nowrap lg:w-full text-left px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center shrink-0 ${activeSection === section.id
                                         ? 'bg-primary-600 text-white shadow-lg'
                                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                         }`}
                                 >
                                     <span className="mr-2">{section.icon}</span>
-                                    {section.label}
+                                    <span className="xs:inline">{section.label}</span>
                                 </button>
                             ))}
                         </CardContent>
                     </Card>
 
                     {/* Main Content Area */}
-                    <div className="col-span-9 space-y-6">
+                    <div className="col-span-1 lg:col-span-9 space-y-6">
                         <Card className="border-2 border-slate-200">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-2xl">
+                            <CardHeader className="p-4 sm:p-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <CardTitle className="text-xl sm:text-2xl">
                                         {sectionNames.find(s => s.id === activeSection)?.label}
                                     </CardTitle>
                                     <Button
                                         onClick={() => handleSaveSection(activeSection)}
                                         disabled={saving}
-                                        className="bg-primary-600 hover:bg-primary-700"
+                                        size="sm"
+                                        className="bg-primary-600 hover:bg-primary-700 w-full sm:w-auto"
                                     >
                                         {saving ? (
-                                            <RefreshCw size={18} className="mr-2 animate-spin" />
+                                            <RefreshCw size={16} className="mr-2 animate-spin" />
                                         ) : (
-                                            <Save size={18} className="mr-2" />
+                                            <Save size={16} className="mr-2" />
                                         )}
-                                        Save Section
+                                        Save Changes
                                     </Button>
                                 </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-4 sm:p-6 pt-0">
                                 {renderActiveSection()}
                             </CardContent>
                         </Card>

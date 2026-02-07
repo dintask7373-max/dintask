@@ -47,10 +47,8 @@ const EmployeeLogin = () => {
             <Card className="w-full max-w-sm border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
                 <div className="h-2 bg-primary-500 w-full" />
                 <CardHeader className="text-center space-y-1 pt-8">
-                    <div className="flex justify-center mb-4">
-                        <div className="p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-xl shadow-primary-500/10 border border-slate-50 dark:border-slate-800">
-                            <img src="/dintask-logo.png" alt="DinTask" className="h-10 w-10 object-contain" />
-                        </div>
+                    <div className="flex justify-center mb-6">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-20 w-20 object-contain" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                         Employee Login
