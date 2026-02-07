@@ -29,6 +29,7 @@ import {
     History,
     Receipt,
     Activity,
+    FileEdit,
     ClipboardCheck // New icon for Project Approvals
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
@@ -134,6 +135,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
                 { name: 'History', path: '/superadmin/history', icon: History },
                 { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
+                { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
                 { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
             ]
             : []),

@@ -66,7 +66,7 @@ const EmployeeProfile = () => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <Card className="border-none shadow-lg shadow-primary-500/20 dark:shadow-none bg-gradient-to-br from-primary-600 to-purple-700 rounded-3xl overflow-hidden">
+                <Card className="border-none shadow-lg shadow-amber-500/20 dark:shadow-none bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 rounded-3xl overflow-hidden">
                     <CardContent className="p-8">
                         <div className="flex flex-col items-center text-center">
                             <div className="relative mb-4">

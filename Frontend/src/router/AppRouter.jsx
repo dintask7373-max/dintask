@@ -121,6 +121,7 @@ import SubscriptionHistory from '@/modules/superadmin/pages/SubscriptionHistory'
 import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
+import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -233,6 +234,7 @@ const AppRouter = () => {
                 <Route path="support" element={<SupportCenter />} />
                 <Route path="history" element={<SubscriptionHistory />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
+                <Route path="landing-page" element={<LandingPageManager />} />
                 <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
                 <Route path="calendar" element={<div>System Calendar (Coming Soon)</div>} />
             </Route>
