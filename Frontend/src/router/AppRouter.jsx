@@ -50,6 +50,7 @@ import AdminSubscription from '@/modules/admin/pages/Subscription';
 import Settings from '@/modules/admin/pages/Settings';
 import JoinRequests from '@/modules/admin/pages/JoinRequests';
 import SalesManagement from '@/modules/admin/pages/SalesManagement';
+import ProjectApprovals from '@/modules/admin/pages/ProjectApprovals';
 
 import ManagerLogin from '@/modules/manager/pages/ManagerLogin';
 import ManagerRegister from '@/modules/manager/pages/ManagerRegister';
@@ -165,8 +166,8 @@ const AppRouter = () => {
                 <Route path="managers" element={<ManagerManagement />} />
                 <Route path="employees" element={<EmployeeManagement />} />
                 <Route path="sales" element={<SalesManagement />} />
-                <Route path="tasks" element={<TaskManagement />} />
-                <Route path="tasks/:id" element={<TaskCompletion />} />
+                {/* Task module removed for Admin as they don't assign tasks anymore */}
+                <Route path="projects/approvals" element={<ProjectApprovals />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="chat" element={<AdminChat />} />
                 <Route path="calendar" element={<AdminCalendar />} />

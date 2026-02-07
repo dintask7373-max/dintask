@@ -15,7 +15,8 @@ const useCRMStore = create(
           company: 'ABC Corp',
           source: 'Website',
           owner: '103',
-          status: 'New',
+          status: 'New', // Pipeline Stage
+          approvalStatus: 'none', // none, pending_project, approved_project
           notes: 'Interested in our services',
           amount: 5000,
           priority: 'high',
@@ -31,10 +32,27 @@ const useCRMStore = create(
           source: 'Call',
           owner: 'EMP-002',
           status: 'Contacted',
+          approvalStatus: 'none',
           notes: 'Follow up next week',
           amount: 12000,
           priority: 'medium',
           deadline: '2026-03-01T00:00:00.000Z',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'LEAD-003',
+          name: 'Robert Stark',
+          mobile: '+1987654321',
+          email: 'robert@starkindustries.com',
+          company: 'Stark Ind',
+          source: 'Referral',
+          owner: '103',
+          status: 'Won',
+          approvalStatus: 'pending_project', // Waiting for Admin to assign Manager
+          notes: 'Deal closed. Needs project setup.',
+          amount: 500000,
+          priority: 'urgent',
+          deadline: '2026-04-10T00:00:00.000Z',
           createdAt: new Date().toISOString(),
         },
       ],
@@ -48,7 +66,7 @@ const useCRMStore = create(
         Contacted: ['LEAD-002'],
         'Meeting Done': [],
         'Proposal Sent': [],
-        Won: [],
+        Won: ['LEAD-003'],
         Lost: [],
       },
 
@@ -66,6 +84,7 @@ const useCRMStore = create(
           amount: 0,
           priority: 'medium',
           deadline: null,
+          approvalStatus: 'none',
           ...leadData,
         };
         set((state) => ({
@@ -140,6 +159,11 @@ const useCRMStore = create(
           if (!lead) return state;
 
           const updatedPipeline = { ...state.pipeline };
+
+          // Safety check: ensure arrays exist
+          if (!updatedPipeline[fromStage]) updatedPipeline[fromStage] = [];
+          if (!updatedPipeline[toStage]) updatedPipeline[toStage] = [];
+
           updatedPipeline[fromStage] = updatedPipeline[fromStage].filter((id) => id !== leadId);
           updatedPipeline[toStage] = [...updatedPipeline[toStage], leadId];
 
@@ -152,8 +176,15 @@ const useCRMStore = create(
           };
 
           // Update lead status
+          let updatedApprovalStatus = lead.approvalStatus;
+
+          // PROPOSAL: If moving to WON, automatically set to pending_project if not already
+          if (toStage === 'Won' && lead.approvalStatus === 'none') {
+            updatedApprovalStatus = 'pending_project';
+          }
+
           const updatedLeads = state.leads.map((l) =>
-            l.id === leadId ? { ...l, status: toStage } : l
+            l.id === leadId ? { ...l, status: toStage, approvalStatus: updatedApprovalStatus } : l
           );
 
           return {
@@ -162,6 +193,22 @@ const useCRMStore = create(
             leads: updatedLeads,
           };
         });
+      },
+
+      requestProjectConversion: (leadId) => {
+        set((state) => ({
+          leads: state.leads.map(lead =>
+            lead.id === leadId ? { ...lead, approvalStatus: 'pending_project' } : lead
+          )
+        }));
+      },
+
+      approveProject: (leadId, managerId) => {
+        set((state) => ({
+          leads: state.leads.map(lead =>
+            lead.id === leadId ? { ...lead, approvalStatus: 'approved_project', projectManager: managerId } : lead
+          )
+        }));
       },
 
       // Add Follow-up
@@ -241,6 +288,11 @@ const useCRMStore = create(
           leads: leadIds.map((id) => state.leads.find((lead) => lead.id === id)),
         }));
       },
+
+      // Get Pending Projects
+      getPendingProjects: () => {
+        return get().leads.filter(lead => lead.status === 'Won' && lead.approvalStatus === 'pending_project');
+      }
     }),
     {
       name: 'dintask-crm-storage',

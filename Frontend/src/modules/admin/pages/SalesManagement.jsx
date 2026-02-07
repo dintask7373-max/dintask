@@ -45,7 +45,7 @@ import useManagerStore from '@/store/managerStore';
 
 const SalesManagement = () => {
     const { salesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
-    const { leads, getPipelineData, moveLead, addLead, assignLead } = useCRMStore();
+    const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion } = useCRMStore();
     const { employees } = useEmployeeStore();
     const { managers } = useManagerStore();
     const { user } = useAuthStore();
@@ -383,9 +383,33 @@ const SalesManagement = () => {
                                                     <Badge className={cn("text-[8px] uppercase font-black px-1.5 py-0 border-none shadow-none", getPriorityColor(lead.priority))}>
                                                         {lead.priority}
                                                     </Badge>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1.5 text-slate-300 hover:text-slate-600 rounded-lg">
-                                                        <MoreHorizontal size={12} />
-                                                    </Button>
+
+                                                    {stage === 'Won' && (
+                                                        lead.approvalStatus === 'pending_project' ? (
+                                                            <Badge variant="outline" className="text-[8px] h-5 bg-amber-50 text-amber-600 border-amber-200">Pending Project</Badge>
+                                                        ) : lead.approvalStatus === 'approved_project' ? (
+                                                            <Badge variant="outline" className="text-[8px] h-5 bg-emerald-50 text-emerald-600 border-emerald-200">Active Project</Badge>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="h-5 text-[8px] px-2 bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    requestProjectConversion(lead.id);
+                                                                    toast.success("Project conversion requested sent to Admin");
+                                                                }}
+                                                            >
+                                                                Request Project
+                                                            </Button>
+                                                        )
+                                                    )}
+
+                                                    {stage !== 'Won' && (
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1.5 text-slate-300 hover:text-slate-600 rounded-lg">
+                                                            <MoreHorizontal size={12} />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                                 <h4 className="font-black text-slate-900 dark:text-white text-[11px] mb-1 line-clamp-1 relative z-10 uppercase tracking-tight">{lead.name}</h4>
                                                 <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-3 relative z-10 font-bold tracking-wide">

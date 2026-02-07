@@ -28,19 +28,27 @@ import {
     LifeBuoy,
     History,
     Receipt,
-    Activity
+    Activity,
+    ClipboardCheck // New icon for Project Approvals
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Button } from '@/shared/components/ui/button';
 import useAuthStore from '@/store/authStore';
 import useSuperAdminStore from '@/store/superAdminStore';
+import useCRMStore from '@/store/crmStore'; // To show pending count
 
 const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const logout = useAuthStore(state => state.logout);
     const navigate = useNavigate();
     const location = useLocation();
     const inquiries = useSuperAdminStore(state => state.inquiries);
+    const leads = useCRMStore(state => state.leads);
+
+    // Counts
     const newInquiriesCount = inquiries.filter(inq => inq.status === 'new').length;
+    // Count pending project approvals for Admin
+    const pendingProjectsCount = leads.filter(l => l.status === 'Won' && l.approvalStatus === 'pending_project').length;
+
 
     const isSuperAdmin = role === 'superadmin';
     const isManager = role === 'manager';
@@ -95,12 +103,19 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         ...(role === 'admin'
             ? [
                 { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-                { name: 'Tasks', path: `/${role}/tasks`, icon: CheckSquare },
+                // { name: 'Tasks', path: `/${role}/tasks`, icon: CheckSquare }, // REMOVED as per user request
                 { name: 'CRM', path: '/admin/crm', icon: Briefcase },
                 { name: 'Managers', path: '/admin/managers', icon: ShieldCheck },
                 { name: 'Employees', path: '/admin/employees', icon: Users },
-                { name: 'Join Requests', path: '/admin/requests', icon: UserPlus },
                 { name: 'Sales', path: '/admin/sales', icon: TrendingUp },
+                // Added Project Approvals
+                {
+                    name: 'Project Approvals',
+                    path: '/admin/projects/approvals',
+                    icon: ClipboardCheck,
+                    badge: pendingProjectsCount
+                },
+                { name: 'Join Requests', path: '/admin/requests', icon: UserPlus },
                 { name: 'Reports', path: `/${role}/reports`, icon: BarChart3 },
                 { name: 'Chat', path: '/admin/chat', icon: MessageSquare },
                 { name: 'Calendar', path: `/${role}/calendar`, icon: CalendarIcon },
@@ -197,6 +212,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto no-scrollbar py-2">
                     {navItems.map((item) => {
                         const isSettingsItem = (isManager || isAdmin || isSuperAdmin) && item.name === 'Settings';
+                        const badgeCount = item.name === 'Inquiries' ? newInquiriesCount : item.badge;
 
                         if (isSettingsItem) {
                             return (
@@ -280,12 +296,12 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                                     isCollapsed ? "mx-auto" : ""
                                 )} />
                                 {!isCollapsed && <span className="truncate ml-3 text-xs uppercase tracking-widest">{item.name}</span>}
-                                {!isCollapsed && item.name === 'Inquiries' && newInquiriesCount > 0 && (
+                                {!isCollapsed && badgeCount > 0 && (
                                     <span className={cn(
                                         "ml-auto flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black shadow-sm",
                                         "bg-primary-600 text-white"
                                     )}>
-                                        {newInquiriesCount}
+                                        {badgeCount}
                                     </span>
                                 )}
                             </NavLink>
