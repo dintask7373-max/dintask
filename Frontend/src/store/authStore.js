@@ -23,15 +23,6 @@ const useAuthStore = create(
                             method: 'POST',
                             body: { adminId: email, secureKey: password }
                         });
-                    } else if (['employee', 'manager', 'sales'].includes(selectedRole)) {
-                        // Mock login for non-admin roles as requested
-                        await new Promise(resolve => setTimeout(resolve, 800));
-                        const mockUser = mockUsers[selectedRole];
-                        response = {
-                            success: true,
-                            user: { ...mockUser, email }, // Allow login with any email but use role structure
-                            token: 'mock-jwt-token'
-                        };
                     } else {
                         response = await apiRequest('/auth/login', {
                             method: 'POST',
@@ -52,16 +43,17 @@ const useAuthStore = create(
                             isAuthenticated: true,
                             loading: false,
                         });
-                        return true;
+                        return { success: true };
                     } else {
                         throw new Error(response.error || 'Login failed');
                     }
                 } catch (err) {
+                    const errorMessage = err.message || 'Login failed';
                     set({
                         loading: false,
-                        error: err.message || 'Login failed',
+                        error: errorMessage,
                     });
-                    return false;
+                    return { success: false, error: errorMessage };
                 }
             },
 
@@ -75,7 +67,7 @@ const useAuthStore = create(
 
                     if (response.success) {
                         set({ loading: false });
-                        return true;
+                        return response;
                     } else {
                         throw new Error(response.error || 'Registration failed');
                     }
@@ -93,14 +85,6 @@ const useAuthStore = create(
                     let response;
                     if (role === 'superadmin' || role === 'super_admin') {
                         response = await apiRequest('/superadmin/me');
-                    } else if (['employee', 'manager', 'sales'].includes(role)) {
-                        // Mock profile fetch
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        const mockUser = mockUsers[role];
-                        response = {
-                            success: true,
-                            data: { ...mockUser, ...get().user } // Keep current user data (like email)
-                        };
                     } else {
                         response = await apiRequest('/auth/me');
                     }
@@ -136,33 +120,31 @@ const useAuthStore = create(
                 const { role } = get();
 
                 try {
+                    let response;
                     if (role === 'superadmin') {
                         // Handle form data if it contains a file
-                        let body = updatedData;
-                        let headers = {};
-
-                        if (updatedData instanceof FormData) {
-                            // Fetch will handle Content-Type for FormData
-                        }
-
-                        const response = await apiRequest('/superadmin/updateprofile', {
+                        const body = updatedData;
+                        response = await apiRequest('/superadmin/updateprofile', {
                             method: 'PUT',
                             body
                         });
-
-                        if (response.success) {
-                            set({ user: response.data, loading: false });
-                            return true;
-                        }
+                    } else {
+                        // Regular user update
+                        response = await apiRequest('/auth/updatedetails', {
+                            method: 'PUT',
+                            body: updatedData
+                        });
                     }
 
-                    // Mock for others
-                    await new Promise((resolve) => setTimeout(resolve, 800));
-                    set((state) => ({
-                        user: { ...state.user, ...updatedData },
-                        loading: false
-                    }));
-                    return true;
+                    if (response && response.success) {
+                        set((state) => ({
+                            user: response.data || state.user,
+                            loading: false
+                        }));
+                        return true;
+                    } else {
+                        throw new Error(response?.error || 'Update failed');
+                    }
                 } catch (err) {
                     set({ loading: false, error: err.message });
                     return false;
@@ -174,22 +156,25 @@ const useAuthStore = create(
                 const { role } = get();
 
                 try {
+                    let response;
                     if (role === 'superadmin') {
-                        const response = await apiRequest('/superadmin/changepassword', {
+                        response = await apiRequest('/superadmin/changepassword', {
                             method: 'PUT',
                             body: { currentPassword, newPassword }
                         });
-
-                        if (response.success) {
-                            set({ loading: false });
-                            return true;
-                        }
+                    } else {
+                        response = await apiRequest('/auth/updatepassword', {
+                            method: 'PUT',
+                            body: { currentPassword, newPassword }
+                        });
                     }
 
-                    // Mock for others
-                    await new Promise((resolve) => setTimeout(resolve, 800));
-                    set({ loading: false });
-                    return true;
+                    if (response && response.success) {
+                        set({ loading: false });
+                        return true;
+                    } else {
+                        throw new Error(response?.error || 'Password update failed');
+                    }
                 } catch (err) {
                     set({ loading: false, error: err.message });
                     return false;

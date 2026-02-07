@@ -22,12 +22,16 @@ const SalesLogin = () => {
             return;
         }
 
-        const success = await login(email, password, 'sales');
-        if (success) {
+        const result = await login(email, password, 'sales');
+        if (result.success) {
             toast.success('Sales access verified');
             navigate('/sales');
         } else {
-            toast.error(error || 'Authentication failure');
+            if (result.error && result.error.includes('pending approval')) {
+                navigate('/pending-approval');
+            } else {
+                toast.error(result.error || 'Authentication failure');
+            }
         }
     };
 

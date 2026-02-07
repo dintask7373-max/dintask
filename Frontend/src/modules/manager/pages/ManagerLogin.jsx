@@ -24,12 +24,16 @@ const ManagerLogin = () => {
             return;
         }
 
-        const success = await login(email, password, 'manager');
-        if (success) {
+        const result = await login(email, password, 'manager');
+        if (result.success) {
             toast.success('Manager force-access verified');
             navigate('/manager');
         } else {
-            toast.error(error || 'Authentication sequence failed');
+            if (result.error && result.error.includes('pending approval')) {
+                navigate('/pending-approval');
+            } else {
+                toast.error(result.error || 'Authentication sequence failed');
+            }
         }
     };
 

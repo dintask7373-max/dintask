@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
     Plus,
     Search,
@@ -50,6 +51,9 @@ import { Progress } from '@/shared/components/ui/progress';
 
 import useSalesStore from '@/store/salesStore';
 import useAuthStore from '@/store/authStore';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Copy, Send } from 'lucide-react';
+import api from '@/lib/api';
 
 const EmployeeManagement = () => {
     const navigate = useNavigate();
@@ -63,7 +67,21 @@ const EmployeeManagement = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [expandedEmployee, setExpandedEmployee] = useState(null);
     const [newEmployee, setNewEmployee] = useState({ name: '', email: '', role: '', managerId: '' });
+
     const [parent] = useAutoAnimate();
+
+    React.useEffect(() => {
+        const loadData = async () => {
+            await useEmployeeStore.getState().fetchEmployees();
+            await useEmployeeStore.getState().fetchPendingRequests();
+            // also fetch managers/sales if still needed by other components, 
+            // but our updated fetchEmployees gets everyone.
+
+            // If we really need to sync with managerStore:
+            // useManagerStore.getState().setManagers(employees.filter(e => e.role === 'manager'));
+        };
+        loadData();
+    }, []);
 
     // Limit based on plan from authStore
     const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2; // Default to 2 if not found
@@ -73,9 +91,12 @@ const EmployeeManagement = () => {
     const employeeStats = useMemo(() => {
         const stats = {};
         employees.forEach(emp => {
-            const empTasks = tasks.filter(t => t.assignedTo.includes(emp.id.toString()));
+            const empId = emp._id || emp.id;
+            if (!empId) return;
+            // assignedTo is likely an array of strings (IDs)
+            const empTasks = tasks.filter(t => t.assignedTo && t.assignedTo.includes(empId.toString()));
             const completed = empTasks.filter(t => t.status === 'completed').length;
-            stats[emp.id] = {
+            stats[empId] = {
                 total: empTasks.length,
                 completed: completed,
                 percentage: empTasks.length > 0 ? (completed / empTasks.length) * 100 : 0,
@@ -143,6 +164,9 @@ const EmployeeManagement = () => {
                 </div>
             </div>
 
+
+
+
             {/* Subscription Alert */}
             <Alert className="bg-blue-50/30 border-blue-100/50 dark:bg-blue-900/10 dark:border-blue-900/20 rounded-xl sm:rounded-2xl p-3 sm:p-4">
                 <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
@@ -201,15 +225,16 @@ const EmployeeManagement = () => {
                         </thead>
                         <tbody ref={parent}>
                             {filteredEmployees.map((emp) => {
-                                const stats = employeeStats[emp.id] || { total: 0, completed: 0, percentage: 0, tasks: [] };
-                                const isExpanded = expandedEmployee === emp.id;
+                                const empId = emp._id || emp.id;
+                                const stats = employeeStats[empId] || { total: 0, completed: 0, percentage: 0, tasks: [] };
+                                const isExpanded = expandedEmployee === empId;
 
                                 return (
-                                    <React.Fragment key={emp.id}>
+                                    <React.Fragment key={empId}>
                                         <tr className={cn(
                                             "border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer",
                                             isExpanded && "bg-slate-50/80 dark:bg-slate-800/80"
-                                        )} onClick={() => setExpandedEmployee(isExpanded ? null : emp.id)}>
+                                        )} onClick={() => setExpandedEmployee(isExpanded ? null : empId)}>
                                             <td className="p-5">
                                                 {isExpanded ? <ChevronUp size={16} className="text-primary-600" /> : <ChevronDown size={16} className="text-slate-400" />}
                                             </td>
@@ -229,11 +254,11 @@ const EmployeeManagement = () => {
                                                 {emp.managerId ? (
                                                     <div className="flex items-center gap-2">
                                                         <Avatar className="h-6 w-6 border border-white dark:border-slate-800 shadow-sm">
-                                                            <AvatarImage src={managers.find(m => m.id === emp.managerId)?.avatar} />
-                                                            <AvatarFallback className="text-[8px] font-black">{managers.find(m => m.id === emp.managerId)?.name.charAt(0)}</AvatarFallback>
+                                                            <AvatarImage src={employees.find(m => m._id === emp.managerId)?.avatar} />
+                                                            <AvatarFallback className="text-[8px] font-black">{employees.find(m => m._id === emp.managerId)?.name?.charAt(0) || '?'}</AvatarFallback>
                                                         </Avatar>
                                                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                            {managers.find(m => m.id === emp.managerId)?.name}
+                                                            {employees.find(m => m._id === emp.managerId)?.name || 'Unknown'}
                                                         </span>
                                                     </div>
                                                 ) : (
@@ -277,7 +302,7 @@ const EmployeeManagement = () => {
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                                                        onClick={() => handleDelete(emp.id)}
+                                                        onClick={() => handleDelete(emp._id || emp.id)}
                                                     >
                                                         <Trash2 size={14} />
                                                     </Button>
@@ -367,9 +392,10 @@ const EmployeeManagement = () => {
                 {/* Mobile Card List */}
                 <div className="lg:hidden divide-y divide-slate-50 dark:divide-slate-800">
                     {filteredEmployees.map((emp) => {
-                        const stats = employeeStats[emp.id] || { total: 0, completed: 0, percentage: 0, tasks: [] };
+                        const empId = emp._id || emp.id;
+                        const stats = employeeStats[empId] || { total: 0, completed: 0, percentage: 0, tasks: [] };
                         return (
-                            <div key={emp.id} className="p-4 space-y-4">
+                            <div key={empId} className="p-4 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-10 w-10 border-2 border-slate-100 dark:border-slate-800">
@@ -412,7 +438,7 @@ const EmployeeManagement = () => {
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                                             <MessageSquare size={12} />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 rounded-lg bg-slate-50 dark:bg-slate-800/50" onClick={() => handleDelete(emp.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 rounded-lg bg-slate-50 dark:bg-slate-800/50" onClick={() => handleDelete(emp._id || emp.id)}>
                                             <Trash2 size={12} />
                                         </Button>
                                     </div>
@@ -494,6 +520,8 @@ const EmployeeManagement = () => {
                     </form>
                 </DialogContent>
             </Dialog>
+
+
         </div>
     );
 };

@@ -108,6 +108,7 @@ import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
 import JoinWorkspace from '@/modules/user/pages/JoinWorkspace';
 import Checkout from '@/modules/user/pages/Checkout';
+import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
 // Super Admin Pages
 import SuperAdminDashboard from '@/modules/superadmin/pages/Dashboard';
@@ -141,6 +142,7 @@ const AppRouter = () => {
             <Route path="/terms" element={<Terms />} />
             <Route path="/cookies" element={<Cookies />} />
             <Route path="/employee/splash" element={<SplashScreen />} />
+            <Route path="/pending-approval" element={<PendingApproval />} />
             <Route path="/employee/success-join" element={<SuccessJoin />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path="/employee/register" element={<EmployeeRegister />} />

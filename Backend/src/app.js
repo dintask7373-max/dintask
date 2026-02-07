@@ -40,6 +40,7 @@ app.use('/api/v1/superadmin', superAdmin);
 app.use('/api/v1/support', support);
 app.use('/api/v1/support-tickets', supportTickets);
 app.use('/api/v1/payments', payment);
+app.use('/api/v1/invite', require('./routes/inviteRoutes'));
 
 app.use(errorHandler);
 

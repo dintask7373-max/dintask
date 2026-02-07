@@ -41,14 +41,18 @@ import {
 import { cn } from '@/shared/utils/cn';
 
 import useAuthStore from '@/store/authStore';
-import useSalesStore from '@/store/salesStore';
+
 
 const ManagerManagement = () => {
     const navigate = useNavigate();
-    const { managers, addManager, updateManager, deleteManager } = useManagerStore();
-    const { employees } = useEmployeeStore();
-    const { salesExecutives } = useSalesStore();
+    // Use employeeStore for data source and actions
+    const { employees, fetchEmployees, addEmployee, deleteEmployee, loading } = useEmployeeStore();
     const { user } = useAuthStore();
+
+    // Derived state for managers from the main employee list
+    const managers = useMemo(() => employees.filter(e => e.role === 'manager'), [employees]);
+    const teamMembersList = useMemo(() => employees.filter(e => e.role === 'employee' || e.role === 'sales_executive'), [employees]);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -57,9 +61,14 @@ const ManagerManagement = () => {
     const [editingManager, setEditingManager] = useState(null);
     const [parent] = useAutoAnimate();
 
+    React.useEffect(() => {
+        fetchEmployees();
+    }, []);
+
     // Limit tracking
     const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2;
-    const currentCount = managers.length + employees.length + (salesExecutives?.length || 0);
+    // Count all distinct users. Note: employees array contains ALL users (managers, sales, employees)
+    const currentCount = employees.length;
     const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
 
     const filteredManagers = useMemo(() => {
@@ -69,26 +78,29 @@ const ManagerManagement = () => {
         );
     }, [managers, searchTerm]);
 
-    const handleAddManager = (e) => {
+    const handleAddManager = async (e) => {
         e.preventDefault();
-        addManager({
-            ...newManager,
-            id: `M00${managers.length + 1}`,
-            status: 'active',
-            teamMembers: []
-        });
-        setNewManager({ name: '', email: '', department: '' });
-        setIsAddModalOpen(false);
+        try {
+            await addEmployee({
+                ...newManager,
+                role: 'manager',
+                phoneNumber: '0000000000' // Placeholder if required by backend schema validation
+            });
+            setNewManager({ name: '', email: '', department: '' });
+            setIsAddModalOpen(false);
+        } catch (error) {
+            // Error is handled in store
+        }
     };
 
     const handleExportExcel = () => {
         const excelData = filteredManagers.map(mgr => ({
-            'Manager ID': mgr.id,
+            'Manager ID': mgr._id, // Use _id
             'Name': mgr.name,
             'Email': mgr.email,
-            'Department': mgr.department,
-            'Team Size': employees.filter(e => e.managerId === mgr.id).length,
-            'Status': mgr.status.toUpperCase(),
+            'Department': mgr.department || 'N/A',
+            'Team Size': teamMembersList.filter(e => e.managerId === mgr._id).length,
+            'Status': (mgr.status || 'active').toUpperCase(),
         }));
 
         const worksheet = utils.json_to_sheet(excelData);
@@ -104,12 +116,10 @@ const ManagerManagement = () => {
 
     const handleUpdateManager = (e) => {
         e.preventDefault();
+        // Update functionality is not yet available in backend
         if (editingManager) {
-            updateManager(editingManager.id, {
-                name: editingManager.name,
-                email: editingManager.email,
-                department: editingManager.department
-            });
+            // Placeholder logic or toast
+            // toast.info("Update functionality coming soon");
             setIsEditModalOpen(false);
             setEditingManager(null);
         }
@@ -209,18 +219,18 @@ const ManagerManagement = () => {
                         </thead>
                         <tbody ref={parent}>
                             {filteredManagers.map((mgr) => {
-                                const teamMembers = employees.filter(e => e.managerId === mgr.id);
+                                const teamMembers = teamMembersList.filter(e => e.managerId === mgr._id);
                                 const teamCount = teamMembers.length;
                                 const isExpanded = expandedManager === mgr.id;
 
                                 return (
-                                    <React.Fragment key={mgr.id}>
+                                    <React.Fragment key={mgr._id}>
                                         <tr
                                             className={cn(
                                                 "border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 transition-colors group cursor-pointer",
                                                 isExpanded && "bg-slate-50/80 dark:bg-slate-800/80"
                                             )}
-                                            onClick={() => setExpandedManager(isExpanded ? null : mgr.id)}
+                                            onClick={() => setExpandedManager(isExpanded ? null : mgr._id)}
                                         >
                                             <td className="p-5">
                                                 {isExpanded ? <ChevronUp size={16} className="text-primary-600" /> : <ChevronDown size={16} className="text-slate-400" />}
@@ -239,7 +249,7 @@ const ManagerManagement = () => {
                                             </td>
                                             <td className="p-5">
                                                 <Badge variant="outline" className="rounded-lg font-bold text-[10px] bg-slate-50 text-slate-600 tracking-wider">
-                                                    {mgr.department}
+                                                    {mgr.department || 'N/A'}
                                                 </Badge>
                                             </td>
                                             <td className="p-5">
@@ -258,7 +268,7 @@ const ManagerManagement = () => {
                                                         "text-xs font-bold uppercase tracking-widest",
                                                         mgr.status === 'active' ? "text-emerald-600" : "text-slate-400"
                                                     )}>
-                                                        {mgr.status}
+                                                        {mgr.status || 'Pending'}
                                                     </span>
                                                 </div>
                                             </td>
@@ -279,7 +289,7 @@ const ManagerManagement = () => {
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                                                        onClick={() => deleteManager(mgr.id)}
+                                                        onClick={() => deleteEmployee(mgr._id || mgr.id, 'manager')}
                                                     >
                                                         <Trash2 size={14} />
                                                     </Button>
@@ -299,7 +309,7 @@ const ManagerManagement = () => {
                                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                             {teamMembers.length > 0 ? (
                                                                 teamMembers.map(emp => (
-                                                                    <div key={emp.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group/employee">
+                                                                    <div key={emp._id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group/employee">
                                                                         <div className="flex items-center gap-3">
                                                                             <Avatar className="h-10 w-10 border border-slate-100 shadow-sm">
                                                                                 <AvatarImage src={emp.avatar} />
@@ -335,9 +345,9 @@ const ManagerManagement = () => {
                 {/* Mobile Card List */}
                 <div className="lg:hidden divide-y divide-slate-50 dark:divide-slate-800">
                     {filteredManagers.map((mgr) => {
-                        const teamCount = employees.filter(e => e.managerId === mgr.id).length;
+                        const teamCount = teamMembersList.filter(e => e.managerId === mgr._id).length;
                         return (
-                            <div key={mgr.id} className="p-4 space-y-4">
+                            <div key={mgr._id} className="p-4 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-10 w-10 border-2 border-slate-100 dark:border-slate-800">
@@ -353,13 +363,13 @@ const ManagerManagement = () => {
                                         "text-[8px] font-black uppercase tracking-widest bg-slate-50 dark:bg-slate-800 text-slate-500",
                                         mgr.status === 'active' && "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20"
                                     )}>
-                                        {mgr.status}
+                                        {mgr.status || 'Pending'}
                                     </Badge>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl">
                                     <div>
                                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Department</p>
-                                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{mgr.department}</p>
+                                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{mgr.department || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Team Size</p>
@@ -386,7 +396,7 @@ const ManagerManagement = () => {
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 rounded-lg bg-slate-50 dark:bg-slate-800/50" onClick={() => navigate('/admin/chat')}>
                                             <MessageSquare size={12} />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 rounded-lg bg-slate-50 dark:bg-slate-800/50" onClick={() => deleteManager(mgr.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 rounded-lg bg-slate-50 dark:bg-slate-800/50" onClick={() => deleteEmployee(mgr._id || mgr.id, 'manager')}>
                                             <Trash2 size={12} />
                                         </Button>
                                     </div>

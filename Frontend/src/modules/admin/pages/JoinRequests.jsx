@@ -22,26 +22,28 @@ import { format } from 'date-fns';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 const JoinRequests = () => {
-    const { pendingRequests, approveRequest, rejectRequest } = useEmployeeStore();
+    const { pendingRequests, approveRequest, rejectRequest, fetchPendingRequests } = useEmployeeStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [parent] = useAutoAnimate();
 
+    React.useEffect(() => {
+        fetchPendingRequests();
+    }, [fetchPendingRequests]);
+
     const filteredRequests = pendingRequests.filter(req =>
-        req.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleApprove = (id, name) => {
-        const success = approveRequest(id);
+    const handleApprove = async (id, name, role) => {
+        const success = await approveRequest(id, role);
         if (success) {
             toast.success(`${name} has been approved and added to your team!`);
-        } else {
-            toast.error("Failed to approve. Subscription limit might be reached.");
         }
     };
 
-    const handleReject = (id, name) => {
-        rejectRequest(id);
+    const handleReject = async (id, name, role) => {
+        await rejectRequest(id, role);
         toast.error(`${name}'s request has been rejected.`);
     };
 
@@ -72,9 +74,16 @@ const JoinRequests = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Button variant="outline" className="rounded-xl h-11 gap-2 border-slate-200 dark:border-slate-800">
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            fetchPendingRequests();
+                            toast.info('Refreshing requests...');
+                        }}
+                        className="rounded-xl h-11 gap-2 border-slate-200 dark:border-slate-800"
+                    >
                         <Filter size={18} />
-                        <span>Recent First</span>
+                        <span>Refresh</span>
                     </Button>
                 </CardContent>
             </Card>
@@ -84,7 +93,7 @@ const JoinRequests = () => {
                     {filteredRequests.length > 0 ? (
                         filteredRequests.map((req, index) => (
                             <motion.div
-                                key={req.id}
+                                key={req._id}
                                 layout
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -101,7 +110,7 @@ const JoinRequests = () => {
                                                 <div className="space-y-1">
                                                     <div className="flex items-center gap-2">
                                                         <h3 className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                                                            {req.fullName}
+                                                            {req.name}
                                                         </h3>
                                                         <Badge variant="outline" className="rounded-full text-[10px] font-black uppercase tracking-tighter bg-blue-50/50 text-blue-600 border-blue-100">
                                                             {req.role}
@@ -109,13 +118,10 @@ const JoinRequests = () => {
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1 pt-1">
                                                         <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500">
-                                                            <Mail size={14} className="text-slate-400" /> {req.email}
-                                                        </span>
-                                                        <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500">
-                                                            <Shield size={14} className="text-slate-400" /> Ref: {req.workspaceId}
+                                                            <Mail size={14} className="text-slate-400" /> {req.email || 'No Email'}
                                                         </span>
                                                         <span className="flex items-center gap-1.5 text-sm font-medium text-slate-400">
-                                                            <Clock size={14} /> {format(new Date(req.requestedDate), 'MMM dd, HH:mm')}
+                                                            <Clock size={14} /> {req.createdAt ? format(new Date(req.createdAt), 'MMM dd, HH:mm') : 'Recently'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -123,7 +129,7 @@ const JoinRequests = () => {
 
                                             <div className="flex items-center gap-3 shrink-0">
                                                 <Button
-                                                    onClick={() => handleReject(req.id, req.fullName)}
+                                                    onClick={() => handleReject(req._id, req.name, req.role)}
                                                     variant="outline"
                                                     className="rounded-2xl h-12 px-6 border-slate-200 dark:border-slate-800 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all font-bold group/reject"
                                                 >
@@ -131,7 +137,7 @@ const JoinRequests = () => {
                                                     Reject
                                                 </Button>
                                                 <Button
-                                                    onClick={() => handleApprove(req.id, req.fullName)}
+                                                    onClick={() => handleApprove(req._id, req.name, req.role)}
                                                     className="rounded-2xl h-12 px-8 bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-200 dark:shadow-none font-bold group/approve"
                                                 >
                                                     <Check size={18} className="mr-2 group-hover/approve:scale-125 transition-transform" />
