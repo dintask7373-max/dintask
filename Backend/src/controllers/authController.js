@@ -18,6 +18,35 @@ const models = {
   superadmin: SuperAdmin
 };
 
+// Helper to get token from model, create cookie and send response
+const sendTokenResponse = async (user, statusCode, res) => {
+  // Create token with role included
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: '30d'
+  });
+
+  let userData = {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role
+  };
+
+  // Include plan details for Admins
+  if (user.role === 'admin') {
+    // We need to populate it if not already
+    await user.populate('subscriptionPlanId');
+    userData.subscriptionPlan = user.subscriptionPlan;
+    userData.planDetails = user.subscriptionPlanId;
+  }
+
+  res.status(statusCode).json({
+    success: true,
+    token,
+    user: userData
+  });
+};
+
 // @desc    Register user
 // @route   POST /api/v1/auth/register
 // @access  Public
@@ -188,31 +217,74 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
-// Get token from model, create cookie and send response
-const sendTokenResponse = async (user, statusCode, res) => {
-  // Create token with role included
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: '30d'
-  });
 
-  let userData = {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role
-  };
+// @desc    Update user details
+// @route   PUT /api/v1/auth/updatedetails
+// @access  Private
+exports.updateDetails = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
 
-  // Include plan details for Admins
-  if (user.role === 'admin') {
-    // We need to populate it if not already
-    await user.populate('subscriptionPlanId');
-    userData.subscriptionPlan = user.subscriptionPlan;
-    userData.planDetails = user.subscriptionPlanId;
+    // Find user by ID and Role from the request (set by protect middleware)
+    const UserModel = models[req.user.role];
+
+    if (!UserModel) {
+      return next(new ErrorResponse('Invalid user role', 400));
+    }
+
+    // Check if email is being updated and if it's already taken
+    if (email) {
+      const emailExists = await UserModel.findOne({ email });
+      if (emailExists && emailExists._id.toString() !== req.user.id) {
+        return next(new ErrorResponse('Email already exists', 400));
+      }
+    }
+
+    const fieldsToUpdate = {
+      name: name || req.user.name,
+      email: email || req.user.email
+    };
+
+    const user = await UserModel.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (err) {
+    next(err);
   }
+};
 
-  res.status(statusCode).json({
-    success: true,
-    token,
-    user: userData
-  });
+// @desc    Update password
+// @route   PUT /api/v1/auth/updatepassword
+// @access  Private
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return next(new ErrorResponse('Please provide current and new password', 400));
+    }
+
+    const UserModel = models[req.user.role];
+
+    // Get user with password
+    const user = await UserModel.findById(req.user.id).select('+password');
+
+    // Check current password
+    if (!(await user.matchPassword(currentPassword))) {
+      return next(new ErrorResponse('Invalid current password', 401));
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    sendTokenResponse(user, 200, res);
+  } catch (err) {
+    next(err);
+  }
 };

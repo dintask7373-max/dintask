@@ -54,24 +54,25 @@ const AddTask = () => {
 
         setIsSubmitting(true);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            await addTask({
+                title: formData.title,
+                description: formData.description,
+                deadline: formData.deadline,
+                priority: formData.priority,
+                labels: formData.labels,
+                assignedTo: [user?.id], // Self-assigned task
+                status: 'pending',
+                progress: 0
+            });
 
-        addTask({
-            ...formData,
-            labels: [...formData.labels, 'Self Task'],
-            status: 'pending',
-            progress: 0,
-            assignedTo: [user?.id || '1'], // Assigning to self dynamically
-            assignedBy: 'self',
-            activity: [
-                { user: 'You', content: 'created this task', time: 'Just now', type: 'system' }
-            ]
-        });
-
-        setIsSubmitting(false);
-        toast.success('Task created successfully');
-        navigate('/employee');
+            toast.success('Task created successfully');
+            navigate('/employee');
+        } catch (error) {
+            // Error toast already handled in store
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const addLabel = () => {

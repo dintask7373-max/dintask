@@ -55,9 +55,11 @@ import ProjectApprovals from '@/modules/admin/pages/ProjectApprovals';
 import ManagerLogin from '@/modules/manager/pages/ManagerLogin';
 import ManagerRegister from '@/modules/manager/pages/ManagerRegister';
 
-// Manager Pages
 import ManagerDashboard from '@/modules/manager/pages/Dashboard';
+import ManagerProjects from '@/modules/manager/pages/Projects';
+import ManagerProjectDetails from '@/modules/manager/pages/ProjectDetails';
 import AssignTask from '@/modules/manager/pages/AssignTask';
+
 import MyTasks from '@/modules/manager/pages/MyTasks';
 import TaskDelegation from '@/modules/manager/pages/TaskDelegation';
 import TeamManagement from '@/modules/manager/pages/TeamManagement';
@@ -249,6 +251,8 @@ const AppRouter = () => {
             {/* Main Manager Panel */}
             <Route path="/manager" element={<ProtectedRoute allowedRoles={['manager']}><ManagerLayout /></ProtectedRoute>}>
                 <Route index element={<ManagerDashboard />} />
+                <Route path="projects" element={<ManagerProjects />} />
+                <Route path="projects/:id" element={<ManagerProjectDetails />} />
                 <Route path="assign-task" element={<AssignTask />} />
                 <Route path="my-tasks" element={<MyTasks />} />
                 <Route path="delegation" element={<TaskDelegation />} />

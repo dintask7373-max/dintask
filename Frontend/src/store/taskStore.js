@@ -1,121 +1,90 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import mockTasks from '../data/mockTasks.json';
+import api from '@/lib/api';
+import { toast } from 'sonner';
 
-const useTaskStore = create(
-    persist(
-        (set, get) => ({
-            tasks: mockTasks,
-            loading: false,
+const useTaskStore = create((set, get) => ({
+    tasks: [],
+    loading: false,
+    error: null,
 
-            fetchTasks: async () => {
-                set({ loading: true });
-                // Simulate API delay
-                await new Promise((resolve) => setTimeout(resolve, 500));
-                set({ loading: false });
-            },
-
-            addTask: (task) => {
-                set((state) => ({
-                    tasks: [
-                        ...state.tasks,
-                        {
-                            ...task,
-                            id: Date.now().toString(),
-                            createdAt: new Date().toISOString(),
-                            status: task.status || 'pending',
-                        },
-                    ],
+    // Fetch Tasks
+    fetchTasks: async () => {
+        set({ loading: true });
+        try {
+            const res = await api.get('/tasks');
+            if (res.data.success) {
+                // Normalize tasks: add id field to match _id
+                const normalizedTasks = res.data.data.map(task => ({
+                    ...task,
+                    id: task._id || task.id
                 }));
-            },
-
-            updateTask: (taskId, updatedData) => {
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === taskId ? { ...task, ...updatedData } : task
-                    ),
-                }));
-            },
-
-            deleteTask: (taskId) => {
-                set((state) => ({
-                    tasks: state.tasks.filter((task) => task.id !== taskId),
-                }));
-            },
-
-            assignTaskToManager: (taskId, managerId) => {
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === taskId
-                            ? { ...task, assignedToManager: managerId, assignedBy: 'admin', status: 'pending' }
-                            : task
-                    ),
-                }));
-            },
-
-            delegateTaskToEmployee: (taskId, employeeId, managerId, notes) => {
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === taskId
-                            ? {
-                                ...task,
-                                assignedTo: [...(task.assignedTo || []), employeeId],
-                                delegatedBy: managerId,
-                                delegationNotes: notes,
-                                status: 'pending'
-                            }
-                            : task
-                    ),
-                }));
-            },
-
-            completeTask: (taskId, location, completionData) => {
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === taskId
-                            ? {
-                                ...task,
-                                status: 'completed',
-                                completedAt: new Date().toISOString(),
-                                completionLocation: location,
-                                ...completionData
-                            }
-                            : task
-                    ),
-                }));
-            },
-
-            addActivity: (taskId, activityItem) => {
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === taskId
-                            ? {
-                                ...task,
-                                activity: [...(task.activity || []), activityItem]
-                            }
-                            : task
-                    ),
-                }));
-            },
-
-            addComment: (taskId, comment) => {
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === taskId
-                            ? {
-                                ...task,
-                                comments: [...(task.comments || []), { ...comment, id: Date.now(), createdAt: new Date().toISOString() }]
-                            }
-                            : task
-                    ),
-                }));
-            },
-        }),
-        {
-            name: 'dintask-tasks-storage',
-            storage: createJSONStorage(() => sessionStorage),
+                set({ tasks: normalizedTasks, loading: false });
+            }
+        } catch (error) {
+            set({ error: error.message, loading: false });
+            console.error("Failed to fetch tasks", error);
         }
-    )
-);
+    },
+
+    // Add Task
+    addTask: async (taskData) => {
+        try {
+            const res = await api.post('/tasks', taskData);
+            if (res.data.success) {
+                const normalizedTask = {
+                    ...res.data.data,
+                    id: res.data.data._id || res.data.data.id
+                };
+                set((state) => ({
+                    tasks: [normalizedTask, ...state.tasks]
+                }));
+                // toast handled in component usually, but can be here too
+                return normalizedTask;
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.error || "Failed to add task");
+            throw error;
+        }
+    },
+
+    // Update Task
+    updateTask: async (taskId, updatedData) => {
+        try {
+            // Optimistic Update
+            set((state) => ({
+                tasks: state.tasks.map((task) =>
+                    task._id === taskId ? { ...task, ...updatedData } : task
+                ),
+            }));
+
+            const res = await api.put(`/tasks/${taskId}`, updatedData);
+
+            // Revert if failed? For now assume success or toast error
+            if (!res.data.success) {
+                toast.error("Failed to update task");
+                get().fetchTasks(); // Revert
+            }
+
+        } catch (error) {
+            toast.error("Failed to update task");
+            get().fetchTasks(); // Revert
+        }
+    },
+
+    // Delete Task
+    deleteTask: async (taskId) => {
+        try {
+            const res = await api.delete(`/tasks/${taskId}`);
+            if (res.data.success) {
+                set((state) => ({
+                    tasks: state.tasks.filter((task) => task._id !== taskId),
+                }));
+                toast.success("Task deleted");
+            }
+        } catch (error) {
+            toast.error("Failed to delete task");
+        }
+    }
+}));
 
 export default useTaskStore;

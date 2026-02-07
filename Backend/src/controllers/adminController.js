@@ -39,20 +39,21 @@ exports.registerAdmin = async (req, res, next) => {
   }
 };
 
-// @desc    Get all users across all collections
+// @desc    Get all users across all collections (Workspace-specific)
 // @route   GET /api/v1/admin/users
 // @access  Private (Admin)
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const [employees, sales, managers, admins, superadmins] = await Promise.all([
-      Employee.find(),
-      SalesExecutive.find(),
-      Manager.find(),
-      Admin.find(),
-      SuperAdmin.find()
+    const adminId = req.user.id; // Get admin's ID
+
+    // Fetch only users from THIS admin's workspace
+    const [employees, sales, managers] = await Promise.all([
+      Employee.find({ adminId }),
+      SalesExecutive.find({ adminId }),
+      Manager.find({ adminId })
     ]);
 
-    const allUsers = [...employees, ...sales, ...managers, ...admins, ...superadmins];
+    const allUsers = [...employees, ...sales, ...managers];
 
     res.status(200).json({
       success: true,
@@ -64,7 +65,7 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// @desc    Delete a user from any collection
+// @desc    Delete a user from any collection (Workspace-specific)
 // @route   DELETE /api/v1/admin/users/:id
 // @access  Private (Admin)
 exports.deleteUser = async (req, res, next) => {
@@ -79,16 +80,25 @@ exports.deleteUser = async (req, res, next) => {
     const models = {
       employee: Employee,
       sales_executive: SalesExecutive,
-      manager: Manager,
-      admin: Admin,
-      super_admin: SuperAdmin
+      manager: Manager
     };
 
-    const user = await models[role].findByIdAndDelete(id);
+    if (!models[role]) {
+      return next(new ErrorResponse('Invalid role or cannot delete admin/superadmin', 400));
+    }
+
+    const user = await models[role].findById(id);
 
     if (!user) {
       return next(new ErrorResponse(`User not found with id of ${id} in ${role}`, 404));
     }
+
+    // Verify user belongs to THIS admin's workspace
+    if (user.adminId.toString() !== req.user.id) {
+      return next(new ErrorResponse('Not authorized to delete this user - different workspace', 403));
+    }
+
+    await models[role].findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
@@ -299,9 +309,9 @@ exports.addTeamMember = async (req, res, next) => {
     const adminId = req.user.id;
 
     // Check Limit
-    // const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top
-    // const limitCheck = await checkUserLimit(adminId);
-    // if (!limitCheck.allowed) return next(new ErrorResponse(limitCheck.error, 403));
+    const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top
+    const limitCheck = await checkUserLimit(adminId);
+    if (!limitCheck.allowed) return next(new ErrorResponse(limitCheck.error, 403));
 
     const models = {
       employee: Employee,

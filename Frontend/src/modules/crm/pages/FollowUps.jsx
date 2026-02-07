@@ -45,7 +45,7 @@ const FollowUps = () => {
   const followUpStatuses = ['Scheduled', 'Completed', 'Missed', 'Cancelled'];
 
   const suggestedLeads = useMemo(() => {
-    if (!leadSearch) return [];
+    if (!leadSearch || !leads) return [];
     const searchLower = leadSearch.toLowerCase();
     return leads.filter(lead =>
       lead.name.toLowerCase().includes(searchLower) ||
@@ -54,6 +54,7 @@ const FollowUps = () => {
   }, [leads, leadSearch]);
 
   const filteredFollowUps = useMemo(() => {
+    if (!followUps || !leads) return [];
     return followUps.filter((followUp) => {
       const lead = leads.find(l => l.id === followUp.leadId);
       const matchesSearch =
@@ -212,10 +213,10 @@ const FollowUps = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Total Schedule', value: followUps.length, color: 'primary' },
-          { label: 'Today Ops', value: followUps.filter(f => format(new Date(f.scheduledAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, color: 'amber' },
-          { label: 'Completed', value: followUps.filter(f => f.status === 'Completed').length, color: 'emerald' },
-          { label: 'Overdue Flow', value: followUps.filter(f => new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled').length, color: 'red' }
+          { label: 'Total Schedule', value: (followUps || []).length, color: 'primary' },
+          { label: 'Today Ops', value: (followUps || []).filter(f => format(new Date(f.scheduledAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, color: 'amber' },
+          { label: 'Completed', value: (followUps || []).filter(f => f.status === 'Completed').length, color: 'emerald' },
+          { label: 'Overdue Flow', value: (followUps || []).filter(f => new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled').length, color: 'red' }
         ].map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
             <CardContent className="p-3 sm:p-4">

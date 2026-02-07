@@ -29,10 +29,13 @@ import { toast } from 'sonner';
 
 const MyTasks = () => {
     const { user } = useAuthStore();
-    const tasks = useTaskStore(state => state.tasks);
-    const completeTask = useTaskStore(state => state.completeTask);
+    const { tasks, fetchTasks, completeTask } = useTaskStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+
+    React.useEffect(() => {
+        fetchTasks();
+    }, []);
 
     const handleCompleteTask = (taskId) => {
         completeTask(taskId, "Tactical Module", { completedBy: user.id });
