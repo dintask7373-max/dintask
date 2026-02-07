@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { ShieldCheck, LogIn, Lock } from 'lucide-react';
@@ -12,8 +12,15 @@ import { Label } from '@/shared/components/ui/label';
 const SalesLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, error } = useAuthStore();
+    const { login, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
+
+    // Auto-redirect if already logged in
+    useEffect(() => {
+        if (isAuthenticated && role === 'sales') {
+            navigate('/sales');
+        }
+    }, [isAuthenticated, role, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

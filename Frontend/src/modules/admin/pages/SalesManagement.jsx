@@ -48,7 +48,7 @@ import useManagerStore from '@/store/managerStore'; // Kept in case required by 
 const SalesManagement = () => {
     const { salesReps, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
     const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion } = useCRMStore();
-    const { employees } = useEmployeeStore();
+    const { employees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { managers } = useManagerStore();
     const { user } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
@@ -69,13 +69,17 @@ const SalesManagement = () => {
     const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
 
     React.useEffect(() => {
-        fetchSalesReps();
+        const loadData = async () => {
+            await fetchSalesReps();
+            await fetchSubscriptionLimit();
+        };
+        loadData();
     }, []);
 
-    // Limit tracking
-    const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2;
-    const currentCount = employees.length;
-    const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
+    // Limit tracking - use real data from backend
+    const EMPLOYEE_LIMIT = limitStatus?.limit || user?.planDetails?.userLimit || 2;
+    const currentCount = limitStatus?.current || employees.length;
+    const isLimitReached = limitStatus?.allowed === false || currentCount >= EMPLOYEE_LIMIT;
 
     const filteredReps = useMemo(() => {
         return salesReps.filter(rep =>
@@ -100,12 +104,23 @@ const SalesManagement = () => {
 
     const handleAddRep = async (e) => {
         e.preventDefault();
+
+        if (isLimitReached) {
+            toast.error(limitStatus?.error || 'Subscription limit reached. Please upgrade your plan.');
+            return;
+        }
+
         try {
             await addSalesRep(newRepData);
             setNewRepData({ name: '', email: '' });
             setIsAddRepModalOpen(false);
+            // Refresh limit status
+            await fetchSubscriptionLimit();
         } catch (error) {
             // error handled in store
+            if (error.message && error.message.includes('limit')) {
+                await fetchSubscriptionLimit();
+            }
         }
     };
 

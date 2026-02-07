@@ -20,8 +20,13 @@ const models = {
 
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = async (user, statusCode, res) => {
-  // Create token with role included
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+  // Normalize role for frontend consistency
+  let normalizedRole = user.role;
+  if (user.role === 'sales_executive') normalizedRole = 'sales';
+  if (user.role === 'super_admin') normalizedRole = 'superadmin';
+
+  // Create token with normalized role
+  const token = jwt.sign({ id: user._id, role: normalizedRole }, process.env.JWT_SECRET, {
     expiresIn: '30d'
   });
 
@@ -29,7 +34,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.role
+    role: normalizedRole
   };
 
   // Include plan details for Admins

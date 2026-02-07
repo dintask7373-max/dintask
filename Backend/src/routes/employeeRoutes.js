@@ -6,7 +6,7 @@ const router = express.Router();
 
 // All routes under this router will be protected and for employees only
 router.use(protect);
-router.use(authorize('employee', 'manager', 'admin', 'super_admin'));
+router.use(authorize('employee', 'manager', 'admin', 'superadmin'));
 
 router.get('/me', getMe);
 router.put('/updatedetails', updateDetails);

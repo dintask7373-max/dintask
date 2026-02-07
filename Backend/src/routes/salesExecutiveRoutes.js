@@ -5,7 +5,7 @@ const { getMe, updateDetails } = require('../controllers/salesExecutiveControlle
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize('sales_executive', 'manager', 'admin', 'super_admin'));
+router.use(authorize('sales', 'manager', 'admin', 'superadmin'));
 
 router.get('/me', getMe);
 router.put('/updatedetails', updateDetails);

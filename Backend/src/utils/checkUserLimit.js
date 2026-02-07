@@ -7,10 +7,15 @@ const Plan = require('../models/Plan');
 const checkUserLimit = async (adminId) => {
   // 1. Get Admin and their plan
   const admin = await Admin.findById(adminId);
-  if (!admin) return { allowed: false, error: 'Admin not found' };
+  if (!admin) return {
+    allowed: false,
+    error: 'Admin not found',
+    current: 0,
+    limit: 0,
+    breakdown: { managers: 0, salesExecutives: 0, employees: 0 }
+  };
 
-  // Get plan details - handle both string based and reference based if we refactor later
-  // For now, let's assume we fetch by name or ID if we refactor Admin model
+  // Get plan details - handle both string based and reference based
   let plan;
   if (admin.subscriptionPlanId) {
     plan = await Plan.findById(admin.subscriptionPlanId);
@@ -20,9 +25,14 @@ const checkUserLimit = async (adminId) => {
   }
 
   if (!plan) {
-    // If no plan found, use some default or allow if it's a legacy account?
-    // Let's assume Starter as default if nothing found
-    return { allowed: true, limit: Infinity }; // Or set a strict default
+    // If no plan found, deny access for safety
+    return {
+      allowed: false,
+      error: 'No subscription plan found. Please contact support.',
+      current: 0,
+      limit: 0,
+      breakdown: { managers: 0, salesExecutives: 0, employees: 0 }
+    };
   }
 
   // 2. Count current users
@@ -33,17 +43,34 @@ const checkUserLimit = async (adminId) => {
   ]);
 
   const totalUsers = managers + sales + employees;
+  const remaining = plan.userLimit - totalUsers;
 
   if (totalUsers >= plan.userLimit) {
     return {
       allowed: false,
-      error: `Plan limit reached. You can only add up to ${plan.userLimit} users.`,
+      error: `Subscription limit reached! Your ${plan.name} plan allows ${plan.userLimit} members. You currently have ${totalUsers} members (${managers} managers, ${sales} sales executives, ${employees} employees). Please upgrade your plan to add more members.`,
       limit: plan.userLimit,
-      current: totalUsers
+      current: totalUsers,
+      remaining: 0,
+      breakdown: {
+        managers,
+        salesExecutives: sales,
+        employees
+      }
     };
   }
 
-  return { allowed: true, limit: plan.userLimit, current: totalUsers };
+  return {
+    allowed: true,
+    limit: plan.userLimit,
+    current: totalUsers,
+    remaining,
+    breakdown: {
+      managers,
+      salesExecutives: sales,
+      employees
+    }
+  };
 };
 
 module.exports = checkUserLimit;

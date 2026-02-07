@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { User, LogIn } from 'lucide-react';
@@ -12,8 +12,15 @@ import { Label } from '@/shared/components/ui/label';
 const EmployeeLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, error } = useAuthStore();
+    const { login, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
+
+    // Auto-redirect if already logged in
+    useEffect(() => {
+        if (isAuthenticated && role === 'employee') {
+            navigate('/employee');
+        }
+    }, [isAuthenticated, role, navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();

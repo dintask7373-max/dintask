@@ -44,50 +44,6 @@ exports.getAdmins = async (req, res, next) => {
   }
 };
 
-// @desc    Login Super Admin
-// @route   POST /api/v1/superadmin/login
-// @access  Public
-exports.login = async (req, res, next) => {
-  try {
-    const { adminId, secureKey } = req.body;
-
-    // Validate adminId & secureKey
-    if (!adminId || !secureKey) {
-      return next(new ErrorResponse('Please provide Administrator ID and Secure Key', 400));
-    }
-
-    // Check for user
-    const superAdmin = await SuperAdmin.findOne({ email: adminId }).select('+password');
-
-    if (!superAdmin) {
-      return next(new ErrorResponse('Invalid credentials', 401));
-    }
-
-    // Check password
-    const isMatch = await superAdmin.matchPassword(secureKey);
-
-    if (!isMatch) {
-      return next(new ErrorResponse('Invalid credentials', 401));
-    }
-
-    // Create token
-    const token = jwt.sign({ id: superAdmin._id, role: 'superadmin' }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE
-    });
-
-    res.status(200).json({
-      success: true,
-      token,
-      user: {
-        ...superAdmin.toObject(),
-        role: 'superadmin' // Normalize for frontend ('super_admin' -> 'superadmin')
-      }
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
 // @desc    Create Admin (Provision Account)
 // @route   POST /api/v1/superadmin/admins
 // @access  Private (Super Admin)
@@ -277,12 +233,12 @@ exports.login = async (req, res, next) => {
 
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
-  // Create token
-  const token = user.getSignedJwtToken
-    ? user.getSignedJwtToken()
-    : jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '30d' // Hardcoded for now if model method doesn't exist, strictly following authController pattern or better
-    });
+  // Create token - ALWAYS use 'superadmin' as role for SuperAdmin users
+  const token = jwt.sign(
+    { id: user._id, role: 'superadmin' },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
 
   res.status(statusCode).json({
     success: true,
@@ -291,7 +247,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: 'superadmin' // Normalize for frontend
     }
   });
 };

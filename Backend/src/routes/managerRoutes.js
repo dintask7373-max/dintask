@@ -5,7 +5,7 @@ const { getMe, getEmployees } = require('../controllers/managerController');
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize('manager', 'admin', 'super_admin'));
+router.use(authorize('manager', 'admin', 'superadmin'));
 
 router.get('/me', getMe);
 router.get('/employees', getEmployees);

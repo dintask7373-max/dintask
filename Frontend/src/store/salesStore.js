@@ -79,6 +79,7 @@ const useSalesStore = create(
                     console.error("Add Sales Rep Error", error);
                     toast.error(error.message || 'Failed to add sales rep');
                     set({ loading: false });
+                    throw error; // Re-throw so caller can handle
                 }
             },
 

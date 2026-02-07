@@ -1,8 +1,9 @@
 const BASE_URL = 'http://localhost:5000/api/v1';
 
 const apiRequest = async (endpoint, options = {}) => {
-  const token = sessionStorage.getItem('dintask-auth-storage')
-    ? JSON.parse(sessionStorage.getItem('dintask-auth-storage')).state.token
+  // Read token from localStorage (matching authStore configuration)
+  const token = localStorage.getItem('dintask-auth-storage')
+    ? JSON.parse(localStorage.getItem('dintask-auth-storage')).state.token
     : null;
 
   const headers = {

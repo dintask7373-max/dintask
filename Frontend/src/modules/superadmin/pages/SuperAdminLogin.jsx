@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { Shield, KeyRound } from 'lucide-react';
@@ -13,8 +13,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui
 const SuperAdminLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, error } = useAuthStore();
+    const { login, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
+
+    // Auto-redirect if already logged in
+    useEffect(() => {
+        if (isAuthenticated && role === 'superadmin') {
+            navigate('/superadmin');
+        }
+    }, [isAuthenticated, role, navigate]);
 
     const handleLogin = async (e, role) => {
         e.preventDefault();

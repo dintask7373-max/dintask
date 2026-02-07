@@ -12,7 +12,7 @@ const razorpay = new Razorpay({
 // @desc    Create Razorpay Order
 // @route   POST /api/v1/payments/create-order
 // @access  Private (Admin)
-exports.createOrder = async (req, res) => {
+exports.createOrder = async (req, res, next) => {
   try {
     const { planId } = req.body;
     const plan = await Plan.findById(planId);
@@ -70,7 +70,7 @@ exports.createOrder = async (req, res) => {
 // @desc    Verify Payment
 // @route   POST /api/v1/payments/verify
 // @access  Private (Admin)
-exports.verifyPayment = async (req, res) => {
+exports.verifyPayment = async (req, res, next) => {
   try {
     const {
       razorpay_order_id,
@@ -129,7 +129,7 @@ exports.verifyPayment = async (req, res) => {
 // @desc    Get billing history
 // @route   GET /api/v1/payments/history
 // @access  Private (Admin)
-exports.getBillingHistory = async (req, res) => {
+exports.getBillingHistory = async (req, res, next) => {
   try {
     const payments = await Payment.find({ adminId: req.user.id })
       .populate('planId', 'name')
@@ -150,7 +150,7 @@ const PDFDocument = require('pdfkit');
 // @desc    Download invoice
 // @route   GET /api/v1/payments/invoice/:id
 // @access  Private (Admin)
-exports.downloadInvoice = async (req, res) => {
+exports.downloadInvoice = async (req, res, next) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('planId')

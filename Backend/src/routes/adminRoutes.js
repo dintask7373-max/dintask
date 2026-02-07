@@ -9,7 +9,8 @@ const {
     getJoinRequests,
     approveJoinRequest,
     rejectJoinRequest,
-    addTeamMember
+    addTeamMember,
+    getSubscriptionLimitStatus
 } = require('../controllers/adminController');
 const { getPlans } = require('../controllers/planController');
 
@@ -21,10 +22,11 @@ router.put('/resetpassword/:resettoken', resetPassword);
 
 // Only Admin and Super Admin can access these routes
 router.use(protect);
-router.use(authorize('admin', 'super_admin'));
+router.use(authorize('admin', 'superadmin'));
 
 router.get('/users', getAllUsers);
 router.get('/plans', getPlans);
+router.get('/subscription-limit', getSubscriptionLimitStatus);
 router.delete('/users/:id', deleteUser);
 
 // Join Requests

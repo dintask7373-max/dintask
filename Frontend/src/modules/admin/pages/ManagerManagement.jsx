@@ -39,6 +39,7 @@ import {
     DialogDescription
 } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/utils/cn';
+import { toast } from 'sonner';
 
 import useAuthStore from '@/store/authStore';
 
@@ -46,7 +47,7 @@ import useAuthStore from '@/store/authStore';
 const ManagerManagement = () => {
     const navigate = useNavigate();
     // Use employeeStore for data source and actions
-    const { employees, fetchEmployees, addEmployee, deleteEmployee, loading } = useEmployeeStore();
+    const { employees, fetchEmployees, addEmployee, deleteEmployee, loading, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { user } = useAuthStore();
 
     // Derived state for managers from the main employee list
@@ -62,14 +63,17 @@ const ManagerManagement = () => {
     const [parent] = useAutoAnimate();
 
     React.useEffect(() => {
-        fetchEmployees();
+        const loadData = async () => {
+            await fetchEmployees();
+            await fetchSubscriptionLimit();
+        };
+        loadData();
     }, []);
 
-    // Limit tracking
-    const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2;
-    // Count all distinct users. Note: employees array contains ALL users (managers, sales, employees)
-    const currentCount = employees.length;
-    const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
+    // Limit tracking - use real data from backend
+    const EMPLOYEE_LIMIT = limitStatus?.limit || user?.planDetails?.userLimit || 2;
+    const currentCount = limitStatus?.current || employees.length;
+    const isLimitReached = limitStatus?.allowed === false || currentCount >= EMPLOYEE_LIMIT;
 
     const filteredManagers = useMemo(() => {
         return managers.filter(m =>
@@ -80,6 +84,13 @@ const ManagerManagement = () => {
 
     const handleAddManager = async (e) => {
         e.preventDefault();
+
+        // Check limit before attempting to add
+        if (isLimitReached) {
+            toast.error(limitStatus?.error || 'Subscription limit reached. Please upgrade your plan.');
+            return;
+        }
+
         try {
             await addEmployee({
                 ...newManager,
@@ -88,8 +99,13 @@ const ManagerManagement = () => {
             });
             setNewManager({ name: '', email: '', department: '' });
             setIsAddModalOpen(false);
+            // Refresh limit status
+            await fetchSubscriptionLimit();
         } catch (error) {
-            // Error is handled in store
+            // Error is handled in store, but we can show specific limit error
+            if (error.message && error.message.includes('limit')) {
+                await fetchSubscriptionLimit(); // Refresh to get updated limit info
+            }
         }
     };
 

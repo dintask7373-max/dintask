@@ -246,12 +246,14 @@ exports.approveJoinRequest = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized to approve this request', 403));
     }
 
+    // Check plan limits before approval
+    const limitCheck = await checkUserLimit(req.user.id);
+    if (!limitCheck.allowed) {
+      return next(new ErrorResponse(limitCheck.error, 403));
+    }
+
     user.status = 'active';
     await user.save();
-
-    // Check plan limits (Optional but recommended)
-    // const limitCheck = await checkUserLimit(req.user.id);
-    // if (!limitCheck.allowed) ... (Handled optimally before approval or we let it slide for now)
 
     res.status(200).json({
       success: true,
@@ -338,6 +340,25 @@ exports.addTeamMember = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get subscription limit status
+// @route   GET /api/v1/admin/subscription-limit
+// @access  Private (Admin)
+exports.getSubscriptionLimitStatus = async (req, res, next) => {
+  try {
+    const adminId = req.user.id;
+    const checkUserLimit = require('../utils/checkUserLimit');
+
+    const limitStatus = await checkUserLimit(adminId);
+
+    res.status(200).json({
+      success: true,
+      data: limitStatus
     });
   } catch (err) {
     next(err);

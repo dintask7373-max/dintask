@@ -57,7 +57,7 @@ import api from '@/lib/api';
 
 const EmployeeManagement = () => {
     const navigate = useNavigate();
-    const { employees, deleteEmployee, addEmployee, updateEmployee } = useEmployeeStore();
+    const { employees, deleteEmployee, addEmployee, updateEmployee, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { user } = useAuthStore();
     const { tasks } = useTaskStore();
     const { managers } = useManagerStore();
@@ -74,19 +74,15 @@ const EmployeeManagement = () => {
         const loadData = async () => {
             await useEmployeeStore.getState().fetchEmployees();
             await useEmployeeStore.getState().fetchPendingRequests();
-            // also fetch managers/sales if still needed by other components, 
-            // but our updated fetchEmployees gets everyone.
-
-            // If we really need to sync with managerStore:
-            // useManagerStore.getState().setManagers(employees.filter(e => e.role === 'manager'));
+            await fetchSubscriptionLimit();
         };
         loadData();
     }, []);
 
-    // Limit based on plan from authStore
-    const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2; // Default to 2 if not found
-    const currentCount = employees.length + managers.length + (salesExecutives?.length || 0);
-    const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
+    // Limit based on plan from backend
+    const EMPLOYEE_LIMIT = limitStatus?.limit || user?.planDetails?.userLimit || 2;
+    const currentCount = limitStatus?.current || (employees.length + managers.length + (salesExecutives?.length || 0));
+    const isLimitReached = limitStatus?.allowed === false || currentCount >= EMPLOYEE_LIMIT;
 
     const employeeStats = useMemo(() => {
         const stats = {};
@@ -115,17 +111,30 @@ const EmployeeManagement = () => {
         });
     }, [employees, searchTerm, filterStatus]);
 
-    const handleAddEmployee = (e) => {
+    const handleAddEmployee = async (e) => {
         e.preventDefault();
-        if (isLimitReached) return;
-        addEmployee({
-            ...newEmployee,
-            id: Date.now(),
-            status: 'active',
-            joinedDate: new Date().toLocaleDateString()
-        });
-        setNewEmployee({ name: '', email: '', role: '', managerId: '' });
-        setIsAddModalOpen(false);
+
+        if (isLimitReached) {
+            toast.error(limitStatus?.error || 'Subscription limit reached. Please upgrade your plan.');
+            return;
+        }
+
+        try {
+            await addEmployee({
+                ...newEmployee,
+                id: Date.now(),
+                status: 'active',
+                joinedDate: new Date().toLocaleDateString()
+            });
+            setNewEmployee({ name: '', email: '', role: '', managerId: '' });
+            setIsAddModalOpen(false);
+            // Refresh limit status
+            await fetchSubscriptionLimit();
+        } catch (error) {
+            if (error.message && error.message.includes('limit')) {
+                await fetchSubscriptionLimit();
+            }
+        }
     };
 
     const handleDelete = (id) => {

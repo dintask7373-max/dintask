@@ -6,7 +6,30 @@ const useEmployeeStore = create((set, get) => ({
     employees: [],
     pendingRequests: [],
     loading: false,
-    subscriptionLimit: 5, // Ideally fetch this from Admin's plan details
+    subscriptionLimit: null, // Will be fetched from backend
+    limitStatus: {
+        allowed: true,
+        current: 0,
+        limit: 0,
+        remaining: 0,
+        breakdown: { managers: 0, salesExecutives: 0, employees: 0 }
+    },
+
+    fetchSubscriptionLimit: async () => {
+        try {
+            const res = await api('/admin/subscription-limit');
+            if (res.success) {
+                set({
+                    limitStatus: res.data,
+                    subscriptionLimit: res.data.limit
+                });
+                return res.data;
+            }
+        } catch (error) {
+            console.error("Fetch Subscription Limit Error", error);
+            return null;
+        }
+    },
 
     fetchEmployees: async () => {
         set({ loading: true });
@@ -18,8 +41,8 @@ const useEmployeeStore = create((set, get) => ({
                 const managers = allUsers.filter(u => u.role === 'manager');
                 const sales = allUsers.filter(u => u.role === 'sales' || u.role === 'sales_executive');
 
-                // Update self
-                set({ employees: allUsers, loading: false });
+                // Store only employees for the Employee Management page
+                set({ employees: employees, loading: false });
 
                 // Update other stores if they exist/are imported? 
                 // Actually, EmployeeManagement uses separate hooks. 

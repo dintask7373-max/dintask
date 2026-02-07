@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import mockUsers from '../data/mockUsers.json';
 import apiRequest from '../lib/api';
 
 const useAuthStore = create(
@@ -192,7 +191,7 @@ const useAuthStore = create(
         }),
         {
             name: 'dintask-auth-storage',
-            storage: createJSONStorage(() => sessionStorage),
+            storage: createJSONStorage(() => localStorage),
         }
     )
 );

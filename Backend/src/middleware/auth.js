@@ -8,6 +8,7 @@ const SuperAdmin = require('../models/SuperAdmin');
 const models = {
   employee: Employee,
   sales_executive: SalesExecutive,
+  sales: SalesExecutive, // Support normalized frontend role
   manager: Manager,
   admin: Admin,
   super_admin: SuperAdmin, // Support legacy/db role
@@ -44,9 +45,13 @@ exports.protect = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    // NORMALIZE ROLE: Ensure downstream middleware sees 'superadmin' even if DB says 'super_admin'
+    // NORMALIZE ROLES: Ensure downstream middleware sees normalized roles
+    // This allows both frontend (normalized) and backend (db) roles to work
     if (req.user.role === 'super_admin') {
       req.user.role = 'superadmin';
+    }
+    if (req.user.role === 'sales_executive') {
+      req.user.role = 'sales';
     }
 
     next();
