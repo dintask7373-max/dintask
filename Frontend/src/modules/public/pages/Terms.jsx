@@ -1,17 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import axios from 'axios';
 
 const Terms = () => {
     const navigate = useNavigate();
+    const [sections, setSections] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/terms_service');
+                if (response.data.success && response.data.data) {
+                    setSections(response.data.data.policySections || []);
+                }
+            } catch (error) {
+                console.error('Error fetching terms:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContent();
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white pb-20">
             {/* Header Area */}
             <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-                <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-4xl mx-auto px-6 h-24 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/')}
                         className="flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors group"
@@ -20,7 +39,7 @@ const Terms = () => {
                         <span className="text-sm font-bold uppercase tracking-widest">Back to Home</span>
                     </button>
                     <div className="flex items-center gap-3">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-8 w-8" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-18 w-18 sm:h-22 sm:w-22 object-contain" />
                         <span className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">
                             Din<span className="text-primary-600">Task</span>
                         </span>
@@ -29,20 +48,23 @@ const Terms = () => {
             </div>
 
             {/* Hero Section */}
-            <div className="py-16 px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                <div className="max-w-4xl mx-auto text-center">
+            <div className="py-20 px-6 bg-primary-600 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
+                <div className="max-w-4xl mx-auto text-center relative z-10">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center justify-center size-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 text-primary-600 mb-6"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="inline-flex items-center justify-center mb-6 text-white"
                     >
-                        <FileText size={32} />
+                        <FileText size={64} strokeWidth={1.5} className="drop-shadow-lg" />
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4"
+                        className="text-4xl md:text-6xl font-black text-white tracking-tight mb-4 drop-shadow-md"
                     >
                         Terms of Service
                     </motion.h1>
@@ -50,9 +72,9 @@ const Terms = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-slate-500 dark:text-slate-400 font-medium uppercase tracking-[0.2em] text-xs"
+                        className="text-primary-100 font-bold uppercase tracking-[0.2em] text-sm"
                     >
-                        Last Updated: February 6, 2026
+                        Last Updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </motion.p>
                 </div>
             </div>
@@ -65,28 +87,21 @@ const Terms = () => {
                     transition={{ delay: 0.3 }}
                     className="prose prose-slate dark:prose-invert max-w-none"
                 >
-                    <div className="space-y-12">
-                        <Section
-                            title="01 / Agreement to Terms"
-                            content="By accessing or using DinTask, you agree to be bound by these Terms of Service. If you do not agree to all of these terms, do not use our platform. These terms apply to all visitors, users, and others who access the service."
-                        />
-                        <Section
-                            title="02 / Use of the Platform"
-                            content="DinTask is designed for professional business use. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to use the platform in compliance with all applicable laws."
-                        />
-                        <Section
-                            title="03 / Intellectual Property"
-                            content="The platform and its original content, features, and functionality are and will remain the exclusive property of DinTask and its licensors. Our trademarks and trade dress may not be used in connection with any product or service without our prior written consent."
-                        />
-                        <Section
-                            title="04 / Technical Limitations"
-                            content="While we strive for 100% uptime, you acknowledge that technical issues may occur. We reserve the right to perform maintenance and updates to improve the platform's tactical performance, which may result in temporary unavailability."
-                        />
-                        <Section
-                            title="05 / Termination"
-                            content="We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the platform will immediately cease."
-                        />
-                    </div>
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                        </div>
+                    ) : (
+                        <div className="space-y-12">
+                            {sections.map((section, index) => (
+                                <Section
+                                    key={index}
+                                    title={section.title}
+                                    content={section.content}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </motion.div>
 
                 <div className="mt-20 p-10 bg-slate-900 dark:bg-white rounded-[2rem] text-white dark:text-slate-900 text-center">
@@ -107,7 +122,7 @@ const Terms = () => {
 const Section = ({ title, content }) => (
     <div className="space-y-4">
         <h2 className="text-xs font-black text-primary-600 uppercase tracking-[0.3em]">{title}</h2>
-        <p className="text-lg text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+        <p className="text-lg text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-line">
             {content}
         </p>
     </div>

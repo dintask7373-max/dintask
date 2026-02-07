@@ -14,9 +14,20 @@ const LandingPageContentSchema = new mongoose.Schema({
             'testimonial',
             'pricing',
             'demo_cta',
-            'footer'
+            'footer',
+            'social_contact',
+            'privacy_policy',
+            'terms_service',
+            'cookie_policy'
         ]
     },
+
+    // Policy Content (for Privacy, Terms, Cookies)
+    policySections: [{
+        title: String,
+        content: String
+    }],
+    lastUpdated: { type: Date },
 
     // Hero Section
     heroTitle: { type: String },
@@ -93,6 +104,20 @@ const LandingPageContentSchema = new mongoose.Schema({
         title: String,
         links: [String]
     }],
+
+    // Social and Contact
+    socialLinks: {
+        facebook: String,
+        twitter: String,
+        youtube: String,
+        linkedin: String,
+        instagram: String
+    },
+    contactInfo: {
+        phone: String,
+        email: String,
+        whatsapp: String
+    },
 
     // Metadata
     isActive: { type: Boolean, default: true },

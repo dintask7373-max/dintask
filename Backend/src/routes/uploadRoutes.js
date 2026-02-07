@@ -11,9 +11,7 @@ router.post('/', protect, authorize('superadmin'), upload.single('image'), (req,
         }
 
         // Construct file URL
-        const protocol = req.protocol;
-        const host = req.get('host');
-        const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        const fileUrl = req.file.path || req.file.secure_url;
 
         res.status(200).json({
             success: true,

@@ -1,28 +1,34 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
+// Configure Cloudinary Storage
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req, file) => {
+        let resource_type = 'image';
+        if (file.mimetype.startsWith('video')) {
+            resource_type = 'video';
+        }
+        return {
+            folder: 'dintask-uploads',
+            resource_type: resource_type,
+            allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'avi']
+        };
     },
-    filename: function (req, file, cb) {
-        // Create unique filename with original extension
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname));
-    }
 });
 
 const fileFilter = (req, file, cb) => {
-    // Accept images only
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-        return cb(new Error('Only image files are allowed!'), false);
+    // Accept images and videos
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|mov|avi)$/)) {
+        return cb(new Error('Only image and video files are allowed!'), false);
     }
     cb(null, true);
 };
@@ -30,7 +36,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit for videos
 });
 
 module.exports = upload;
