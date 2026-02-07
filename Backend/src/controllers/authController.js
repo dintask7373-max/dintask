@@ -107,9 +107,17 @@ exports.login = async (req, res, next) => {
     let user;
     let foundRole = role;
 
-    if (role && models[role]) {
+    // Map frontend 'sales' role to backend 'sales_executive'
+    const roleMap = {
+      'sales': 'sales_executive',
+      'superadmin': 'superadmin' // just in case
+    };
+    const dbRole = roleMap[role] || role;
+
+    if (dbRole && models[dbRole]) {
       // Check specific model
-      user = await models[role].findOne({ email }).select('+password');
+      user = await models[dbRole].findOne({ email }).select('+password');
+      foundRole = dbRole;
     } else {
       // Search all collections if role not provided
       for (const [r, Model] of Object.entries(models)) {

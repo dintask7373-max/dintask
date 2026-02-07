@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
             loginPath = '/admin/login';
         } else if (allowedRoles && allowedRoles.includes('manager')) {
             loginPath = '/manager/login';
-        } else if (allowedRoles && allowedRoles.includes('sales')) {
+        } else if (allowedRoles && (allowedRoles.includes('sales') || allowedRoles.includes('sales_executive'))) {
             loginPath = '/sales/login';
         }
 
@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
                 ? '/admin'
                 : role === 'manager'
                     ? '/manager'
-                    : role === 'sales'
+                    : (role === 'sales' || role === 'sales_executive')
                         ? '/sales'
                         : '/employee';
 

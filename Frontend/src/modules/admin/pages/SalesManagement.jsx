@@ -45,7 +45,7 @@ import useManagerStore from '@/store/managerStore'; // Kept in case required by 
 
 
 const SalesManagement = () => {
-    const { salesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
+    const { salesReps, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
     const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion } = useCRMStore();
     const { employees } = useEmployeeStore();
     const { managers } = useManagerStore();
@@ -68,7 +68,7 @@ const SalesManagement = () => {
     const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
 
     React.useEffect(() => {
-        fetchEmployees();
+        fetchSalesReps();
     }, []);
 
     // Limit tracking
@@ -100,7 +100,7 @@ const SalesManagement = () => {
     const handleAddRep = async (e) => {
         e.preventDefault();
         try {
-            await addEmployee({ ...newRepData, role: 'sales_executive', phoneNumber: '0000000000' });
+            await addSalesRep(newRepData);
             setNewRepData({ name: '', email: '' });
             setIsAddRepModalOpen(false);
         } catch (error) {
