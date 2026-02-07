@@ -39,7 +39,8 @@ const Subscription = () => {
             cta: "Current Plan",
             ctaVariant: "outline",
             popular: false,
-            icon: Star
+            icon: Star,
+            iconColor: "bg-gradient-to-br from-amber-400 to-orange-500"
         },
         {
             name: "Pro",
@@ -55,7 +56,8 @@ const Subscription = () => {
             cta: "Upgrade",
             ctaVariant: "default",
             popular: false,
-            icon: Crown
+            icon: Crown,
+            iconColor: "bg-gradient-to-br from-purple-500 to-indigo-600"
         },
         {
             name: "Pro Plus",
@@ -72,7 +74,8 @@ const Subscription = () => {
             cta: "Get Started",
             ctaVariant: "default",
             popular: true,
-            icon: Zap
+            icon: Zap,
+            iconColor: "bg-gradient-to-br from-pink-500 to-rose-600"
         },
         {
             name: "Enterprise",
@@ -89,7 +92,8 @@ const Subscription = () => {
             cta: "Contact Sales",
             ctaVariant: "outline",
             popular: false,
-            icon: Shield
+            icon: Shield,
+            iconColor: "bg-gradient-to-br from-emerald-500 to-teal-600"
         }
     ];
 
@@ -180,8 +184,7 @@ const Subscription = () => {
                             <CardContent className="p-3 md:p-6 flex flex-col h-full">
                                 <div className="mb-4 md:mb-6">
                                     <div className="flex items-center gap-1.5 md:gap-2 mb-2">
-                                        <div className={`p-1.5 md:p-2 rounded-lg ${plan.popular ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                                            }`}>
+                                        <div className={`p-1.5 md:p-2 rounded-lg ${plan.iconColor} text-white shadow-lg`}>
                                             <plan.icon size={14} className="md:w-5 md:h-5" />
                                         </div>
                                         <h3 className="text-xs md:text-lg font-bold text-slate-900 dark:text-white">{plan.name}</h3>
