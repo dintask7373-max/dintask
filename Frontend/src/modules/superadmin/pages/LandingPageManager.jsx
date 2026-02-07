@@ -622,27 +622,15 @@ const LandingPageManager = () => {
         const data = sections.testimonial || {};
         return (
             <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Badge Text</label>
-                        <input
-                            type="text"
-                            value={data.testimonialBadge || ''}
-                            onChange={(e) => updateSectionData('testimonial', 'testimonialBadge', e.target.value)}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-lg"
-                            placeholder="All-in-one suite"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Background Color</label>
-                        <input
-                            type="text"
-                            value={data.testimonialBgColor || ''}
-                            onChange={(e) => updateSectionData('testimonial', 'testimonialBgColor', e.target.value)}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-lg"
-                            placeholder="#ffcc00"
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Badge Text</label>
+                    <input
+                        type="text"
+                        value={data.testimonialBadge || ''}
+                        onChange={(e) => updateSectionData('testimonial', 'testimonialBadge', e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                        placeholder="All-in-one suite"
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
