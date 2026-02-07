@@ -103,6 +103,37 @@ const LandingPage = () => {
         }
     });
 
+    const [pricingContent, setPricingContent] = useState({
+        pricingTitle: "Flexible Plans & Pricing",
+        pricingDescription: "Everything you need to get started with DinTask. Choose the plan that fits your team's needs.",
+        pricingBgColor: "#6374f2",
+        plans: []
+    });
+
+    const [testimonialSection, setTestimonialSection] = useState({
+        testimonialBadge: "All-in-one suite",
+        testimonialTitle: "DinTask One",
+        testimonialSubtitle: "The operating system for business.",
+        testimonialDescription: "Run your entire business on DinTask with our unified cloud software.",
+        testimonialCtaText: "TRY DINTASK ONE",
+        testimonialQuote: "DinTask One is a boon for all. It transformed our workflow.",
+        testimonialAuthorName: "Rishi Sir",
+        testimonialAuthorRole: "Founder & CEO, DinTask",
+        testimonialAuthorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rishi",
+        testimonialBgColor: "#ffcc00"
+    });
+
+    const [footerContent, setFooterContent] = useState({
+        footerDescription: "Empowering teams with tactical workspace solutions since 2026.",
+        footerCopyright: "© 2026 DinTask Inc. All rights reserved.",
+        footerLogoUrl: "/dintask-logo.png",
+        footerLinks: [
+            { title: 'Product', links: ['Features', 'Pricing'] },
+            { title: 'Company', links: ['About', 'Contact'] },
+            { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
+        ]
+    });
+
     useEffect(() => {
         // Fetch hero section content from API
         const fetchHeroContent = async () => {
@@ -199,6 +230,39 @@ const LandingPage = () => {
             }
         };
 
+        const fetchPricingContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/pricing');
+                if (response.data.success && response.data.data) {
+                    setPricingContent(prev => ({ ...prev, ...response.data.data }));
+                }
+            } catch (error) {
+                console.error('Error fetching pricing content:', error);
+            }
+        };
+
+        const fetchTestimonialSection = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/testimonial');
+                if (response.data.success && response.data.data) {
+                    setTestimonialSection(prev => ({ ...prev, ...response.data.data }));
+                }
+            } catch (error) {
+                console.error('Error fetching testimonial section:', error);
+            }
+        };
+
+        const fetchFooterContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/footer');
+                if (response.data.success && response.data.data) {
+                    setFooterContent(prev => ({ ...prev, ...response.data.data }));
+                }
+            } catch (error) {
+                console.error('Error fetching footer content:', error);
+            }
+        };
+
         fetchHeroContent();
         fetchModulesContent();
         fetchStrategicOptions();
@@ -206,6 +270,9 @@ const LandingPage = () => {
         fetchTacticalContent();
         fetchDemoCtaContent();
         fetchSocialContact();
+        fetchPricingContent();
+        fetchTestimonialSection();
+        fetchFooterContent();
 
         // Ensure body is scrollable when landing page mounts
         document.body.style.overflow = 'auto';
@@ -353,45 +420,7 @@ const LandingPage = () => {
         }
     ]);
 
-    const plans = [
-        {
-            name: "Free",
-            price: "$0",
-            duration: "Forever",
-            description: "Everything you need to get started.",
-            features: ["Personal Tasks", "Basic Calendar", "Storage 5GB", "1 Workspace"],
-            cta: "Get Started",
-            variant: "outline"
-        },
-        {
-            name: "Pro",
-            price: "$12",
-            duration: "member / month",
-            description: "Perfect for growing teams.",
-            features: ["Everything in Free", "Advanced CRM", "Google SSO", "Unlimited Storage"],
-            cta: "Upgrade Now",
-            variant: "default",
-            popular: true
-        },
-        {
-            name: "Pro Plus",
-            price: "$29",
-            duration: "member / month",
-            description: "Advanced tactical operations.",
-            features: ["Everything in Pro", "Custom Branding", "Priority Support", "Advanced API"],
-            cta: "Go Pro Plus",
-            variant: "default"
-        },
-        {
-            name: "Enterprise",
-            price: "Custom",
-            duration: "for large scale",
-            description: "For organizations needing more.",
-            features: ["Everything in Pro Plus", "Dedicated Manager", "SLA Support", "SSO & SCIM"],
-            cta: "Contact Sales",
-            variant: "outline"
-        }
-    ];
+
 
     // Helper function to map icon names to icon components
     const getIconComponent = (iconName) => {
@@ -444,10 +473,10 @@ const LandingPage = () => {
                     </div>
 
                     <div className="hidden lg:flex items-center gap-4">
-                        <Button variant="ghost" onClick={() => navigate('/admin/login')} className="font-bold uppercase tracking-widest text-xs">
+                        <Button variant="ghost" onClick={() => navigate('/welcome')} className="font-bold uppercase tracking-widest text-xs">
                             Login
                         </Button>
-                        <Button onClick={() => navigate('/admin/register')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
+                        <Button onClick={() => navigate('/welcome')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
                             Try For Free
                         </Button>
                     </div>
@@ -482,10 +511,10 @@ const LandingPage = () => {
                                 </button>
                             ))}
                             <div className="pt-4 flex flex-row gap-2">
-                                <Button variant="outline" onClick={() => navigate('/admin/login')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200">
+                                <Button variant="outline" onClick={() => navigate('/welcome')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200">
                                     Login
                                 </Button>
-                                <Button onClick={() => navigate('/admin/register')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
+                                <Button onClick={() => navigate('/welcome')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
                                     Sign Up
                                 </Button>
                             </div>
@@ -540,7 +569,7 @@ const LandingPage = () => {
                                         <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter italic">Din<span className="text-primary-600">Task</span></span>
 
                                         <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:gap-2">
-                                            <button onClick={() => navigate('/admin/register')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
+                                            <button onClick={() => navigate('/welcome')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
                                             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-2 sm:px-3 py-1 sm:py-1.5 border border-primary-600 text-primary-600 text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 transition-all active:scale-90 uppercase tracking-widest">BUY NOW</button>
                                         </div>
                                     </div>
@@ -661,6 +690,237 @@ const LandingPage = () => {
                             </video>
                         </div>
                     </motion.div>
+                </div>
+            </section>
+
+            {/* Testimonial inspired by Image 1 */}
+            <section id="about" className="py-20 relative overflow-x-clip border-t border-b border-white/10" style={{ backgroundColor: testimonialSection.testimonialBgColor }}>
+                <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+                    <motion.div
+                        initial={{ opacity: 0, x: -50, y: 20 }}
+                        whileInView={{ opacity: 1, x: 0, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                        <Badge className="bg-black/10 text-black border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
+                            {testimonialSection.testimonialBadge}
+                        </Badge>
+                        <h2 className="text-5xl lg:text-7xl font-black leading-none tracking-tight text-slate-900 mb-4">
+                            {testimonialSection.testimonialTitle}
+                        </h2>
+                        <p className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight">
+                            {testimonialSection.testimonialSubtitle}
+                        </p>
+                        <p className="text-base text-slate-700 font-medium leading-relaxed max-w-lg mb-8">
+                            {testimonialSection.testimonialDescription}
+                        </p>
+                        <Button
+                            onClick={() => navigate('/welcome')}
+                            className="h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-base shadow-xl group"
+                        >
+                            {testimonialSection.testimonialCtaText} <ArrowRight className="ml-3 group-hover:translate-x-2" />
+                        </Button>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        className="relative"
+                    >
+                        <div className="pl-12 border-l border-slate-900/20 py-4 lg:py-12">
+                            <span className="text-7xl font-serif text-slate-900 absolute -left-4 top-0 opacity-20">“</span>
+                            <blockquote className="text-2xl lg:text-3xl font-black text-slate-900 italic leading-tight mb-8">
+                                "{testimonialSection.testimonialQuote}"
+                            </blockquote>
+                            <div className="flex items-center gap-6">
+                                <div className="size-16 rounded-full bg-slate-900 overflow-hidden border-4 border-white shadow-xl">
+                                    <img src={testimonialSection.testimonialAuthorImage} alt={testimonialSection.testimonialAuthorName} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-black text-slate-900">{testimonialSection.testimonialAuthorName}</h4>
+                                    <p className="text-base font-bold text-slate-700 uppercase tracking-tighter">{testimonialSection.testimonialAuthorRole}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Testimonials Section */}
+            <section className="py-12 bg-slate-50 dark:bg-slate-900 border-t border-b border-slate-200 dark:border-slate-800">
+                <div className="max-w-7xl mx-auto px-6">
+                    {/* Section Title */}
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                            User <span className="text-primary-600">Testimonials</span>
+                        </h2>
+
+                        <div className="mt-4">
+                            <Dialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="rounded-full border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20">Share Your Story</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-slate-900 dark:text-white">Share Your Experience</DialogTitle>
+                                        <DialogDescription className="text-slate-500 dark:text-slate-400">
+                                            Tell us how DinTask has helped your team.
+                                        </DialogDescription>
+                                    </DialogHeader>
+
+                                    {submitStatus === 'success' ? (
+                                        <div className="py-8 text-center text-green-600">
+                                            <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
+                                            <p className="font-medium">Thank you! Your testimonial has been submitted for review.</p>
+                                        </div>
+                                    ) : submitStatus === 'error' ? (
+                                        <div className="py-8 text-center text-red-600">
+                                            <p className="font-medium">Something went wrong. Please try again.</p>
+                                            <Button variant="link" onClick={() => setSubmitStatus(null)}>Try Again</Button>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleSubmitTestimonial} className="grid gap-4 py-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">Name</Label>
+                                                <Input id="name" name="name" value={formData.name} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700" />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="role" className="text-slate-700 dark:text-slate-300">Role / Company</Label>
+                                                <Input id="role" name="role" value={formData.role} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700" />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label className="text-slate-700 dark:text-slate-300">Rating</Label>
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <Star
+                                                            key={star}
+                                                            size={24}
+                                                            className={`cursor-pointer transition-colors ${star <= formData.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300 dark:text-slate-600'}`}
+                                                            onClick={() => handleRatingChange(star)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="testimonial" className="text-slate-700 dark:text-slate-300">Message</Label>
+                                                <Textarea id="testimonial" name="testimonial" value={formData.testimonial} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 resize-none h-24" />
+                                            </div>
+                                            <Button type="submit" disabled={isSubmitting} className="bg-primary-600 hover:bg-primary-700 text-white">
+                                                {isSubmitting ? 'Submitting...' : 'Submit Testimonial'}
+                                            </Button>
+                                        </form>
+                                    )}
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
+
+                    {/* Testimonials with Scroll Buttons */}
+                    <div className="relative">
+                        {/* Left Scroll Button */}
+                        <button
+                            onClick={() => {
+                                const container = document.getElementById('testimonials-container');
+                                container.scrollBy({ left: -350, behavior: 'smooth' });
+                            }}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-3 shadow-lg transition-all hidden md:block"
+                        >
+                            <ChevronLeft size={24} />
+                        </button>
+
+                        {/* Right Scroll Button */}
+                        <button
+                            onClick={() => {
+                                const container = document.getElementById('testimonials-container');
+                                container.scrollBy({ left: 350, behavior: 'smooth' });
+                            }}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-3 shadow-lg transition-all hidden md:block"
+                        >
+                            <ChevronRight size={24} />
+                        </button>
+
+                        {/* Scrollable Testimonials */}
+                        <div id="testimonials-container" className="overflow-x-auto pb-4 scroll-smooth">
+                            <div className="flex gap-6 justify-center px-12 md:px-20">
+                                {testimonials.map((testimonial, index) => (
+                                    <motion.div
+                                        key={testimonial.id}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.1 }}
+                                        className="flex-shrink-0 w-80"
+                                    >
+                                        <Card className={`p-6 text-center h-full transition-transform duration-300 ${testimonial.highlighted
+                                            ? 'bg-primary-600 border-primary-500 shadow-xl scale-105'
+                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg'
+                                            }`}>
+                                            {/* Profile Image */}
+                                            <div className="relative inline-block mb-3">
+                                                <div className={`w-20 h-20 rounded-full overflow-hidden border-3 ${testimonial.highlighted
+                                                    ? 'border-white'
+                                                    : 'border-primary-600'
+                                                    } mx-auto`}>
+                                                    <img
+                                                        src={testimonial.image}
+                                                        alt={testimonial.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://ui-avatars.com/api/?name=' + testimonial.name + '&size=80&background=random';
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Rating Stars */}
+                                            <div className="flex justify-center gap-0.5 mb-2">
+                                                {[...Array(testimonial.rating)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        size={12}
+                                                        className={testimonial.highlighted ? 'fill-white text-white' : 'fill-primary-600 text-primary-600'}
+                                                    />
+                                                ))}
+                                            </div>
+
+                                            {/* Name & Role */}
+                                            <h3 className={`text-base font-black mb-0.5 ${testimonial.highlighted
+                                                ? 'text-white'
+                                                : 'text-slate-900 dark:text-white'
+                                                }`}>
+                                                {testimonial.name}
+                                            </h3>
+                                            <p className={`text-xs font-medium mb-4 ${testimonial.highlighted
+                                                ? 'text-primary-100'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                                }`}>
+                                                {testimonial.role}
+                                            </p>
+
+                                            {/* Quote Icon */}
+                                            <div className="mb-2">
+                                                <span className={`text-4xl font-black ${testimonial.highlighted
+                                                    ? 'text-white/20'
+                                                    : 'text-primary-600/20'
+                                                    }`}>
+                                                    &ldquo;
+                                                </span>
+                                            </div>
+
+                                            {/* Testimonial Text */}
+                                            <p className={`text-xs leading-relaxed line-clamp-3 ${testimonial.highlighted
+                                                ? 'text-white/90'
+                                                : 'text-slate-600 dark:text-slate-300'
+                                                }`}>
+                                                {testimonial.testimonial}
+                                            </p>
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -812,63 +1072,14 @@ const LandingPage = () => {
 
 
 
-            {/* Testimonial inspired by Image 1 */}
-            <section id="about" className="py-20 bg-[#ffcc00] relative overflow-x-clip">
-                <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
-                    <motion.div
-                        initial={{ opacity: 0, x: -50, y: 20 }}
-                        whileInView={{ opacity: 1, x: 0, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                    >
-                        <Badge className="bg-black/10 text-black border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
-                            All-in-one suite
-                        </Badge>
-                        <h2 className="text-5xl lg:text-7xl font-black leading-none tracking-tight text-slate-900 mb-4">
-                            DinTask One
-                        </h2>
-                        <p className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight">
-                            The operating system for business.
-                        </p>
-                        <p className="text-base text-slate-700 font-medium leading-relaxed max-w-lg mb-8">
-                            Run your entire business on DinTask with our unified cloud software, designed to help you break down silos between departments and increase organizational efficiency.
-                        </p>
-                        <Button className="h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-base shadow-xl group">
-                            TRY DINTASK ONE <ArrowRight className="ml-3 group-hover:translate-x-2" />
-                        </Button>
-                    </motion.div>
 
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        className="relative"
-                    >
-                        <div className="pl-12 border-l border-slate-900/20 py-4 lg:py-12">
-                            <span className="text-7xl font-serif text-slate-900 absolute -left-4 top-0 opacity-20">“</span>
-                            <blockquote className="text-2xl lg:text-3xl font-black text-slate-900 italic leading-tight mb-8">
-                                "You can be a startup, mid-sized company, or an enterprise - DinTask One is a boon for all. It transformed our workflow across India."
-                            </blockquote>
-                            <div className="flex items-center gap-6">
-                                <div className="size-16 rounded-full bg-slate-900 overflow-hidden border-4 border-white shadow-xl">
-                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rishi" alt="CEO" />
-                                </div>
-                                <div>
-                                    <h4 className="text-xl font-black text-slate-900">Rishi Sir</h4>
-                                    <p className="text-base font-bold text-slate-700 uppercase tracking-tighter">Founder & CEO, DinTask</p>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
 
 
 
             {/* Pricing Section */}
             <section id="pricing" className="relative py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden scroll-mt-20">
                 {/* Background Two-Tone */}
-                < div className="absolute top-0 left-0 w-full h-[50%] bg-[#6374f2] dark:bg-[#4f5ed9]" />
+                < div className="absolute top-0 left-0 w-full h-[50%]" style={{ backgroundColor: pricingContent.pricingBgColor }} />
 
                 <div className="max-w-6xl mx-auto px-6 relative z-10 text-center mb-10">
                     <motion.div
@@ -877,16 +1088,16 @@ const LandingPage = () => {
                         viewport={{ once: true }}
                     >
                         <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight mb-4">
-                            Flexible Plans & Pricing
+                            {pricingContent.pricingTitle}
                         </h2>
                         <p className="text-white/80 text-sm max-w-xl mx-auto font-medium opacity-70 leading-relaxed">
-                            Lorem Ipsum is simply dummy text of the printing and typesetting industry and has been the standard ever since.
+                            {pricingContent.pricingDescription}
                         </p>
                     </motion.div>
                 </div>
 
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                    {plans.map((plan, i) => (
+                    {(pricingContent.plans || []).map((plan, i) => (
                         <motion.div
                             key={plan.name}
                             initial={{ opacity: 0, y: 30 }}
@@ -911,17 +1122,17 @@ const LandingPage = () => {
                                     <div className="mb-3 sm:mb-6">
                                         <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
                                             <span className="text-sm sm:text-3xl font-bold text-slate-800 dark:text-white">
-                                                {plan.name === 'Enterprise' ? 'Custom' : `₹${parseInt(plan.price.replace('$', '')) * 80 || 0}`}
+                                                {plan.name === 'Enterprise' ? 'Custom' : `${plan.price}`}
                                             </span>
                                             {plan.name !== 'Enterprise' && (
-                                                <span className="text-[7px] sm:text-xs font-medium text-slate-400 uppercase tracking-tighter">/ month</span>
+                                                <span className="text-[7px] sm:text-xs font-medium text-slate-400 uppercase tracking-tighter">/ {plan.duration || 'month'}</span>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Features List */}
                                     <div className="space-y-1.5 sm:space-y-3 mb-4 sm:mb-8 flex-1 w-full text-left border-t border-slate-100 dark:border-slate-800 pt-3 sm:pt-6">
-                                        {plan.features.map(f => (
+                                        {(plan.features || []).map(f => (
                                             <div key={f} className="flex items-start gap-1.5 sm:gap-3">
                                                 <div className="size-3 sm:size-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
                                                     <CheckCircle2 className="size-2 sm:size-[10px]" />
@@ -933,7 +1144,7 @@ const LandingPage = () => {
 
                                     {/* Action Button */}
                                     <Button
-                                        onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact', { state: { plan: 'Enterprise', source: 'pricing_page' } }) : navigate('/employee/register')}
+                                        onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact', { state: { plan: 'Enterprise', source: 'pricing_page' } }) : navigate('/welcome')}
                                         variant={plan.variant}
                                         className={`w-full h-8 sm:h-11 rounded-md font-bold text-[7px] sm:text-[10px] uppercase tracking-widest transition-all duration-300 ${plan.popular || i === 0
                                             ? 'bg-[#6374f2] hover:bg-[#4f5ed9] text-white shadow-md'
@@ -964,7 +1175,7 @@ const LandingPage = () => {
                                     {demoCta.demoDescription}
                                 </p>
                                 <div className="flex flex-row gap-2 sm:gap-4">
-                                    <Button onClick={() => navigate('/admin/register')} className="h-10 sm:h-16 px-3 sm:px-10 bg-primary-600 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-primary-700 transition-colors">
+                                    <Button onClick={() => navigate('/welcome')} className="h-10 sm:h-16 px-3 sm:px-10 bg-primary-600 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-primary-700 transition-colors">
                                         {demoCta.demoCtaPrimary}
                                     </Button>
                                     <Button onClick={() => navigate('/contact')} className="h-10 sm:h-16 px-3 sm:px-10 bg-white text-slate-900 dark:bg-slate-900 dark:text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -1205,13 +1416,13 @@ const LandingPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 text-center sm:text-left">
                         <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6 sm:space-y-8 flex flex-col items-center sm:items-start">
                             <div className="flex items-center gap-3">
-                                <img src="/dintask-logo.png" alt="DinTask" className="h-24 sm:h-32 w-24 sm:w-32 object-contain" />
+                                <img src={footerContent.footerLogoUrl || "/dintask-logo.png"} alt="DinTask" className="h-24 sm:h-32 w-24 sm:w-32 object-contain" />
                                 <span className="text-4xl font-black tracking-tighter text-white italic uppercase whitespace-nowrap">
                                     Din<span className="text-primary-600">Task</span>
                                 </span>
                             </div>
                             <p className="text-slate-400 max-w-sm font-medium leading-relaxed text-sm sm:text-base">
-                                Empowering teams with tactical workspace solutions since 2026. Built by engineers, for engineers.
+                                {footerContent.footerDescription}
                             </p>
                             <div className="flex gap-4">
                                 {/* Icons removed as per user request to only show text links */}
@@ -1219,11 +1430,7 @@ const LandingPage = () => {
                         </div>
 
                         {/* Link Columns */}
-                        {[
-                            { title: 'Product', links: ['Features', 'Pricing'] },
-                            { title: 'Company', links: ['About', 'Contact'] },
-                            { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
-                        ].map(col => (
+                        {(footerContent.footerLinks || []).map(col => (
                             <div key={col.title} className="flex flex-col items-center sm:items-start">
                                 <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white mb-6 sm:mb-8">{col.title}</h4>
                                 <ul className="space-y-4">
@@ -1259,7 +1466,7 @@ const LandingPage = () => {
 
                     <div className="mt-24 pt-8 border-t border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                            © 2026 DinTask Inc. All rights reserved.
+                            {footerContent.footerCopyright}
                         </p>
                         <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
                             <Lock size={12} /> Military Grade Encryption v4.2
@@ -1303,7 +1510,7 @@ const LandingPage = () => {
                     </span>
                 </a>
             </div>
-        </main>
+        </main >
     );
 };
 

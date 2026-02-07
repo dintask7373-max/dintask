@@ -130,6 +130,7 @@ import ContactPage from '@/modules/public/pages/ContactPage';
 import Privacy from '@/modules/public/pages/Privacy';
 import Terms from '@/modules/public/pages/Terms';
 import Cookies from '@/modules/public/pages/Cookies';
+import Welcome from '@/modules/public/pages/Welcome';
 
 // Layouts
 import CRMLayout from '@/shared/layouts/CRMLayout';
@@ -139,6 +140,7 @@ const AppRouter = () => {
         <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
