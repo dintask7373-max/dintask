@@ -1,15 +1,16 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import mockSales from '../data/mockSales.json';
+import api from '@/lib/api';
+import { toast } from 'sonner';
 
 const useSalesStore = create(
     persist(
         (set, get) => ({
-            salesReps: mockSales,
+            salesReps: [],
             loading: false,
             error: null,
-            
-            // Sales activities store
+
+            // Sales activities store (Keeping mock for now as requested only for users integration)
             salesActivities: [
                 {
                     id: 'ACT001',
@@ -23,59 +24,62 @@ const useSalesStore = create(
                     duration: '30',
                     outcome: 'positive',
                     createdAt: '2026-01-28T14:30:00'
-                },
-                {
-                    id: 'ACT002',
-                    type: 'email',
-                    title: 'Send proposal to XYZ Ltd',
-                    description: 'Sent detailed proposal for software solution',
-                    clientId: 'C002',
-                    dealId: 'D002',
-                    salesRepId: 'S001',
-                    date: '2026-01-27T10:15:00',
-                    duration: null,
-                    outcome: 'sent',
-                    createdAt: '2026-01-27T10:15:00'
-                },
-                {
-                    id: 'ACT003',
-                    type: 'meeting',
-                    title: 'Client meeting with Global Tech',
-                    description: 'In-person meeting to discuss requirements',
-                    clientId: 'C005',
-                    dealId: null,
-                    salesRepId: 'S001',
-                    date: '2026-01-29T11:00:00',
-                    duration: '60',
-                    outcome: 'scheduled',
-                    createdAt: '2026-01-26T16:45:00'
                 }
             ],
 
             fetchSalesReps: async () => {
                 set({ loading: true });
-                // Simulate API delay
-                await new Promise((resolve) => setTimeout(resolve, 500));
-                set({ loading: false });
+                try {
+                    const res = await api('/admin/users');
+                    if (res.success) {
+                        const allUsers = res.data || [];
+                        // Filter for Sales roles
+                        const sales = allUsers.filter(u => u.role === 'sales' || u.role === 'sales_executive');
+
+                        // Map to preserve UI fields that aren't in backend yet (mocking stats)
+                        const mappedSales = sales.map(rep => ({
+                            ...rep,
+                            id: rep._id, // Ensure ID compatibility
+                            totalSales: rep.totalSales || 0,
+                            activeDeals: rep.activeDeals || 0,
+                            conversionRate: rep.conversionRate || 0,
+                            status: rep.status || 'active'
+                        }));
+
+                        set({ salesReps: mappedSales, loading: false });
+                    }
+                } catch (error) {
+                    console.error("Fetch Sales Reps Error", error);
+                    set({ loading: false, error: error.message });
+                }
             },
 
-            addSalesRep: (salesRep) => {
-                set((state) => ({
-                    salesReps: [
-                        ...state.salesReps,
-                        {
-                            ...salesRep,
-                            id: `S${Date.now()}`,
-                            status: 'active',
-                            totalSales: 0,
-                            activeDeals: 0,
-                            conversionRate: 0,
-                            clients: 0,
-                            performance: [],
-                            recentSales: []
-                        },
-                    ],
-                }));
+            addSalesRep: async (salesRepData) => {
+                set({ loading: true });
+                try {
+                    const res = await api('/admin/add-member', {
+                        method: 'POST',
+                        body: { ...salesRepData, role: 'sales_executive' }
+                    });
+
+                    if (res.success) {
+                        set((state) => ({
+                            salesReps: [...state.salesReps, {
+                                ...res.data,
+                                id: res.data._id,
+                                totalSales: 0,
+                                activeDeals: 0,
+                                conversionRate: 0
+                            }],
+                            loading: false
+                        }));
+                        toast.success('Sales Representative added successfully');
+                    }
+                } catch (error) {
+                    console.error("Add Sales Rep Error", error);
+                    toast.error(error.message || 'Failed to add sales rep');
+                    set({ loading: false });
+                }
             },
 
             updateSalesRep: (salesRepId, updatedData) => {
@@ -86,10 +90,20 @@ const useSalesStore = create(
                 }));
             },
 
-            deleteSalesRep: (salesRepId) => {
-                set((state) => ({
-                    salesReps: state.salesReps.filter((salesRep) => salesRep.id !== salesRepId),
-                }));
+            deleteSalesRep: async (salesRepId) => {
+                try {
+                    await api(`/admin/users/${salesRepId}`, {
+                        method: 'DELETE',
+                        body: { role: 'sales_executive' }
+                    });
+                    set((state) => ({
+                        salesReps: state.salesReps.filter((salesRep) => salesRep.id !== salesRepId),
+                    }));
+                    toast.success('Sales Representative removed');
+                } catch (error) {
+                    console.error("Delete Sales Rep Error", error);
+                    toast.error(error.message || 'Failed to remove sales rep');
+                }
             },
 
             getSalesRepByEmail: (email) => {

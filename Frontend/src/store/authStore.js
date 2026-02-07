@@ -34,7 +34,12 @@ const useAuthStore = create(
                     if (response.success) {
                         const rawRole = response.user.role || selectedRole;
                         // Frontend expects 'superadmin', backend might send 'super_admin'
-                        const normalizedRole = rawRole === 'super_admin' ? 'superadmin' : rawRole;
+                        // Also normalize 'sales_executive' to 'sales'
+                        let normalizedRole = rawRole;
+                        if (rawRole === 'super_admin') normalizedRole = 'superadmin';
+                        if (rawRole === 'sales_executive') normalizedRole = 'sales';
+
+                        console.log('[AuthStore] Login Success - Raw:', rawRole, 'Normalized:', normalizedRole);
 
                         set({
                             user: response.user,
@@ -92,7 +97,9 @@ const useAuthStore = create(
                     if (response.success) {
                         const rawRole = response.data.role || response.user.role;
                         // Helper to keep role consistent
-                        const normalizedRole = rawRole === 'super_admin' ? 'superadmin' : rawRole;
+                        let normalizedRole = rawRole;
+                        if (rawRole === 'super_admin') normalizedRole = 'superadmin';
+                        if (rawRole === 'sales_executive') normalizedRole = 'sales';
 
                         // If role changed (e.g. from super_admin to superadmin), update it
                         set({
