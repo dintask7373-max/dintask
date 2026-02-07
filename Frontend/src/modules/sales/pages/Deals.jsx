@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     CheckSquare,
     Filter,
@@ -42,7 +42,7 @@ const Deals = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { salesReps, getSalesRepByEmail } = useSalesStore();
-    const { leads, addLead, editLead, deleteLead, pipelineStages } = useCRMStore();
+    const { leads, fetchLeads, addLead, editLead, deleteLead, pipelineStages } = useCRMStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStage, setSelectedStage] = useState('all');
@@ -72,6 +72,11 @@ const Deals = () => {
         status: 'New',
         priority: 'medium'
     });
+
+    // Fetch leads on mount
+    useEffect(() => {
+        fetchLeads();
+    }, []);
 
     // Get current sales rep data
     const salesRep = useMemo(() => {
@@ -178,7 +183,7 @@ const Deals = () => {
     };
 
     const handleViewDeal = (dealId) => {
-        const deal = leads.find(l => l.id === dealId);
+        const deal = leads.find(l => (l._id || l.id) === dealId);
         if (deal) {
             setSelectedDeal(deal);
             setIsViewOpen(true);
@@ -187,7 +192,7 @@ const Deals = () => {
 
     const handleDeleteDeal = () => {
         if (selectedDeal) {
-            deleteLead(selectedDeal.id);
+            deleteLead(selectedDeal._id || selectedDeal.id);
             toast.success("Deal deleted successfully");
             setIsViewOpen(false);
             setSelectedDeal(null);
@@ -213,7 +218,7 @@ const Deals = () => {
             toast.error("Name is required");
             return;
         }
-        editLead(selectedDeal.id, {
+        editLead(selectedDeal._id || selectedDeal.id, {
             ...editDealData,
             amount: parseFloat(editDealData.amount) || 0
         });
@@ -342,7 +347,7 @@ const Deals = () => {
                             </TableHeader>
                             <TableBody>
                                 {filteredDeals.map((deal) => (
-                                    <TableRow key={deal.id} className="group cursor-pointer border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors" onClick={() => handleViewDeal(deal.id)}>
+                                    <TableRow key={deal._id || deal.id} className="group cursor-pointer border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors" onClick={() => handleViewDeal(deal._id || deal.id)}>
                                         <TableCell className="px-6 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="size-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
@@ -350,7 +355,7 @@ const Deals = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none mb-1">{deal.company || deal.name}</p>
-                                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Node ID: {String(deal.id).substring(0, 8)}</p>
+                                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Node ID: {String(deal._id || deal.id).substring(0, 8)}</p>
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -385,7 +390,7 @@ const Deals = () => {
                     {/* Mobile View */}
                     <div className="md:hidden space-y-3 p-3">
                         {filteredDeals.map((deal) => (
-                            <div key={deal.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-3" onClick={() => handleViewDeal(deal.id)}>
+                            <div key={deal._id || deal.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-3" onClick={() => handleViewDeal(deal._id || deal.id)}>
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="size-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center text-xs font-black text-primary-600">

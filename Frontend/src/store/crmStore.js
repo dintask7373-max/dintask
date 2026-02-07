@@ -1,298 +1,204 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import api from '@/lib/api';
 import useTaskStore from './taskStore';
+import { toast } from 'sonner';
 
 const useCRMStore = create(
   persist(
     (set, get) => ({
-      // Leads Management
-      leads: [
-        {
-          id: 'LEAD-001',
-          name: 'John Doe',
-          mobile: '+1234567890',
-          email: 'john.doe@example.com',
-          company: 'ABC Corp',
-          source: 'Website',
-          owner: '103',
-          status: 'New', // Pipeline Stage
-          approvalStatus: 'none', // none, pending_project, approved_project
-          notes: 'Interested in our services',
-          amount: 5000,
-          priority: 'high',
-          deadline: '2026-02-15T00:00:00.000Z',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'LEAD-002',
-          name: 'Jane Smith',
-          mobile: '+0987654321',
-          email: 'jane.smith@example.com',
-          company: 'XYZ Inc',
-          source: 'Call',
-          owner: 'EMP-002',
-          status: 'Contacted',
-          approvalStatus: 'none',
-          notes: 'Follow up next week',
-          amount: 12000,
-          priority: 'medium',
-          deadline: '2026-03-01T00:00:00.000Z',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'LEAD-003',
-          name: 'Robert Stark',
-          mobile: '+1987654321',
-          email: 'robert@starkindustries.com',
-          company: 'Stark Ind',
-          source: 'Referral',
-          owner: '103',
-          status: 'Won',
-          approvalStatus: 'pending_project', // Waiting for Admin to assign Manager
-          notes: 'Deal closed. Needs project setup.',
-          amount: 500000,
-          priority: 'urgent',
-          deadline: '2026-04-10T00:00:00.000Z',
-          createdAt: new Date().toISOString(),
-        },
-      ],
+      leads: [],
+      salesExecutives: [],
+      pendingProjects: [],
+      loading: false,
+      error: null,
 
       // Sales Pipeline Stages (Configurable)
       pipelineStages: ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'],
 
-      // Sales Pipeline
-      pipeline: {
-        New: ['LEAD-001'],
-        Contacted: ['LEAD-002'],
-        'Meeting Done': [],
-        'Proposal Sent': [],
-        Won: ['LEAD-003'],
-        Lost: [],
+      // Fetch Leads
+      fetchLeads: async () => {
+        set({ loading: true });
+        try {
+          const res = await api('/crm');
+          if (res.success) {
+            set({ leads: res.data, loading: false, error: null });
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          toast.error("Failed to fetch leads");
+        }
       },
 
-      // Follow-ups & Reminders
-      followUps: [],
+      // Fetch Sales Executives
+      fetchSalesExecutives: async () => {
+        try {
+          const res = await api('/crm/sales-executives');
+          if (res.success) {
+            set({ salesExecutives: res.data });
+          }
+        } catch (error) {
+          console.error("Failed to fetch sales execs", error);
+        }
+      },
 
-      // Lead Status History
-      leadHistory: [],
+      // Fetch Pending Projects
+      fetchPendingProjects: async () => {
+        try {
+          const res = await api('/crm/pending-projects');
+          if (res.success) {
+            set({ pendingProjects: res.data }); // Store separately or filter from leads
+          }
+        } catch (error) {
+          console.error("Failed to fetch pending projects", error);
+        }
+      },
 
       // Add Lead
-      addLead: (leadData, autoCreateTask = false) => {
-        const newLead = {
-          id: `LEAD-${Math.floor(1000 + Math.random() * 9000)}`,
-          createdAt: new Date().toISOString(),
-          amount: 0,
-          priority: 'medium',
-          deadline: null,
-          approvalStatus: 'none',
-          ...leadData,
-        };
-        set((state) => ({
-          leads: [...state.leads, newLead],
-          pipeline: {
-            ...state.pipeline,
-            New: [...state.pipeline.New, newLead.id],
-          },
-        }));
-
-        // Optionally create task for new lead
-        if (autoCreateTask) {
-          const taskStore = useTaskStore.getState();
-          taskStore.addTask({
-            title: `Follow up with new lead: ${newLead.name}`,
-            description: `Initial contact with ${newLead.name} from ${newLead.company}`,
-            assignedTo: [newLead.owner],
-            deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-            status: 'pending',
-            priority: 'high',
-            crmLink: {
-              type: 'lead',
-              id: newLead.id,
-            },
+      addLead: async (leadData) => {
+        set({ loading: true });
+        try {
+          const res = await api('/crm', {
+            method: 'POST',
+            body: leadData
           });
+          if (res.success) {
+            const newLead = res.data;
+            set((state) => ({
+              leads: [...state.leads, newLead],
+              loading: false
+            }));
+            toast.success("Lead added successfully");
+            return newLead;
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          toast.error(error.message || "Failed to add lead");
         }
-
-        return newLead;
       },
 
-      // Edit Lead
-      editLead: (leadId, leadData) => {
-        set((state) => ({
-          leads: state.leads.map((lead) =>
-            lead.id === leadId ? { ...lead, ...leadData } : lead
-          ),
-        }));
+      // Update Lead
+      editLead: async (leadId, leadData) => {
+        try {
+          const res = await api(`/crm/${leadId}`, {
+            method: 'PUT',
+            body: leadData
+          });
+          if (res.success) {
+            const updatedLead = res.data;
+            set((state) => ({
+              leads: state.leads.map(l => l._id === leadId ? updatedLead : l)
+            }));
+            toast.success("Lead updated");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to update lead");
+        }
       },
 
       // Delete Lead
-      deleteLead: (leadId) => {
-        set((state) => {
-          // Remove from leads
-          const updatedLeads = state.leads.filter((lead) => lead.id !== leadId);
-
-          // Remove from pipeline
-          const updatedPipeline = { ...state.pipeline };
-          for (const stage in updatedPipeline) {
-            updatedPipeline[stage] = updatedPipeline[stage].filter((id) => id !== leadId);
+      deleteLead: async (leadId) => {
+        try {
+          const res = await api(`/crm/${leadId}`, {
+            method: 'DELETE'
+          });
+          if (res.success) {
+            set((state) => ({
+              leads: state.leads.filter(l => l._id !== leadId)
+            }));
+            toast.success("Lead deleted successfully");
           }
-
-          return {
-            leads: updatedLeads,
-            pipeline: updatedPipeline,
-          };
-        });
+        } catch (error) {
+          toast.error(error.message || "Failed to delete lead");
+        }
       },
 
       // Assign Lead
-      assignLead: (leadId, employeeId) => {
-        set((state) => ({
-          leads: state.leads.map((lead) =>
-            lead.id === leadId ? { ...lead, owner: employeeId } : lead
-          ),
-        }));
-      },
-
-      // Move Lead Between Pipeline Stages
-      moveLead: (leadId, fromStage, toStage) => {
-        set((state) => {
-          const lead = state.leads.find((l) => l.id === leadId);
-          if (!lead) return state;
-
-          const updatedPipeline = { ...state.pipeline };
-
-          // Safety check: ensure arrays exist
-          if (!updatedPipeline[fromStage]) updatedPipeline[fromStage] = [];
-          if (!updatedPipeline[toStage]) updatedPipeline[toStage] = [];
-
-          updatedPipeline[fromStage] = updatedPipeline[fromStage].filter((id) => id !== leadId);
-          updatedPipeline[toStage] = [...updatedPipeline[toStage], leadId];
-
-          // Add to history
-          const historyEntry = {
-            leadId,
-            stage: toStage,
-            changedBy: 'current-user', // Replace with actual user ID
-            changedAt: new Date().toISOString(),
-          };
-
-          // Update lead status
-          let updatedApprovalStatus = lead.approvalStatus;
-
-          // PROPOSAL: If moving to WON, automatically set to pending_project if not already
-          if (toStage === 'Won' && lead.approvalStatus === 'none') {
-            updatedApprovalStatus = 'pending_project';
+      assignLead: async (leadId, employeeId) => {
+        try {
+          const res = await api(`/crm/${leadId}/assign`, {
+            method: 'PUT',
+            body: { employeeId }
+          });
+          if (res.success) {
+            const updatedLead = res.data;
+            set((state) => ({
+              leads: state.leads.map(l => l._id === leadId ? updatedLead : l)
+            }));
+            toast.success("Lead assigned");
           }
-
-          const updatedLeads = state.leads.map((l) =>
-            l.id === leadId ? { ...l, status: toStage, approvalStatus: updatedApprovalStatus } : l
-          );
-
-          return {
-            pipeline: updatedPipeline,
-            leadHistory: [...state.leadHistory, historyEntry],
-            leads: updatedLeads,
-          };
-        });
+        } catch (error) {
+          toast.error(error.message || "Failed to assign lead");
+        }
       },
 
-      requestProjectConversion: (leadId) => {
-        set((state) => ({
-          leads: state.leads.map(lead =>
-            lead.id === leadId ? { ...lead, approvalStatus: 'pending_project' } : lead
-          )
-        }));
+      // Request Project Conversion
+      requestProjectConversion: async (leadId) => {
+        try {
+          const res = await api(`/crm/${leadId}/request-project`, {
+            method: 'PUT'
+          });
+          if (res.success) {
+            set((state) => ({
+              leads: state.leads.map(l => l._id === leadId ? { ...l, approvalStatus: 'pending_project' } : l)
+            }));
+            toast.success("Project requested");
+            get().fetchPendingProjects(); // Refresh pending
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to request project");
+        }
       },
 
-      approveProject: (leadId, managerId) => {
-        set((state) => ({
-          leads: state.leads.map(lead =>
-            lead.id === leadId ? { ...lead, approvalStatus: 'approved_project', projectManager: managerId } : lead
-          )
-        }));
+      // Approve Project
+      approveProject: async (leadId, managerId) => {
+        try {
+          const res = await api(`/crm/${leadId}/approve-project`, {
+            method: 'POST',
+            body: { managerId }
+          });
+          if (res.success) {
+            set((state) => ({
+              leads: state.leads.map(l => l._id === leadId ? { ...l, approvalStatus: 'approved_project', projectRef: res.data._id } : l),
+              pendingProjects: state.pendingProjects.filter(p => p._id !== leadId)
+            }));
+            toast.success("Project approved and assigned");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to approve project");
+        }
       },
 
-      // Add Follow-up
-      addFollowUp: (followUpData) => {
-        const newFollowUp = {
-          id: `FUP-${Math.floor(1000 + Math.random() * 9000)}`,
-          createdAt: new Date().toISOString(),
-          ...followUpData,
-        };
-        set((state) => ({
-          followUps: [...state.followUps, newFollowUp],
-        }));
-
-        // Auto-create task in task management system
-        const taskStore = useTaskStore.getState();
-        const lead = get().leads.find(l => l.id === followUpData.leadId);
-
-        taskStore.addTask({
-          title: `${followUpData.type} with ${lead?.name}`,
-          description: followUpData.notes || `Follow up with ${lead?.name} via ${followUpData.type}`,
-          assignedTo: [followUpData.leadId],
-          deadline: followUpData.scheduledAt,
-          status: 'pending',
-          priority: 'medium',
-          crmLink: {
-            type: 'followUp',
-            id: newFollowUp.id,
-            leadId: followUpData.leadId,
-          },
-        });
-
-        return newFollowUp;
-      },
-
-      // Update Follow-up
-      updateFollowUp: (followUpId, followUpData) => {
-        set((state) => ({
-          followUps: state.followUps.map((followUp) =>
-            followUp.id === followUpId ? { ...followUp, ...followUpData } : followUp
-          ),
-        }));
-      },
-
-      // Delete Follow-up
-      deleteFollowUp: (followUpId) => {
-        set((state) => ({
-          followUps: state.followUps.filter((followUp) => followUp.id !== followUpId),
-        }));
-      },
-
-      // Get Leads by Status
-      getLeadsByStatus: (status) => {
-        return get().leads.filter((lead) => lead.status === status);
-      },
-
-      // Get Leads by Owner
-      getLeadsByOwner: (ownerId) => {
-        return get().leads.filter((lead) => lead.owner === ownerId);
-      },
-
-      // Get Lead History
-      getLeadHistory: (leadId) => {
-        return get().leadHistory.filter((entry) => entry.leadId === leadId);
-      },
-
-      // Get Follow-ups for Lead
-      getFollowUpsByLead: (leadId) => {
-        return get().followUps.filter((followUp) => followUp.leadId === leadId);
-      },
-
-      // Get Pipeline Data
+      // Helper: Get Pipeline Data
       getPipelineData: () => {
-        const state = get();
-        return Object.entries(state.pipeline).map(([stage, leadIds]) => ({
+        const { leads, pipelineStages } = get();
+        // Structure: [ { stage: 'New', leads: [...] }, ... ]
+        return pipelineStages.map(stage => ({
           stage,
-          leadIds,
-          leads: leadIds.map((id) => state.leads.find((lead) => lead.id === id)),
+          leads: leads.filter(l => l.status === stage)
         }));
       },
 
-      // Get Pending Projects
+      // Helper: Move Lead (Calls editLead)
+      moveLead: async (leadId, fromStage, toStage) => {
+        // Optimistic update
+        set(state => ({
+          leads: state.leads.map(l => l._id === leadId ? { ...l, status: toStage } : l)
+        }));
+
+        // API Call
+        try {
+          await get().editLead(leadId, { status: toStage });
+        } catch (err) {
+          // Revert if failed (optional, but good practice)
+        }
+      },
+
+      // Helper: Get Pending Projects (Sync selector from state)
       getPendingProjects: () => {
         return get().leads.filter(lead => lead.status === 'Won' && lead.approvalStatus === 'pending_project');
       }
+
     }),
     {
       name: 'dintask-crm-storage',

@@ -76,6 +76,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         ...(role === 'manager'
             ? [
                 { name: 'Dashboard', path: '/manager', icon: LayoutDashboard },
+                { name: 'My Projects', path: '/manager/projects', icon: ClipboardCheck }, // New Projects Link
                 { name: 'Assign Task', path: '/manager/assign-task', icon: CheckSquare },
                 { name: 'My Tasks', path: '/manager/my-tasks', icon: ListChecks },
                 { name: 'Delegation', path: '/manager/delegation', icon: Users },

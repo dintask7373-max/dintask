@@ -39,32 +39,36 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const ProjectApprovals = () => {
-  const { getPendingProjects, approveProject } = useCRMStore();
+  const { pendingProjects, fetchPendingProjects, approveProject } = useCRMStore();
   const { managers } = useManagerStore();
 
-  // Get leads that are Won but waiting for project setup
-  const pendingProjects = getPendingProjects();
+  React.useEffect(() => {
+    fetchPendingProjects();
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedManager, setSelectedManager] = useState('');
   const [parent] = useAutoAnimate();
 
-  const filteredProjects = pendingProjects.filter(project =>
+  // Ensure pendingProjects is an array (state initialization checks)
+  const projectsList = Array.isArray(pendingProjects) ? pendingProjects : [];
+
+  const filteredProjects = projectsList.filter(project =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.company.toLowerCase().includes(searchTerm.toLowerCase())
+    project.company?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedManager) {
       toast.error("Please select a manager to assign this project.");
       return;
     }
 
-    // Approve and Assign
-    approveProject(selectedProject.id, selectedManager);
+    // Approve and Assign use _id
+    await approveProject(selectedProject._id || selectedProject.id, selectedManager);
 
-    toast.success(`Project assigned to ${managers.find(m => m.id === selectedManager)?.name}`);
+    toast.success(`Project assigned to ${managers.find(m => (m._id || m.id) === selectedManager)?.name}`);
     setSelectedProject(null);
     setSelectedManager('');
   };
@@ -109,7 +113,7 @@ const ProjectApprovals = () => {
           </div>
         ) : (
           filteredProjects.map((project) => (
-            <Card key={project.id} className="border-none shadow-md hover:shadow-xl transition-shadow duration-300 group overflow-hidden bg-white dark:bg-slate-900 flex flex-col rounded-3xl h-full border border-slate-50 dark:border-slate-800/50">
+            <Card key={project._id || project.id} className="border-none shadow-md hover:shadow-xl transition-shadow duration-300 group overflow-hidden bg-white dark:bg-slate-900 flex flex-col rounded-3xl h-full border border-slate-50 dark:border-slate-800/50">
               <div className="h-1.5 w-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
               <CardContent className="p-6 flex flex-col h-full">
                 <div className="flex justify-between items-start mb-4">
@@ -187,7 +191,7 @@ const ProjectApprovals = () => {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   {managers.map(manager => (
-                    <SelectItem key={manager.id} value={manager.id} className="text-xs font-medium py-2.5">
+                    <SelectItem key={manager._id || manager.id} value={manager._id || manager.id} className="text-xs font-medium py-2.5">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${manager.name}`} />

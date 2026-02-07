@@ -40,14 +40,20 @@ import { cn } from '@/shared/utils/cn';
 import useAuthStore from '@/store/authStore';
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
-import useNotificationStore from '@/store/notificationStore';
+import useProjectStore from '@/store/projectStore';
 
 const AssignTask = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const addTask = useTaskStore(state => state.addTask);
+    const { addTask, tasks, fetchTasks } = useTaskStore();
     const employees = useEmployeeStore(state => state.employees);
     const addNotification = useNotificationStore(state => state.addNotification);
+    const { projects, fetchProjects } = useProjectStore();
+
+    React.useEffect(() => {
+        fetchProjects();
+        fetchTasks();
+    }, []);
 
     const subEmployees = employees.filter(e => e.managerId === user?.id);
 
@@ -58,7 +64,8 @@ const AssignTask = () => {
         description: '',
         priority: 'medium',
         assignedTo: '',
-        labels: ''
+        labels: '',
+        projectId: 'none'
     });
 
     const handleInputChange = (e) => {
@@ -79,41 +86,32 @@ const AssignTask = () => {
 
         setIsSubmitting(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            const newTask = {
+            // Task Object matches Backend Schema
+            const newTaskPayload = {
                 title: formData.title,
                 description: formData.description,
-                deadline: date.toISOString(),
+                deadline: date ? date.toISOString() : null,
                 priority: formData.priority,
-                status: 'pending',
-                assignedTo: [formData.assignedTo],
-                assignedBy: user.id || 'manager',
-                assignedToManager: user.id,
-                delegatedBy: user.id,
-                createdAt: new Date().toISOString(),
-                progress: 0,
-                labels: formData.labels.split(',').map(l => l.trim()).filter(l => l),
-                activity: [{
-                    type: 'system',
-                    user: user.name || 'Manager',
-                    content: 'initialized task deployment',
-                    time: 'Just now'
-                }]
+                assignedTo: [formData.assignedTo], // Backend expects array
+                project: formData.projectId === 'none' ? undefined : formData.projectId,
+                labels: formData.labels.split(',').map(l => l.trim()).filter(l => l)
             };
 
-            addTask(newTask);
+            await addTask(newTaskPayload);
+
+            // Notification logic (Optional: Backend can handle notifications too)
             addNotification({
                 title: 'New Task Assignment',
-                description: `Directive: "${newTask.title}" initiated by ${user.name}`,
+                description: `Directive: "${newTaskPayload.title}" initiated by ${user.name}`,
                 category: 'task',
                 recipientId: formData.assignedTo
             });
 
-            toast.success("Tactical deployment successful");
+            toast.success("Task created and assigned successfully");
             navigate('/manager/delegation');
         } catch (error) {
-            toast.error("Deployment failed");
+            console.error(error);
+            toast.error("Failed to create task");
         } finally {
             setIsSubmitting(false);
         }
@@ -224,6 +222,26 @@ const AssignTask = () => {
                         </CardHeader>
                         <CardContent className="p-5 space-y-5">
                             <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Assign to Project (Optional)</Label>
+                                <Select
+                                    value={formData.projectId}
+                                    onValueChange={(val) => handleSelectChange('projectId', val)}
+                                >
+                                    <SelectTrigger className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4">
+                                        <SelectValue placeholder="Select Project" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl h-60">
+                                        <SelectItem value="none" className="text-[10px] font-black uppercase">No Project</SelectItem>
+                                        {projects.map(project => (
+                                            <SelectItem key={project._id} value={project._id} className="text-[10px] font-black uppercase">
+                                                {project.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset ID</Label>
                                 <Select
                                     value={formData.assignedTo}
@@ -297,21 +315,20 @@ const AssignTask = () => {
                 </div>
             </div>
 
-            {/* Recent Deployment History - High Density List */}
             <div className="mt-8 sm:mt-12">
                 <div className="flex items-center gap-2 mb-5 px-1">
                     <div className="h-4 w-1 bg-primary-600 rounded-full" />
                     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">Recent Deployments</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {useTaskStore(state => state.tasks)
-                        .filter(t => t.delegatedBy === user?.id)
+                    {tasks
+                        .filter(t => t.assignedBy === user?.id || t.delegatedBy === user?.id)
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                         .slice(0, 3)
                         .map(task => {
                             const assignee = employees.find(e => task.assignedTo?.includes(e.id));
                             return (
-                                <Card key={task.id} className="border-none shadow-sm hover:shadow-md transition-all bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
+                                <Card key={task._id || task.id} className="border-none shadow-sm hover:shadow-md transition-all bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase leading-tight line-clamp-1 group-hover:text-primary-600 transition-colors">{task.title}</h3>

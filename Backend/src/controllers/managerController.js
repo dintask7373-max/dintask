@@ -17,12 +17,23 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
-// @desc    Get all employees (for manager view)
+// @desc    Get all employees (for manager view - workspace-specific)
 // @route   GET /api/v1/manager/employees
 // @access  Private (Manager)
 exports.getEmployees = async (req, res, next) => {
   try {
-    const employees = await Employee.find();
+    // Get manager's adminId
+    const manager = await Manager.findById(req.user.id);
+    if (!manager) {
+      return next(new ErrorResponse('Manager not found', 404));
+    }
+
+    // Fetch only employees from THIS manager's workspace
+    const employees = await Employee.find({
+      adminId: manager.adminId,
+      status: 'active'  // Only active employees
+    });
+
     res.status(200).json({
       success: true,
       count: employees.length,

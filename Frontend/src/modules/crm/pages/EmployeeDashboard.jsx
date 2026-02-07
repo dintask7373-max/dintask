@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
@@ -38,35 +38,26 @@ const EmployeeDashboard = () => {
   const { user } = useAuthStore();
   const { tasks } = useTaskStore();
   const {
-    leads,
     followUps,
   } = useCRMStore();
 
   const currentUserId = user?.id;
 
-  // Filter data for current user
-  const assignedLeads = useMemo(() => {
-    if (!currentUserId) return [];
-    return leads.filter(lead => lead.owner === currentUserId);
-  }, [leads, currentUserId]);
-
+  // Today's follow-ups
   const todayFollowUps = useMemo(() => {
-    if (!currentUserId) return [];
+    if (!currentUserId || !followUps) return [];
     const today = new Date();
     return followUps.filter(followUp => {
-      const lead = leads.find(l => l.id === followUp.leadId);
-      const isOwner = lead?.owner === currentUserId;
       const followUpDate = new Date(followUp.scheduledAt);
       return (
-        isOwner &&
         followUpDate.toDateString() === today.toDateString() &&
         followUp.status !== 'Completed'
       );
     });
-  }, [followUps, leads, currentUserId]);
+  }, [followUps, currentUserId]);
 
   const pendingTasks = useMemo(() => {
-    if (!currentUserId) return [];
+    if (!currentUserId || !tasks) return [];
     return tasks.filter(task =>
       task.status !== 'completed' &&
       (Array.isArray(task.assignedTo) ? task.assignedTo.includes(currentUserId) : task.assignedTo === currentUserId)
@@ -100,12 +91,11 @@ const EmployeeDashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
-          { label: 'Assigned Leads', value: assignedLeads.length, icon: Users, color: 'indigo', trend: 'Total' },
           { label: 'Follow-ups', value: todayFollowUps.length, icon: CalendarIcon, color: 'amber', trend: 'Today' },
           { label: 'Pending Tasks', value: pendingTasks.length, icon: ListTodo, color: 'emerald', trend: 'Active' },
-          { label: 'Conversion', value: '14.2%', icon: TrendingUp, color: 'primary', trend: 'Rate' }
+          { label: 'Completion Rate', value: '85%', icon: TrendingUp, color: 'primary', trend: 'This Week' }
         ].map((stat, i) => (
           <motion.div key={i} variants={fadeInUp}>
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden group border border-slate-50 dark:border-slate-800/50 hover:shadow-xl hover:shadow-primary-500/5 transition-all">
@@ -192,17 +182,10 @@ const EmployeeDashboard = () => {
         </Card>
       </motion.div>
 
-      {/* Sections with Tabs */}
       <motion.div variants={fadeInUp}>
-        <Tabs defaultValue="leads" className="w-full">
+        <Tabs defaultValue="followups" className="w-full">
           <div className="flex items-center justify-center mb-6">
             <TabsList className="bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl h-11 w-full max-w-md border border-slate-100 dark:border-slate-800 shadow-sm">
-              <TabsTrigger
-                value="leads"
-                className="flex-1 rounded-xl h-8 text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm"
-              >
-                Leads
-              </TabsTrigger>
               <TabsTrigger
                 value="followups"
                 className="flex-1 rounded-xl h-8 text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm"
@@ -218,55 +201,12 @@ const EmployeeDashboard = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="leads" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-3">
-            {assignedLeads.length > 0 ? (
-              assignedLeads.map((lead) => (
-                <motion.div
-                  key={lead.id}
-                  variants={fadeInUp}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-50 dark:border-slate-800/50 shadow-sm flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 group-hover:text-primary-600 transition-all">
-                      <Users size={20} />
-                    </div>
-                    <div>
-                      <h3 className="text-[11px] font-black uppercase tracking-tight text-slate-900 dark:text-white transition-colors group-hover:text-primary-600">{lead.name}</h3>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{lead.company}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge
-                      className={cn(
-                        "border-none px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest",
-                        lead.status === 'Won' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' :
-                          lead.status === 'Lost' ? 'bg-red-50 text-red-600 dark:bg-red-900/20' :
-                            lead.status === 'Interested' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20' :
-                              'bg-slate-100 text-slate-600 dark:bg-slate-800'
-                      )}
-                    >
-                      {lead.status}
-                    </Badge>
-                    <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">{format(new Date(lead.createdAt), 'dd MMM')}</span>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="py-12 flex flex-col items-center justify-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-                <Users size={40} className="mb-3 opacity-20" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Leads</p>
-              </div>
-            )}
-          </TabsContent>
-
           <TabsContent value="followups" className="mt-0 space-y-3">
             {todayFollowUps.length > 0 ? (
               todayFollowUps.map((followUp) => {
-                const lead = leads.find(l => l.id === followUp.leadId);
                 return (
                   <motion.div
-                    key={followUp.id}
+                    key={followUp._id || followUp.id}
                     variants={fadeInUp}
                     whileTap={{ scale: 0.98 }}
                     className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm group"
@@ -277,8 +217,8 @@ const EmployeeDashboard = () => {
                           <Clock size={18} />
                         </div>
                         <div>
-                          <p className="text-[11px] font-black uppercase tracking-tight text-slate-900 dark:text-white">{lead?.name}</p>
-                          <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest mt-1">{followUp.type} • {format(new Date(followUp.scheduledAt), 'HH:mm')}</p>
+                          <p className="text-[11px] font-black uppercase tracking-tight text-slate-900 dark:text-white">{followUp.type || 'Follow-up'}</p>
+                          <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest mt-1">{format(new Date(followUp.scheduledAt), 'dd MMM • HH:mm')}</p>
                         </div>
                       </div>
                       <Button size="sm" className="h-7 w-7 rounded-lg bg-emerald-500 hover:bg-emerald-600 p-0">
@@ -303,7 +243,7 @@ const EmployeeDashboard = () => {
             {pendingTasks.length > 0 ? (
               pendingTasks.map((task) => (
                 <motion.div
-                  key={task.id}
+                  key={task._id || task.id}
                   variants={fadeInUp}
                   whileTap={{ scale: 0.98 }}
                   className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-50 dark:border-slate-800/50 shadow-sm flex items-center justify-between group"

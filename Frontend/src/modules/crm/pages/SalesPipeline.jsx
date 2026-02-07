@@ -58,7 +58,8 @@ const SalesPipeline = () => {
     addLead,
     editLead,
     deleteLead,
-    pipelineStages
+    pipelineStages,
+    requestProjectConversion
   } = useCRMStore();
 
   const [draggedLead, setDraggedLead] = useState(null);
@@ -316,6 +317,11 @@ const SalesPipeline = () => {
                             <DropdownMenuItem onClick={() => handleEditClick(lead)} className="text-xs font-bold">
                               <Edit2 className="mr-2 h-3 w-3" /> Edit
                             </DropdownMenuItem>
+                            {lead.status === 'Won' && !lead.approvalStatus && (
+                              <DropdownMenuItem onClick={() => requestProjectConversion(lead.id || lead._id)} className="text-xs font-bold text-emerald-600 focus:text-emerald-600">
+                                <Building2 className="mr-2 h-3 w-3" /> Request Project
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="text-red-500 focus:text-red-500 text-xs font-bold" onClick={() => handleDeleteDeal(lead.id)}>
                               <Trash2 className="mr-2 h-3 w-3" /> Delete
                             </DropdownMenuItem>

@@ -22,11 +22,15 @@ import { Button } from '@/shared/components/ui/button';
 
 const TaskHome = () => {
     const navigate = useNavigate();
-    const { tasks } = useTaskStore();
+    const { tasks, fetchTasks } = useTaskStore();
     const { user } = useAuthStore();
     const { notifications } = useNotificationStore();
     const [activeTab, setActiveTab] = useState('today');
     const [listRef] = useAutoAnimate();
+
+    React.useEffect(() => {
+        fetchTasks();
+    }, []);
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
