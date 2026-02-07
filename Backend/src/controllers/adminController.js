@@ -309,9 +309,9 @@ exports.addTeamMember = async (req, res, next) => {
     const adminId = req.user.id;
 
     // Check Limit
-    // const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top
-    // const limitCheck = await checkUserLimit(adminId);
-    // if (!limitCheck.allowed) return next(new ErrorResponse(limitCheck.error, 403));
+    const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top
+    const limitCheck = await checkUserLimit(adminId);
+    if (!limitCheck.allowed) return next(new ErrorResponse(limitCheck.error, 403));
 
     const models = {
       employee: Employee,

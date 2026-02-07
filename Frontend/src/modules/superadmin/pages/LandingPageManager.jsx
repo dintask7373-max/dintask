@@ -36,7 +36,10 @@ const LandingPageManager = () => {
         { id: 'testimonial', label: 'Testimonial', icon: '💬' },
         { id: 'pricing', label: 'Pricing Plans', icon: '💰' },
         { id: 'demo_cta', label: 'Demo CTA', icon: '🎬' },
-        { id: 'footer', label: 'Footer', icon: '📋' }
+        { id: 'social_contact', label: 'Social & Contact', icon: '🌐' },
+        { id: 'privacy_policy', label: 'Privacy Policy', icon: '🔒' },
+        { id: 'terms_service', label: 'Terms of Service', icon: '📜' },
+        { id: 'cookie_policy', label: 'Cookie Policy', icon: '🍪' }
     ];
 
     useEffect(() => {
@@ -618,6 +621,124 @@ const LandingPageManager = () => {
         );
     };
 
+    const renderTacticalSection = () => {
+        const data = sections.tactical_preview || {};
+        const images = data.showcaseImages || [];
+
+        return (
+            <div className="space-y-6">
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Section Title</label>
+                    <input
+                        type="text"
+                        value={data.tacticalTitle || ''}
+                        onChange={(e) => updateSectionData('tactical_preview', 'tacticalTitle', e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                        placeholder="The Tactical Interface."
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Accepts plain text. Use HTML manually if needed for rich styling, or keep it simple.</p>
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Badge Text</label>
+                    <input
+                        type="text"
+                        value={data.tacticalSubtitle || ''}
+                        onChange={(e) => updateSectionData('tactical_preview', 'tacticalSubtitle', e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                        placeholder="Tactical Preview"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Video URL (Left)</label>
+                    <input
+                        type="text"
+                        value={data.tacticalVideoUrl || ''}
+                        onChange={(e) => updateSectionData('tactical_preview', 'tacticalVideoUrl', e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                        placeholder="Path to video (e.g. /meeting-animation.mp4)"
+                    />
+                    <div className="relative mt-2">
+                        <input
+                            type="file"
+                            accept="video/*"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const url = await handleImageUpload(file);
+                                    if (url) updateSectionData('tactical_preview', 'tacticalVideoUrl', url);
+                                }
+                            }}
+                        />
+                        <Button variant="outline" size="sm" className="w-full">
+                            <ImageIcon size={16} className="mr-2" /> Upload Video to Cloudinary
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="mt-8 border-t border-slate-200 pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-slate-900">Showcase Images (Slider)</h3>
+                        <Button
+                            onClick={() => addArrayItem('tactical_preview', 'showcaseImages', '')}
+                            size="sm"
+                            className="bg-primary-600 hover:bg-primary-700"
+                        >
+                            <Plus size={16} className="mr-2" /> Add Image
+                        </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {images.map((img, index) => (
+                            <div key={index} className="space-y-2 border p-4 rounded-lg bg-slate-50 relative group">
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-bold text-slate-600">Image {index + 1}</label>
+                                    <button
+                                        onClick={() => removeArrayItem('tactical_preview', 'showcaseImages', index)}
+                                        className="text-red-500 hover:text-red-700 p-1 rounded-md transition-colors"
+                                        title="Remove Image"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={img || ''}
+                                        onChange={(e) => updateArrayItem('tactical_preview', 'showcaseImages', index, e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                                        placeholder="Image URL"
+                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*,video/*"
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const url = await handleImageUpload(file);
+                                                    if (url) updateArrayItem('tactical_preview', 'showcaseImages', index, url);
+                                                }
+                                            }}
+                                        />
+                                        <Button variant="outline" size="icon" className="shrink-0">
+                                            <ImageIcon size={16} />
+                                        </Button>
+                                    </div>
+                                </div>
+                                {img && (
+                                    <div className="h-40 w-full bg-slate-200 rounded-lg overflow-hidden border border-slate-300 mt-2 relative">
+                                        <img src={img} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderTestimonialSection = () => {
         const data = sections.testimonial || {};
         return (
@@ -886,7 +1007,7 @@ const LandingPageManager = () => {
                                     <div className="relative">
                                         <input
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/*,video/*"
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                             onChange={async (e) => {
                                                 const file = e.target.files[0];
@@ -926,6 +1047,141 @@ const LandingPageManager = () => {
                 </div>
             </div>
         );
+
+    };
+
+    const renderSocialContactSection = () => {
+        const data = sections.social_contact || {};
+        const social = data.socialLinks || {};
+        const contact = data.contactInfo || {};
+
+        return (
+            <div className="space-y-8">
+                <div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Phone Number</label>
+                            <input
+                                type="text"
+                                value={contact.phone || ''}
+                                onChange={(e) => updateSectionData('social_contact', 'contactInfo', { ...contact, phone: e.target.value })}
+                                className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                                placeholder="+919876543210"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
+                            <input
+                                type="email"
+                                value={contact.email || ''}
+                                onChange={(e) => updateSectionData('social_contact', 'contactInfo', { ...contact, email: e.target.value })}
+                                className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                                placeholder="contact@dintask.com"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">WhatsApp Number</label>
+                            <input
+                                type="text"
+                                value={contact.whatsapp || ''}
+                                onChange={(e) => updateSectionData('social_contact', 'contactInfo', { ...contact, whatsapp: e.target.value })}
+                                className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                                placeholder="919876543210"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="border-t border-slate-200 pt-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Social Media Links</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {['facebook', 'twitter', 'youtube', 'linkedin', 'instagram'].map(platform => (
+                            <div key={platform}>
+                                <label className="block text-sm font-bold text-slate-700 mb-2 capitalize">{platform}</label>
+                                <input
+                                    type="text"
+                                    value={social[platform] || ''}
+                                    onChange={(e) => updateSectionData('social_contact', 'socialLinks', { ...social, [platform]: e.target.value })}
+                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                                    placeholder={`https://${platform}.com/...`}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderPolicySection = (sectionKey, title) => {
+        const data = sections[sectionKey] || {};
+        const policySections = data.policySections || [];
+
+        const updatePolicySection = (index, field, value) => {
+            const newSections = [...policySections];
+            newSections[index] = { ...newSections[index], [field]: value };
+            updateSectionData(sectionKey, 'policySections', newSections);
+        };
+
+        const addPolicySection = () => {
+            updateSectionData(sectionKey, 'policySections', [...policySections, { title: '', content: '' }]);
+        };
+
+        const removePolicySection = (index) => {
+            const newSections = policySections.filter((_, i) => i !== index);
+            updateSectionData(sectionKey, 'policySections', newSections);
+        };
+
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-900">{title} Sections</h3>
+                    <Button onClick={addPolicySection} size="sm" className="gap-2">
+                        <Plus size={16} /> Add Section
+                    </Button>
+                </div>
+
+                {policySections.map((section, index) => (
+                    <div key={index} className="p-4 border border-slate-200 rounded-xl bg-slate-50 relative">
+                        <button
+                            onClick={() => removePolicySection(index)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+
+                        <div className="space-y-4 pr-8">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Section Title</label>
+                                <input
+                                    type="text"
+                                    value={section.title || ''}
+                                    onChange={(e) => updatePolicySection(index, 'title', e.target.value)}
+                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+                                    placeholder="e.g. 01 / Introduction"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Content</label>
+                                <textarea
+                                    value={section.content || ''}
+                                    onChange={(e) => updatePolicySection(index, 'content', e.target.value)}
+                                    className="w-full px-4 py-3 border border-slate-300 rounded-lg h-32"
+                                    placeholder="Enter section content..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                {policySections.length === 0 && (
+                    <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        No sections added yet. Click "Add Section" to start.
+                    </div>
+                )}
+            </div>
+        );
     };
 
     const renderActiveSection = () => {
@@ -936,12 +1192,22 @@ const LandingPageManager = () => {
                 return renderFeaturesSection();
             case 'strategic_options':
                 return renderStrategicOptionsSection();
+            case 'tactical_preview':
+                return renderTacticalSection();
             case 'pricing':
                 return renderPricingSection();
             case 'testimonial':
                 return renderTestimonialSection();
             case 'demo_cta':
                 return renderDemoCtaSection();
+            case 'social_contact':
+                return renderSocialContactSection();
+            case 'privacy_policy':
+                return renderPolicySection('privacy_policy', 'Privacy Policy');
+            case 'terms_service':
+                return renderPolicySection('terms_service', 'Terms of Service');
+            case 'cookie_policy':
+                return renderPolicySection('cookie_policy', 'Cookie Policy');
             default:
                 return <div className="text-center text-slate-500 py-12">This section editor is coming soon...</div>;
         }

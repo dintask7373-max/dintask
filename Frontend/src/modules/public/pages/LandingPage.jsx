@@ -18,6 +18,14 @@ import {
     Layers,
     Lock,
     Globe,
+    Facebook,
+    Twitter,
+    Youtube,
+    Linkedin,
+    Instagram,
+    MessageCircle,
+    Mail,
+    Phone,
     Search,
     Lightbulb,
     Menu,
@@ -70,11 +78,30 @@ const LandingPage = () => {
         demoFloatingImages: []
     });
 
-    const showcaseImages = [
-        '/src/assets/dashboard_1.png',
-        '/src/assets/dashboard_2.png',
-        '/src/assets/dashboard_3.png',
-    ];
+    const [tacticalContent, setTacticalContent] = useState({
+        tacticalTitle: "The Tactical Interface.",
+        tacticalSubtitle: "Tactical Preview",
+        showcaseImages: [
+            '/src/assets/dashboard_1.png',
+            '/src/assets/dashboard_2.png',
+            '/src/assets/dashboard_3.png'
+        ]
+    });
+
+    const [socialContact, setSocialContact] = useState({
+        socialLinks: {
+            facebook: '#',
+            twitter: '#',
+            youtube: '#',
+            linkedin: '#',
+            instagram: '#'
+        },
+        contactInfo: {
+            phone: '+919876543210',
+            email: 'contact@dintask.com',
+            whatsapp: '919876543210'
+        }
+    });
 
     useEffect(() => {
         // Fetch hero section content from API
@@ -139,6 +166,17 @@ const LandingPage = () => {
             }
         };
 
+        const fetchTacticalContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/tactical_preview');
+                if (response.data.success && response.data.data) {
+                    setTacticalContent(prev => ({ ...prev, ...response.data.data }));
+                }
+            } catch (error) {
+                console.error('Error fetching tactical content:', error);
+            }
+        };
+
         const fetchDemoCtaContent = async () => {
             try {
                 const response = await axios.get('http://localhost:5000/api/v1/landing-page/demo_cta');
@@ -150,23 +188,43 @@ const LandingPage = () => {
             }
         };
 
+        const fetchSocialContact = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/social_contact');
+                if (response.data.success && response.data.data) {
+                    setSocialContact(prev => ({ ...prev, ...response.data.data }));
+                }
+            } catch (error) {
+                console.error('Error fetching social/contact:', error);
+            }
+        };
+
         fetchHeroContent();
         fetchModulesContent();
         fetchStrategicOptions();
         fetchTestimonials();
+        fetchTacticalContent();
         fetchDemoCtaContent();
+        fetchSocialContact();
 
         // Ensure body is scrollable when landing page mounts
         document.body.style.overflow = 'auto';
         document.body.style.overflowX = 'hidden';
 
+
+    }, []);
+
+    useEffect(() => {
+        if (!tacticalContent.showcaseImages || tacticalContent.showcaseImages.length === 0) return;
+
         const timer = setInterval(() => {
-            setCurrentImage((prev) => (prev + 1) % showcaseImages.length);
+            setCurrentImage((prev) => (prev + 1) % tacticalContent.showcaseImages.length);
         }, 3000);
+
         return () => {
             clearInterval(timer);
         };
-    }, []);
+    }, [tacticalContent.showcaseImages]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -358,10 +416,14 @@ const LandingPage = () => {
     return (
         <main className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white overflow-x-clip">
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-24 sm:h-28 w-24 sm:w-28 object-contain" />
+            <nav className="fixed top-0 w-full z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+                    <div className="flex items-center">
+                        <img
+                            src="/dintask-logo.png"
+                            alt="DinTask"
+                            className="h-20 sm:h-24 w-auto object-contain"
+                        />
                     </div>
 
                     {/* Desktop Nav */}
@@ -672,13 +734,13 @@ const LandingPage = () => {
                     {/* Centered Header */}
                     <div className="text-center mb-20">
                         <Badge className="bg-primary-600/10 text-primary-600 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest mb-4">
-                            Tactical Preview
+                            {tacticalContent.tacticalSubtitle}
                         </Badge>
                         <h2 className="text-5xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter mb-8 leading-[1.1]">
-                            The Tactical <span className="text-primary-600 italic">Interface.</span>
+                            {tacticalContent.tacticalTitle}
                         </h2>
                         <div className="flex justify-center gap-2">
-                            {showcaseImages.map((_, i) => (
+                            {tacticalContent.showcaseImages.map((_, i) => (
                                 <div
                                     key={i}
                                     className={`h-1.5 rounded-full transition-all duration-500 ${currentImage === i ? 'w-10 bg-primary-600' : 'w-3 bg-slate-200 dark:bg-slate-800'}`}
@@ -702,7 +764,7 @@ const LandingPage = () => {
                                 playsInline
                                 className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal"
                             >
-                                <source src="/team-meeting-animation.mp4" type="video/mp4" />
+                                <source src={tacticalContent.tacticalVideoUrl || "/team-meeting-animation.mp4"} type="video/mp4" />
                             </video>
                         </motion.div>
 
@@ -728,7 +790,7 @@ const LandingPage = () => {
                                             </div>
                                             <div className="relative flex-1 overflow-hidden">
                                                 <img
-                                                    src={showcaseImages[currentImage]}
+                                                    src={tacticalContent.showcaseImages[currentImage]}
                                                     alt="Dashboard Preview"
                                                     className="w-full h-full object-cover object-top"
                                                 />
@@ -1113,13 +1175,37 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Social Icons Section */}
+            <section className="bg-black border-t border-slate-800 py-12 px-6">
+                <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
+                    <h3 className="text-white font-bold tracking-widest uppercase text-sm opacity-70">Follow Us</h3>
+                    <div className="flex gap-8">
+                        <a href={socialContact.socialLinks.facebook || '#'} target={socialContact.socialLinks.facebook !== '#' ? "_blank" : "_self"} rel="noopener noreferrer" className="text-slate-400 hover:text-blue-500 transition-colors transform hover:scale-110 duration-300">
+                            <Facebook size={24} />
+                        </a>
+                        <a href={socialContact.socialLinks.twitter || '#'} target={socialContact.socialLinks.twitter !== '#' ? "_blank" : "_self"} rel="noopener noreferrer" className="text-slate-400 hover:text-sky-400 transition-colors transform hover:scale-110 duration-300">
+                            <Twitter size={24} />
+                        </a>
+                        <a href={socialContact.socialLinks.youtube || '#'} target={socialContact.socialLinks.youtube !== '#' ? "_blank" : "_self"} rel="noopener noreferrer" className="text-slate-400 hover:text-red-500 transition-colors transform hover:scale-110 duration-300">
+                            <Youtube size={24} />
+                        </a>
+                        <a href={socialContact.socialLinks.linkedin || '#'} target={socialContact.socialLinks.linkedin !== '#' ? "_blank" : "_self"} rel="noopener noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors transform hover:scale-110 duration-300">
+                            <Linkedin size={24} />
+                        </a>
+                        <a href={socialContact.socialLinks.instagram || '#'} target={socialContact.socialLinks.instagram !== '#' ? "_blank" : "_self"} rel="noopener noreferrer" className="text-slate-400 hover:text-pink-500 transition-colors transform hover:scale-110 duration-300">
+                            <Instagram size={24} />
+                        </a>
+                    </div>
+                </div>
+            </section>
+
             {/* Footer */}
-            <footer className="bg-black pt-32 pb-12 px-6">
+            <footer className="bg-black pt-12 pb-12 px-6">
                 <div className="max-w-7xl mx-auto border-t border-slate-700 pt-16">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 text-center sm:text-left">
                         <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6 sm:space-y-8 flex flex-col items-center sm:items-start">
                             <div className="flex items-center gap-3">
-                                <img src="/dintask-logo.png" alt="DinTask" className="h-16 sm:h-20 w-16 sm:w-20 object-contain" />
+                                <img src="/dintask-logo.png" alt="DinTask" className="h-24 sm:h-32 w-24 sm:w-32 object-contain" />
                                 <span className="text-4xl font-black tracking-tighter text-white italic uppercase whitespace-nowrap">
                                     Din<span className="text-primary-600">Task</span>
                                 </span>
@@ -1181,6 +1267,42 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
+
+            {/* Fixed Contact Widget */}
+            <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3 p-3 bg-slate-900/90 backdrop-blur-xl rounded-l-2xl border-l border-t border-b border-slate-700/50 shadow-2xl animate-in slide-in-from-right duration-700">
+                <a
+                    href={`tel:${socialContact.contactInfo.phone}`}
+                    className="p-3 bg-blue-600 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all duration-300 group relative"
+                    title="Call Us"
+                >
+                    <Phone size={20} className="relative z-10" />
+                    <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        Call Us
+                    </span>
+                </a>
+                <a
+                    href={`mailto:${socialContact.contactInfo.email}`}
+                    className="p-3 bg-red-500 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] transition-all duration-300 group relative"
+                    title="Email Us"
+                >
+                    <Mail size={20} className="relative z-10" />
+                    <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        Email Us
+                    </span>
+                </a>
+                <a
+                    href={`https://wa.me/${socialContact.contactInfo.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-green-500 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all duration-300 group relative"
+                    title="WhatsApp"
+                >
+                    <MessageCircle size={20} className="relative z-10" />
+                    <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        WhatsApp
+                    </span>
+                </a>
+            </div>
         </main>
     );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
 import {
     Plus,
     Search,
@@ -108,6 +109,32 @@ const SalesManagement = () => {
         }
     };
 
+    const handleExport = () => {
+        try {
+            const dataToExport = filteredReps.map(rep => ({
+                'Name': rep.name,
+                'Email': rep.email,
+                'Phone': rep.phoneNumber || 'N/A',
+                'Status': rep.status || 'Active',
+                'Total Sales': rep.totalSales || 0,
+                'Active Deals': rep.activeDeals || 0,
+                'Conversion Rate (%)': rep.conversionRate || 0,
+                'Joined Date': rep.createdAt ? new Date(rep.createdAt).toLocaleDateString() : 'N/A'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Sales Representatives");
+
+            // Generate Excel file and trigger download
+            XLSX.writeFile(wb, "Sales_Representatives.xlsx");
+            toast.success("Export successful");
+        } catch (error) {
+            console.error("Export Error:", error);
+            toast.error("Failed to export data");
+        }
+    };
+
     const handleAddDeal = () => {
         if (!newDealData.name || !newDealData.company) {
             toast.error("Name and Company are required");
@@ -209,7 +236,11 @@ const SalesManagement = () => {
                             />
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto">
-                            <Button variant="ghost" className="flex-1 sm:flex-none gap-2 border border-slate-100 dark:border-slate-800 h-9 sm:h-10 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                            <Button
+                                variant="ghost"
+                                onClick={handleExport}
+                                className="flex-1 sm:flex-none gap-2 border border-slate-100 dark:border-slate-800 h-9 sm:h-10 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                            >
                                 <Download size={14} />
                                 <span className="hidden sm:inline">Export</span>
                             </Button>
@@ -278,7 +309,7 @@ const SalesManagement = () => {
                                             <td className="p-4 text-right">
                                                 <div className="flex justify-end gap-1">
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"> <Edit2 size={12} /> </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteEmployee(rep._id || rep.id, 'sales_executive')}> <Trash2 size={12} /> </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} /> </Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -333,7 +364,7 @@ const SalesManagement = () => {
                                         </div>
                                         <div className="flex gap-2">
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"> <Edit2 size={12} /> </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteEmployee(rep._id || rep.id, 'sales_executive')}> <Trash2 size={12} className="text-red-400" /> </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} className="text-red-400" /> </Button>
                                         </div>
                                     </div>
                                 </div>

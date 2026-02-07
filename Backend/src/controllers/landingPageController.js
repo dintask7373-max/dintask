@@ -237,6 +237,51 @@ exports.initializeDefaultContent = async (req, res) => {
                     { title: 'Company', links: ['About', 'Contact'] },
                     { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
                 ]
+            },
+            {
+                section: 'social_contact',
+                socialLinks: {
+                    facebook: '#',
+                    twitter: '#',
+                    youtube: '#',
+                    linkedin: '#',
+                    instagram: '#'
+                },
+                contactInfo: {
+                    phone: '+919876543210',
+                    email: 'contact@dintask.com',
+                    whatsapp: '919876543210'
+                }
+            },
+            {
+                section: 'privacy_policy',
+                policySections: [
+                    { title: "01 / Introduction", content: "At DinTask, your privacy is our priority. This Privacy Policy explains how we collect, use, and protect your information when you use our tactical workspace solutions. We are committed to maintaining the highest standards of data security and transparency." },
+                    { title: "02 / Information Collection", content: "We collect information that you provide directly to us when you create an account, such as your name, email address, and company details. We also collect data related to your usage of the platform to provide a personalized and efficient experience." },
+                    { title: "03 / Data Security", content: "We implement military-grade encryption (v4.2) and industry-leading security protocols to safeguard your data. Your information is stored on secure servers with restricted access, ensuring that your business intelligence remains confidential." },
+                    { title: "04 / Information Sharing", content: "DinTask does not sell or lease your personal information to third parties. We may share data with trusted service providers who assist us in operating our platform, provided they adhere to strict confidentiality agreements." },
+                    { title: "05 / Your Rights", content: "You have the right to access, update, or delete your personal information at any time. If you wish to exercise these rights, please contact our support team through the integrated chat or email." }
+                ]
+            },
+            {
+                section: 'terms_service',
+                policySections: [
+                    { title: "01 / Agreement to Terms", content: "By accessing or using DinTask, you agree to be bound by these Terms of Service. If you do not agree to all of these terms, do not use our platform. These terms apply to all visitors, users, and others who access the service." },
+                    { title: "02 / Use of the Platform", content: "DinTask is designed for professional business use. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to use the platform in compliance with all applicable laws." },
+                    { title: "03 / Intellectual Property", content: "The platform and its original content, features, and functionality are and will remain the exclusive property of DinTask and its licensors. Our trademarks and trade dress may not be used in connection with any product or service without our prior written consent." },
+                    { title: "04 / Technical Limitations", content: "While we strive for 100% uptime, you acknowledge that technical issues may occur. We reserve the right to perform maintenance and updates to improve the platform's tactical performance, which may result in temporary unavailability." },
+                    { title: "05 / Termination", content: "We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the platform will immediately cease." }
+                ]
+            },
+            {
+                section: 'cookie_policy',
+                policySections: [
+                    { title: "01 / Use of Cookies", content: "DinTask uses cookies and similar tracking technologies to enhance your tactical experience. Cookies are small data files that are placed on your device to help us recognize you and provide a more personalized workflow." },
+                    { title: "02 / Essential Cookies", content: "These cookies are necessary for the platform to function correctly. They enable core features such as secure login, session management, and load balancing. Without these cookies, the platform cannot operate effectively." },
+                    { title: "03 / Analytical Cookies", content: "We use analytical cookies to understand how users interact with our platform. This data helps us optimize the user interface and improve the performance of our tactical modules." },
+                    { title: "04 / Customization Cookies", content: "These cookies allow the platform to remember your preferences, such as language settings, theme choices, and workspace layouts, providing a more tailored experience every time you log in." },
+                    { title: "05 / Managing Cookies", content: "You can control and manage cookies through your browser settings. Please note that disabling certain cookies may impact the functionality and performance of the DinTask platform." }
+                ]
             }
         ];
 

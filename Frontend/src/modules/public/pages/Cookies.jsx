@@ -1,17 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import axios from 'axios';
 
 const Cookies = () => {
     const navigate = useNavigate();
+    const [sections, setSections] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/cookie_policy');
+                if (response.data.success && response.data.data) {
+                    setSections(response.data.data.policySections || []);
+                }
+            } catch (error) {
+                console.error('Error fetching cookie policy:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContent();
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white pb-20">
             {/* Header Area */}
             <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-                <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-4xl mx-auto px-6 h-24 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/')}
                         className="flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors group"
@@ -20,7 +39,7 @@ const Cookies = () => {
                         <span className="text-sm font-bold uppercase tracking-widest">Back to Home</span>
                     </button>
                     <div className="flex items-center gap-3">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-8 w-8" />
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-18 w-18 sm:h-22 sm:w-22 object-contain" />
                         <span className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">
                             Din<span className="text-primary-600">Task</span>
                         </span>
@@ -29,20 +48,23 @@ const Cookies = () => {
             </div>
 
             {/* Hero Section */}
-            <div className="py-16 px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                <div className="max-w-4xl mx-auto text-center">
+            <div className="py-20 px-6 bg-primary-600 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
+                <div className="max-w-4xl mx-auto text-center relative z-10">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center justify-center size-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 text-primary-600 mb-6"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="inline-flex items-center justify-center mb-6 text-white"
                     >
-                        <Cookie size={32} />
+                        <Cookie size={64} strokeWidth={1.5} className="drop-shadow-lg" />
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4"
+                        className="text-4xl md:text-6xl font-black text-white tracking-tight mb-4 drop-shadow-md"
                     >
                         Cookie Policy
                     </motion.h1>
@@ -50,9 +72,9 @@ const Cookies = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-slate-500 dark:text-slate-400 font-medium uppercase tracking-[0.2em] text-xs"
+                        className="text-primary-100 font-bold uppercase tracking-[0.2em] text-sm"
                     >
-                        Last Updated: February 6, 2026
+                        Last Updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </motion.p>
                 </div>
             </div>
@@ -65,28 +87,21 @@ const Cookies = () => {
                     transition={{ delay: 0.3 }}
                     className="prose prose-slate dark:prose-invert max-w-none"
                 >
-                    <div className="space-y-12">
-                        <Section
-                            title="01 / Use of Cookies"
-                            content="DinTask uses cookies and similar tracking technologies to enhance your tactical experience. Cookies are small data files that are placed on your device to help us recognize you and provide a more personalized workflow."
-                        />
-                        <Section
-                            title="02 / Essential Cookies"
-                            content="These cookies are necessary for the platform to function correctly. They enable core features such as secure login, session management, and load balancing. Without these cookies, the platform cannot operate effectively."
-                        />
-                        <Section
-                            title="03 / Analytical Cookies"
-                            content="We use analytical cookies to understand how users interact with our platform. This data helps us optimize the user interface and improve the performance of our tactical modules."
-                        />
-                        <Section
-                            title="04 / Customization Cookies"
-                            content="These cookies allow the platform to remember your preferences, such as language settings, theme choices, and workspace layouts, providing a more tailored experience every time you log in."
-                        />
-                        <Section
-                            title="05 / Managing Cookies"
-                            content="You can control and manage cookies through your browser settings. Please note that disabling certain cookies may impact the functionality and performance of the DinTask platform."
-                        />
-                    </div>
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                        </div>
+                    ) : (
+                        <div className="space-y-12">
+                            {sections.map((section, index) => (
+                                <Section
+                                    key={index}
+                                    title={section.title}
+                                    content={section.content}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </motion.div>
 
                 <div className="mt-20 p-10 bg-primary-600 rounded-[2rem] text-white text-center">
@@ -107,7 +122,7 @@ const Cookies = () => {
 const Section = ({ title, content }) => (
     <div className="space-y-4">
         <h2 className="text-xs font-black text-primary-600 uppercase tracking-[0.3em]">{title}</h2>
-        <p className="text-lg text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+        <p className="text-lg text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-line">
             {content}
         </p>
     </div>
