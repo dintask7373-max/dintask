@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path'); // Core module
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -29,6 +30,9 @@ const superAdmin = require('./routes/superAdminRoutes');
 const support = require('./routes/supportLeadRoutes');
 const supportTickets = require('./routes/supportTicketRoutes');
 const payment = require('./routes/paymentRoutes');
+const landingPage = require('./routes/landingPageRoutes');
+const testimonials = require('./routes/testimonialRoutes');
+const uploadRoutes = require('./routes/uploadRoutes'); // Import upload routes
 
 // Mount routers
 app.use('/api/v1/auth', auth);
@@ -40,6 +44,12 @@ app.use('/api/v1/superadmin', superAdmin);
 app.use('/api/v1/support', support);
 app.use('/api/v1/support-tickets', supportTickets);
 app.use('/api/v1/payments', payment);
+app.use('/api/v1/landing-page', landingPage);
+app.use('/api/v1/testimonials', testimonials);
+app.use('/api/v1/upload', uploadRoutes); // Mount upload routes
+
+// Serve static assets - Uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/v1/invite', require('./routes/inviteRoutes'));
 
 app.use(errorHandler);

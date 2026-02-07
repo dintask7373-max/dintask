@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -8,6 +8,7 @@ import {
     ArrowRight,
     ShieldCheck,
     Briefcase,
+    ChevronLeft,
     ChevronRight,
     CheckCircle2,
     Zap,
@@ -25,12 +26,49 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter
+} from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import axios from 'axios';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeModule, setActiveModule] = useState(0);
     const [currentImage, setCurrentImage] = useState(0);
+    const [heroContent, setHeroContent] = useState({
+        heroTitle: "Your work,\nPowered by\nour life's work.",
+        heroSubtitle: "An all-in-one workspace designed to break down silos and boost efficiency. Experience total control over your business operations."
+    });
+
+    // Testimonial Submission States
+    const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
+    const [formData, setFormData] = useState({
+        name: '',
+        role: '',
+        testimonial: '',
+        rating: 5,
+        image: '' // Optional image URL
+    });
+
+    const [demoCta, setDemoCta] = useState({
+        demoTitle: "Ready to experience the Command Center?",
+        demoDescription: "Join thousands of managers who have optimized their workforce with DinTask's integrated suite.",
+        demoCtaPrimary: "START FREE TRIAL",
+        demoCtaSecondary: "BOOK A DEMO",
+        demoFloatingImages: []
+    });
 
     const showcaseImages = [
         '/src/assets/dashboard_1.png',
@@ -38,7 +76,86 @@ const LandingPage = () => {
         '/src/assets/dashboard_3.png',
     ];
 
-    React.useEffect(() => {
+    useEffect(() => {
+        // Fetch hero section content from API
+        const fetchHeroContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/hero');
+                if (response.data.success && response.data.data) {
+                    setHeroContent({
+                        heroTitle: response.data.data.heroTitle || heroContent.heroTitle,
+                        heroSubtitle: response.data.data.heroSubtitle || heroContent.heroSubtitle
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching hero content:', error);
+                // Keep default content if API fails
+            }
+        };
+
+        // Fetch features/modules content from API
+        const fetchModulesContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/features');
+                if (response.data.success && response.data.data && response.data.data.modules) {
+                    setModules(response.data.data.modules);
+                }
+            } catch (error) {
+                console.error('Error fetching modules content:', error);
+                // Keep default modules if API fails
+            }
+        };
+
+        // Fetch strategic options content from API
+        const fetchStrategicOptions = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/strategic_options');
+                if (response.data.success && response.data.data && response.data.data.strategicOptions) {
+                    setStrategicOptions(response.data.data.strategicOptions);
+                }
+            } catch (error) {
+                console.error('Error fetching strategic options:', error);
+                // Keep default strategic options if API fails
+            }
+        };
+
+        // Fetch testimonials content from API
+        const fetchTestimonials = async () => {
+            try {
+                // Try to fetch approved user testimonials first
+                const response = await axios.get('http://localhost:5000/api/v1/testimonials/approved');
+                if (response.data.success && response.data.data && response.data.data.length > 0) {
+                    setTestimonials(response.data.data);
+                } else {
+                    // Fallback to landing page config if no user testimonials approved yet
+                    const fallback = await axios.get('http://localhost:5000/api/v1/landing-page/testimonial');
+                    if (fallback.data.success && fallback.data.data && fallback.data.data.testimonials) {
+                        setTestimonials(fallback.data.data.testimonials);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching testimonials:', error);
+                // Keep default if everything fails
+            }
+        };
+
+        const fetchDemoCtaContent = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/v1/landing-page/demo_cta');
+                if (response.data.success && response.data.data) {
+                    setDemoCta(prev => ({ ...prev, ...response.data.data }));
+                }
+            } catch (error) {
+                console.error('Error fetching demo cta:', error);
+            }
+        };
+
+        fetchHeroContent();
+        fetchModulesContent();
+        fetchStrategicOptions();
+        fetchTestimonials();
+        fetchDemoCtaContent();
+
         // Ensure body is scrollable when landing page mounts
         document.body.style.overflow = 'auto';
         document.body.style.overflowX = 'hidden';
@@ -51,12 +168,44 @@ const LandingPage = () => {
         };
     }, []);
 
-    const modules = [
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleRatingChange = (value) => {
+        setFormData(prev => ({ ...prev, rating: value }));
+    };
+
+    const handleSubmitTestimonial = async (e) => {
+        e.preventDefault();
+
+        setIsSubmitting(true);
+        setSubmitStatus(null);
+
+        try {
+            await axios.post('http://localhost:5000/api/v1/testimonials', formData);
+            setSubmitStatus('success');
+            // Reset form
+            setTimeout(() => {
+                setFormData({ name: '', role: '', testimonial: '', rating: 5, image: '' });
+                setIsSubmitOpen(false);
+                setSubmitStatus(null);
+            }, 2000);
+        } catch (error) {
+            console.error('Error submitting testimonial:', error);
+            setSubmitStatus('error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const [modules, setModules] = useState([
         {
             id: 'admin',
             title: 'Admin Console',
             description: 'Centralized control center to manage managers, employees, and overall system health.',
-            icon: ShieldCheck,
+            icon: 'ShieldCheck',
             color: 'from-blue-600 to-indigo-600',
             features: ['Manager Oversight', 'Employee Directory', 'System Analytics', 'Permission Controls']
         },
@@ -64,7 +213,7 @@ const LandingPage = () => {
             id: 'manager',
             title: 'Manager Station',
             description: 'Powerful tools for task delegation, team progress monitoring, and schedule management.',
-            icon: LayoutDashboard,
+            icon: 'LayoutDashboard',
             color: 'from-purple-600 to-pink-600',
             features: ['Task Delegation', 'Performance Metrics', 'Team Chat', 'Real-time Sync']
         },
@@ -72,7 +221,7 @@ const LandingPage = () => {
             id: 'employee',
             title: 'Employee Portal',
             description: 'Personalized task dashboard designed for maximum productivity and focus.',
-            icon: Target,
+            icon: 'Target',
             color: 'from-emerald-500 to-teal-600',
             features: ['Task List', 'Calendar Sync', 'Personal Notes', 'Quick Actions']
         },
@@ -80,11 +229,71 @@ const LandingPage = () => {
             id: 'sales',
             title: 'Sales & CRM',
             description: 'Track leads, manage pipelines, and close deals with our integrated CRM suite.',
-            icon: Briefcase,
+            icon: 'Briefcase',
             color: 'from-amber-500 to-orange-600',
             features: ['Lead Management', 'Sales Pipeline', 'Follow-up Scheduler', 'Client Portal']
         }
-    ];
+    ]);
+
+    const [strategicOptions, setStrategicOptions] = useState([
+        {
+            id: '01',
+            title: 'OPTIONS 01',
+            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.',
+            icon: 'Search',
+            color: 'text-[#8bc34a]',
+            bgColor: 'bg-[#8bc34a]',
+            borderColor: 'border-[#8bc34a]'
+        },
+        {
+            id: '02',
+            title: 'OPTIONS 02',
+            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.',
+            icon: 'Lightbulb',
+            color: 'text-[#00BFA5]',
+            bgColor: 'bg-[#00BFA5]',
+            borderColor: 'border-[#00BFA5]'
+        },
+        {
+            id: '03',
+            title: 'OPTIONS 03',
+            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.',
+            icon: 'Target',
+            color: 'text-[#0288D1]',
+            bgColor: 'bg-[#0288D1]',
+            borderColor: 'border-[#0288D1]'
+        }
+    ]);
+
+    const [testimonials, setTestimonials] = useState([
+        {
+            id: 1,
+            name: 'Michael Jackson',
+            role: 'CEO Of Company',
+            image: '/user1.jpg',
+            rating: 5,
+            testimonial: 'Lorem ipsum is simply dummy text of the Printing industry Lorem ipsum has been industry\'s',
+            highlighted: false
+        },
+        {
+            id: 2,
+            name: 'Parvez Hossein',
+            role: 'CEO Of Company',
+            image: '/user2.jpg',
+            rating: 5,
+            testimonial: 'Lorem ipsum is simply dummy text of the Printing industry Lorem ipsum has been industry\'s',
+            highlighted: true
+        },
+        {
+            id: 3,
+            name: 'Shoikot Hasan',
+            role: 'CEO Of Company',
+            image: '/user3.jpg',
+            rating: 5,
+            testimonial: 'Lorem ipsum is simply dummy text of the Printing industry Lorem ipsum has been industry\'s',
+            highlighted: false
+        }
+    ]);
 
     const plans = [
         {
@@ -125,6 +334,26 @@ const LandingPage = () => {
             variant: "outline"
         }
     ];
+
+    // Helper function to map icon names to icon components
+    const getIconComponent = (iconName) => {
+        const iconMap = {
+            'ShieldCheck': ShieldCheck,
+            'LayoutDashboard': LayoutDashboard,
+            'Target': Target,
+            'Briefcase': Briefcase,
+            'Users': Users,
+            'Search': Search,
+            'Lightbulb': Lightbulb,
+            'Zap': Zap,
+            'Star': Star,
+            'Monitor': Monitor,
+            'Smartphone': Smartphone,
+            'Layers': Layers,
+            'Globe': Globe
+        };
+        return iconMap[iconName] || ShieldCheck; // Default to ShieldCheck if not found
+    };
 
     return (
         <main className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white overflow-x-clip">
@@ -216,12 +445,23 @@ const LandingPage = () => {
                     >
 
                         <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-7xl font-black text-slate-900 dark:text-white leading-[0.9] tracking-tighter mb-4 md:mb-8 italic">
-                            Your work, <br />
-                            <span className="text-primary-600">Powered</span> by <br />
-                            our life's work.
+                            {heroContent.heroTitle.split('\n').map((line, index) => (
+                                <React.Fragment key={index}>
+                                    {line.includes('Powered') ? (
+                                        <>
+                                            {line.split('Powered')[0]}
+                                            <span className="text-primary-600">Powered</span>
+                                            {line.split('Powered')[1]}
+                                        </>
+                                    ) : (
+                                        line
+                                    )}
+                                    {index < heroContent.heroTitle.split('\n').length - 1 && <br />}
+                                </React.Fragment>
+                            ))}
                         </h1>
                         <p className="text-[10px] sm:text-xs md:text-base lg:text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6 md:mb-12 max-w-lg">
-                            An all-in-one workspace designed to break down silos and boost efficiency. Experience total control over your business operations.
+                            {heroContent.heroSubtitle}
                         </p>
                         {/* Strategic Ecosystem Infographic */}
                         <div id="features" className="relative mt-4 md:mt-16 h-[220px] sm:h-[350px] md:h-[520px] w-[250%] md:w-full group scale-[0.4] sm:scale-[0.6] md:scale-[0.8] lg:scale-[0.85] origin-left flex scroll-mt-24">
@@ -272,7 +512,7 @@ const LandingPage = () => {
                                                     }`}>
                                                     <div className={`size-10 flex items-center justify-center transition-all ${activeModule === idx ? 'text-white' : `text-slate-400`
                                                         }`}>
-                                                        <module.icon size={24} />
+                                                        {React.createElement(getIconComponent(module.icon), { size: 24 })}
                                                     </div>
                                                     <div className="text-left flex-1">
                                                         <h3 className={`text-xs font-black uppercase tracking-[0.15em] ${activeModule === idx ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{module.title}</h3>
@@ -366,57 +606,62 @@ const LandingPage = () => {
             <section className="py-12 sm:py-24 bg-white dark:bg-slate-950 overflow-x-clip">
                 <div className="max-w-7xl mx-auto px-2 sm:px-6">
                     <div className="grid grid-cols-3 gap-2 sm:gap-16 lg:gap-24">
-                        {[
-                            {
-                                id: '01',
-                                icon: Search,
-                                color: 'text-[#8bc34a]',
-                                bg: 'bg-[#8bc34a]',
-                                border: 'border-[#8bc34a]',
-                            },
-                            {
-                                id: '02',
-                                icon: Lightbulb,
-                                color: 'text-[#00BFA5]',
-                                bg: 'bg-[#00BFA5]',
-                                border: 'border-[#00BFA5]',
-                            },
-                            {
-                                id: '03',
-                                icon: Target,
-                                color: 'text-[#0288D1]',
-                                bg: 'bg-[#0288D1]',
-                                border: 'border-[#0288D1]',
-                            }
-                        ].map((opt, i) => (
-                            <motion.div
-                                key={opt.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.2 }}
-                                className="relative flex items-center justify-center py-4 sm:py-10"
-                            >
-                                {/* Top-Left Solid Block */}
-                                <div className={`absolute top-0 left-0 w-8 sm:w-32 h-8 sm:h-32 ${opt.bg} opacity-100 -z-0`} />
+                        {strategicOptions.map((opt, i) => {
+                            // Static color and icon mapping - NOT from database
+                            const staticConfig = [
+                                {
+                                    icon: Search,
+                                    color: 'text-[#8bc34a]',
+                                    bgColor: 'bg-[#8bc34a]',
+                                    borderColor: 'border-[#8bc34a]'
+                                },
+                                {
+                                    icon: Lightbulb,
+                                    color: 'text-[#00BFA5]',
+                                    bgColor: 'bg-[#00BFA5]',
+                                    borderColor: 'border-[#00BFA5]'
+                                },
+                                {
+                                    icon: ShieldCheck,
+                                    color: 'text-[#0288D1]',
+                                    bgColor: 'bg-[#0288D1]',
+                                    borderColor: 'border-[#0288D1]'
+                                }
+                            ];
 
-                                {/* Bottom-Right Outlined Frame */}
-                                <div className={`absolute bottom-0 right-0 w-12 sm:w-48 h-12 sm:h-48 border-[2px] sm:border-[6px] ${opt.border} -z-0`} />
+                            const config = staticConfig[i] || staticConfig[0];
+                            const IconComponent = config.icon;
 
-                                {/* Main White Card */}
-                                <Card className="w-full bg-white dark:bg-slate-900 border-none shadow-[0_10px_25px_rgba(0,0,0,0.15)] sm:shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none relative z-10 px-2 sm:px-6 py-4 sm:py-10 text-center">
-                                    <div className={`mb-1 sm:mb-4 flex justify-center ${opt.color}`}>
-                                        <opt.icon className="size-4 sm:size-9" strokeWidth={1.5} />
-                                    </div>
-                                    <h3 className={`text-[6px] sm:text-xl font-black uppercase tracking-widest mb-1 sm:mb-4 ${opt.color}`}>
-                                        OPTIONS {opt.id}
-                                    </h3>
-                                    <p className="text-[5px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
-                                    </p>
-                                </Card>
-                            </motion.div>
-                        ))}
+                            return (
+                                <motion.div
+                                    key={opt.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.2 }}
+                                    className="relative flex items-center justify-center py-4 sm:py-10"
+                                >
+                                    {/* Top-Left Solid Block */}
+                                    <div className={`absolute top-0 left-0 w-8 sm:w-32 h-8 sm:h-32 ${config.bgColor} opacity-100 -z-0`} />
+
+                                    {/* Bottom-Right Outlined Frame */}
+                                    <div className={`absolute bottom-0 right-0 w-12 sm:w-48 h-12 sm:h-48 border-[2px] sm:border-[6px] ${config.borderColor} -z-0`} />
+
+                                    {/* Main White Card */}
+                                    <Card className="w-full bg-white dark:bg-slate-900 border-none shadow-[0_10px_25px_rgba(0,0,0,0.15)] sm:shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none relative z-10 px-2 sm:px-6 py-4 sm:py-10 text-center">
+                                        <div className={`mb-1 sm:mb-4 flex justify-center ${config.color}`}>
+                                            <IconComponent className="size-4 sm:size-9" strokeWidth={1.5} />
+                                        </div>
+                                        <h3 className={`text-[6px] sm:text-xl font-black uppercase tracking-widest mb-1 sm:mb-4 ${config.color}`}>
+                                            {opt.title}
+                                        </h3>
+                                        <p className="text-[5px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
+                                            {opt.description}
+                                        </p>
+                                    </Card>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
@@ -651,31 +896,37 @@ const LandingPage = () => {
                         <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
                             <div>
                                 <h2 className="text-5xl lg:text-7xl font-black text-white dark:text-slate-900 tracking-tighter mb-8 leading-none">
-                                    Ready to experience the <span className="text-primary-600 italic">Command Center?</span>
+                                    {demoCta.demoTitle}
                                 </h2>
                                 <p className="text-xl text-slate-400 dark:text-slate-500 mb-12 max-w-md">
-                                    Join thousands of managers who have optimized their workforce with DinTask's integrated suite.
+                                    {demoCta.demoDescription}
                                 </p>
                                 <div className="flex flex-row gap-2 sm:gap-4">
                                     <Button onClick={() => navigate('/admin/register')} className="h-10 sm:h-16 px-3 sm:px-10 bg-primary-600 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-primary-700 transition-colors">
-                                        START FREE TRIAL
+                                        {demoCta.demoCtaPrimary}
                                     </Button>
                                     <Button onClick={() => navigate('/contact')} className="h-10 sm:h-16 px-3 sm:px-10 bg-white text-slate-900 dark:bg-slate-900 dark:text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                        BOOK A DEMO
+                                        {demoCta.demoCtaSecondary}
                                     </Button>
                                 </div>
                             </div>
                             <div className="relative translate-y-8 sm:translate-y-12 lg:translate-x-12">
                                 <Monitor className="text-white/10 dark:text-slate-900/5 size-[200px] sm:size-[400px] lg:size-[500px] absolute -right-4 sm:-right-20 -top-24 sm:-top-60" />
                                 <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                                    {[1, 2, 3, 4].map(i => (
+                                    {[0, 1, 2, 3].map(i => (
                                         <motion.div
                                             key={i}
                                             animate={{ y: [0, -10, 0] }}
                                             transition={{ duration: 4, delay: i * 0.5, repeat: Infinity }}
-                                            className="h-20 sm:h-40 rounded-2xl sm:rounded-3xl bg-white/5 border border-white/10 p-3 sm:p-6 flex items-end backdrop-blur-sm"
+                                            className="h-20 sm:h-40 rounded-2xl sm:rounded-3xl bg-white/5 border border-white/10 overflow-hidden relative backdrop-blur-sm"
                                         >
-                                            <div className="h-1 sm:h-2 w-1/2 bg-white/20 rounded-full" />
+                                            {demoCta.demoFloatingImages && demoCta.demoFloatingImages[i] ? (
+                                                <img src={demoCta.demoFloatingImages[i]} alt="Preview" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+                                            ) : (
+                                                <div className="absolute inset-0 p-3 sm:p-6 flex items-end">
+                                                    <div className="h-1 sm:h-2 w-1/2 bg-white/20 rounded-full" />
+                                                </div>
+                                            )}
                                         </motion.div>
                                     ))}
                                 </div>
@@ -685,18 +936,195 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Testimonials Section */}
+            <section className="py-12 bg-slate-50 dark:bg-slate-900">
+                <div className="max-w-7xl mx-auto px-6">
+                    {/* Section Title */}
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                            User <span className="text-primary-600">Testimonials</span>
+                        </h2>
+
+                        <div className="mt-4">
+                            <Dialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="rounded-full border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20">Share Your Story</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-slate-900 dark:text-white">Share Your Experience</DialogTitle>
+                                        <DialogDescription className="text-slate-500 dark:text-slate-400">
+                                            Tell us how DinTask has helped your team.
+                                        </DialogDescription>
+                                    </DialogHeader>
+
+                                    {submitStatus === 'success' ? (
+                                        <div className="py-8 text-center text-green-600">
+                                            <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
+                                            <p className="font-medium">Thank you! Your testimonial has been submitted for review.</p>
+                                        </div>
+                                    ) : submitStatus === 'error' ? (
+                                        <div className="py-8 text-center text-red-600">
+                                            <p className="font-medium">Something went wrong. Please try again.</p>
+                                            <Button variant="link" onClick={() => setSubmitStatus(null)}>Try Again</Button>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleSubmitTestimonial} className="grid gap-4 py-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">Name</Label>
+                                                <Input id="name" name="name" value={formData.name} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700" />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="role" className="text-slate-700 dark:text-slate-300">Role / Company</Label>
+                                                <Input id="role" name="role" value={formData.role} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700" />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label className="text-slate-700 dark:text-slate-300">Rating</Label>
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <Star
+                                                            key={star}
+                                                            size={24}
+                                                            className={`cursor-pointer transition-colors ${star <= formData.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300 dark:text-slate-600'}`}
+                                                            onClick={() => handleRatingChange(star)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="testimonial" className="text-slate-700 dark:text-slate-300">Message</Label>
+                                                <Textarea id="testimonial" name="testimonial" value={formData.testimonial} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 resize-none h-24" />
+                                            </div>
+                                            <Button type="submit" disabled={isSubmitting} className="bg-primary-600 hover:bg-primary-700 text-white">
+                                                {isSubmitting ? 'Submitting...' : 'Submit Testimonial'}
+                                            </Button>
+                                        </form>
+                                    )}
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
+
+                    {/* Testimonials with Scroll Buttons */}
+                    <div className="relative">
+                        {/* Left Scroll Button */}
+                        <button
+                            onClick={() => {
+                                const container = document.getElementById('testimonials-container');
+                                container.scrollBy({ left: -350, behavior: 'smooth' });
+                            }}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-3 shadow-lg transition-all hidden md:block"
+                        >
+                            <ChevronLeft size={24} />
+                        </button>
+
+                        {/* Right Scroll Button */}
+                        <button
+                            onClick={() => {
+                                const container = document.getElementById('testimonials-container');
+                                container.scrollBy({ left: 350, behavior: 'smooth' });
+                            }}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-3 shadow-lg transition-all hidden md:block"
+                        >
+                            <ChevronRight size={24} />
+                        </button>
+
+                        {/* Scrollable Testimonials */}
+                        <div id="testimonials-container" className="overflow-x-auto pb-4 scroll-smooth">
+                            <div className="flex gap-6 justify-center px-12 md:px-20">
+                                {testimonials.map((testimonial, index) => (
+                                    <motion.div
+                                        key={testimonial.id}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.1 }}
+                                        className="flex-shrink-0 w-80"
+                                    >
+                                        <Card className={`p-6 text-center h-full transition-transform duration-300 ${testimonial.highlighted
+                                            ? 'bg-primary-600 border-primary-500 shadow-xl scale-105'
+                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg'
+                                            }`}>
+                                            {/* Profile Image */}
+                                            <div className="relative inline-block mb-3">
+                                                <div className={`w-20 h-20 rounded-full overflow-hidden border-3 ${testimonial.highlighted
+                                                    ? 'border-white'
+                                                    : 'border-primary-600'
+                                                    } mx-auto`}>
+                                                    <img
+                                                        src={testimonial.image}
+                                                        alt={testimonial.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://ui-avatars.com/api/?name=' + testimonial.name + '&size=80&background=random';
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Rating Stars */}
+                                            <div className="flex justify-center gap-0.5 mb-2">
+                                                {[...Array(testimonial.rating)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        size={12}
+                                                        className={testimonial.highlighted ? 'fill-white text-white' : 'fill-primary-600 text-primary-600'}
+                                                    />
+                                                ))}
+                                            </div>
+
+                                            {/* Name & Role */}
+                                            <h3 className={`text-base font-black mb-0.5 ${testimonial.highlighted
+                                                ? 'text-white'
+                                                : 'text-slate-900 dark:text-white'
+                                                }`}>
+                                                {testimonial.name}
+                                            </h3>
+                                            <p className={`text-xs font-medium mb-4 ${testimonial.highlighted
+                                                ? 'text-primary-100'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                                }`}>
+                                                {testimonial.role}
+                                            </p>
+
+                                            {/* Quote Icon */}
+                                            <div className="mb-2">
+                                                <span className={`text-4xl font-black ${testimonial.highlighted
+                                                    ? 'text-white/20'
+                                                    : 'text-primary-600/20'
+                                                    }`}>
+                                                    &ldquo;
+                                                </span>
+                                            </div>
+
+                                            {/* Testimonial Text */}
+                                            <p className={`text-xs leading-relaxed line-clamp-3 ${testimonial.highlighted
+                                                ? 'text-white/90'
+                                                : 'text-slate-600 dark:text-slate-300'
+                                                }`}>
+                                                {testimonial.testimonial}
+                                            </p>
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Footer */}
-            <footer className="bg-slate-50 dark:bg-slate-950 pt-32 pb-12 px-6">
-                <div className="max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-800 pt-16">
+            <footer className="bg-black pt-32 pb-12 px-6">
+                <div className="max-w-7xl mx-auto border-t border-slate-700 pt-16">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 text-center sm:text-left">
                         <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6 sm:space-y-8 flex flex-col items-center sm:items-start">
                             <div className="flex items-center gap-3">
                                 <img src="/dintask-logo.png" alt="DinTask" className="h-16 sm:h-20 w-16 sm:w-20 object-contain" />
-                                <span className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white italic uppercase whitespace-nowrap">
+                                <span className="text-4xl font-black tracking-tighter text-white italic uppercase whitespace-nowrap">
                                     Din<span className="text-primary-600">Task</span>
                                 </span>
                             </div>
-                            <p className="text-slate-500 max-w-sm font-medium leading-relaxed text-sm sm:text-base">
+                            <p className="text-slate-400 max-w-sm font-medium leading-relaxed text-sm sm:text-base">
                                 Empowering teams with tactical workspace solutions since 2026. Built by engineers, for engineers.
                             </p>
                             <div className="flex gap-4">
@@ -711,7 +1139,7 @@ const LandingPage = () => {
                             { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
                         ].map(col => (
                             <div key={col.title} className="flex flex-col items-center sm:items-start">
-                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white mb-6 sm:mb-8">{col.title}</h4>
+                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white mb-6 sm:mb-8">{col.title}</h4>
                                 <ul className="space-y-4">
                                     {col.links.map(link => (
                                         <li key={link}>
@@ -732,7 +1160,7 @@ const LandingPage = () => {
                                                         document.getElementById(link.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
                                                     }
                                                 }}
-                                                className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors"
+                                                className="text-sm font-bold text-slate-400 hover:text-primary-600 transition-colors"
                                             >
                                                 {link}
                                             </button>
@@ -743,11 +1171,11 @@ const LandingPage = () => {
                         ))}
                     </div>
 
-                    <div className="mt-24 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <div className="mt-24 pt-8 border-t border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                             © 2026 DinTask Inc. All rights reserved.
                         </p>
-                        <div className="flex items-center gap-3 text-[10px] font-black text-slate-300 uppercase tracking-widest italic">
+                        <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
                             <Lock size={12} /> Military Grade Encryption v4.2
                         </div>
                     </div>

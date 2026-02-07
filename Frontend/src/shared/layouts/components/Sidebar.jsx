@@ -28,7 +28,8 @@ import {
     LifeBuoy,
     History,
     Receipt,
-    Activity
+    Activity,
+    FileEdit
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Button } from '@/shared/components/ui/button';
@@ -119,6 +120,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
                 { name: 'History', path: '/superadmin/history', icon: History },
                 { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
+                { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
                 { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
             ]
             : []),
