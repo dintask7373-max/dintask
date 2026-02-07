@@ -175,6 +175,165 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
+// ... existing code ...
+
+// @desc    Get pending join requests
+// @route   GET /api/v1/admin/join-requests
+// @access  Private (Admin)
+exports.getJoinRequests = async (req, res, next) => {
+  try {
+    const adminId = req.user.id;
+
+    const [employees, sales, managers] = await Promise.all([
+      Employee.find({ adminId, status: 'pending' }),
+      SalesExecutive.find({ adminId, status: 'pending' }),
+      Manager.find({ adminId, status: 'pending' })
+    ]);
+
+    const requests = [...employees, ...sales, ...managers].sort((a, b) => b.createdAt - a.createdAt);
+    console.log(`[DEBUG] Join Requests for Admin ${adminId}: Found ${requests.length} requests`);
+
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      data: requests
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Approve a join request
+// @route   PUT /api/v1/admin/join-requests/:id/approve
+// @access  Private (Admin)
+exports.approveJoinRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body; // We need to know the role to find the collection
+
+    if (!role) {
+      return next(new ErrorResponse('Please provide user role', 400));
+    }
+
+    const models = {
+      employee: Employee,
+      sales_executive: SalesExecutive,
+      manager: Manager
+    };
+
+    if (!models[role]) {
+      return next(new ErrorResponse('Invalid role', 400));
+    }
+
+    const user = await models[role].findById(id);
+
+    if (!user) {
+      return next(new ErrorResponse('Request not found', 404));
+    }
+
+    // Verify this user matches the authorized admin
+    if (user.adminId.toString() !== req.user.id) {
+      return next(new ErrorResponse('Not authorized to approve this request', 403));
+    }
+
+    user.status = 'active';
+    await user.save();
+
+    // Check plan limits (Optional but recommended)
+    // const limitCheck = await checkUserLimit(req.user.id);
+    // if (!limitCheck.allowed) ... (Handled optimally before approval or we let it slide for now)
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reject a join request
+// @route   PUT /api/v1/admin/join-requests/:id/reject
+// @access  Private (Admin)
+exports.rejectJoinRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!role) return next(new ErrorResponse('Please provide user role', 400));
+
+    const models = {
+      employee: Employee,
+      sales_executive: SalesExecutive,
+      manager: Manager
+    };
+
+    const user = await models[role].findById(id);
+
+    if (!user) return next(new ErrorResponse('Request not found', 404));
+
+    if (user.adminId.toString() !== req.user.id) {
+      return next(new ErrorResponse('Not authorized', 403));
+    }
+
+    // Determine whether to delete or just mark rejected
+    // Usually rejected requests are deleted or kept for record.
+    // Deleting for now to keep it clean.
+    await models[role].findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Add a team member directly (Active)
+// @route   POST /api/v1/admin/add-member
+// @access  Private (Admin)
+exports.addTeamMember = async (req, res, next) => {
+  try {
+    const { name, email, password, role, phoneNumber } = req.body;
+    const adminId = req.user.id;
+
+    // Check Limit
+    // const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top
+    // const limitCheck = await checkUserLimit(adminId);
+    // if (!limitCheck.allowed) return next(new ErrorResponse(limitCheck.error, 403));
+
+    const models = {
+      employee: Employee,
+      sales_executive: SalesExecutive,
+      manager: Manager
+    };
+
+    if (!models[role]) return next(new ErrorResponse('Invalid role', 400));
+
+    const userExists = await models[role].findOne({ email });
+    if (userExists) return next(new ErrorResponse('User already exists', 400));
+
+    const user = await models[role].create({
+      name,
+      email,
+      password,
+      role,
+      adminId,
+      phoneNumber,
+      status: 'active', // Direct add is active
+      isActive: true
+    });
+
+    res.status(201).json({
+      success: true,
+      data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token

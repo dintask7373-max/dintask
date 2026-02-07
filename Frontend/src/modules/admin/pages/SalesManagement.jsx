@@ -41,7 +41,8 @@ import { toast } from 'sonner';
 
 import useAuthStore from '@/store/authStore';
 import useEmployeeStore from '@/store/employeeStore';
-import useManagerStore from '@/store/managerStore';
+import useManagerStore from '@/store/managerStore'; // Kept in case required by other logic, though we replaced 'managers' usage with employees filter in principle.
+
 
 const SalesManagement = () => {
     const { salesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
@@ -49,7 +50,6 @@ const SalesManagement = () => {
     const { employees } = useEmployeeStore();
     const { managers } = useManagerStore();
     const { user } = useAuthStore();
-
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddRepModalOpen, setIsAddRepModalOpen] = useState(false);
     const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
@@ -67,9 +67,13 @@ const SalesManagement = () => {
     const [parent] = useAutoAnimate();
     const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
 
+    React.useEffect(() => {
+        fetchEmployees();
+    }, []);
+
     // Limit tracking
     const EMPLOYEE_LIMIT = user?.planDetails?.userLimit || 2;
-    const currentCount = (salesReps?.length || 0) + (employees?.length || 0) + (managers?.length || 0);
+    const currentCount = employees.length;
     const isLimitReached = currentCount >= EMPLOYEE_LIMIT;
 
     const filteredReps = useMemo(() => {
@@ -93,12 +97,15 @@ const SalesManagement = () => {
     }, [pipelineData, pipelineSearchTerm]);
 
 
-    const handleAddRep = (e) => {
+    const handleAddRep = async (e) => {
         e.preventDefault();
-        addSalesRep({ ...newRepData });
-        setNewRepData({ name: '', email: '' });
-        setIsAddRepModalOpen(false);
-        toast.success("Sales Representative added");
+        try {
+            await addEmployee({ ...newRepData, role: 'sales_executive', phoneNumber: '0000000000' });
+            setNewRepData({ name: '', email: '' });
+            setIsAddRepModalOpen(false);
+        } catch (error) {
+            // error handled in store
+        }
     };
 
     const handleAddDeal = () => {
@@ -232,7 +239,7 @@ const SalesManagement = () => {
                                 </thead>
                                 <tbody ref={parent}>
                                     {filteredReps.map((rep) => (
-                                        <tr key={rep.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors group">
+                                        <tr key={rep._id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
@@ -265,13 +272,13 @@ const SalesManagement = () => {
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <div className={cn("h-1.5 w-1.5 rounded-full", rep.status === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-300")} />
-                                                    <span className={cn("text-[10px] font-black uppercase tracking-widest", rep.status === 'active' ? "text-emerald-600" : "text-slate-400")}> {rep.status} </span>
+                                                    <span className={cn("text-[10px] font-black uppercase tracking-widest", rep.status === 'active' ? "text-emerald-600" : "text-slate-400")}> {rep.status || 'Pending'} </span>
                                                 </div>
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex justify-end gap-1">
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"> <Edit2 size={12} /> </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteSalesRep(rep.id)}> <Trash2 size={12} /> </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteEmployee(rep._id || rep.id, 'sales_executive')}> <Trash2 size={12} /> </Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -283,7 +290,7 @@ const SalesManagement = () => {
                         {/* Mobile List Card View */}
                         <div className="lg:hidden p-3 space-y-3">
                             {filteredReps.map((rep) => (
-                                <div key={rep.id} className="p-4 rounded-2xl bg-slate-50/30 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 space-y-4">
+                                <div key={rep._id} className="p-4 rounded-2xl bg-slate-50/30 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
@@ -301,7 +308,7 @@ const SalesManagement = () => {
                                                 rep.status === 'active' ? 'bg-emerald-100/50 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                                             )}
                                         >
-                                            {rep.status}
+                                            {rep.status || 'Pending'}
                                         </Badge>
                                     </div>
 
@@ -326,7 +333,7 @@ const SalesManagement = () => {
                                         </div>
                                         <div className="flex gap-2">
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"> <Edit2 size={12} /> </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteSalesRep(rep.id)}> <Trash2 size={12} className="text-red-400" /> </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteEmployee(rep._id || rep.id, 'sales_executive')}> <Trash2 size={12} className="text-red-400" /> </Button>
                                         </div>
                                     </div>
                                 </div>

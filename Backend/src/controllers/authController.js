@@ -71,6 +71,21 @@ exports.register = async (req, res, next) => {
       ...extraData
     });
 
+    // If status is pending, do NOT login immediately
+    if (user.status === 'pending') {
+      return res.status(201).json({
+        success: true,
+        message: 'Registration successful. Please wait for admin approval.',
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status
+        }
+      });
+    }
+
     await sendTokenResponse(user, 201, res);
   } catch (err) {
     next(err);
@@ -115,6 +130,18 @@ exports.login = async (req, res, next) => {
 
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+
+    // Check if user is active
+    console.log(`[LOGIN DEBUG] Checking status for ${user.email}. Role: ${user.role}, Status: '${user.status}'`);
+
+    if (user.status === 'pending') {
+      console.log('[LOGIN DEBUG] Blocking pending user');
+      return res.status(403).json({ success: false, error: 'Your account is pending approval from your administrator.' });
+    }
+    if (user.status === 'rejected') {
+      console.log('[LOGIN DEBUG] Blocking rejected user');
+      return res.status(403).json({ success: false, error: 'Your account request has been rejected.' });
     }
 
     await sendTokenResponse(user, 200, res);

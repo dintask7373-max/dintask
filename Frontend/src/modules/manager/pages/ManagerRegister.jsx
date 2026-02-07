@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useEmployeeStore from '@/store/employeeStore';
+import useAuthStore from '@/store/authStore';
 import { ShieldCheck, UserPlus, Link2, User, Mail, Lock, Shield, Zap, Terminal } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { toast } from 'sonner';
@@ -15,16 +16,27 @@ const ManagerRegister = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const referralCode = queryParams.get('ref');
+    const adminId = queryParams.get('adminId');
+    const inviteEmail = queryParams.get('email');
+
+    const { register } = useAuthStore();
+    const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
 
     const [formData, setFormData] = useState({
         fullName: '',
-        email: '',
+        email: inviteEmail || '',
         password: '',
         confirmPassword: ''
     });
 
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (inviteEmail) {
+            setFormData(prev => ({ ...prev, email: inviteEmail }));
+        }
+    }, [inviteEmail]);
 
     const handleChange = (e) => {
         const { id, value } = e.target;
@@ -33,8 +45,6 @@ const ManagerRegister = () => {
             [id]: value
         }));
     };
-
-    const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -53,7 +63,25 @@ const ManagerRegister = () => {
         setLoading(true);
 
         try {
-            if (referralCode) {
+            if (adminId) {
+                // Direct registration via Invite
+                const response = await register({
+                    name: fullName,
+                    email,
+                    password,
+                    role: 'manager',
+                    adminId
+                });
+
+                if (response?.success) {
+                    if (response.user?.status === 'pending') {
+                        navigate('/pending-approval');
+                    } else {
+                        toast.success('Manager application submitted. Verify keys below.');
+                        navigate('/manager/login');
+                    }
+                }
+            } else if (referralCode) {
                 addPendingRequest({
                     fullName,
                     email,
@@ -64,9 +92,7 @@ const ManagerRegister = () => {
                 toast.success('Join request sent! Awaiting Admin authorization.');
                 navigate('/employee/success-join');
             } else {
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                toast.success('Manager application submitted. Verify keys below.');
-                navigate('/manager/login');
+                toast.error("Process Terminated. Invitation or Link required.");
             }
         } catch {
             toast.error('Registration sequence aborted. Try again.');
@@ -95,19 +121,23 @@ const ManagerRegister = () => {
                                 <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full scale-150 group-hover:bg-primary-500/30 transition-all" />
                                 <div className={cn(
                                     "relative p-4 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl border transition-all duration-500 group-hover:rotate-6",
-                                    referralCode ? "border-emerald-100 dark:border-emerald-900/20 text-emerald-600" : "border-primary-100 dark:border-primary-900/20 text-primary-600"
+                                    referralCode ? "border-emerald-100 dark:border-emerald-900/20 text-emerald-600" : adminId ? "border-indigo-100 dark:border-indigo-900/20 text-indigo-600" : "border-primary-100 dark:border-primary-900/20 text-primary-600"
                                 )}>
-                                    {referralCode ? <Link2 className="w-10 h-10" /> : <ShieldCheck className="w-10 h-10" />}
+                                    {referralCode ? <Link2 className="w-10 h-10" /> : adminId ? <Mail className="w-10 h-10" /> : <ShieldCheck className="w-10 h-10" />}
                                 </div>
                             </div>
                         </div>
                         <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">
-                            {referralCode ? 'Join' : 'Register'} <span className="text-primary-600">Asset</span>
+                            {referralCode ? 'Join' : adminId ? 'Accept' : 'Register'} <span className="text-primary-600">Asset</span>
                         </CardTitle>
                         <CardDescription className="text-[10px] font-black font-mono text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] italic mt-2">
                             {referralCode ? (
                                 <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">
                                     NODE_UPLINK: {referralCode}
+                                </span>
+                            ) : adminId ? (
+                                <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-full">
+                                    SECURE_INVITE: RECEIVED
                                 </span>
                             ) : '[ NEW_FORCE_APPLICATION ]'}
                         </CardDescription>
@@ -140,7 +170,8 @@ const ManagerRegister = () => {
                                         placeholder="SYNC@DINTASK.SOL"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs uppercase"
+                                        readOnly={!!inviteEmail}
+                                        className={`h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs uppercase ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                             </div>

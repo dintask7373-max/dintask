@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import useEmployeeStore from '@/store/employeeStore';
-import { UserPlus, Link2 } from 'lucide-react';
+import { UserPlus, Link2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
@@ -14,16 +14,26 @@ const EmployeeRegister = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const referralCode = queryParams.get('ref');
+    const adminId = queryParams.get('adminId');
+    const inviteEmail = queryParams.get('email');
 
     const [formData, setFormData] = useState({
         fullName: '',
-        email: '',
+        email: inviteEmail || '',
         password: '',
         confirmPassword: ''
     });
 
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { register } = useAuthStore();
+    const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
+
+    useEffect(() => {
+        if (inviteEmail) {
+            setFormData(prev => ({ ...prev, email: inviteEmail }));
+        }
+    }, [inviteEmail]);
 
     const handleChange = (e) => {
         const { id, value } = e.target;
@@ -32,8 +42,6 @@ const EmployeeRegister = () => {
             [id]: value
         }));
     };
-
-    const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -52,8 +60,26 @@ const EmployeeRegister = () => {
         setLoading(true);
 
         try {
-            // If joining via referral, add to pending requests
-            if (referralCode) {
+            if (adminId) {
+                // Direct registration via Invite
+                const response = await register({
+                    name: fullName,
+                    email,
+                    password,
+                    role: 'employee',
+                    adminId
+                });
+
+                if (response?.success) {
+                    if (response.user?.status === 'pending') {
+                        navigate('/pending-approval');
+                    } else {
+                        toast.success('Account created successfully! Please login.');
+                        navigate('/employee/login');
+                    }
+                }
+            } else if (referralCode) {
+                // Join via Referal Code (Pending Request)
                 addPendingRequest({
                     fullName,
                     email,
@@ -62,15 +88,13 @@ const EmployeeRegister = () => {
                     role: 'Employee'
                 });
                 toast.success('Join request sent! Waiting for Admin approval.');
-                // Navigate to a "waiting" screen or splash
                 navigate('/employee/success-join');
             } else {
-                // Normal direct registration (might still need approval but for now let's say it's direct)
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                toast.success('Account created successfully! Please login.');
-                navigate('/employee/login');
+                // Standalone registration (fallback, though usually employees need an invite or code)
+                // For now, assuming direct reg requires adminId or refCode usually, but leaving basic flow
+                toast.error("Invitation link or Referral code required.");
             }
-        } catch {
+        } catch (err) {
             toast.error('Registration failed. Please try again.');
         } finally {
             setLoading(false);
@@ -88,6 +112,12 @@ const EmployeeRegister = () => {
                                 <Link2 className="w-8 h-8" />
                             </div>
                         </div>
+                    ) : adminId ? (
+                        <div className="flex justify-center mb-4">
+                            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center gap-2">
+                                <Mail className="w-8 h-8" />
+                            </div>
+                        </div>
                     ) : (
                         <div className="flex justify-center mb-4">
                             <div className="p-3 rounded-2xl bg-primary-50 dark:bg-primary-900/20 text-primary-600">
@@ -96,13 +126,15 @@ const EmployeeRegister = () => {
                         </div>
                     )}
                     <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        {referralCode ? 'Join Workspace' : 'Create Account'}
+                        {referralCode ? 'Join Workspace' : adminId ? 'Accept Invitation' : 'Create Account'}
                     </CardTitle>
                     <CardDescription className="text-slate-500 dark:text-slate-400">
                         {referralCode ? (
                             <span className="flex items-center justify-center gap-1 text-emerald-600 font-bold dark:text-emerald-400">
                                 Workspace ID: {referralCode}
                             </span>
+                        ) : adminId ? (
+                            'Join your team workspace'
                         ) : 'Join your team workspace'}
                     </CardDescription>
                 </CardHeader>
@@ -129,7 +161,8 @@ const EmployeeRegister = () => {
                                 placeholder="employee@dintask.com"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
+                                readOnly={!!inviteEmail}
+                                className={`bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
                             />
                         </div>
 

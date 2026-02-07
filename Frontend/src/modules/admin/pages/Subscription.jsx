@@ -9,7 +9,8 @@ import {
     ChevronRight,
     TrendingUp,
     History,
-    Download
+    Download,
+    Mail
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -17,6 +18,15 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { Input } from '@/shared/components/ui/input';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogDescription
+} from '@/shared/components/ui/dialog';
 import { Progress } from "@/shared/components/ui/progress";
 import useEmployeeStore from '@/store/employeeStore';
 import { cn } from '@/shared/utils/cn';
@@ -24,6 +34,7 @@ import { cn } from '@/shared/utils/cn';
 import { useNavigate } from 'react-router-dom';
 import useSubscriptionStore from '@/store/subscriptionStore';
 import useAuthStore from '@/store/authStore';
+import api from '@/lib/api';
 
 const Subscription = () => {
     const { employees, subscriptionLimit } = useEmployeeStore();
@@ -31,6 +42,8 @@ const Subscription = () => {
     const { plans, fetchPlans, createOrder, verifyPayment, billingHistory, fetchBillingHistory, downloadInvoice } = useSubscriptionStore();
     const [loadingPlan, setLoadingPlan] = React.useState(null);
     const [downloadingId, setDownloadingId] = React.useState(null);
+    const [inviteModal, setInviteModal] = React.useState({ isOpen: false, role: '', email: '' });
+    const [loadingInvite, setLoadingInvite] = React.useState(false);
 
     React.useEffect(() => {
         fetchPlans();
@@ -264,10 +277,79 @@ const Subscription = () => {
                                     <span>Remaining Seats</span>
                                     <span className="text-primary-600">{subscriptionLimit - employees.length} slots</span>
                                 </div>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setInviteModal({ isOpen: true, role: selectedRole, email: '' })}
+                                    className="w-full h-8 text-xs font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                >
+                                    <Mail size={14} className="mr-2" />
+                                    Send Invite via Email
+                                </Button>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Invite Email Dialog */}
+                <Dialog open={!!inviteModal.isOpen} onOpenChange={(open) => !open && setInviteModal({ isOpen: false, role: '', email: '' })}>
+                    <DialogContent className="sm:max-w-md rounded-3xl duration-200">
+                        <DialogHeader>
+                            <DialogTitle>Send Invitation</DialogTitle>
+                            <DialogDescription>
+                                Send an invitation link to a new {inviteModal.role}. They will be able to register and join your team immediately.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="grid gap-2">
+                                <label htmlFor="invite-email" className="text-xs font-bold text-slate-500 uppercase">Email Address</label>
+                                <Input
+                                    id="invite-email"
+                                    type="email"
+                                    value={inviteModal.email}
+                                    onChange={(e) => setInviteModal({ ...inviteModal, email: e.target.value })}
+                                    placeholder={`new.${inviteModal.role}@example.com`}
+                                    className="rounded-xl h-11"
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => setInviteModal({ isOpen: false, role: '', email: '' })}
+                                className="rounded-xl h-11 px-6"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={async () => {
+                                    if (!inviteModal.email) {
+                                        toast.error("Please enter an email address");
+                                        return;
+                                    }
+                                    try {
+                                        setLoadingInvite(true);
+                                        await api('/invite', {
+                                            method: 'POST',
+                                            body: { email: inviteModal.email, role: inviteModal.role }
+                                        });
+                                        toast.success(`Invitation sent to ${inviteModal.email}`);
+                                        setInviteModal({ isOpen: false, role: '', email: '' });
+                                    } catch (err) {
+                                        console.error("Invite Error:", err);
+                                        toast.error(err.message || 'Failed to send invite');
+                                    } finally {
+                                        setLoadingInvite(false);
+                                    }
+                                }}
+                                disabled={loadingInvite}
+                                className="rounded-xl h-11 px-6 bg-primary-600 hover:bg-primary-700"
+                            >
+                                {loadingInvite ? 'Sending...' : 'Send Invite'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Quick Billing Stats / Actions */}
                 <div className="space-y-6">

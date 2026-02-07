@@ -50,6 +50,7 @@ app.use('/api/v1/upload', uploadRoutes); // Mount upload routes
 
 // Serve static assets - Uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api/v1/invite', require('./routes/inviteRoutes'));
 
 app.use(errorHandler);
 

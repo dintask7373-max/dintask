@@ -32,7 +32,11 @@ import useTicketStore from '@/store/ticketStore';
 
 const SupportCenter = () => {
     const { user, role } = useAuthStore();
-    const { tickets, addTicket, updateTicketStatus } = useTicketStore();
+    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading } = useTicketStore();
+
+    React.useEffect(() => {
+        fetchTickets();
+    }, [fetchTickets]);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState(role === 'admin' ? 'received' : 'sent');
@@ -49,41 +53,41 @@ const SupportCenter = () => {
 
     // Filter Logic
     const filteredTickets = tickets.filter(t => {
-        const matchesSearch = t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.id.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.ticketId?.toLowerCase().includes(searchQuery.toLowerCase());
 
         if (role === 'superadmin') {
-            return t.receiverRole === 'superadmin' && matchesSearch;
+            return t.isEscalatedToSuperAdmin && matchesSearch;
         }
 
         if (role === 'admin') {
             if (activeTab === 'received') {
-                return t.receiverRole === 'admin' && matchesSearch;
+                // Team tickets: NOT escalated and NOT created by me (although creator check is redundant if valid logic)
+                // Filter out tickets I created myself just in case
+                return !t.isEscalatedToSuperAdmin && t.creator?._id !== user?.id && matchesSearch;
             } else {
-                return t.senderId === user?.id && t.receiverRole === 'superadmin' && matchesSearch;
+                // My tickets: Created by me (and implicitly escalated if I am admin)
+                return t.creator?._id === user?.id && matchesSearch;
             }
         }
 
-        // Employee, Manager, Sales
-        return t.senderId === user?.id && matchesSearch;
+        // Employee, Manager, Sales - They only see their own tickets
+        return t.creator?._id === user?.id && matchesSearch;
     });
 
-    const handleCreateTicket = () => {
+    const handleCreateTicket = async () => {
         if (!newTicket.subject || !newTicket.description) return;
 
         const ticketData = {
             ...newTicket,
-            senderId: user.id,
-            senderName: user.name,
-            senderRole: role,
-            // Subordinates send to Admin, Admin sends to Super Admin
-            receiverRole: role === 'admin' ? 'superadmin' : 'admin',
-            companyId: role === 'admin' ? user.id : 'adm-1' // Mock company association
+            // Backend handles the rest
         };
 
-        addTicket(ticketData);
-        setIsCreateModalOpen(false);
-        setNewTicket({ subject: '', description: '', category: 'Technical', priority: 'Medium' });
+        const success = await addTicket(ticketData);
+        if (success) {
+            setIsCreateModalOpen(false);
+            setNewTicket({ subject: '', description: '', category: 'Technical', priority: 'Medium' });
+        }
     };
 
     const getStatusStyle = (status) => {
@@ -177,9 +181,10 @@ const SupportCenter = () => {
                                     </div>
                                     <Button
                                         onClick={handleCreateTicket}
+                                        disabled={loading}
                                         className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest rounded-xl"
                                     >
-                                        SEND TO {role === 'admin' ? 'SUPER ADMIN' : 'ADMIN'}
+                                        {loading ? 'SENDING...' : `SEND TO ${role === 'admin' ? 'SUPER ADMIN' : 'ADMIN'}`}
                                     </Button>
                                 </div>
                             </DialogContent>
@@ -223,11 +228,15 @@ const SupportCenter = () => {
 
                     <div className="space-y-3">
                         <AnimatePresence mode='popLayout'>
-                            {filteredTickets.length > 0 ? (
+                            {loading ? (
+                                <div className="flex justify-center items-center py-20">
+                                    <Loader2 className="animate-spin text-primary-600" size={32} />
+                                </div>
+                            ) : filteredTickets.length > 0 ? (
                                 filteredTickets.map((ticket) => (
                                     <motion.div
                                         layout
-                                        key={ticket.id}
+                                        key={ticket._id}
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         className="bg-white border border-slate-100 p-5 rounded-[1.5rem] shadow-sm hover:shadow-md transition-all group cursor-pointer"
@@ -236,20 +245,20 @@ const SupportCenter = () => {
                                             <div className="flex items-start gap-4">
                                                 <div className={`size-12 rounded-2xl flex flex-col items-center justify-center border font-black ${getStatusStyle(ticket.status)}`}>
                                                     <span className="text-[8px] opacity-60">ID</span>
-                                                    <span className="text-[10px] tracking-tighter">{ticket.id.split('-')[1]}</span>
+                                                    <span className="text-[10px] tracking-tighter">{ticket.ticketId?.split('-')[1]}</span>
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <Badge variant="outline" className="border-slate-100 text-[8px] font-black uppercase">{ticket.category}</Badge>
+                                                        <Badge variant="outline" className="border-slate-100 text-[8px] font-black uppercase">{ticket.type}</Badge>
                                                         <span className={`text-[9px] font-black uppercase flex items-center gap-1 ${getPriorityColor(ticket.priority)}`}>
                                                             <AlertCircle size={10} /> {ticket.priority}
                                                         </span>
                                                     </div>
-                                                    <h3 className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{ticket.subject}</h3>
+                                                    <h3 className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{ticket.title}</h3>
                                                     <div className="flex items-center gap-4 mt-1.5">
                                                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
                                                             <User size={12} className="text-primary-400 text-xs" />
-                                                            {role === 'admin' && activeTab === 'received' ? ticket.senderName : `Sent to ${ticket.receiverRole}`}
+                                                            {role === 'admin' && activeTab === 'received' ? ticket.creator?.name : `Sent to ${ticket.isEscalatedToSuperAdmin ? 'SUPER ADMIN' : 'ADMIN'}`}
                                                         </div>
                                                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
                                                             <Clock size={12} className="text-primary-400" />
@@ -264,7 +273,7 @@ const SupportCenter = () => {
                                                     <Button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            updateTicketStatus(ticket.id, 'Resolved');
+                                                            updateTicketStatus(ticket._id, 'Resolved');
                                                         }}
                                                         variant="outline"
                                                         className="h-9 px-4 rounded-lg border-emerald-100 text-emerald-600 hover:bg-emerald-50 text-[10px] font-black uppercase tracking-widest"

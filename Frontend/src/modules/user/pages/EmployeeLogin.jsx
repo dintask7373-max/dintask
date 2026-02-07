@@ -22,12 +22,16 @@ const EmployeeLogin = () => {
             return;
         }
 
-        const success = await login(email, password, 'employee');
-        if (success) {
+        const result = await login(email, password, 'employee');
+        if (result.success) {
             toast.success('Welcome back!');
             navigate('/employee');
         } else {
-            toast.error(error || 'Login failed');
+            if (result.error && result.error.includes('pending approval')) {
+                navigate('/pending-approval');
+            } else {
+                toast.error(result.error || 'Login failed');
+            }
         }
     };
 
