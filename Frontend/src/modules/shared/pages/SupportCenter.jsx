@@ -32,11 +32,12 @@ import useTicketStore from '@/store/ticketStore';
 
 const SupportCenter = () => {
     const { user, role } = useAuthStore();
-    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading } = useTicketStore();
+    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats } = useTicketStore();
 
     React.useEffect(() => {
         fetchTickets();
-    }, [fetchTickets]);
+        fetchTicketStats();
+    }, [fetchTickets, fetchTicketStats]);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState(role === 'admin' ? 'received' : 'sent');
@@ -312,9 +313,9 @@ const SupportCenter = () => {
 
                         <div className="space-y-4">
                             {[
-                                { label: 'Avg Feedback', val: '4.8/5', color: 'bg-emerald-500' },
-                                { label: 'Resolved', val: '92%', color: 'bg-primary-500' },
-                                { label: 'In Time', val: '85%', color: 'bg-amber-500' }
+                                { label: 'Avg Feedback', val: `${stats?.avgFeedback || 0}/5`, color: 'bg-emerald-500', width: `${((stats?.avgFeedback || 0) / 5) * 100}%` },
+                                { label: 'Resolved', val: `${stats?.resolvedRate || 0}%`, color: 'bg-primary-500', width: `${stats?.resolvedRate || 0}%` },
+                                { label: 'In Time', val: `${stats?.inTimeResolution || 0}%`, color: 'bg-amber-500', width: `${stats?.inTimeResolution || 0}%` }
                             ].map((stat, i) => (
                                 <div key={i} className="space-y-1.5">
                                     <div className="flex justify-between text-[10px] font-black uppercase tracking-tight">
@@ -322,7 +323,7 @@ const SupportCenter = () => {
                                         <span className="text-slate-900">{stat.val}</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                                        <div className={`h-full ${stat.color} rounded-full`} style={{ width: stat.val.includes('/') ? '96%' : stat.val }} />
+                                        <div className={`h-full ${stat.color} rounded-full`} style={{ width: stat.width }} />
                                     </div>
                                 </div>
                             ))}

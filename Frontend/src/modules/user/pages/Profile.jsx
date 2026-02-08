@@ -1,194 +1,184 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
-    User,
+    Save,
     Bell,
-    Shield,
-    LogOut,
-    ChevronRight,
-    Camera,
-    Star,
-    Zap,
-    HelpCircle,
-    FileText
+    Moon,
+    AlertCircle,
+    User,
+    Shield
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-
-import { Card, CardContent } from '@/shared/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
+import { Input } from '@/shared/components/ui/input';
+import { Switch } from '@/shared/components/ui/switch';
+import { Label } from '@/shared/components/ui/label';
+import { Separator } from '@/shared/components/ui/separator';
 import useAuthStore from '@/store/authStore';
+import { toast } from 'sonner';
+import { cn } from '@/shared/utils/cn';
 
 const EmployeeProfile = () => {
-    const { user, logout } = useAuthStore();
-    const navigate = useNavigate();
+    const { user, updateProfile, changePassword } = useAuthStore();
 
-    const handleLogout = async () => {
-        const logoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
+    const [profileData, setProfileData] = useState({
+        name: '',
+        email: '',
+        phoneNumber: '+1 (555) 123-4567'
+    });
 
-        toast.promise(logoutPromise, {
-            loading: 'Logging out...',
-            success: 'Logged out successfully',
-            error: 'Logout failed',
-        });
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
 
-        await logoutPromise;
-        logout();
-    };
+    const [isLoading, setIsLoading] = useState(false);
 
-    const menuItems = [
-        { icon: <User size={18} className="text-blue-500" />, label: 'Personal Information', sub: 'Name, email, and phone', path: '/employee/profile/account' },
-        { icon: <Bell size={18} className="text-amber-500" />, label: 'Notification Settings', sub: 'App, email & desktop', path: '/employee/profile/notifications' },
-        { icon: <Shield size={18} className="text-emerald-500" />, label: 'Security & Password', sub: '2FA and credentials', path: '/employee/profile/security' },
-        { icon: <Zap size={18} className="text-purple-500" />, label: 'Workspace Preferences', sub: 'Dark mode and localization', path: '/employee/profile/preferences' },
-    ];
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                name: user.name || '',
+                email: user.email || '',
+                phoneNumber: user.phoneNumber || user.phone || '+1 (555) 123-4567'
+            });
+        }
+    }, [user]);
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
+    const handleProfileUpdate = async () => {
+        if (!profileData.name || !profileData.email) {
+            toast.error("Parameters incomplete");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await updateProfile({
+                ...profileData,
+                phoneNumber: profileData.phoneNumber
+            });
+            toast.success("Synchronized successfully");
+        } catch (error) {
+            toast.error("Sync failed");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
+    const handlePasswordChange = async () => {
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            toast.error("Security fields incomplete");
+            return;
+        }
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            toast.error("Hash mismatch");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await changePassword(passwordData.currentPassword, passwordData.newPassword);
+            toast.success("Security protocol updated");
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (error) {
+            toast.error("Recall failed");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
+    // Default Profile View
     return (
-        <div className="px-4 pt-6 pb-32 space-y-6">
-            {/* Profile Header Card */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <Card className="border-none shadow-lg shadow-amber-500/20 dark:shadow-none bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 rounded-3xl overflow-hidden">
-                    <CardContent className="p-8">
-                        <div className="flex flex-col items-center text-center">
-                            <div className="relative mb-4">
-                                <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
-                                    <Avatar className="h-24 w-24 ring-4 ring-white/30 shadow-2xl">
-                                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
-                                        <AvatarFallback className="bg-white/20 text-white font-black text-2xl">{user?.name?.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.2 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute bottom-0 right-0 cursor-pointer"
-                                >
-                                    <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-lg">
-                                        <Camera size={16} className="text-primary-600" />
-                                    </div>
-                                </motion.div>
-                            </div>
-
-                            <h3 className="text-xl font-black text-white leading-tight mb-1">{user?.name}</h3>
-                            <p className="text-sm text-white/80 font-medium mb-6">Employee • Marketing Team</p>
-
-                            {/* Stats Row */}
-                            <div className="flex gap-8 w-full justify-center">
-                                <div className="text-center">
-                                    <div className="flex items-center justify-center gap-1.5 font-black text-white mb-1">
-                                        <Star size={16} className="text-amber-400 fill-amber-400" />
-                                        <span className="text-xl">4.9</span>
-                                    </div>
-                                    <p className="text-xs text-white/70 font-medium">Performance</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-xl font-black text-white mb-1">42</p>
-                                    <p className="text-xs text-white/70 font-medium">Tasks Monthly</p>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </motion.div>
-
-            {/* Settings Section */}
-            <motion.div
-                className="space-y-4"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-100px" }}
-                variants={containerVariants}
-            >
-                <motion.h3 variants={itemVariants} className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Settings</motion.h3>
-                <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
-                    <CardContent className="p-0 divide-y divide-slate-50 dark:divide-slate-800">
-                        {menuItems.map((item, i) => (
-                            <motion.div
-                                key={i}
-                                variants={itemVariants}
-                                onClick={() => navigate(item.path)}
-                                className="flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-slate-800 transition-colors cursor-pointer group"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 group-hover:scale-110 transition-transform duration-300">
-                                        {item.icon}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{item.label}</p>
-                                        <p className="text-[10px] text-slate-400">{item.sub}</p>
-                                    </div>
-                                </div>
-                                <ChevronRight size={18} className="text-slate-300 group-hover:text-primary-500 transition-colors" />
-                            </motion.div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </motion.div>
-
-            {/* Privacy & Support */}
-            <motion.div
-                className="space-y-4"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={containerVariants}
-            >
-                <motion.h3 variants={itemVariants} className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Privacy & Support</motion.h3>
-                <div className="grid grid-cols-2 gap-4">
-                    <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate('/employee/profile/help')}>
-                        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden p-4 h-full cursor-pointer group">
-                            <HelpCircle size={20} className="text-primary-500 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-xs font-bold">Help Center</p>
-                        </Card>
-                    </motion.div>
-                    <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate('/employee/profile/help')}>
-                        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden p-4 h-full cursor-pointer group">
-                            <FileText size={20} className="text-slate-400 mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-xs font-bold">Legal Info</p>
-                        </Card>
-                    </motion.div>
+        <div className="space-y-4 sm:space-y-6 pb-12 transition-all duration-500">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+                <div className="flex items-center gap-3">
+                    <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                            System <span className="text-primary-600">Preferences</span>
+                        </h1>
+                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                            Identity & security parameters
+                        </p>
+                    </div>
                 </div>
-            </motion.div>
-
-            {/* Logout Button */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-            >
-                <Button
-                    variant="ghost"
-                    className="w-full h-14 rounded-2xl text-red-500 font-bold bg-white dark:bg-slate-900 shadow-sm border-none mb-6 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.98] transition-all"
-                    onClick={handleLogout}
-                >
-                    <LogOut size={20} className="mr-2" />
-                    Sign Out
+                <Button className="h-9 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/20 text-white gap-2" onClick={handleProfileUpdate} disabled={isLoading}>
+                    <Save size={14} /> {isLoading ? 'SAVING...' : 'SAVE'}
                 </Button>
-            </motion.div>
+            </div>
 
-            {/* Footer */}
-            <div className="text-center pb-8">
-                <p className="text-[10px] text-slate-400 font-medium">Version 1.0.4 (Build 82910)</p>
-                <p className="text-[10px] text-slate-400">© 2026 DinTask CRM Inc.</p>
+            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+                {/* Profile Matrix */}
+                <div className="space-y-4 sm:space-y-6">
+                    <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
+                        <CardHeader className="py-5 px-8 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Public Identity</CardTitle>
+                                <CardDescription className="text-[8px] font-black text-slate-300 uppercase italic">Force-wide recognition data</CardDescription>
+                            </div>
+                            <User size={18} className="text-primary-500" />
+                        </CardHeader>
+                        <CardContent className="p-6 sm:p-8 space-y-6">
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</Label>
+                                    <Input
+                                        value={profileData.name}
+                                        onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                                        className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Primary Email</Label>
+                                    <Input
+                                        value={profileData.email}
+                                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                                        className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Mobile Number</Label>
+                                    <Input
+                                        value={profileData.phoneNumber}
+                                        onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
+                                        className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4"
+                                    />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
+                        <CardHeader className="py-5 px-8 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Security Encryption</CardTitle>
+                                <CardDescription className="text-[8px] font-black text-slate-300 uppercase italic">Credential rotation & access keys</CardDescription>
+                            </div>
+                            <Shield size={18} className="text-amber-500" />
+                        </CardHeader>
+                        <CardContent className="p-6 sm:p-8 space-y-6">
+                            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 items-end">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Current Cipher</Label>
+                                    <Input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} placeholder="••••••••" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">New Sequence</Label>
+                                    <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm Sequence</Label>
+                                    <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" className="h-11 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-sm px-4" />
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button className="h-9 px-5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black text-[9px] uppercase tracking-widest" onClick={handlePasswordChange} disabled={isLoading}>ROTATE KEYS</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

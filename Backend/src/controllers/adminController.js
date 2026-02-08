@@ -7,6 +7,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const jwt = require('jsonwebtoken'); // Needed for token response logic if we duplicate it
+const checkUserLimit = require('../utils/checkUserLimit');
 
 // @desc    Register a new Admin (Self-service)
 // @route   POST /api/v1/admin/register
@@ -45,6 +46,8 @@ exports.registerAdmin = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
   try {
     const adminId = req.user.id; // Get admin's ID
+    console.log(`[DEBUG] getAllUsers - Logged in Admin ID: ${adminId}, Email: ${req.user.email}`);
+
 
     // Fetch only users from THIS admin's workspace
     const [employees, sales, managers] = await Promise.all([

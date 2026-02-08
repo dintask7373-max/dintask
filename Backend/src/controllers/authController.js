@@ -13,6 +13,7 @@ const Plan = require('../models/Plan');
 const models = {
   employee: Employee,
   sales_executive: SalesExecutive,
+  sales: SalesExecutive, // Added for normalized role support
   manager: Manager,
   admin: Admin,
   superadmin: SuperAdmin
@@ -197,7 +198,12 @@ exports.login = async (req, res, next) => {
 // @access  Private
 exports.getMe = async (req, res, next) => {
   try {
-    const user = await req.user.populate('subscriptionPlanId');
+    let user = req.user;
+
+    // Only populate subscriptionPlanId for admins
+    if (user.role === 'admin') {
+      user = await user.populate('subscriptionPlanId');
+    }
 
     let userData = {
       id: user._id,
@@ -228,7 +234,7 @@ exports.getMe = async (req, res, next) => {
 // @access  Private
 exports.updateDetails = async (req, res, next) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, phoneNumber } = req.body;
 
     // Find user by ID and Role from the request (set by protect middleware)
     const UserModel = models[req.user.role];
@@ -247,7 +253,8 @@ exports.updateDetails = async (req, res, next) => {
 
     const fieldsToUpdate = {
       name: name || req.user.name,
-      email: email || req.user.email
+      email: email || req.user.email,
+      phoneNumber: phoneNumber || req.user.phoneNumber
     };
 
     const user = await UserModel.findByIdAndUpdate(req.user.id, fieldsToUpdate, {

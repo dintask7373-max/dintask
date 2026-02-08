@@ -65,7 +65,14 @@ const SupportTicketSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         }
-    }]
+    }],
+    rating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    feedback: String,
+    resolvedAt: Date
 }, { timestamps: true });
 
 module.exports = mongoose.model('SupportTicket', SupportTicketSchema);

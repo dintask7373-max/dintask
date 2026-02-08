@@ -262,11 +262,6 @@ const AppRouter = () => {
                 <Route path="schedule" element={<ManagerSchedule />} />
                 <Route path="reports" element={<ManagerReports />} />
                 <Route path="settings" element={<ManagerSettings />} />
-                <Route path="settings/profile" element={<ManagerSettings />} />
-                <Route path="settings/notifications" element={<ManagerSettings />} />
-                <Route path="settings/security" element={<ManagerSettings />} />
-                <Route path="settings/customization" element={<ManagerSettings />} />
-                <Route path="settings/language" element={<ManagerSettings />} />
                 <Route path="support" element={<SupportCenter />} />
             </Route>
 

@@ -142,12 +142,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
             : []),
     ];
 
-    const managerSettingsSubItems = isManager
-        ? [
-            { name: 'Profile Information', path: '/manager/settings/profile', icon: User },
-            { name: 'Notifications', path: '/manager/settings/notifications', icon: Bell },
-        ]
-        : [];
+
 
     const adminSettingsSubItems = isAdmin
         ? [
@@ -214,7 +209,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
 
                 <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto no-scrollbar py-2">
                     {navItems.map((item) => {
-                        const isSettingsItem = (isManager || isAdmin || isSuperAdmin) && item.name === 'Settings';
+                        const isSettingsItem = (isAdmin || isSuperAdmin) && item.name === 'Settings';
                         const badgeCount = item.name === 'Inquiries' ? newInquiriesCount : item.badge;
 
                         if (isSettingsItem) {

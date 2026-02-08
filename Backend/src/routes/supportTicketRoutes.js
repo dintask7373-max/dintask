@@ -4,12 +4,16 @@ const {
     createTicket,
     getTickets,
     getTicket,
-    updateTicket
+    updateTicket,
+    getTicketStats
 } = require('../controllers/supportTicketController');
 
 const router = express.Router();
 
 router.use(protect);
+
+router.route('/stats')
+    .get(getTicketStats);
 
 router.route('/')
     .post(createTicket)

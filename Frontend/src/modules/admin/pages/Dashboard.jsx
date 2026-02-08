@@ -39,7 +39,15 @@ const AdminDashboard = () => {
     const { user } = useAuthStore();
     const { tasks } = useTaskStore();
     const { managers } = useManagerStore();
-    const { employees } = useEmployeeStore();
+    const { employees, fetchEmployees } = useEmployeeStore();
+    const { fetchManagers } = useManagerStore();
+    const { fetchTasks } = useTaskStore();
+
+    React.useEffect(() => {
+        fetchTasks();
+        fetchManagers();
+        fetchEmployees();
+    }, []);
 
     // Mock data for the chart
     const chartData = [

@@ -7,10 +7,28 @@ const useTicketStore = create((set, get) => ({
     loading: false,
     error: null,
 
-    fetchTickets: async () => {
+    stats: {
+        avgFeedback: 0,
+        resolvedRate: 0,
+        inTimeResolution: 0
+    },
+
+    fetchTicketStats: async () => {
+        try {
+            const res = await api('/support-tickets/stats');
+            if (res.success) {
+                set({ stats: res.data });
+            }
+        } catch (err) {
+            console.error("Fetch Stats Error:", err);
+        }
+    },
+
+    fetchTickets: async (scope = 'all') => {
         set({ loading: true, error: null });
         try {
-            const res = await api('/support-tickets');
+            const query = scope ? `?scope=${scope}` : '';
+            const res = await api(`/support-tickets${query}`);
             set({ tickets: res.data || [], loading: false });
         } catch (err) {
             console.error("Fetch Tickets Error:", err);
