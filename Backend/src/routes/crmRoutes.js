@@ -20,21 +20,21 @@ const router = express.Router();
 
 router
   .route('/')
-  .get(protect, authorize('admin', 'sales_executive'), getLeads)
-  .post(protect, authorize('admin', 'sales_executive'), createLead);
+  .get(protect, authorize('admin', 'sales'), getLeads)
+  .post(protect, authorize('admin', 'sales'), createLead);
 
-router.route('/sales-executives').get(protect, authorize('admin'), getSalesExecutives);
+router.route('/sales-executives').get(protect, authorize('admin', 'sales'), getSalesExecutives);
 
-router.route('/pending-projects').get(protect, authorize('admin'), getPendingProjects);
+router.route('/pending-projects').get(protect, authorize('admin', 'sales'), getPendingProjects);
 
 router
   .route('/:id')
-  .put(protect, authorize('admin', 'sales_executive'), updateLead)
-  .delete(protect, authorize('admin', 'sales_executive'), deleteLead);
+  .put(protect, authorize('admin', 'sales'), updateLead)
+  .delete(protect, authorize('admin', 'sales'), deleteLead);
 
 router.route('/:id/assign').put(protect, authorize('admin'), assignLead);
 
-router.route('/:id/request-project').put(protect, authorize('sales_executive', 'admin'), requestProjectConversion);
+router.route('/:id/request-project').put(protect, authorize('sales', 'admin'), requestProjectConversion);
 
 router.route('/:id/approve-project').post(protect, authorize('admin'), approveProject);
 

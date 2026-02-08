@@ -45,10 +45,17 @@ exports.createLead = async (req, res) => {
       if (req.body.owner) owner = req.body.owner;
     }
 
+    // Sanitize owner field to avoid CastErrors
+    let leadData = { ...req.body };
+    if (leadData.owner === "") {
+      delete leadData.owner;
+      owner = undefined;
+    }
+
     const lead = await Lead.create({
-      ...req.body,
+      ...leadData,
       adminId,
-      owner: owner || req.body.owner
+      owner: owner || undefined // Ensure we don't pass empty string
     });
 
     res.status(201).json({ success: true, data: lead });
@@ -220,10 +227,21 @@ exports.approveProject = async (req, res) => {
 // @desc    Get pending projects
 // @route   GET /api/crm/leads/pending-projects
 // @access  Private (Admin)
+// @desc    Get pending projects
+// @route   GET /api/crm/leads/pending-projects
+// @access  Private (Admin, Sales)
 exports.getPendingProjects = async (req, res) => {
   try {
+    let adminId = req.user.id;
+
+    if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
+      const salesExec = await SalesExecutive.findById(req.user.id);
+      if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Rep not found' });
+      adminId = salesExec.adminId;
+    }
+
     const leads = await Lead.find({
-      adminId: req.user.id,
+      adminId: adminId,
       status: 'Won',
       approvalStatus: 'pending_project'
     }).populate('owner', 'name');
@@ -237,10 +255,18 @@ exports.getPendingProjects = async (req, res) => {
 
 // @desc    Get sales executives for dropdown
 // @route   GET /api/crm/sales-executives
-// @access  Private (Admin)
+// @access  Private (Admin, Sales)
 exports.getSalesExecutives = async (req, res) => {
   try {
-    const executives = await SalesExecutive.find({ adminId: req.user.id });
+    let adminId = req.user.id;
+
+    if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
+      const salesExec = await SalesExecutive.findById(req.user.id);
+      if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Rep not found' });
+      adminId = salesExec.adminId;
+    }
+
+    const executives = await SalesExecutive.find({ adminId: adminId });
     res.status(200).json({ success: true, data: executives });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

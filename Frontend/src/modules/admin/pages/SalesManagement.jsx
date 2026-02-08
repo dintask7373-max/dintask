@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
     Plus,
     Search,
@@ -187,6 +188,25 @@ const SalesManagement = () => {
             case 'low': return 'bg-blue-100 text-blue-700 border-blue-200';
             default: return 'bg-slate-100 text-slate-700 border-slate-200';
         }
+    };
+
+    const onDragEnd = (result) => {
+        const { destination, source, draggableId } = result;
+
+        if (!destination) return;
+
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+
+        const startStage = source.droppableId;
+        const finishStage = destination.droppableId;
+
+        moveLead(draggableId, startStage, finishStage);
+        toast.success(`Moved to ${finishStage}`);
     };
 
     return (
@@ -388,7 +408,9 @@ const SalesManagement = () => {
                     </Card>
                 </TabsContent>
 
+
                 <TabsContent value="pipeline" className="space-y-4 sm:space-y-6">
+                    {/* Search and Add Deal Button (unchanged) */}
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div className="relative w-full sm:w-[300px] lg:w-[350px]">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
@@ -405,93 +427,122 @@ const SalesManagement = () => {
                         </Button>
                     </div>
 
-                    <div className="flex overflow-x-auto pb-4 gap-4 custom-scrollbar">
-                        {processedPipeline.map(({ stage, leads: stageLeads }) => (
-                            <div key={stage} className="flex flex-col w-[260px] sm:w-[280px] bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100 dark:border-slate-800 h-full max-h-[calc(100vh-320px)] min-h-[450px]">
-                                <div className="p-3 border-b border-slate-100 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-t-2xl sticky top-0 z-10">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700 dark:text-slate-300">{stage}</h3>
-                                        <Badge variant="outline" className="h-5 text-[9px] font-black bg-white dark:bg-slate-800 border-none shadow-none">
-                                            {stageLeads.length}
-                                        </Badge>
-                                    </div>
-                                    <div className="h-0.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                        <div className={cn("h-full transition-all duration-500",
-                                            stage === 'Won' ? 'bg-emerald-500' :
-                                                stage === 'Lost' ? 'bg-red-500' : 'bg-primary-500'
-                                        )} style={{ width: '100%' }} />
-                                    </div>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
-                                    {stageLeads.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center h-20 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100/50 dark:border-slate-800/30 rounded-xl">
-                                            Empty
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <div className="flex overflow-x-auto pb-4 gap-4 custom-scrollbar">
+                            {processedPipeline.map(({ stage, leads: stageLeads }) => (
+                                <div key={stage} className="flex flex-col w-[260px] sm:w-[280px] bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100 dark:border-slate-800 h-full max-h-[calc(100vh-320px)] min-h-[450px]">
+                                    <div className="p-3 border-b border-slate-100 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-t-2xl sticky top-0 z-10">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-700 dark:text-slate-300">{stage}</h3>
+                                            <Badge variant="outline" className="h-5 text-[9px] font-black bg-white dark:bg-slate-800 border-none shadow-none">
+                                                {stageLeads.length}
+                                            </Badge>
                                         </div>
-                                    ) : (
-                                        stageLeads.map((lead) => (
-                                            <div key={lead.id} className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 group hover:shadow-md transition-all relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 w-12 h-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-bl-full -mr-6 -mt-6 group-hover:scale-110 transition-transform" />
-
-                                                <div className="flex justify-between items-start mb-2 relative z-10">
-                                                    <Badge className={cn("text-[8px] uppercase font-black px-1.5 py-0 border-none shadow-none", getPriorityColor(lead.priority))}>
-                                                        {lead.priority}
-                                                    </Badge>
-
-                                                    {stage === 'Won' && (
-                                                        lead.approvalStatus === 'pending_project' ? (
-                                                            <Badge variant="outline" className="text-[8px] h-5 bg-amber-50 text-amber-600 border-amber-200">Pending Project</Badge>
-                                                        ) : lead.approvalStatus === 'approved_project' ? (
-                                                            <Badge variant="outline" className="text-[8px] h-5 bg-emerald-50 text-emerald-600 border-emerald-200">Active Project</Badge>
-                                                        ) : (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="h-5 text-[8px] px-2 bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    requestProjectConversion(lead.id);
-                                                                    toast.success("Project conversion requested sent to Admin");
-                                                                }}
-                                                            >
-                                                                Request Project
-                                                            </Button>
-                                                        )
-                                                    )}
-
-                                                    {stage !== 'Won' && (
-                                                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1.5 text-slate-300 hover:text-slate-600 rounded-lg">
-                                                            <MoreHorizontal size={12} />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                                <h4 className="font-black text-slate-900 dark:text-white text-[11px] mb-1 line-clamp-1 relative z-10 uppercase tracking-tight">{lead.name}</h4>
-                                                <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-3 relative z-10 font-bold tracking-wide">
-                                                    <Building2 size={10} className="text-slate-300" />
-                                                    <span className="truncate">{lead.company}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5 mb-3 relative z-10">
-                                                    <Avatar className="h-4 w-4 border border-white dark:border-slate-800 shrink-0">
-                                                        <AvatarFallback className="text-[7px] font-black bg-primary-50 text-primary-600 uppercase">{getRepName(lead.owner).charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest truncate">{getRepName(lead.owner)}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between pt-2.5 border-t border-slate-50 dark:border-slate-800 relative z-10">
-                                                    <div className="flex items-center gap-0.5 text-primary-600 font-black text-[11px] tracking-tight">
-                                                        <IndianRupee size={10} className="stroke-[3.5px]" />
-                                                        {Number(lead.amount || 0).toLocaleString()}
+                                        <div className="h-0.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <div className={cn("h-full transition-all duration-500",
+                                                stage === 'Won' ? 'bg-emerald-500' :
+                                                    stage === 'Lost' ? 'bg-red-500' : 'bg-primary-500'
+                                            )} style={{ width: '100%' }} />
+                                        </div>
+                                    </div>
+                                    <Droppable droppableId={stage}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.droppableProps}
+                                                className={cn(
+                                                    "flex-1 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar min-h-[100px] transition-colors",
+                                                    snapshot.isDraggingOver ? "bg-slate-100 dark:bg-slate-800/50 rounded-b-2xl" : ""
+                                                )}
+                                            >
+                                                {stageLeads.length === 0 && !snapshot.isDraggingOver ? (
+                                                    <div className="flex flex-col items-center justify-center h-20 text-slate-300 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-100/50 dark:border-slate-800/30 rounded-xl">
+                                                        Empty
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest">
-                                                        <Calendar size={9} />
-                                                        {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : '—'}
-                                                    </div>
-                                                </div>
+                                                ) : (
+                                                    stageLeads.map((lead, index) => (
+                                                        <Draggable key={lead._id || lead.id} draggableId={lead._id || lead.id} index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    className={cn(
+                                                                        "bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 group hover:shadow-md transition-all relative overflow-hidden select-none",
+                                                                        snapshot.isDragging ? "shadow-xl ring-2 ring-primary-500 rotate-2 z-50 bg-white" : ""
+                                                                    )}
+                                                                    style={{ ...provided.draggableProps.style }}
+                                                                >
+                                                                    {/* Card Content same as before */}
+                                                                    <div className="absolute top-0 right-0 w-12 h-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-bl-full -mr-6 -mt-6 group-hover:scale-110 transition-transform" />
+
+                                                                    <div className="flex justify-between items-start mb-2 relative z-10">
+                                                                        <Badge className={cn("text-[8px] uppercase font-black px-1.5 py-0 border-none shadow-none", getPriorityColor(lead.priority))}>
+                                                                            {lead.priority}
+                                                                        </Badge>
+
+                                                                        {stage === 'Won' && (
+                                                                            lead.approvalStatus === 'pending_project' ? (
+                                                                                <Badge variant="outline" className="text-[8px] h-5 bg-amber-50 text-amber-600 border-amber-200">Pending Project</Badge>
+                                                                            ) : lead.approvalStatus === 'approved_project' ? (
+                                                                                <Badge variant="outline" className="text-[8px] h-5 bg-emerald-50 text-emerald-600 border-emerald-200">Active Project</Badge>
+                                                                            ) : (
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="outline"
+                                                                                    className="h-5 text-[8px] px-2 bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation(); // prevent drag interference if button clicked
+                                                                                        requestProjectConversion(lead.id);
+                                                                                        toast.success("Project conversion requested sent to Admin");
+                                                                                    }}
+                                                                                    onMouseDown={(e) => e.stopPropagation()} // Important for button inside draggable
+                                                                                >
+                                                                                    Request Project
+                                                                                </Button>
+                                                                            )
+                                                                        )}
+
+                                                                        {stage !== 'Won' && (
+                                                                            <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1.5 text-slate-300 hover:text-slate-600 rounded-lg">
+                                                                                <MoreHorizontal size={12} />
+                                                                            </Button>
+                                                                        )}
+                                                                    </div>
+                                                                    <h4 className="font-black text-slate-900 dark:text-white text-[11px] mb-1 line-clamp-1 relative z-10 uppercase tracking-tight">{lead.name}</h4>
+                                                                    <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-3 relative z-10 font-bold tracking-wide">
+                                                                        <Building2 size={10} className="text-slate-300" />
+                                                                        <span className="truncate">{lead.company}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 mb-3 relative z-10">
+                                                                        <Avatar className="h-4 w-4 border border-white dark:border-slate-800 shrink-0">
+                                                                            <AvatarFallback className="text-[7px] font-black bg-primary-50 text-primary-600 uppercase">{getRepName(lead.owner).charAt(0)}</AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest truncate">{getRepName(lead.owner)}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-50 dark:border-slate-800 relative z-10">
+                                                                        <div className="flex items-center gap-0.5 text-primary-600 font-black text-[11px] tracking-tight">
+                                                                            <IndianRupee size={10} className="stroke-[3.5px]" />
+                                                                            {Number(lead.amount || 0).toLocaleString()}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest">
+                                                                            <Calendar size={9} />
+                                                                            {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : '—'}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))
+                                                )}
+                                                {provided.placeholder}
                                             </div>
-                                        ))
-                                    )}
+                                        )}
+                                    </Droppable>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    </DragDropContext>
                 </TabsContent>
             </Tabs>
 
@@ -570,7 +621,7 @@ const SalesManagement = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 };
 

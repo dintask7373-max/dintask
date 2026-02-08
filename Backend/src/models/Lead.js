@@ -11,7 +11,7 @@ const LeadSchema = new mongoose.Schema({
   },
   mobile: {
     type: String,
-    required: [true, 'Please add a mobile number']
+    required: false
   },
   company: {
     type: String
