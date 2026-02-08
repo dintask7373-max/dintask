@@ -36,14 +36,10 @@ const JoinWorkspace = () => {
         setStatus('checking');
 
         try {
-            // Simulate API verification of the code
             await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // In a real app, we'd verify the code against the backend/store
-            // For now, let's assume if it starts with 'ADM-', it's valid
             if (inviteCode.startsWith('ADM-')) {
                 addPendingRequest({
-                    fullName: "Current User", // In real app, get from authStore
+                    fullName: "Current User",
                     email: "user@example.com",
                     workspaceId: inviteCode,
                     role: 'Employee'
@@ -65,145 +61,108 @@ const JoinWorkspace = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-                {/* Left Side: Info */}
-                <div className="flex-1 space-y-6">
-                    <div className="space-y-2">
-                        <Badge className="bg-primary-50 text-primary-600 border-primary-100 px-3 py-1 font-bold">
-                            Join Your Team
-                        </Badge>
-                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                            Work Together with Your Workspace Team
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg font-medium leading-relaxed">
-                            Joining a workspace gives you access to premium features, shared boards, and team collaboration tools.
-                        </p>
+        <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden">
+            {/* Enhanced Background Visibility */}
+            <div className="absolute inset-0 h-[420px] z-0 overflow-hidden">
+                <img
+                    src="/WLCOMPAGE .png"
+                    alt="Background"
+                    className="w-full h-full object-cover object-center opacity-70 dark:opacity-30 translate-y-[-10%]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-white dark:from-slate-950/40 dark:via-slate-950/80 dark:to-slate-950" />
+            </div>
+
+            {/* Join Workspace Content */}
+            <div className="w-full max-w-[440px] mt-20 px-4 relative z-10 pb-20">
+                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] p-10 md:p-12 border border-white dark:border-slate-800">
+                    <div className="text-center mb-10">
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Join Workspace</h1>
+                        <p className="text-slate-400 text-xs font-medium italic">Enter unique invite code from your admin</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                        <FeatureCard
-                            icon={Link2}
-                            title="Shared Resources"
-                            desc="Access your team's documents, sheets, and tasks in one place."
-                        />
-                        <FeatureCard
-                            icon={ShieldCheck}
-                            title="Admin Support"
-                            desc="Get direct help and resources from your workspace administrator."
-                        />
-                        <FeatureCard
-                            icon={Users}
-                            title="Colleagues"
-                            desc="Stay connected with your team members across the dashboard."
-                        />
-                        <FeatureCard
-                            icon={Zap}
-                            title="Premium Features"
-                            desc="Unlock advanced tools through your admin's active subscription."
-                        />
+                    <form onSubmit={handleJoin} className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">
+                                Invite Code
+                            </label>
+                            <div className="relative group">
+                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#4461f2] transition-colors" size={18} />
+                                <Input
+                                    placeholder="ADM-XXXX-XXXX"
+                                    className="h-12 pl-11 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-bold text-sm tracking-widest placeholder:text-slate-300 placeholder:tracking-normal focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                    value={inviteCode}
+                                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                                    disabled={loading}
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-400 ml-1 font-medium">
+                                Ask your admin for the referral link or code.
+                            </p>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            disabled={loading || !inviteCode.trim()}
+                            className={cn(
+                                "w-full h-12 text-sm font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] mt-2",
+                                status === 'success' ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20" : "bg-[#4461f2] hover:bg-[#3451e2] text-white shadow-[#4461f2]/20"
+                            )}
+                        >
+                            <AnimatePresence mode="wait">
+                                {loading ? (
+                                    <motion.div
+                                        key="loading"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                        <span>Verifying...</span>
+                                    </motion.div>
+                                ) : status === 'success' ? (
+                                    <motion.div
+                                        key="success"
+                                        initial={{ y: 10 }}
+                                        animate={{ y: 0 }}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <CheckCircle2 size={18} /> Request Sent
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="idle"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex items-center gap-2"
+                                    >
+                                        Join Team <ArrowRight size={18} />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </Button>
+
+                        <div className="mt-6 p-5 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-start gap-3">
+                            <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={16} />
+                            <p className="text-[10px] leading-snug text-amber-700/80 font-semibold italic">
+                                Your request will be sent to the admin. Once approved, you will join the premium workspace.
+                            </p>
+                        </div>
+                    </form>
+
+                    <div className="text-center mt-10">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                        >
+                            Go Back
+                        </button>
                     </div>
-                </div>
-
-                {/* Right Side: Form */}
-                <div className="w-full md:w-[400px] shrink-0">
-                    <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden">
-                        <div className="h-2 bg-primary-600 w-full" />
-                        <CardHeader className="p-8 pb-4">
-                            <CardTitle className="text-2xl font-bold">Join Workspace</CardTitle>
-                            <CardDescription className="font-medium">
-                                Enter the unique invite code provided by your administrator.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-8 pt-4">
-                            <form onSubmit={handleJoin} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">
-                                        Invite Code
-                                    </label>
-                                    <div className="relative group">
-                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={20} />
-                                        <Input
-                                            placeholder="ADM-XXXX-XXXX"
-                                            className="h-14 pl-12 bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 rounded-2xl font-mono text-lg tracking-wider focus:ring-4 focus:ring-primary-500/10 transition-all font-bold"
-                                            value={inviteCode}
-                                            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                                            disabled={loading}
-                                        />
-                                    </div>
-                                    <p className="text-[11px] text-slate-400 px-1 italic">
-                                        Ask your admin for the referral link or code.
-                                    </p>
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    disabled={loading || !inviteCode.trim()}
-                                    className={cn(
-                                        "w-full h-14 rounded-2xl text-lg font-bold transition-all duration-300 relative overflow-hidden",
-                                        status === 'success' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-primary-600 hover:bg-primary-700"
-                                    )}
-                                >
-                                    <AnimatePresence mode="wait">
-                                        {loading ? (
-                                            <motion.div
-                                                key="loading"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                                Verifying...
-                                            </motion.div>
-                                        ) : status === 'success' ? (
-                                            <motion.div
-                                                key="success"
-                                                initial={{ y: 20 }}
-                                                animate={{ y: 0 }}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <CheckCircle2 size={20} /> Request Sent
-                                            </motion.div>
-                                        ) : (
-                                            <motion.div
-                                                key="idle"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                className="flex items-center gap-2"
-                                            >
-                                                Join Team <ArrowRight size={20} />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </Button>
-
-                                <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 flex items-start gap-3">
-                                    <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={16} />
-                                    <p className="text-[11px] leading-relaxed text-slate-500 font-medium">
-                                        Your request will be sent to the admin. Once approved, you will automatically transition to the premium workspace subscription.
-                                    </p>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
                 </div>
             </div>
         </div>
     );
 };
-
-const FeatureCard = ({ icon: Icon, title, desc }) => (
-    <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-3 group hover:border-primary-500/30 transition-all duration-300">
-        <div className="w-10 h-10 rounded-2xl bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Icon size={20} strokeWidth={2.5} />
-        </div>
-        <div className="space-y-1">
-            <h4 className="font-bold text-slate-900 dark:text-white text-sm">{title}</h4>
-            <p className="text-xs text-slate-500 leading-relaxed font-medium">{desc}</p>
-        </div>
-    </div>
-);
 
 const Badge = ({ children, className }) => (
     <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border tracking-tight", className)}>

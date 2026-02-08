@@ -621,7 +621,7 @@ const SalesManagement = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 };
 

@@ -137,11 +137,14 @@ import Welcome from '@/modules/public/pages/Welcome';
 // Layouts
 import CRMLayout from '@/shared/layouts/CRMLayout';
 
+import InitialSplash from '@/modules/public/pages/InitialSplash';
+
 const AppRouter = () => {
     return (
         <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/init" element={<InitialSplash />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/privacy" element={<Privacy />} />
@@ -207,7 +210,7 @@ const AppRouter = () => {
                 <Route path="profile/notifications" element={<Notifications />} />
                 <Route path="profile/security" element={<Security />} />
                 <Route path="profile/preferences" element={<Preferences />} />
-                <Route path="subscription" element={<EmployeeSubscription />} />
+
                 <Route path="join" element={<JoinWorkspace />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="profile/help" element={<HelpLegal />} />

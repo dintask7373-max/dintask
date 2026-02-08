@@ -473,10 +473,10 @@ const LandingPage = () => {
                     </div>
 
                     <div className="hidden lg:flex items-center gap-4">
-                        <Button variant="ghost" onClick={() => navigate('/welcome')} className="font-bold uppercase tracking-widest text-xs">
+                        <Button variant="ghost" onClick={() => navigate('/init')} className="font-bold uppercase tracking-widest text-xs">
                             Login
                         </Button>
-                        <Button onClick={() => navigate('/welcome')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
+                        <Button onClick={() => navigate('/init')} className="bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-xs h-11 px-8 rounded-xl shadow-lg shadow-primary-500/20">
                             Try For Free
                         </Button>
                     </div>
@@ -511,10 +511,10 @@ const LandingPage = () => {
                                 </button>
                             ))}
                             <div className="pt-4 flex flex-row gap-2">
-                                <Button variant="outline" onClick={() => navigate('/welcome')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200">
+                                <Button variant="outline" onClick={() => navigate('/init')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200">
                                     Login
                                 </Button>
-                                <Button onClick={() => navigate('/welcome')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
+                                <Button onClick={() => navigate('/init')} className="flex-1 h-10 rounded-xl bg-primary-600 text-white font-black uppercase tracking-wider text-[10px]">
                                     Sign Up
                                 </Button>
                             </div>
@@ -569,7 +569,7 @@ const LandingPage = () => {
                                         <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter italic">Din<span className="text-primary-600">Task</span></span>
 
                                         <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:gap-2">
-                                            <button onClick={() => navigate('/welcome')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
+                                            <button onClick={() => navigate('/init')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
                                             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-2 sm:px-3 py-1 sm:py-1.5 border border-primary-600 text-primary-600 text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 transition-all active:scale-90 uppercase tracking-widest">BUY NOW</button>
                                         </div>
                                     </div>
@@ -715,7 +715,7 @@ const LandingPage = () => {
                             {testimonialSection.testimonialDescription}
                         </p>
                         <Button
-                            onClick={() => navigate('/welcome')}
+                            onClick={() => navigate('/init')}
                             className="h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-base shadow-xl group"
                         >
                             {testimonialSection.testimonialCtaText} <ArrowRight className="ml-3 group-hover:translate-x-2" />

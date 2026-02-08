@@ -61,60 +61,79 @@ const TaskHome = () => {
 
     return (
         <div className="bg-white dark:bg-slate-950 min-h-screen w-full font-display text-text-main dark:text-white pb-28">
-            {/* -- Header Section -- */}
-            <motion.header
-                variants={fadeInUp}
-                initial="hidden"
-                animate="visible"
-                className="flex items-center justify-between py-6 px-6"
-            >
-                <div className="flex flex-col">
-                    <h2 className="text-2xl font-extrabold leading-tight tracking-[-0.02em] flex items-center gap-2">
-                        Good Morning, {user?.name?.split(' ')[0] || 'User'}
-                    </h2>
-                    <p className="text-text-secondary dark:text-gray-400 text-sm font-medium">
-                        {format(new Date(), 'EEEE, MMM dd')} • {stats.today} tasks today
-                    </p>
+            {/* -- Premium Header Section with Background -- */}
+            <div className="relative overflow-hidden">
+                {/* Background Image Layer */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/WLCOMPAGE .png"
+                        alt="Background"
+                        className="w-full h-full object-cover object-center opacity-40 dark:opacity-20 translate-y-[-10%]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/40 to-white dark:from-slate-950/90 dark:via-slate-950/40 dark:to-slate-950" />
                 </div>
-                <div className="flex items-center gap-3">
-                    <motion.div {...scaleOnTap} className="relative">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700"
-                            onClick={() => navigate('/employee/notifications')}
-                        >
-                            <Bell size={20} className="text-primary" />
-                        </Button>
-                        {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 size-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-background-light dark:border-background-dark shadow-sm">
-                                {unreadCount}
-                            </span>
-                        )}
-                    </motion.div>
-                </div>
-            </motion.header>
 
-            {/* -- Summary Pills -- */}
-            <motion.div
-                variants={staggerContainer}
-                initial="initial"
-                animate="animate"
-                className="grid grid-cols-3 gap-3 px-6 pt-2 pb-6"
-            >
-                <motion.div variants={fadeInUp} className="flex flex-col gap-1 rounded-xl p-4 bg-primary text-white shadow-lg shadow-primary/20">
-                    <p className="text-[11px] uppercase tracking-wider font-bold opacity-80">Today</p>
-                    <p className="text-2xl font-extrabold leading-none">{stats.today}</p>
-                </motion.div>
-                <motion.div variants={fadeInUp} className="flex flex-col gap-1 rounded-xl p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm">
-                    <p className="text-[11px] uppercase tracking-wider font-bold text-text-secondary">Pending</p>
-                    <p className="text-2xl font-extrabold leading-none">{stats.pending}</p>
-                </motion.div>
-                <motion.div variants={fadeInUp} className="flex flex-col gap-1 rounded-xl p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm">
-                    <p className="text-[11px] uppercase tracking-wider font-bold text-text-secondary">Done</p>
-                    <p className="text-2xl font-extrabold leading-none">{stats.done}</p>
-                </motion.div>
-            </motion.div>
+                <div className="relative z-10 px-6 pt-8 pb-2">
+                    {/* Header Row */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex flex-col">
+                            <h2 className="text-xl font-black leading-tight tracking-tight flex items-center gap-2 text-slate-900 dark:text-white">
+                                Good Morning, {user?.name?.split(' ')[0] || 'User'}
+                            </h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                                {format(new Date(), 'EEEE, MMM dd')}
+                            </p>
+                        </div>
+                        <div className="relative">
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                className="size-10 rounded-2xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-xl flex items-center justify-center border border-white/40 dark:border-slate-700/50 shadow-sm"
+                                onClick={() => navigate('/employee/notifications')}
+                            >
+                                <Bell size={18} className="text-[#4461f2]" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 size-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-slate-950 shadow-sm">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </motion.button>
+                        </div>
+                    </div>
+
+                    {/* Stats Pills - Compact Mobile Design */}
+                    <div className="grid grid-cols-3 gap-3 mb-6">
+                        <motion.div
+                            variants={fadeInUp}
+                            initial="hidden"
+                            animate="visible"
+                            className="bg-[#4461f2] rounded-2xl p-4 text-white shadow-lg shadow-[#4461f2]/20 flex flex-col gap-0.5"
+                        >
+                            <p className="text-[9px] font-black uppercase tracking-widest opacity-80 leading-none">Today</p>
+                            <p className="text-xl font-black leading-none">{stats.today}</p>
+                        </motion.div>
+                        <motion.div
+                            variants={fadeInUp}
+                            initial="hidden"
+                            animate="visible"
+                            transition={{ delay: 0.1 }}
+                            className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl p-4 border border-white dark:border-slate-800 shadow-sm flex flex-col gap-0.5"
+                        >
+                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Pending</p>
+                            <p className="text-xl font-black text-slate-800 dark:text-white leading-none">{stats.pending}</p>
+                        </motion.div>
+                        <motion.div
+                            variants={fadeInUp}
+                            initial="hidden"
+                            animate="visible"
+                            transition={{ delay: 0.2 }}
+                            className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl p-4 border border-white dark:border-slate-800 shadow-sm flex flex-col gap-0.5"
+                        >
+                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Done</p>
+                            <p className="text-xl font-black text-slate-800 dark:text-white leading-none">{stats.done}</p>
+                        </motion.div>
+                    </div>
+                </div>
+            </div>
 
             {/* -- Tabs Navigation -- */}
             <div className="mb-4 px-6">

@@ -111,224 +111,278 @@ const SupportCenter = () => {
     };
 
     return (
-        <div className="p-4 md:p-8 space-y-8 bg-slate-50/50 min-h-screen">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 italic">
-                        <LifeBuoy className="text-primary-600 size-8" />
-                        SUPPORT <span className="text-primary-600">CENTER</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium text-xs uppercase tracking-[0.2em] mt-1">
-                        {role === 'superadmin' ? 'Managing Administrator Escalations' :
-                            role === 'admin' ? 'Unified Support Hub & Platform Requests' :
-                                'Raise tickets for technical & account issues'}
-                    </p>
-                </div>
+        <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden pb-12">
+            {/* Enhanced Background Visibility */}
+            <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
+                <img
+                    src="/WLCOMPAGE .png"
+                    alt="Background"
+                    className="w-full h-full object-cover object-center opacity-70 dark:opacity-30 translate-y-[-10%]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-white dark:from-slate-950/40 dark:via-slate-950/80 dark:to-slate-950" />
+            </div>
 
-                <div className="flex items-center gap-3">
-                    {role !== 'superadmin' && (
-                        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="h-11 px-6 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest gap-2 shadow-lg shadow-primary-500/20">
-                                    <Plus size={16} /> Raise New Ticket
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md bg-white border-none rounded-[2rem] p-8">
-                                <DialogHeader>
-                                    <DialogTitle className="text-2xl font-black italic tracking-tight uppercase">Raise <span className="text-primary-600">Ticket</span></DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-6 mt-4">
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</p>
-                                        <Input
-                                            placeholder="What is the issue?"
-                                            value={newTicket.subject}
-                                            onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                                            className="h-12 border-none bg-slate-50 rounded-xl font-medium"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</p>
-                                            <select
-                                                className="w-full h-12 bg-slate-50 rounded-xl px-4 text-sm font-bold appearance-none outline-none"
-                                                value={newTicket.category}
-                                                onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
-                                            >
-                                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</p>
-                                            <select
-                                                className="w-full h-12 bg-slate-50 rounded-xl px-4 text-sm font-bold appearance-none outline-none"
-                                                value={newTicket.priority}
-                                                onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
-                                            >
-                                                {priorities.map(p => <option key={p} value={p}>{p}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</p>
-                                        <textarea
-                                            rows={4}
-                                            placeholder="Explain the issue in detail..."
-                                            className="w-full p-4 bg-slate-50 rounded-xl border-none font-medium text-sm outline-none resize-none"
-                                            value={newTicket.description}
-                                            onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                                        />
-                                    </div>
-                                    <Button
-                                        onClick={handleCreateTicket}
-                                        disabled={loading}
-                                        className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest rounded-xl"
-                                    >
-                                        {loading ? 'SENDING...' : `SEND TO ${role === 'admin' ? 'SUPER ADMIN' : 'ADMIN'}`}
+            {/* Support Content */}
+            <div className="w-full max-w-[1100px] mt-12 px-6 relative z-10 space-y-8">
+                {/* Header Row */}
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+                            Support <span className="text-[#4461f2]">Center</span>
+                        </h1>
+                        <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                            <LifeBuoy size={14} className="text-[#4461f2]" />
+                            {role === 'superadmin' ? 'Managing Administrator Escalations' :
+                                role === 'admin' ? 'Unified Support Hub & Platform Requests' :
+                                    'Raise tickets for technical & account issues'}
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {role !== 'superadmin' && (
+                            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="h-12 px-6 rounded-2xl bg-[#4461f2] hover:bg-[#3451e2] text-white font-black text-[10px] uppercase tracking-widest gap-3 shadow-lg shadow-[#4461f2]/20 border-none transition-all active:scale-95">
+                                        <Plus size={18} /> Raise New Ticket
                                     </Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    )}
-                </div>
-            </header>
-
-            {/* Role Specific Navigation */}
-            {role === 'admin' && (
-                <div className="flex gap-4 p-1.5 bg-white rounded-2xl w-fit shadow-sm border border-slate-100">
-                    <button
-                        onClick={() => setActiveTab('received')}
-                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'received' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        Team Support Requests
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('sent')}
-                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'sent' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        My Support Tickets
-                    </button>
-                </div>
-            )}
-
-            {/* Content Area */}
-            <div className="grid lg:grid-cols-12 gap-8">
-                {/* Tickets List */}
-                <div className="lg:col-span-8 space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search by subject or ID..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-14 pl-12 pr-4 bg-white border-none rounded-[1.25rem] shadow-sm text-sm font-medium focus:ring-2 focus:ring-primary-500 transition-all"
-                        />
-                    </div>
-
-                    <div className="space-y-3">
-                        <AnimatePresence mode='popLayout'>
-                            {loading ? (
-                                <div className="flex justify-center items-center py-20">
-                                    <Loader2 className="animate-spin text-primary-600" size={32} />
-                                </div>
-                            ) : filteredTickets.length > 0 ? (
-                                filteredTickets.map((ticket) => (
-                                    <motion.div
-                                        layout
-                                        key={ticket._id}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="bg-white border border-slate-100 p-5 rounded-[1.5rem] shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                                    >
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                            <div className="flex items-start gap-4">
-                                                <div className={`size-12 rounded-2xl flex flex-col items-center justify-center border font-black ${getStatusStyle(ticket.status)}`}>
-                                                    <span className="text-[8px] opacity-60">ID</span>
-                                                    <span className="text-[10px] tracking-tighter">{ticket.ticketId?.split('-')[1]}</span>
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Badge variant="outline" className="border-slate-100 text-[8px] font-black uppercase">{ticket.type}</Badge>
-                                                        <span className={`text-[9px] font-black uppercase flex items-center gap-1 ${getPriorityColor(ticket.priority)}`}>
-                                                            <AlertCircle size={10} /> {ticket.priority}
-                                                        </span>
-                                                    </div>
-                                                    <h3 className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight">{ticket.title}</h3>
-                                                    <div className="flex items-center gap-4 mt-1.5">
-                                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
-                                                            <User size={12} className="text-primary-400 text-xs" />
-                                                            {role === 'admin' && activeTab === 'received' ? ticket.creator?.name : `Sent to ${ticket.isEscalatedToSuperAdmin ? 'SUPER ADMIN' : 'ADMIN'}`}
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
-                                                            <Clock size={12} className="text-primary-400" />
-                                                            {new Date(ticket.createdAt).toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border-white/20 dark:border-slate-800/40 rounded-[2.5rem] p-8 shadow-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-2xl font-black italic tracking-tight uppercase dark:text-white">Raise <span className="text-[#4461f2]">Ticket</span></DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-6 mt-6">
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subject</p>
+                                            <Input
+                                                placeholder="What is the issue?"
+                                                value={newTicket.subject}
+                                                onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
+                                                className="h-12 border-none bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-sm px-5"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</p>
+                                                <select
+                                                    className="w-full h-12 bg-slate-50 dark:bg-slate-950 rounded-xl px-5 text-sm font-bold appearance-none outline-none border-none dark:text-white"
+                                                    value={newTicket.category}
+                                                    onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
+                                                >
+                                                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                                </select>
                                             </div>
-
-                                            <div className="flex items-center gap-3">
-                                                {role === 'admin' && activeTab === 'received' && ticket.status === 'Open' && (
-                                                    <Button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            updateTicketStatus(ticket._id, 'Resolved');
-                                                        }}
-                                                        variant="outline"
-                                                        className="h-9 px-4 rounded-lg border-emerald-100 text-emerald-600 hover:bg-emerald-50 text-[10px] font-black uppercase tracking-widest"
-                                                    >
-                                                        Quick Resolve
-                                                    </Button>
-                                                )}
-                                                <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getStatusStyle(ticket.status)}`}>
-                                                    {ticket.status}
-                                                </div>
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Priority</p>
+                                                <select
+                                                    className="w-full h-12 bg-slate-50 dark:bg-slate-950 rounded-xl px-5 text-sm font-bold appearance-none outline-none border-none dark:text-white"
+                                                    value={newTicket.priority}
+                                                    onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
+                                                >
+                                                    {priorities.map(p => <option key={p} value={p}>{p}</option>)}
+                                                </select>
                                             </div>
                                         </div>
-                                    </motion.div>
-                                ))
-                            ) : (
-                                <div className="text-center py-20 bg-white/50 rounded-[2rem] border-2 border-dashed border-slate-200">
-                                    <MessageSquare size={48} className="mx-auto text-slate-300 mb-4" />
-                                    <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No support tickets found</p>
-                                </div>
-                            )}
-                        </AnimatePresence>
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</p>
+                                            <textarea
+                                                rows={4}
+                                                placeholder="Explain the issue in detail..."
+                                                className="w-full p-5 bg-slate-50 dark:bg-slate-950 rounded-xl border-none font-bold text-sm outline-none resize-none dark:text-white"
+                                                value={newTicket.description}
+                                                onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
+                                            />
+                                        </div>
+                                        <Button
+                                            onClick={handleCreateTicket}
+                                            disabled={loading}
+                                            className="w-full h-12 bg-[#4461f2] hover:bg-[#3451e2] text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-[#4461f2]/20 border-none transition-all"
+                                        >
+                                            {loading ? 'SENDING...' : `SEND TO ${role === 'admin' ? 'SUPER ADMIN' : 'ADMIN'}`}
+                                        </Button>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        )}
                     </div>
-                </div>
+                </header>
 
-                {/* Info / Tips Sidebar */}
-                <div className="lg:col-span-4 space-y-6">
+                {/* Role Specific Tabs */}
+                {role === 'admin' && (
+                    <div className="flex gap-2 p-1.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl w-fit shadow-sm border border-white/20 dark:border-slate-800/40">
+                        <button
+                            onClick={() => setActiveTab('received')}
+                            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'received' ? 'bg-[#4461f2] text-white shadow-lg shadow-[#4461f2]/20' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                        >
+                            Team Support Requests
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('sent')}
+                            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'sent' ? 'bg-[#4461f2] text-white shadow-lg shadow-[#4461f2]/20' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                        >
+                            My Support Tickets
+                        </button>
+                    </div>
+                )}
 
-
-                    <Card className="border-none shadow-sm bg-white rounded-[2rem] p-6 lg:p-8 space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                <CheckCircle2 size={18} />
-                            </div>
-                            <h4 className="text-xs font-black uppercase tracking-widest underline decoration-emerald-200">Resolution Stats</h4>
+                <div className="grid lg:grid-cols-12 gap-8">
+                    {/* Tickets List */}
+                    <div className="lg:col-span-8 space-y-6">
+                        <div className="relative group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#4461f2] transition-colors" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search by subject or ID..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full h-14 pl-12 pr-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-none rounded-[1.5rem] shadow-sm text-sm font-bold focus:ring-4 focus:ring-[#4461f2]/10 transition-all placeholder:text-slate-400 dark:text-white"
+                            />
                         </div>
 
                         <div className="space-y-4">
-                            {[
-                                { label: 'Avg Feedback', val: `${stats?.avgFeedback || 0}/5`, color: 'bg-emerald-500', width: `${((stats?.avgFeedback || 0) / 5) * 100}%` },
-                                { label: 'Resolved', val: `${stats?.resolvedRate || 0}%`, color: 'bg-primary-500', width: `${stats?.resolvedRate || 0}%` },
-                                { label: 'In Time', val: `${stats?.inTimeResolution || 0}%`, color: 'bg-amber-500', width: `${stats?.inTimeResolution || 0}%` }
-                            ].map((stat, i) => (
-                                <div key={i} className="space-y-1.5">
-                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-tight">
-                                        <span className="text-slate-400">{stat.label}</span>
-                                        <span className="text-slate-900">{stat.val}</span>
+                            <AnimatePresence mode='popLayout'>
+                                {loading && tickets.length === 0 ? (
+                                    <div className="flex justify-center items-center py-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[2rem]">
+                                        <Loader2 className="animate-spin text-[#4461f2]" size={32} />
                                     </div>
-                                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                                        <div className={`h-full ${stat.color} rounded-full`} style={{ width: stat.width }} />
+                                ) : filteredTickets.length > 0 ? (
+                                    filteredTickets.map((ticket, index) => (
+                                        <motion.div
+                                            layout
+                                            key={ticket._id}
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 p-5 rounded-[2rem] shadow-[0_15px_35px_-8px_rgba(0,0,0,0.06)] hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer"
+                                        >
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                                                <div className="flex items-start gap-5">
+                                                    <div className={cn(
+                                                        "size-14 rounded-2xl flex flex-col items-center justify-center border-none font-black shadow-inner bg-slate-50 dark:bg-slate-950",
+                                                        ticket.status === 'Resolved' ? "text-emerald-500" : "text-[#4461f2]"
+                                                    )}>
+                                                        <span className="text-[9px] opacity-40 uppercase tracking-tighter">ID</span>
+                                                        <span className="text-[13px] tracking-tighter">{ticket.ticketId?.split('-')[1] || ticket._id.slice(-4).toUpperCase()}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-3 mb-1.5">
+                                                            <Badge className="bg-[#4461f2]/10 text-[#4461f2] hover:bg-[#4461f2]/20 border-none text-[8px] font-black uppercase tracking-wider px-2 py-0.5">
+                                                                {ticket.category}
+                                                            </Badge>
+                                                            <span className={cn(
+                                                                "text-[9px] font-black uppercase flex items-center gap-1 tracking-wider",
+                                                                getPriorityColor(ticket.priority)
+                                                            )}>
+                                                                <AlertCircle size={10} /> {ticket.priority}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-[#4461f2] transition-colors uppercase tracking-tight text-[15px]">{ticket.subject}</h3>
+                                                        <div className="flex items-center gap-5 mt-2">
+                                                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                <User size={12} className="text-[#4461f2]/50" />
+                                                                {role === 'admin' && activeTab === 'received' ? ticket.creator?.name : `To: ${ticket.isEscalatedToSuperAdmin ? 'Super Admin' : 'Admin'}`}
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                <Clock size={12} className="text-[#4461f2]/50" />
+                                                                {new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-3">
+                                                    {role === 'admin' && activeTab === 'received' && ticket.status === 'Open' && (
+                                                        <Button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                updateTicketStatus(ticket._id, 'Resolved');
+                                                            }}
+                                                            className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 border-none transition-all active:scale-95"
+                                                        >
+                                                            Resolve
+                                                        </Button>
+                                                    )}
+                                                    <div className={cn(
+                                                        "px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] border-none shadow-sm",
+                                                        getStatusStyle(ticket.status),
+                                                        ticket.status === 'Resolved' ? "bg-emerald-500/10 text-emerald-600" :
+                                                            ticket.status === 'Open' ? "bg-blue-500/10 text-blue-600" :
+                                                                "bg-amber-500/10 text-amber-600"
+                                                    )}>
+                                                        {ticket.status}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                        <MessageSquare size={54} className="mx-auto text-slate-300 dark:text-slate-700 mb-5 opacity-50" />
+                                        <h3 className="text-slate-900 dark:text-slate-300 font-bold mb-1">Stay Organized</h3>
+                                        <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">No support tickets found</p>
                                     </div>
-                                </div>
-                            ))}
+                                )}
+                            </AnimatePresence>
                         </div>
-                    </Card>
+                    </div>
+
+                    {/* Stats Sidebar */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 rounded-[2.5rem] p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] space-y-8"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="size-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                    <CheckCircle2 size={20} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">Resolution</h4>
+                                    <p className="text-lg font-black text-slate-900 dark:text-white leading-none">Global Stats</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6">
+                                {[
+                                    { label: 'Avg Feedback', val: `${stats?.avgFeedback || 0}/5`, color: 'bg-emerald-500', width: `${((stats?.avgFeedback || 0) / 5) * 100}%` },
+                                    { label: 'Resolved Rate', val: `${stats?.resolvedRate || 0}%`, color: 'bg-[#4461f2]', width: `${stats?.resolvedRate || 0}%` },
+                                    { label: 'SLA Adherence', val: `${stats?.inTimeResolution || 0}%`, color: 'bg-amber-500', width: `${stats?.inTimeResolution || 0}%` }
+                                ].map((stat, i) => (
+                                    <div key={i} className="space-y-2.5">
+                                        <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
+                                            <span className="text-slate-400">{stat.label}</span>
+                                            <span className="text-slate-900 dark:text-slate-200 font-black tracking-tight">{stat.val}</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden shadow-inner">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: stat.width }}
+                                                transition={{ duration: 1, delay: i * 0.1 }}
+                                                className={`h-full ${stat.color} rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-50 dark:border-slate-800/50">
+                                <p className="text-[10px] leading-relaxed text-slate-400 font-bold uppercase tracking-widest italic text-center">
+                                    "Your satisfaction is our primary metric of success."
+                                </p>
+                            </div>
+                        </motion.div>
+
+                        {/* Quick Tip */}
+                        <div className="p-6 bg-[#4461f2]/10 rounded-[2rem] border border-[#4461f2]/20 flex gap-4">
+                            <AlertTriangle className="text-[#4461f2] shrink-0 mt-0.5" size={18} />
+                            <div>
+                                <h5 className="text-[11px] font-black text-[#4461f2] uppercase tracking-[0.1em] mb-1">PRO TIP</h5>
+                                <p className="text-[10px] leading-snug text-[#4461f2]/80 font-bold italic">
+                                    Include screenshots or record IDs in your ticket description for faster resolution.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
