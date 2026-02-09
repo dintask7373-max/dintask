@@ -52,6 +52,7 @@ import Settings from '@/modules/admin/pages/Settings';
 import JoinRequests from '@/modules/admin/pages/JoinRequests';
 import SalesManagement from '@/modules/admin/pages/SalesManagement';
 import ProjectApprovals from '@/modules/admin/pages/ProjectApprovals';
+import AdminProjects from '@/modules/admin/pages/Projects';
 
 import ManagerLogin from '@/modules/manager/pages/ManagerLogin';
 import ManagerRegister from '@/modules/manager/pages/ManagerRegister';
@@ -79,7 +80,6 @@ import Clients from '@/modules/sales/pages/Clients';
 import Schedule from '@/modules/sales/pages/Schedule';
 import SalesReports from '@/modules/sales/pages/Reports';
 import SalesSettings from '@/modules/sales/pages/Settings';
-import SalesTasks from '@/modules/sales/pages/SalesTasks';
 
 // CRM Pages
 import CRMHome from '@/modules/crm/pages/CRMHome';
@@ -177,6 +177,7 @@ const AppRouter = () => {
                 <Route path="managers" element={<AdminSubscriptionProtectedRoute><ManagerManagement /></AdminSubscriptionProtectedRoute>} />
                 <Route path="employees" element={<AdminSubscriptionProtectedRoute><EmployeeManagement /></AdminSubscriptionProtectedRoute>} />
                 <Route path="sales" element={<AdminSubscriptionProtectedRoute><SalesManagement /></AdminSubscriptionProtectedRoute>} />
+                <Route path="projects" element={<AdminSubscriptionProtectedRoute><AdminProjects /></AdminSubscriptionProtectedRoute>} />
                 <Route path="projects/approvals" element={<AdminSubscriptionProtectedRoute><ProjectApprovals /></AdminSubscriptionProtectedRoute>} />
                 <Route path="reports" element={<AdminSubscriptionProtectedRoute><Reports /></AdminSubscriptionProtectedRoute>} />
                 <Route path="chat" element={<AdminSubscriptionProtectedRoute><AdminChat /></AdminSubscriptionProtectedRoute>} />

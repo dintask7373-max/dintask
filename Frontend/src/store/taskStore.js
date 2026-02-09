@@ -11,10 +11,10 @@ const useTaskStore = create((set, get) => ({
     fetchTasks: async () => {
         set({ loading: true });
         try {
-            const res = await api.get('/tasks');
-            if (res.data.success) {
+            const res = await api('/tasks');
+            if (res.success) {
                 // Normalize tasks: add id field to match _id
-                const normalizedTasks = res.data.data.map(task => ({
+                const normalizedTasks = res.data.map(task => ({
                     ...task,
                     id: task._id || task.id
                 }));
@@ -29,20 +29,22 @@ const useTaskStore = create((set, get) => ({
     // Add Task
     addTask: async (taskData) => {
         try {
-            const res = await api.post('/tasks', taskData);
-            if (res.data.success) {
+            const res = await api('/tasks', {
+                method: 'POST',
+                body: taskData
+            });
+            if (res.success) {
                 const normalizedTask = {
-                    ...res.data.data,
-                    id: res.data.data._id || res.data.data.id
+                    ...res.data,
+                    id: res.data._id || res.data.id
                 };
                 set((state) => ({
                     tasks: [normalizedTask, ...state.tasks]
                 }));
-                // toast handled in component usually, but can be here too
                 return normalizedTask;
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || "Failed to add task");
+            toast.error(error.message || "Failed to add task");
             throw error;
         }
     },
@@ -57,10 +59,12 @@ const useTaskStore = create((set, get) => ({
                 ),
             }));
 
-            const res = await api.put(`/tasks/${taskId}`, updatedData);
+            const res = await api(`/tasks/${taskId}`, {
+                method: 'PUT',
+                body: updatedData
+            });
 
-            // Revert if failed? For now assume success or toast error
-            if (!res.data.success) {
+            if (!res.success) {
                 toast.error("Failed to update task");
                 get().fetchTasks(); // Revert
             }
@@ -74,8 +78,10 @@ const useTaskStore = create((set, get) => ({
     // Delete Task
     deleteTask: async (taskId) => {
         try {
-            const res = await api.delete(`/tasks/${taskId}`);
-            if (res.data.success) {
+            const res = await api(`/tasks/${taskId}`, {
+                method: 'DELETE'
+            });
+            if (res.success) {
                 set((state) => ({
                     tasks: state.tasks.filter((task) => task._id !== taskId),
                 }));

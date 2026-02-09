@@ -165,9 +165,9 @@ const SalesManagement = () => {
             status: newDealData.stage
         };
 
-        const addedLead = addLead(deal);
-        if (newDealData.stage !== 'New') {
-            moveLead(addedLead.id, 'New', newDealData.stage);
+        const addedLead = await addLead(deal);
+        if (addedLead && newDealData.stage !== 'New') {
+            await moveLead(addedLead._id || addedLead.id, 'New', newDealData.stage);
         }
 
         setIsAddDealModalOpen(false);
@@ -178,7 +178,8 @@ const SalesManagement = () => {
     };
 
     const getRepName = (id) => {
-        const rep = salesReps.find(r => r.id === id);
+        const actualId = id?._id || id?.id || id;
+        const rep = salesReps.find(r => r.id === actualId);
         return rep ? rep.name : 'Unassigned';
     };
 

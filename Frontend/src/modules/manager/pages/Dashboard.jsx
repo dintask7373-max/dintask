@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import {
     LayoutDashboard,
     CheckSquare,
@@ -10,12 +11,14 @@ import {
     TrendingUp,
     Calendar as CalendarIcon,
     ArrowRight,
-    Zap
+    Zap,
+    Briefcase
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
+import useProjectStore from '@/store/projectStore';
 import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -27,7 +30,12 @@ const ManagerDashboard = () => {
     const { user } = useAuthStore();
     const tasks = useTaskStore(state => state.tasks);
     const employees = useEmployeeStore(state => state.employees);
+    const { projects, fetchProjects } = useProjectStore();
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        fetchProjects();
+    }, []);
 
     // Manager statistics
     const stats = useMemo(() => {
@@ -238,6 +246,47 @@ const ManagerDashboard = () => {
                                 </div>
                             );
                         })}
+                    </CardContent>
+                </Card>
+
+                {/* Active Projects Quick Access */}
+                <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden h-fit lg:col-span-3">
+                    <CardHeader className="py-4 px-5 flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800">
+                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-600 flex items-center gap-2">
+                            <Briefcase size={14} />
+                            Active Operational Units (Projects)
+                        </CardTitle>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-3 rounded-lg text-primary-600 hover:bg-primary-50 font-black text-[9px] uppercase tracking-widest"
+                            onClick={() => navigate('/manager/projects')}
+                        >
+                            View All <ArrowRight size={10} className="ml-1" />
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {projects.filter(p => p.status === 'active').slice(0, 3).map(project => (
+                            <div key={project._id} className="p-4 rounded-[1.5rem] bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 group hover:border-primary-500 transition-all cursor-pointer" onClick={() => navigate(`/manager/projects/${project._id}`)}>
+                                <div className="flex justify-between items-start mb-3">
+                                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-emerald-200 text-emerald-600 bg-emerald-50">
+                                        ACTIVE
+                                    </Badge>
+                                    <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                                        {project.deadline ? format(new Date(project.deadline), 'MMM dd') : 'NO DEADLINE'}
+                                    </div>
+                                </div>
+                                <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase mb-1 truncate">{project.name}</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                    <Users size={10} /> {project.clientCompany || 'Independent'}
+                                </p>
+                            </div>
+                        ))}
+                        {projects.filter(p => p.status === 'active').length === 0 && (
+                            <div className="col-span-full py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest italic border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                                Zero Active Projects Detected
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
