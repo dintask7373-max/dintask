@@ -2,6 +2,7 @@ const Lead = require('../models/Lead');
 const Project = require('../models/Project');
 const SalesExecutive = require('../models/SalesExecutive');
 const Manager = require('../models/Manager');
+const Notification = require('../models/Notification');
 
 // @desc    Get all leads
 // @route   GET /api/crm/leads
@@ -11,7 +12,7 @@ exports.getLeads = async (req, res) => {
     let query = { adminId: req.user.id }; // By default, fetch leads for this admin's workspace
 
     // If Sales Executive is requesting, filter by owner
-    if (req.user.role === 'sales_executive') {
+    if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
       const salesExec = await SalesExecutive.findById(req.user.id);
       if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Rep not found' });
       query = { owner: salesExec._id, adminId: salesExec.adminId };
@@ -36,7 +37,7 @@ exports.createLead = async (req, res) => {
     let adminId = req.user.id;
     let owner = null;
 
-    if (req.user.role === 'sales_executive') {
+    if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
       const salesExec = await SalesExecutive.findById(req.user.id);
       adminId = salesExec.adminId;
       owner = salesExec._id;
@@ -55,8 +56,23 @@ exports.createLead = async (req, res) => {
     const lead = await Lead.create({
       ...leadData,
       adminId,
-      owner: owner || undefined // Ensure we don't pass empty string
+      owner: owner || undefined
     });
+
+    // If owner is assigned during creation, send notification
+    if (owner) {
+      const leadName = lead.name || 'New Lead';
+      const companyName = lead.company || 'No Company';
+
+      await Notification.create({
+        recipient: owner,
+        sender: req.user.id,
+        type: 'lead_assigned',
+        title: 'New Lead Assigned',
+        message: `You have been assigned a new lead: ${leadName} (${companyName})`,
+        link: `/sales/deals`
+      });
+    }
 
     res.status(201).json({ success: true, data: lead });
   } catch (err) {
@@ -79,7 +95,7 @@ exports.updateLead = async (req, res) => {
     let userAdminId;
     if (req.user.role === 'admin') {
       userAdminId = req.user.id;
-    } else if (req.user.role === 'sales_executive') {
+    } else if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
       const salesExec = await SalesExecutive.findById(req.user.id);
       userAdminId = salesExec?.adminId;
     }
@@ -120,6 +136,16 @@ exports.assignLead = async (req, res) => {
 
     const populatedLead = await Lead.findById(lead._id).populate('owner', 'name email');
 
+    // Create Notification for the Sales Executive
+    await Notification.create({
+      recipient: employeeId,
+      sender: req.user.id,
+      type: 'lead_assigned',
+      title: 'New Lead Assigned',
+      message: `You have been assigned a new lead: ${lead.name} (${lead.company || 'No Company'})`,
+      link: `/sales/deals`
+    });
+
     res.status(200).json({ success: true, data: populatedLead, message: 'Lead assigned successfully' });
 
   } catch (err) {
@@ -142,7 +168,7 @@ exports.deleteLead = async (req, res) => {
     let userAdminId;
     if (req.user.role === 'admin') {
       userAdminId = req.user.id;
-    } else if (req.user.role === 'sales_executive') {
+    } else if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
       const salesExec = await SalesExecutive.findById(req.user.id);
       userAdminId = salesExec?.adminId;
     }

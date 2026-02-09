@@ -1,100 +1,70 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import api from '@/lib/api';
 
-const useNotificationStore = create(
-    persist(
-        (set, get) => ({
-            notifications: [
-                {
-                    id: '1',
-                    title: 'New Task Assigned',
-                    description: 'You have been assigned to "Frontend Dashboard Redesign"',
-                    time: '2 mins ago',
-                    isRead: false,
-                    category: 'task',
-                    recipientId: '103'
-                },
-                {
-                    id: '2',
-                    title: 'Deadline Approaching',
-                    description: 'The task "API Integration" is due in 2 hours',
-                    time: '45 mins ago',
-                    isRead: false,
-                    category: 'deadline',
-                    recipientId: '103'
-                },
-                {
-                    id: '5',
-                    title: 'Emergency Security Patch',
-                    description: 'Admin assigned you: "Emergency Security Patch"',
-                    time: '1 hour ago',
-                    isRead: false,
-                    category: 'task',
-                    recipientId: '103'
-                },
-                {
-                    id: '6',
-                    title: 'Direct Message',
-                    description: 'Sarah Johnson: "Can we sync on the ACME project today?"',
-                    time: '3 hours ago',
-                    isRead: false,
-                    category: 'message',
-                    recipientId: '103'
-                },
-                {
-                    id: '3',
-                    title: 'Comment on Task',
-                    description: 'Sarah left a comment on your task "Landing Page Fixes"',
-                    time: '1 hour ago',
-                    isRead: true,
-                    category: 'comment',
-                    recipientId: '103'
-                },
-                {
-                    id: '4',
-                    title: 'Project Update',
-                    description: 'The Q1 Planning project has been completed successfully',
-                    time: '5 hours ago',
-                    isRead: true,
-                    category: 'system',
-                    recipientId: '103'
-                },
-            ],
+const useNotificationStore = create((set, get) => ({
+    notifications: [],
+    loading: false,
+    error: null,
+    unreadCount: 0,
 
-            markAsRead: (id) => {
-                set((state) => ({
-                    notifications: state.notifications.map((n) =>
-                        n.id === id ? { ...n, isRead: true } : n
-                    ),
-                }));
-            },
-
-            markAllAsRead: () => {
-                set((state) => ({
-                    notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
-                }));
-            },
-
-            deleteNotification: (id) => {
-                set((state) => ({
-                    notifications: state.notifications.filter((n) => n.id !== id),
-                }));
-            },
-
-            addNotification: (notification) => {
-                set((state) => ({
-                    notifications: [
-                        { ...notification, id: Date.now().toString(), isRead: false, time: 'Just now' },
-                        ...state.notifications
-                    ],
-                }));
-            },
-        }),
-        {
-            name: 'dintask-notifications-storage',
-            storage: createJSONStorage(() => sessionStorage),
+    fetchNotifications: async () => {
+        set({ loading: true });
+        try {
+            const res = await api('/notifications');
+            if (res.success) {
+                // Count unread
+                const unread = res.data.filter(n => !n.isRead).length;
+                set({ notifications: res.data, unreadCount: unread, loading: false });
+            }
+        } catch (error) {
+            console.error("Fetch Notifications Error", error);
+            set({ loading: false, error: error.message });
         }
-    )
-);
+    },
+
+    markAsRead: async (id) => {
+        try {
+            // Optimistic update
+            set((state) => {
+                const updatedList = state.notifications.map((n) =>
+                    n._id === id ? { ...n, isRead: true } : n
+                );
+                return {
+                    notifications: updatedList,
+                    unreadCount: updatedList.filter(n => !n.isRead).length
+                };
+            });
+
+            await api(`/notifications/${id}/read`, { method: 'PUT' });
+        } catch (error) {
+            console.error("Mark Read Error", error);
+        }
+    },
+
+    markAllAsRead: async () => {
+        try {
+            // Optimistic update
+            set((state) => ({
+                notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+                unreadCount: 0
+            }));
+
+            await api('/notifications/read-all', { method: 'PUT' });
+        } catch (error) {
+            console.error("Mark All Read Error", error);
+        }
+    },
+
+    // For real-time updates (if we implement socket later)
+    addNotification: (notification) => {
+        set((state) => {
+            const newList = [notification, ...state.notifications];
+            return {
+                notifications: newList,
+                unreadCount: newList.filter(n => !n.isRead).length
+            };
+        });
+    },
+}));
 
 export default useNotificationStore;
