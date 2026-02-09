@@ -17,13 +17,6 @@ const ManagerLogin = () => {
     const { login, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
 
-    // Auto-redirect if already logged in
-    useEffect(() => {
-        if (isAuthenticated && role === 'manager') {
-            navigate('/manager');
-        }
-    }, [isAuthenticated, role, navigate]);
-
     const handleLogin = async (e) => {
         e.preventDefault();
         if (!email || !password) {
