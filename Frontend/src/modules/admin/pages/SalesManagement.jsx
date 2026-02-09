@@ -152,7 +152,7 @@ const SalesManagement = () => {
         }
     };
 
-    const handleAddDeal = () => {
+    const handleAddDeal = async () => {
         if (!newDealData.name || !newDealData.company) {
             toast.error("Name and Company are required");
             return;
