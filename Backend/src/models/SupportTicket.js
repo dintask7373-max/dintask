@@ -27,7 +27,7 @@ const SupportTicketSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['Open', 'Pending', 'Escalated', 'Resolved', 'Closed'],
-        default: 'Open'
+        default: 'Pending'
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,

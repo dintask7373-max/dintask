@@ -18,10 +18,13 @@ const {
     getUserGrowth,
     getHourlyActivity,
     getRecentLogins,
+    getPlanDistribution,
     updateAdminPlan,
     getBillingStats,
     getAllTransactions,
-    getSubscriptionHistory
+    getSubscriptionHistory,
+    getPendingSupport,
+    getRecentInquiries
 } = require('../controllers/superAdminController');
 const upload = require('../middleware/upload');
 
@@ -70,6 +73,9 @@ router.get('/dashboard/role-distribution', getRoleDistribution);
 router.get('/dashboard/user-growth', getUserGrowth);
 router.get('/dashboard/hourly-activity', getHourlyActivity);
 router.get('/dashboard/recent-logins', getRecentLogins);
+router.get('/dashboard/plan-distribution', getPlanDistribution);
+router.get('/dashboard/pending-support', getPendingSupport);
+router.get('/dashboard/recent-inquiries', getRecentInquiries);
 
 // Billing & History
 router.get('/billing/stats', getBillingStats);

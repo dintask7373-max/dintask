@@ -61,36 +61,55 @@ exports.createTicket = async (req, res, next) => {
 exports.getTickets = async (req, res, next) => {
     try {
         let query;
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const startIndex = (page - 1) * limit;
+
+        // Build query based on role
+        let match = {};
 
         if (req.user.role === 'superadmin') {
-            // Super Admin sees ONLY Escalated tickets (from Admins)
-            query = SupportTicket.find({ isEscalatedToSuperAdmin: true })
-                .populate('creator', 'name email companyName')
-                .populate('companyId', 'companyName');
+            // Super Admin sees ONLY Escalated tickets (from Admins) by default
+            match = { isEscalatedToSuperAdmin: true };
         } else if (req.user.role === 'admin') {
             // Check scope from query
             if (req.query.scope === 'my') {
-                // Admin wants to see ONLY tickets they created (e.g. "My Support Tickets")
-                query = SupportTicket.find({ creator: req.user.id })
-                    .populate('creator', 'name email role');
+                match = { creator: req.user.id };
             } else {
-                // Admin sees ALL tickets for their company (Team Support Requests)
-                // Exclude their own if needed, or allow all. 
-                // Usually "Team Requests" implies tickets from employees.
-                // Let's filter for companyId but NOT creator if scope is 'team', or just all.
-                query = SupportTicket.find({ companyId: req.user.id })
-                    .populate('creator', 'name email role');
+                match = { companyId: req.user.id };
             }
         } else {
             // Employees/Managers see ONLY their own tickets
-            query = SupportTicket.find({ creator: req.user.id });
+            match = { creator: req.user.id };
         }
 
-        const tickets = await query.sort({ createdAt: -1 });
+        // Apply filters
+        if (req.query.status && req.query.status !== 'All') {
+            match.status = req.query.status;
+        }
+        if (req.query.priority && req.query.priority !== 'All') {
+            match.priority = req.query.priority;
+        }
+
+        query = SupportTicket.find(match)
+            .populate('creator', 'name email role')
+            .populate('companyId', 'companyName');
+
+        const total = await SupportTicket.countDocuments(match);
+
+        query = query.sort({ createdAt: -1 }).skip(startIndex).limit(limit);
+
+        const tickets = await query;
 
         res.status(200).json({
             success: true,
             count: tickets.length,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            },
             data: tickets
         });
     } catch (err) {
@@ -128,7 +147,7 @@ exports.getTicket = async (req, res, next) => {
     }
 };
 
-// @desc    Update ticket (Status/Response)
+// @desc    Update ticket (Status/Response/Feedback)
 // @route   PUT /api/v1/support-tickets/:id
 // @access  Private
 exports.updateTicket = async (req, res, next) => {
@@ -143,28 +162,37 @@ exports.updateTicket = async (req, res, next) => {
         if (req.body.response) {
             ticket.responses.push({
                 responder: req.user.id,
-                responderModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin', // Usually Admins respond
+                responderModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin',
                 message: req.body.response
             });
         }
 
-        // Update Status/Priority
+        // Update Status/Priority/Escalation
         if (req.body.status) {
             ticket.status = req.body.status;
             if (['Resolved', 'Closed'].includes(req.body.status) && !ticket.resolvedAt) {
                 ticket.resolvedAt = Date.now();
-            } else if (['Open', 'Pending'].includes(req.body.status)) {
+            } else if (['Open', 'Pending'].includes(req.body.status)) { // Removed In Progress
                 ticket.resolvedAt = undefined; // Clear if re-opened
             }
         }
         if (req.body.priority) ticket.priority = req.body.priority;
         if (req.body.isEscalatedToSuperAdmin !== undefined) ticket.isEscalatedToSuperAdmin = req.body.isEscalatedToSuperAdmin;
 
+        // Feedback & Rating Logic
+        if (req.body.rating) ticket.rating = req.body.rating;
+        if (req.body.feedback) ticket.feedback = req.body.feedback;
+
         await ticket.save();
+
+        // Re-populate for frontend update
+        const updatedTicket = await SupportTicket.findById(req.params.id)
+            .populate('creator', 'name email role')
+            .populate('companyId', 'companyName');
 
         res.status(200).json({
             success: true,
-            data: ticket
+            data: updatedTicket
         });
     } catch (err) {
         next(err);

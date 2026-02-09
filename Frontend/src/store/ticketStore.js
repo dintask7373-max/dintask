@@ -89,6 +89,51 @@ const useTicketStore = create((set, get) => ({
             // Revert
             set({ tickets: originalTickets });
         }
+    },
+
+    replyToTicket: async (id, message) => {
+        try {
+            const res = await api(`/support-tickets/${id}`, {
+                method: 'PUT',
+                body: { response: message }
+            });
+
+            // Update local state with the returned updated ticket
+            set((state) => ({
+                tickets: state.tickets.map((t) =>
+                    t._id === id ? res.data : t // Backend returns fully populated updated ticket
+                )
+            }));
+
+            toast.success('Reply sent successfully');
+            return true;
+        } catch (err) {
+            console.error("Reply Error:", err);
+            toast.error(err.message || 'Failed to send reply');
+            return false;
+        }
+    },
+
+    escalateTicket: async (id) => {
+        try {
+            const res = await api(`/support-tickets/${id}`, {
+                method: 'PUT',
+                body: { isEscalatedToSuperAdmin: true, status: 'Escalated' }
+            });
+
+            set((state) => ({
+                tickets: state.tickets.map((t) =>
+                    t._id === id ? res.data : t
+                )
+            }));
+
+            toast.success('Ticket escalated to Super Admin');
+            return true;
+        } catch (err) {
+            console.error("Escalation Error:", err);
+            toast.error(err.message || 'Failed to escalate ticket');
+            return false;
+        }
     }
 }));
 

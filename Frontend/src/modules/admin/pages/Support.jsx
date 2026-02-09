@@ -15,7 +15,10 @@ import {
     Wrench,
     CreditCard,
     Plus,
-    Loader2
+    Loader2,
+    Send,
+    User,
+    X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -60,6 +63,35 @@ const SupportManagement = () => {
         description: ''
     });
 
+    // Reply State
+    const [replyMessage, setReplyMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { replyToTicket, escalateTicket } = useTicketStore();
+
+    const handleReply = async () => {
+        if (!replyMessage.trim() || !selectedTicket) return;
+        setIsSubmitting(true);
+        const success = await replyToTicket(selectedTicket._id, replyMessage);
+        if (success) {
+            setReplyMessage('');
+            // Store updates selectedTicket automatically via fetch or we update local selectedTicket? 
+            // useTicketStore updates the list. We need to update selectedTicket ref.
+            // Let's find it from store
+            const updated = useTicketStore.getState().tickets.find(t => t._id === selectedTicket._id);
+            if (updated) setSelectedTicket(updated);
+        }
+        setIsSubmitting(false);
+    };
+
+    const handleEscalate = async () => {
+        if (!selectedTicket) return;
+        const success = await escalateTicket(selectedTicket._id);
+        if (success) {
+            const updated = useTicketStore.getState().tickets.find(t => t._id === selectedTicket._id);
+            if (updated) setSelectedTicket(updated);
+        }
+    };
+
     // Fetch on Mount & Tab Change
     useEffect(() => {
         fetchTickets(activeTab === 'my' ? 'my' : 'all');
@@ -76,10 +108,7 @@ const SupportManagement = () => {
         }
     };
 
-    const filters = ['All', 'Pending', 'Escalated', 'Resolved']; // Backend statuses: 'Open', 'Pending', 'Resolved', 'Closed' ? 
-    // Adapting filters to likely backend values or mapping them. 
-    // Let's assume backend returns 'Open', 'In Progress', 'Resolved', 'Closed'.
-    // Mapping for UI: 'Pending' -> 'Open'/'In Progress'
+    const filters = ['All', 'Open', 'Pending', 'Escalated', 'Resolved'];
 
     const filteredTickets = tickets.filter(t => {
         // Backend 'title' vs UI 'issue', Backend 'creator.name' vs UI 'client'
@@ -432,68 +461,107 @@ const SupportManagement = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                             >
-                                <Card className="border-none shadow-xl bg-slate-900 text-white overflow-hidden rounded-2xl relative sticky top-6">
-                                    <div className="absolute top-0 right-0 p-8 opacity-5">
-                                        <ShieldAlert size={120} />
-                                    </div>
-                                    <CardContent className="p-8 space-y-8 relative z-10">
-                                        <div className="pb-6 border-b border-white/10 flex justify-between items-start">
-                                            <div>
-                                                <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.3em] mb-2 block">{selectedTicket.ticketId}</span>
-                                                <h2 className="text-2xl font-black italic tracking-tighter leading-tight uppercase">Ticket Detail</h2>
+                                <Card className="border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden rounded-2xl relative sticky top-6 flex flex-col h-[calc(100vh-140px)]">
+                                    {/* Header */}
+                                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-between items-center shrink-0">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest">
+                                                    {selectedTicket.ticketId || selectedTicket._id.substr(-6)}
+                                                </span>
+                                                <Badge className={`${getStatusStyle(selectedTicket.status)} border-none text-[8px] font-black uppercase px-1.5 h-4`}>
+                                                    {selectedTicket.status}
+                                                </Badge>
                                             </div>
+                                            <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight line-clamp-1">
+                                                {selectedTicket.title}
+                                            </h2>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            {!selectedTicket.isEscalatedToSuperAdmin && !['Resolved', 'Closed'].includes(selectedTicket.status) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleEscalate}
+                                                    className="h-7 text-[9px] font-black uppercase text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                                                >
+                                                    Escalate
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
-                                                className="text-white hover:bg-white/10"
+                                                size="icon"
+                                                className="h-7 w-7 text-slate-400 hover:text-slate-600"
                                                 onClick={() => setSelectedTicket(null)}
                                             >
-                                                Close
+                                                <X size={16} /> {/* Wait, X is not imported? I need to import X if not present. X is likely not imported based on previous check. I'll use simple text or ensure import */}
+                                                {/* X was not in imports list. I'll stick to text 'Close' or use ChevronRight. Text 'Close' used previously. */}
                                             </Button>
                                         </div>
+                                    </div>
 
-                                        <div className="space-y-6">
-                                            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                                                <div className="size-12 rounded-full overflow-hidden bg-primary-600 flex items-center justify-center shrink-0 border-2 border-white/20">
-                                                    <User size={24} className="text-white" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xs font-black uppercase tracking-widest text-primary-400">Reporter</h4>
-                                                    <p className="text-lg font-black italic">{selectedTicket.creator?.name || 'Me'}</p>
-                                                </div>
+                                    {/* Conversation Body */}
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-black/20">
+                                        {/* Original Post */}
+                                        <div className="flex gap-3">
+                                            <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                                <User size={14} className="text-slate-500" />
                                             </div>
-
-                                            <div className="space-y-2">
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Subject</h4>
-                                                <p className="text-sm font-bold text-white/90 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10">
-                                                    {selectedTicket.title}
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Description</h4>
-                                                <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic">
-                                                    "{selectedTicket.description}"
-                                                </p>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Category</p>
-                                                    <div className="flex items-center justify-center gap-2 text-xs font-black italic text-primary-400">
-                                                        {getCategoryIcon(selectedTicket.type)}
-                                                        {selectedTicket.type}
-                                                    </div>
+                                            <div className="flex-1 space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{selectedTicket.creator?.name || 'Reporter'}</span>
+                                                    <span className="text-[9px] text-slate-400">{new Date(selectedTicket.createdAt).toLocaleDateString()}</span>
                                                 </div>
-                                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Created At</p>
-                                                    <p className="text-xs font-black italic whitespace-nowrap">{new Date(selectedTicket.createdAt).toLocaleDateString()}</p>
+                                                <div className="p-3 bg-white dark:bg-slate-800 rounded-r-xl rounded-bl-xl border border-slate-100 dark:border-slate-700 shadow-sm text-xs text-slate-600 dark:text-slate-300">
+                                                    {selectedTicket.description}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Actions could go here */}
-                                    </CardContent>
+                                        {/* Responses */}
+                                        {selectedTicket.responses?.map((msg, i) => {
+                                            const isMe = msg.responderModel === 'Admin'; // Assuming logged in user is Admin
+                                            return (
+                                                <div key={i} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`size-8 rounded-full flex items-center justify-center shrink-0 ${isMe ? 'bg-primary-100 text-primary-600' : 'bg-slate-200 text-slate-500'}`}>
+                                                        {isMe ? <User size={14} /> : (msg.responderModel === 'SuperAdmin' ? <ShieldAlert size={14} /> : <User size={14} />)}
+                                                    </div>
+                                                    <div className={`flex-1 space-y-1 ${isMe ? 'text-right' : ''}`}>
+                                                        <div className={`flex items-center gap-2 ${isMe ? 'justify-end' : ''}`}>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{isMe ? 'You' : msg.responderModel}</span>
+                                                            <span className="text-[9px] text-slate-400">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </div>
+                                                        <div className={`p-3 rounded-xl border shadow-sm text-xs inline-block text-left max-w-[85%] ${isMe
+                                                            ? 'bg-primary-600 border-primary-600 text-white rounded-l-xl rounded-br-none'
+                                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-r-xl rounded-bl-none'
+                                                            }`}>
+                                                            {msg.message}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Footer / Reply */}
+                                    <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shrink-0">
+                                        <div className="relative">
+                                            <Textarea
+                                                placeholder="Type your reply..."
+                                                className="min-h-[60px] w-full resize-none pr-10 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-primary-500"
+                                                value={replyMessage}
+                                                onChange={(e) => setReplyMessage(e.target.value)}
+                                            />
+                                            <Button
+                                                size="icon"
+                                                className="absolute bottom-2 right-2 size-7 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-sm"
+                                                onClick={handleReply}
+                                                disabled={isSubmitting || !replyMessage.trim()}
+                                            >
+                                                {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </Card>
                             </motion.div>
                         ) : (

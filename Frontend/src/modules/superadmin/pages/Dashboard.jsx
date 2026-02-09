@@ -59,47 +59,40 @@ import useAuthStore from '@/store/authStore';
 
 const SuperAdminDashboard = () => {
     const navigate = useNavigate();
-    const { admins, stats, fetchAdmins, fetchDashboardStats, updateAdminStatus } = useSuperAdminStore();
+    const {
+        admins,
+        stats,
+        revenueTrends,
+        planDistribution,
+        pendingSupport,
+        recentInquiries,
+        fetchAdmins,
+        fetchDashboardStats,
+        fetchBillingStats,
+        fetchPlanDistribution,
+        fetchPendingSupport,
+        fetchRecentInquiries,
+        updateAdminStatus
+    } = useSuperAdminStore();
     const { role } = useAuthStore();
     const isSuperAdmin = role === 'superadmin';
 
     React.useEffect(() => {
         fetchDashboardStats();
         fetchAdmins();
-    }, [fetchDashboardStats, fetchAdmins]);
+        fetchBillingStats();
+        fetchPlanDistribution();
+        fetchPendingSupport();
+        fetchRecentInquiries();
+    }, [fetchDashboardStats, fetchAdmins, fetchBillingStats, fetchPlanDistribution, fetchPendingSupport, fetchRecentInquiries]);
 
-    const chartData = [
-        { name: 'Jul', revenue: 250000, growth: 12 },
-        { name: 'Aug', revenue: 310000, growth: 15 },
-        { name: 'Sep', revenue: 280000, growth: 10 },
-        { name: 'Oct', revenue: 350000, growth: 18 },
-        { name: 'Nov', revenue: 420000, growth: 22 },
-        { name: 'Dec', revenue: 485000, growth: 25 },
-    ];
+    // Use real revenue trends from backend or fallback to empty array
+    const chartData = revenueTrends && revenueTrends.length > 0 ? revenueTrends : [];
 
-    const pieData = [
-        { name: 'Starter', value: 4, color: '#94a3b8' },
-        { name: 'Pro Team', value: 6, color: '#3b82f6' },
-        { name: 'Business', value: 2, color: '#8b5cf6' },
-    ];
+    // Use real plan distribution from backend or fallback to empty array
+    const pieData = planDistribution && planDistribution.length > 0 ? planDistribution : [];
 
-    const summaryCards = [
-        {
-            title: 'Total Revenue',
-            value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`,
-            trend: '+12.5%',
-            icon: <IndianRupee className="text-emerald-500" size={20} />,
-            bg: 'bg-emerald-50 dark:bg-emerald-900/10',
-            restricted: true // Only for superadmin
-        },
-        {
-            title: 'Active Companies',
-            value: stats.activeCompanies,
-            trend: '+2',
-            icon: <Building2 className="text-blue-500" size={20} />,
-            bg: 'bg-blue-50 dark:bg-blue-900/10'
-        },
-    ].filter(card => !card.restricted || isSuperAdmin);
+
 
     return (
         <motion.div
@@ -134,7 +127,7 @@ const SuperAdminDashboard = () => {
                                     </div>
                                 </div>
                                 <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Revenue</p>
-                                <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">₹{stats.totalRevenue > 100000 ? `${(stats.totalRevenue / 100000).toFixed(1)}L` : stats.totalRevenue.toLocaleString('en-IN')}</h3>
+                                <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">₹{(stats?.totalRevenue || 0) > 100000 ? `${((stats?.totalRevenue || 0) / 100000).toFixed(1)}L` : (stats?.totalRevenue || 0).toLocaleString('en-IN')}</h3>
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -153,29 +146,29 @@ const SuperAdminDashboard = () => {
                                 </div>
                             </div>
                             <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Active</p>
-                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">{stats.activeCompanies}</h3>
+                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">{stats?.activeCompanies || 0}</h3>
                         </CardContent>
                     </Card>
                 </motion.div>
 
-                {/* Pending Admins Card */}
+                {/* Pending Support Card */}
                 <motion.div variants={fadeInUp}>
                     <Card
                         className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl cursor-pointer"
-                        onClick={() => navigate('/superadmin/admins')}
+                        onClick={() => navigate('/superadmin/support')}
                     >
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
                                 <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-amber-50 dark:bg-amber-900/10 group-hover:scale-105 transition-transform">
-                                    <Activity className="text-amber-500" size={14} />
+                                    <ShieldCheck className="text-amber-500" size={14} />
                                 </div>
-                                {admins.filter(a => a.status === 'pending').length > 0 && (
+                                {(pendingSupport?.length || 0) > 0 && (
                                     <Badge className="bg-amber-500 text-[7px] md:text-[8px] font-black uppercase text-white border-none h-4 px-1.5 flex items-center justify-center">Alert</Badge>
                                 )}
                             </div>
-                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Pending</p>
+                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Support Pending</p>
                             <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                                {admins.filter(a => a.status === 'pending').length}
+                                {pendingSupport?.length || 0}
                             </h3>
                         </CardContent>
                     </Card>
@@ -278,44 +271,50 @@ const SuperAdminDashboard = () => {
                                 </Select>
                             </CardHeader>
                             <CardContent className="px-3 md:px-6 pb-4 md:pb-6">
-                                <div className="h-[160px] md:h-[240px] w-full mt-4">
-                                    <ResponsiveContainer width="100%" height="100%" debounce={50}>
-                                        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                            <XAxis
-                                                dataKey="name"
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
-                                                dy={10}
-                                            />
-                                            <YAxis
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
-                                            />
-                                            <Tooltip
-                                                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="revenue"
-                                                stroke="#3b82f6"
-                                                strokeWidth={4}
-                                                fillOpacity={1}
-                                                fill="url(#colorRev)"
-                                                animationDuration={2000}
-                                                animationBegin={500}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
+                                {chartData.length > 0 ? (
+                                    <div className="h-[160px] md:h-[240px] w-full mt-4">
+                                        <ResponsiveContainer width="100%" height="100%" debounce={50}>
+                                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis
+                                                    dataKey="name"
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+                                                    dy={10}
+                                                />
+                                                <YAxis
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+                                                />
+                                                <Tooltip
+                                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                                                />
+                                                <Area
+                                                    type="monotone"
+                                                    dataKey="revenue"
+                                                    stroke="#3b82f6"
+                                                    strokeWidth={4}
+                                                    fillOpacity={1}
+                                                    fill="url(#colorRev)"
+                                                    animationDuration={2000}
+                                                    animationBegin={500}
+                                                />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="h-[160px] md:h-[240px] w-full mt-4 flex items-center justify-center">
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No revenue data yet</p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -329,41 +328,145 @@ const SuperAdminDashboard = () => {
                             <p className="text-[9px] font-bold text-slate-400 uppercase">Plan distribution</p>
                         </CardHeader>
                         <CardContent className="flex flex-col items-center px-4 md:px-6 pb-4 md:pb-6 pt-3 md:pt-4">
-                            <div className="h-[150px] md:h-[190px] w-full">
-                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
-                                    <PieChart>
-                                        <Pie
-                                            data={pieData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={50}
-                                            outerRadius={75}
-                                            paddingAngle={8}
-                                            dataKey="value"
-                                            animationDuration={1500}
-                                        >
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ fontSize: '10px' }} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="w-full space-y-2 mt-4">
-                                {pieData.map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/50">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{item.name}</span>
-                                        </div>
-                                        <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tighter">{item.value} Org</span>
+                            {pieData.length > 0 ? (
+                                <>
+                                    <div className="h-[150px] md:h-[190px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%" debounce={50}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={pieData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={50}
+                                                    outerRadius={75}
+                                                    paddingAngle={8}
+                                                    dataKey="value"
+                                                    animationDuration={1500}
+                                                >
+                                                    {pieData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip contentStyle={{ fontSize: '10px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
                                     </div>
-                                ))}
+                                    <div className="w-full space-y-2 mt-4">
+                                        {pieData.map((item, i) => (
+                                            <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/50">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{item.name}</span>
+                                                </div>
+                                                <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tighter">{item.value} Org</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="h-[150px] md:h-[190px] w-full flex items-center justify-center">
+                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No plan data yet</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div >
+
+            {/* Bottom Lists Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* Pending Support Tickets List */}
+                <motion.div variants={fadeInUp}>
+                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl md:rounded-[2rem] overflow-hidden h-full">
+                        <CardHeader className="flex flex-row items-center justify-between px-5 py-4 border-b border-slate-50 dark:border-slate-800">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                                    <ShieldCheck className="text-amber-500" size={14} />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-sm font-black uppercase tracking-tight">Pending Support</CardTitle>
+                                    <CardDescription className="text-[10px] font-bold">Requires attention</CardDescription>
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/superadmin/support')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-amber-500">
+                                View All
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                                {pendingSupport && pendingSupport.length > 0 ? (
+                                    pendingSupport.slice(0, 3).map((ticket) => (
+                                        <div key={ticket._id} className="p-3 sm:p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => navigate(`/superadmin/support/${ticket._id}`)}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-1">{ticket.subject}</h4>
+                                                <Badge className="bg-amber-100 text-amber-600 dark:bg-amber-900/30 font-black text-[8px] px-1.5 h-4 uppercase border-none">{ticket.status}</Badge>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500 line-clamp-2 mb-2">{ticket.description}</p>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Avatar className="h-4 w-4">
+                                                        <AvatarFallback className="text-[8px] bg-slate-100 dark:bg-slate-800">{ticket.userId?.name?.charAt(0) || 'U'}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">{ticket.adminId?.companyName || 'Unknown Company'}</span>
+                                                </div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">{ticket.createdAt ? format(new Date(ticket.createdAt), 'MMM dd') : 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center">
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No pending tickets</p>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
                 </motion.div>
+
+                {/* Recent Inquiries List */}
+                <motion.div variants={fadeInUp}>
+                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl md:rounded-[2rem] overflow-hidden h-full">
+                        <CardHeader className="flex flex-row items-center justify-between px-5 py-4 border-b border-slate-50 dark:border-slate-800">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                                    <Zap className="text-indigo-500" size={14} />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-sm font-black uppercase tracking-tight">Recent Inquiries</CardTitle>
+                                    <CardDescription className="text-[10px] font-bold">New leads & contacts</CardDescription>
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/superadmin/inquiries')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-500">
+                                View All
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                                {recentInquiries && recentInquiries.length > 0 ? (
+                                    recentInquiries.slice(0, 3).map((inquiry) => (
+                                        <div key={inquiry._id} className="p-3 sm:p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => navigate('/superadmin/inquiries')}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-slate-900 dark:text-white text-xs">{inquiry.name}</h4>
+                                                <Badge className="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 font-black text-[8px] px-1.5 h-4 uppercase border-none">{inquiry.status || 'New'}</Badge>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500 mb-2 truncate">{inquiry.email}</p>
+                                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded-lg">
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
+                                                <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase">{inquiry.type || 'General'}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center">
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No recent inquiries</p>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
             </div>
 
             {/* Recent Activity Table */}
@@ -479,8 +582,8 @@ const SuperAdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-            </motion.div>
-        </motion.div>
+            </motion.div >
+        </motion.div >
 
     );
 };

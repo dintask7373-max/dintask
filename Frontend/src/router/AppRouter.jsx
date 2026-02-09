@@ -1,7 +1,6 @@
 ﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
-import AdminSubscriptionProtectedRoute from '../components/AdminSubscriptionProtectedRoute';
 import useAuthStore from '@/store/authStore';
 
 const NotFoundRedirect = () => {
@@ -126,6 +125,7 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
+import IntelManager from '@/modules/superadmin/pages/IntelManager';
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -173,6 +173,7 @@ const AppRouter = () => {
             {/* --- ADMIN ROUTES --- */}
             {/* Main Admin Panel */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout role="admin" /></ProtectedRoute>}>
+<<<<<<< HEAD
                 <Route index element={<AdminSubscriptionProtectedRoute><AdminDashboard /></AdminSubscriptionProtectedRoute>} />
                 <Route path="managers" element={<AdminSubscriptionProtectedRoute><ManagerManagement /></AdminSubscriptionProtectedRoute>} />
                 <Route path="employees" element={<AdminSubscriptionProtectedRoute><EmployeeManagement /></AdminSubscriptionProtectedRoute>} />
@@ -183,18 +184,29 @@ const AppRouter = () => {
                 <Route path="chat" element={<AdminSubscriptionProtectedRoute><AdminChat /></AdminSubscriptionProtectedRoute>} />
                 <Route path="calendar" element={<AdminSubscriptionProtectedRoute><AdminCalendar /></AdminSubscriptionProtectedRoute>} />
                 {/* Subscription page is NOT wrapped - always accessible */}
+=======
+                <Route index element={<AdminDashboard />} />
+                <Route path="managers" element={<ManagerManagement />} />
+                <Route path="employees" element={<EmployeeManagement />} />
+                <Route path="sales" element={<SalesManagement />} />
+                {/* Task module removed for Admin as they don't assign tasks anymore */}
+                <Route path="projects/approvals" element={<ProjectApprovals />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="chat" element={<AdminChat />} />
+                <Route path="calendar" element={<AdminCalendar />} />
+>>>>>>> 1ec903f5e54852f8dcedfd9abae5d0c06d05223d
                 <Route path="subscription" element={<AdminSubscription />} />
-                <Route path="settings" element={<AdminSubscriptionProtectedRoute><Settings /></AdminSubscriptionProtectedRoute>} />
-                <Route path="requests" element={<AdminSubscriptionProtectedRoute><JoinRequests /></AdminSubscriptionProtectedRoute>} />
-                <Route path="support" element={<AdminSubscriptionProtectedRoute><SupportCenter /></AdminSubscriptionProtectedRoute>} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="requests" element={<JoinRequests />} />
+                <Route path="support" element={<SupportCenter />} />
             </Route>
 
             {/* Admin CRM Panel */}
             <Route path="/admin/crm" element={<ProtectedRoute allowedRoles={['admin']}><CRMLayout role="admin" /></ProtectedRoute>}>
-                <Route index element={<AdminSubscriptionProtectedRoute><AdminCRM /></AdminSubscriptionProtectedRoute>} />
-                <Route path="leads" element={<AdminSubscriptionProtectedRoute><LeadsManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="pipeline" element={<AdminSubscriptionProtectedRoute><SalesPipeline /></AdminSubscriptionProtectedRoute>} />
-                <Route path="follow-ups" element={<AdminSubscriptionProtectedRoute><FollowUps /></AdminSubscriptionProtectedRoute>} />
+                <Route index element={<AdminCRM />} />
+                <Route path="leads" element={<LeadsManagement />} />
+                <Route path="pipeline" element={<SalesPipeline />} />
+                <Route path="follow-ups" element={<FollowUps />} />
             </Route>
 
             {/* --- EMPLOYEE ROUTES --- */}
@@ -246,6 +258,7 @@ const AppRouter = () => {
                 <Route path="history" element={<SubscriptionHistory />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="landing-page" element={<LandingPageManager />} />
+                <Route path="system-intel" element={<IntelManager />} />
                 <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
                 <Route path="calendar" element={<div>System Calendar (Coming Soon)</div>} />
             </Route>
