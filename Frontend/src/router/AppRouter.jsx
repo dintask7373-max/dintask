@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
+import AdminSubscriptionProtectedRoute from '../components/AdminSubscriptionProtectedRoute';
 import useAuthStore from '@/store/authStore';
 
 const NotFoundRedirect = () => {
@@ -172,27 +173,27 @@ const AppRouter = () => {
             {/* --- ADMIN ROUTES --- */}
             {/* Main Admin Panel */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout role="admin" /></ProtectedRoute>}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="managers" element={<ManagerManagement />} />
-                <Route path="employees" element={<EmployeeManagement />} />
-                <Route path="sales" element={<SalesManagement />} />
-                {/* Task module removed for Admin as they don't assign tasks anymore */}
-                <Route path="projects/approvals" element={<ProjectApprovals />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="chat" element={<AdminChat />} />
-                <Route path="calendar" element={<AdminCalendar />} />
+                <Route index element={<AdminSubscriptionProtectedRoute><AdminDashboard /></AdminSubscriptionProtectedRoute>} />
+                <Route path="managers" element={<AdminSubscriptionProtectedRoute><ManagerManagement /></AdminSubscriptionProtectedRoute>} />
+                <Route path="employees" element={<AdminSubscriptionProtectedRoute><EmployeeManagement /></AdminSubscriptionProtectedRoute>} />
+                <Route path="sales" element={<AdminSubscriptionProtectedRoute><SalesManagement /></AdminSubscriptionProtectedRoute>} />
+                <Route path="projects/approvals" element={<AdminSubscriptionProtectedRoute><ProjectApprovals /></AdminSubscriptionProtectedRoute>} />
+                <Route path="reports" element={<AdminSubscriptionProtectedRoute><Reports /></AdminSubscriptionProtectedRoute>} />
+                <Route path="chat" element={<AdminSubscriptionProtectedRoute><AdminChat /></AdminSubscriptionProtectedRoute>} />
+                <Route path="calendar" element={<AdminSubscriptionProtectedRoute><AdminCalendar /></AdminSubscriptionProtectedRoute>} />
+                {/* Subscription page is NOT wrapped - always accessible */}
                 <Route path="subscription" element={<AdminSubscription />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="requests" element={<JoinRequests />} />
-                <Route path="support" element={<SupportCenter />} />
+                <Route path="settings" element={<AdminSubscriptionProtectedRoute><Settings /></AdminSubscriptionProtectedRoute>} />
+                <Route path="requests" element={<AdminSubscriptionProtectedRoute><JoinRequests /></AdminSubscriptionProtectedRoute>} />
+                <Route path="support" element={<AdminSubscriptionProtectedRoute><SupportCenter /></AdminSubscriptionProtectedRoute>} />
             </Route>
 
             {/* Admin CRM Panel */}
             <Route path="/admin/crm" element={<ProtectedRoute allowedRoles={['admin']}><CRMLayout role="admin" /></ProtectedRoute>}>
-                <Route index element={<AdminCRM />} />
-                <Route path="leads" element={<LeadsManagement />} />
-                <Route path="pipeline" element={<SalesPipeline />} />
-                <Route path="follow-ups" element={<FollowUps />} />
+                <Route index element={<AdminSubscriptionProtectedRoute><AdminCRM /></AdminSubscriptionProtectedRoute>} />
+                <Route path="leads" element={<AdminSubscriptionProtectedRoute><LeadsManagement /></AdminSubscriptionProtectedRoute>} />
+                <Route path="pipeline" element={<AdminSubscriptionProtectedRoute><SalesPipeline /></AdminSubscriptionProtectedRoute>} />
+                <Route path="follow-ups" element={<AdminSubscriptionProtectedRoute><FollowUps /></AdminSubscriptionProtectedRoute>} />
             </Route>
 
             {/* --- EMPLOYEE ROUTES --- */}
