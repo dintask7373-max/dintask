@@ -56,6 +56,7 @@ app.use('/api/v1/notifications', require('./routes/notificationRoutes')); // Not
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/v1/invite', require('./routes/inviteRoutes'));
 app.use('/api/v1/system-intel', require('./routes/systemIntelRoutes'));
+app.use('/api/v1/chat', require('./routes/chatRoutes'));
 
 app.use(errorHandler);
 

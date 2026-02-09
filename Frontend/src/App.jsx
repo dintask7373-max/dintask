@@ -4,6 +4,7 @@ import { Toaster } from '@/shared/components/ui/sonner';
 import AppRouter from './router/AppRouter';
 import useAuthStore from './store/authStore';
 import useSubscriptionMonitor from './hooks/useSubscriptionMonitor';
+import useSocketEvents from './hooks/useSocketEvents';
 import SubscriptionExpiredModal from './shared/components/SubscriptionExpiredModal';
 import AdminSubscriptionExpiredModal from './shared/components/AdminSubscriptionExpiredModal';
 import './index.css';
@@ -11,6 +12,9 @@ import './index.css';
 function App() {
   const { isAuthenticated, fetchProfile } = useAuthStore();
   const { showTeamExpiredModal, showAdminExpiredModal, handleTeamLogout, adminExpiryDate } = useSubscriptionMonitor();
+
+  // Initialize Socket.io and global listeners
+  useSocketEvents();
 
   useEffect(() => {
     if (isAuthenticated) {

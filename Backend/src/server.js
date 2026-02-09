@@ -10,6 +10,18 @@ const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
+// Socket.io initialization
+const io = require('socket.io')(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST"]
+  }
+});
+
+const setupChatSocket = require('./chatSocket');
+setupChatSocket(io);
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
   console.log(`Error: ${err.message}`);

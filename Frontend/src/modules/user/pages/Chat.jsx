@@ -23,55 +23,75 @@ import useChatStore from '@/store/chatStore';
 
 const EmployeeChat = () => {
     const navigate = useNavigate();
-    const { user: currentUser } = useAuthStore();
+    const { user: currentUser, role: userRole } = useAuthStore();
     const { managers } = useManagerStore();
-    const { messages, sendMessage } = useChatStore();
+    const {
+        conversations,
+        activeConversation,
+        messages,
+        loading,
+        fetchConversations,
+        setActiveConversation,
+        sendMessage,
+        accessOrCreateChat
+    } = useChatStore();
+
     const [newMessage, setNewMessage] = useState('');
     const scrollRef = useRef(null);
 
-    // Find the manager of this employee
-    // In this app, employees usually have a managerId. 
-    // If not directly in currentUser, we find it from the task or assume a primary manager.
-    // Let's assume the first manager for now or find the one they have messages with.
+    // Initial load
+    useEffect(() => {
+        fetchConversations();
+    }, [fetchConversations]);
 
-    const chatPartners = useMemo(() => {
-        const partners = new Set();
-        messages.forEach(msg => {
-            if (msg.senderId === currentUser?.id) partners.add(msg.receiverId);
-            if (msg.receiverId === currentUser?.id) partners.add(msg.senderId);
-        });
-
-        return Array.from(partners).map(id => {
-            const manager = managers.find(m => m.id === id);
-            if (!manager) return null;
-            return manager;
-        }).filter(Boolean);
-    }, [messages, managers, currentUser]);
-
-    const activePartner = chatPartners[0] || managers[0]; // Default to first manager if no chat yet
-    const activeChatId = activePartner?.id;
-
-    const activeMessages = useMemo(() => {
-        if (!activeChatId) return [];
-        return messages.filter(msg =>
-            (msg.senderId === currentUser?.id && msg.receiverId === activeChatId) ||
-            (msg.senderId === activeChatId && msg.receiverId === currentUser?.id)
-        ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    }, [messages, activeChatId, currentUser]);
+    // Map role to DB Model
+    const getModelName = (role) => {
+        const maps = {
+            'admin': 'Admin',
+            'manager': 'Manager',
+            'employee': 'Employee',
+            'sales': 'SalesExecutive',
+            'superadmin': 'SuperAdmin'
+        };
+        return maps[role] || 'Employee';
+    };
 
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [activeMessages]);
+    }, [messages]);
 
     const handleSendMessage = (e) => {
         e.preventDefault();
-        if (!newMessage.trim() || !activeChatId) return;
+        if (!newMessage.trim() || !activeConversation) return;
 
-        sendMessage(currentUser.id, activeChatId, newMessage);
+        const participantIds = activeConversation.participants.map(p => p.user._id);
+
+        sendMessage(
+            newMessage,
+            activeConversation._id,
+            currentUser._id,
+            getModelName(userRole),
+            participantIds
+        );
         setNewMessage('');
     };
+
+    const getChatPartner = (chat) => {
+        if (!chat) return null;
+        if (chat.isGroup) return { name: chat.groupName, avatar: chat.groupAvatar };
+        return chat.participants.find(p => p.user._id !== currentUser?._id)?.user || { name: 'Unknown', avatar: '' };
+    };
+
+    // Auto-select first conversation if exists
+    useEffect(() => {
+        if (conversations.length > 0 && !activeConversation) {
+            setActiveConversation(conversations[0]);
+        }
+    }, [conversations, activeConversation, setActiveConversation]);
+
+    const activePartner = getChatPartner(activeConversation);
 
     if (!activePartner) {
         return (
@@ -129,11 +149,13 @@ const EmployeeChat = () => {
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-slate-900/10" ref={scrollRef}>
                 <div className="space-y-6">
-                    {activeMessages.map((msg) => {
-                        const isMe = msg.senderId === currentUser?.id;
+                    {messages.map((msg) => {
+                        const senderId = msg.senderId?._id || msg.senderId;
+                        const currentId = currentUser?._id || currentUser?.id;
+                        const isMe = senderId === currentId;
                         return (
                             <motion.div
-                                key={msg.id}
+                                key={msg._id}
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 className={cn(
@@ -155,7 +177,7 @@ const EmployeeChat = () => {
                                     </div>
                                     <div className={cn("flex items-center gap-1.5 px-2", isMe ? "justify-end" : "justify-start")}>
                                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                                            {format(new Date(msg.timestamp), 'HH:mm')}
+                                            {format(new Date(msg.createdAt), 'HH:mm')}
                                         </span>
                                         {isMe && <CheckCheck size={12} className="text-primary-500" />}
                                     </div>
@@ -163,7 +185,7 @@ const EmployeeChat = () => {
                             </motion.div>
                         );
                     })}
-                    {activeMessages.length === 0 && (
+                    {messages.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full opacity-30 mt-20">
                             <MessageSquare size={48} className="mb-2" />
                             <p className="text-sm font-bold">No messages yet. Say hi to your manager!</p>

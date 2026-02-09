@@ -24,72 +24,81 @@ import useEmployeeStore from '@/store/employeeStore';
 import useChatStore from '@/store/chatStore';
 
 const AdminChat = () => {
-    const { user: currentUser } = useAuthStore();
+    const { user: currentUser, role: userRole } = useAuthStore();
     const { employees } = useEmployeeStore();
-    const { messages, sendMessage } = useChatStore();
+    const {
+        conversations,
+        activeConversation,
+        messages,
+        loading,
+        fetchConversations,
+        setActiveConversation,
+        sendMessage,
+        accessOrCreateChat
+    } = useChatStore();
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeChatId, setActiveChatId] = useState(null);
     const [newMessage, setNewMessage] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
     const scrollRef = useRef(null);
 
-    // Filter employees in the same workspace (or all for now as it's a demo)
-    const availablePartners = useMemo(() => {
-        // Admins can chat with everyone for now, or filter by their workspace
-        return employees.filter(e => e.id !== currentUser?.id);
-    }, [employees, currentUser]);
+    // Initial load
+    useEffect(() => {
+        fetchConversations();
+    }, [fetchConversations]);
 
-    // Get unique conversation partners
-    const chatPartners = useMemo(() => {
-        const partners = new Set();
-        messages.forEach(msg => {
-            if (msg.senderId === currentUser?.id) partners.add(msg.receiverId);
-            if (msg.receiverId === currentUser?.id) partners.add(msg.senderId);
-        });
+    // Map role to DB Model
+    const getModelName = (role) => {
+        const maps = {
+            'admin': 'Admin',
+            'manager': 'Manager',
+            'employee': 'Employee',
+            'sales': 'SalesExecutive',
+            'superadmin': 'SuperAdmin'
+        };
+        return maps[role] || 'Employee';
+    };
 
-        // Current active chats + all available partners (filtered by search)
-        const combinedPartners = Array.from(new Set([...Array.from(partners), ...availablePartners.map(p => p.id)]));
-
-        return combinedPartners.map(id => {
-            const member = employees.find(e => e.id === id);
-            if (!member) return null;
-
-            const lastMsg = messages
-                .filter(m => (m.senderId === id && m.receiverId === currentUser?.id) || (m.senderId === currentUser?.id && m.receiverId === id))
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-
-            return {
-                ...member,
-                lastMessage: lastMsg?.text || 'No messages yet',
-                lastMessageTime: lastMsg?.timestamp || null,
-            };
-        }).filter(Boolean).filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [messages, availablePartners, employees, currentUser, searchTerm]);
-
-    const activePartner = useMemo(() => {
-        return chatPartners.find(p => p.id === activeChatId);
-    }, [chatPartners, activeChatId]);
-
-    const activeMessages = useMemo(() => {
-        if (!activeChatId) return [];
-        return messages.filter(msg =>
-            (msg.senderId === currentUser?.id && msg.receiverId === activeChatId) ||
-            (msg.senderId === activeChatId && msg.receiverId === currentUser?.id)
-        ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    }, [messages, activeChatId, currentUser]);
+    // Filter employees for search
+    const filteredEmployees = useMemo(() => {
+        if (!searchTerm) return [];
+        return employees.filter(e =>
+            e._id !== currentUser?._id &&
+            e.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [employees, currentUser, searchTerm]);
 
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [activeMessages]);
+    }, [messages]);
 
     const handleSendMessage = (e) => {
         e.preventDefault();
-        if (!newMessage.trim() || !activeChatId) return;
+        if (!newMessage.trim() || !activeConversation) return;
 
-        sendMessage(currentUser.id, activeChatId, newMessage);
+        const participantIds = activeConversation.participants.map(p => p.user._id);
+
+        sendMessage(
+            newMessage,
+            activeConversation._id,
+            currentUser._id,
+            getModelName(userRole),
+            participantIds
+        );
         setNewMessage('');
+    };
+
+    const handleStartChat = async (targetUser) => {
+        const targetModel = targetUser.role ? getModelName(targetUser.role) : 'Employee';
+        await accessOrCreateChat(targetUser._id, targetModel, currentUser.workspaceId || 'global');
+        setSearchTerm('');
+    };
+
+    const getChatPartner = (chat) => {
+        if (chat.isGroup) return { name: chat.groupName, avatar: chat.groupAvatar };
+        return chat.participants.find(p => p.user._id !== currentUser?._id)?.user || { name: 'Unknown', avatar: '' };
     };
 
     return (
@@ -98,7 +107,7 @@ const AdminChat = () => {
                 {/* Sidebar */}
                 <div className={cn(
                     "w-full lg:w-72 xl:w-80 flex-shrink-0 border-r border-slate-100 dark:border-slate-800 flex flex-col transition-all",
-                    activeChatId ? "hidden lg:flex" : "flex"
+                    activeConversation ? "hidden lg:flex" : "flex"
                 )}>
                     <div className="p-4 lg:p-6 border-b border-slate-50 dark:border-slate-800">
                         <div className="flex items-center gap-3 mb-4">
@@ -110,7 +119,7 @@ const AdminChat = () => {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                             <Input
-                                placeholder="Search employee..."
+                                placeholder="Search employees..."
                                 className="h-9 pl-9 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-xs font-bold"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -120,46 +129,82 @@ const AdminChat = () => {
 
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-2 space-y-1">
-                            {chatPartners.map((partner) => (
-                                <button
-                                    key={partner.id}
-                                    onClick={() => setActiveChatId(partner.id)}
-                                    className={cn(
-                                        "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
-                                        activeChatId === partner.id
-                                            ? "bg-primary-50 dark:bg-primary-900/10"
-                                            : "hover:bg-slate-50 dark:hover:bg-slate-800/20"
-                                    )}
-                                >
-                                    <div className="relative">
-                                        <Avatar className="h-9 w-9 ring-2 ring-white dark:ring-slate-900 shadow-sm shrink-0">
-                                            <AvatarImage src={partner.avatar} />
-                                            <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
-                                                {partner.name.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <h3 className={cn(
-                                                "text-xs font-black truncate uppercase tracking-tight",
-                                                activeChatId === partner.id ? "text-primary-700 dark:text-primary-400" : "text-slate-900 dark:text-white"
-                                            )}>
-                                                {partner.name}
-                                            </h3>
-                                            {partner.lastMessageTime && (
-                                                <span className="text-[9px] text-slate-400 font-black">
-                                                    {format(new Date(partner.lastMessageTime), 'HH:mm')}
-                                                </span>
-                                            )}
+                            {/* Search Results */}
+                            {searchTerm && filteredEmployees.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">New Chat</p>
+                                    {filteredEmployees.map(emp => (
+                                        <button
+                                            key={emp._id}
+                                            onClick={() => handleStartChat(emp)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/20 text-left transition-all"
+                                        >
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={emp.avatar} />
+                                                <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
+                                                    {emp.name.charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{emp.name}</h3>
+                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
+                                </div>
+                            )}
+
+                            {/* Active Conversations */}
+                            {conversations.length > 0 ? conversations.map((chat) => {
+                                const partner = getChatPartner(chat);
+                                const isActive = activeConversation?._id === chat._id;
+
+                                return (
+                                    <button
+                                        key={chat._id}
+                                        onClick={() => setActiveConversation(chat)}
+                                        className={cn(
+                                            "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
+                                            isActive
+                                                ? "bg-primary-50 dark:bg-primary-900/10"
+                                                : "hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                        )}
+                                    >
+                                        <div className="relative">
+                                            <Avatar className="h-9 w-9 ring-2 ring-white dark:ring-slate-900 shadow-sm shrink-0">
+                                                <AvatarImage src={partner.avatar} />
+                                                <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
+                                                    {partner.name?.charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                                         </div>
-                                        <p className="text-[10px] text-slate-400 truncate font-bold uppercase tracking-widest">
-                                            {partner.lastMessage}
-                                        </p>
-                                    </div>
-                                </button>
-                            ))}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-0.5">
+                                                <h3 className={cn(
+                                                    "text-xs font-black truncate uppercase tracking-tight",
+                                                    isActive ? "text-primary-700 dark:text-primary-400" : "text-slate-900 dark:text-white"
+                                                )}>
+                                                    {partner.name}
+                                                </h3>
+                                                {chat.updatedAt && (
+                                                    <span className="text-[9px] text-slate-400 font-black">
+                                                        {format(new Date(chat.updatedAt), 'HH:mm')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 truncate font-bold uppercase tracking-widest">
+                                                {chat.lastMessage?.text || 'No messages yet'}
+                                            </p>
+                                        </div>
+                                    </button>
+                                );
+                            }) : (
+                                <div className="p-8 text-center">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">No active conversations</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -167,9 +212,9 @@ const AdminChat = () => {
                 {/* Chat Area */}
                 <div className={cn(
                     "flex-1 flex flex-col bg-slate-50/30 dark:bg-slate-900/10",
-                    !activeChatId ? "hidden md:flex items-center justify-center" : "flex"
+                    !activeConversation ? "hidden md:flex items-center justify-center" : "flex"
                 )}>
-                    {activeChatId ? (
+                    {activeConversation ? (
                         <>
                             {/* Chat Header */}
                             <div className="px-4 py-3 sm:px-6 sm:py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -178,19 +223,19 @@ const AdminChat = () => {
                                         variant="ghost"
                                         size="icon"
                                         className="lg:hidden h-8 w-8 rounded-lg"
-                                        onClick={() => setActiveChatId(null)}
+                                        onClick={() => setActiveConversation(null)}
                                     >
                                         <ArrowLeft size={18} />
                                     </Button>
                                     <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
-                                        <AvatarImage src={activePartner?.avatar} />
+                                        <AvatarImage src={getChatPartner(activeConversation).avatar} />
                                         <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs uppercase">
-                                            {activePartner?.name.charAt(0)}
+                                            {getChatPartner(activeConversation)?.name?.charAt(0)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-none mb-1 uppercase tracking-tight">
-                                            {activePartner?.name}
+                                            {getChatPartner(activeConversation).name}
                                         </h2>
                                         <p className="text-[9px] text-emerald-500 font-black uppercase tracking-[0.2em]">
                                             Online
@@ -213,11 +258,13 @@ const AdminChat = () => {
                             {/* Messages Area */}
                             <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar" ref={scrollRef}>
                                 <div className="space-y-4 sm:space-y-6">
-                                    {activeMessages.map((msg) => {
-                                        const isMe = msg.senderId === currentUser?.id;
+                                    {messages.map((msg) => {
+                                        const senderId = msg.senderId?._id || msg.senderId;
+                                        const currentId = currentUser?._id || currentUser?.id;
+                                        const isMe = senderId === currentId;
                                         return (
                                             <motion.div
-                                                key={msg.id}
+                                                key={msg._id}
                                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 className={cn(
@@ -239,7 +286,7 @@ const AdminChat = () => {
                                                     </div>
                                                     <div className={cn("flex items-center gap-1.5 px-1", isMe ? "justify-end" : "justify-start")}>
                                                         <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest">
-                                                            {format(new Date(msg.timestamp), 'HH:mm')}
+                                                            {format(new Date(msg.createdAt), 'HH:mm')}
                                                         </span>
                                                         {isMe && <CheckCheck size={10} className="text-primary-500" />}
                                                     </div>
@@ -252,24 +299,28 @@ const AdminChat = () => {
 
                             {/* Chat Input */}
                             <div className="p-4 sm:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                                <form
-                                    onSubmit={handleSendMessage}
-                                    className="relative flex items-center gap-2 sm:gap-3"
-                                >
-                                    <Input
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder="Type official message..."
-                                        className="h-11 sm:h-14 pl-5 sm:pl-6 pr-12 sm:pr-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl sm:rounded-3xl focus:ring-2 focus:ring-primary/10 text-xs sm:text-sm font-bold placeholder:text-slate-300 transition-all shadow-inner"
-                                    />
-                                    <Button
-                                        type="submit"
-                                        disabled={!newMessage.trim()}
-                                        className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl sm:rounded-3xl bg-primary-600 text-white shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-95 transition-all flex items-center justify-center p-0 shrink-0"
+                                <div className="flex flex-col gap-2">
+                                    <form
+                                        onSubmit={handleSendMessage}
+                                        className="relative flex items-center gap-2 sm:gap-3"
                                     >
-                                        <Send size={18} className="sm:size-[22px] ml-0.5" />
-                                    </Button>
-                                </form>
+                                        <Input
+                                            value={newMessage}
+                                            onChange={(e) => {
+                                                setNewMessage(e.target.value);
+                                            }}
+                                            placeholder="Type official message..."
+                                            className="h-11 sm:h-14 pl-5 sm:pl-6 pr-12 sm:pr-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl sm:rounded-3xl focus:ring-2 focus:ring-primary/10 text-xs sm:text-sm font-bold placeholder:text-slate-300 transition-all shadow-inner"
+                                        />
+                                        <Button
+                                            type="submit"
+                                            disabled={!newMessage.trim()}
+                                            className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl sm:rounded-3xl bg-primary-600 text-white shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-95 transition-all flex items-center justify-center p-0 shrink-0"
+                                        >
+                                            <Send size={18} className="sm:size-[22px] ml-0.5" />
+                                        </Button>
+                                    </form>
+                                </div>
                             </div>
                         </>
                     ) : (

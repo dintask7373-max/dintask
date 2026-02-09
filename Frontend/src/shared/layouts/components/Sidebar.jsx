@@ -97,6 +97,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Sales Tasks', path: '/sales/tasks', icon: CheckSquare },
                 { name: 'Clients', path: '/sales/clients', icon: Users },
                 { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
+                { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
                 { name: 'Schedule', path: '/sales/schedule', icon: CalendarIcon },
                 { name: 'Settings', path: '/sales/settings', icon: SettingsIcon },
                 { name: 'Support', path: '/sales/support', icon: LifeBuoy },
