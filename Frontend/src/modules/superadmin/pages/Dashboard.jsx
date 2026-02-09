@@ -12,7 +12,9 @@ import {
     MoreVertical,
     ChevronRight,
     Clock,
-    Calendar
+    Calendar,
+    Lock,
+    MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -75,7 +77,8 @@ const SuperAdminDashboard = () => {
         updateAdminStatus
     } = useSuperAdminStore();
     const { role } = useAuthStore();
-    const isSuperAdmin = role === 'superadmin';
+    const isSuperAdmin = role === 'superadmin' || role === 'superadmin_staff';
+    const isSuperAdminRoot = role === 'superadmin';
 
     React.useEffect(() => {
         fetchDashboardStats();
@@ -113,25 +116,36 @@ const SuperAdminDashboard = () => {
             </motion.div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {/* Total Revenue */}
-                {isSuperAdmin && (
-                    <motion.div variants={fadeInUp}>
-                        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl">
-                            <CardContent className="p-3 sm:p-5">
-                                <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                    <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 group-hover:scale-105 transition-transform">
-                                        <IndianRupee className="text-emerald-500" size={14} />
-                                    </div>
+                {/* Total Revenue - Root Or Staff (Locked for Staff) */}
+                <motion.div variants={fadeInUp}>
+                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl relative">
+                        {!isSuperAdminRoot && (
+                            <div className="absolute inset-0 bg-slate-50/10 dark:bg-slate-950/20 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-2 text-center">
+                                <Lock className="text-slate-400 mb-1" size={16} />
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">Confidential Data</span>
+                            </div>
+                        )}
+                        <CardContent className="p-3 sm:p-5">
+                            <div className="flex justify-between items-start mb-2 sm:mb-3">
+                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 group-hover:scale-105 transition-transform">
+                                    <IndianRupee className="text-emerald-500" size={14} />
+                                </div>
+                                {isSuperAdminRoot && (
                                     <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
                                         <ArrowUpRight size={8} /> 12%
                                     </div>
-                                </div>
-                                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Revenue</p>
-                                <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">₹{(stats?.totalRevenue || 0) > 100000 ? `${((stats?.totalRevenue || 0) / 100000).toFixed(1)}L` : (stats?.totalRevenue || 0).toLocaleString('en-IN')}</h3>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
+                                )}
+                            </div>
+                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Revenue</p>
+                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">
+                                {isSuperAdminRoot
+                                    ? `₹${(stats?.totalRevenue || 0) > 100000 ? `${((stats?.totalRevenue || 0) / 100000).toFixed(1)}L` : (stats?.totalRevenue || 0).toLocaleString('en-IN')}`
+                                    : '₹ ••••••'
+                                }
+                            </h3>
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
                 {/* Active Companies */}
                 <motion.div variants={fadeInUp}>
@@ -151,116 +165,64 @@ const SuperAdminDashboard = () => {
                     </Card>
                 </motion.div>
 
-                {/* Pending Support Card */}
+                {/* Total Users */}
                 <motion.div variants={fadeInUp}>
-                    <Card
-                        className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl cursor-pointer"
-                        onClick={() => navigate('/superadmin/support')}
-                    >
+                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl">
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-amber-50 dark:bg-amber-900/10 group-hover:scale-105 transition-transform">
-                                    <ShieldCheck className="text-amber-500" size={14} />
+                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 group-hover:scale-105 transition-transform">
+                                    <Users className="text-indigo-500" size={14} />
                                 </div>
-                                {(pendingSupport?.length || 0) > 0 && (
-                                    <Badge className="bg-amber-500 text-[7px] md:text-[8px] font-black uppercase text-white border-none h-4 px-1.5 flex items-center justify-center">Alert</Badge>
-                                )}
+                                <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded-full uppercase">
+                                    Global
+                                </div>
                             </div>
-                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Support Pending</p>
-                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                                {pendingSupport?.length || 0}
-                            </h3>
+                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Total Users</p>
+                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">{stats?.totalUsers || 0}</h3>
                         </CardContent>
                     </Card>
                 </motion.div>
 
-                {/* Total Enquiries */}
+                {/* Active Support Tickets */}
                 <motion.div variants={fadeInUp}>
-                    <Card
-                        className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl cursor-pointer"
-                        onClick={() => navigate('/superadmin/inquiries')}
-                    >
+                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl cursor-pointer"
+                        onClick={() => navigate('/superadmin/support')}>
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 group-hover:scale-105 transition-transform">
-                                    <Zap className="text-indigo-500" size={14} />
+                                <div className="p-1.5 sm:p-3 rounded-xl bg-orange-50 dark:bg-orange-900/10 group-hover:scale-105 transition-transform">
+                                    <MessageSquare className="text-orange-500" size={16} />
                                 </div>
+                                <div className="text-[8px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest">Ongoing</div>
                             </div>
-                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Enquiries</p>
-                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                                {useSuperAdminStore.getState().inquiries.length}
-                            </h3>
+                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Pending Tickets</p>
+                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">{pendingSupport?.length || 0}</h3>
                         </CardContent>
                     </Card>
                 </motion.div>
             </div>
 
-            {/* Pending Approvals Section (Compact) */}
-            {admins.filter(a => a.status === 'pending').length > 0 && (
-                <motion.div variants={fadeInUp}>
-                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl md:rounded-[2rem] overflow-hidden border-2 border-amber-500/20">
-                        <CardHeader className="flex flex-row items-center justify-between px-4 py-2 bg-amber-500/5 border-b border-amber-500/10">
-                            <div className="flex items-center gap-1.5">
-                                <div className="p-1.5 bg-amber-500 rounded-lg text-white">
-                                    <Clock size={12} />
-                                </div>
-                                <CardTitle className="text-[10px] sm:text-xs font-black text-amber-900 dark:text-amber-500 uppercase tracking-widest leading-none">Approvals Needed</CardTitle>
-                            </div>
-                            <Badge className="bg-amber-500 text-white font-black text-[8px] px-2 h-4">{admins.filter(a => a.status === 'pending').length}</Badge>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {admins.filter(a => a.status === 'pending').map((adm) => (
-                                    <div key={adm._id} className="p-2 sm:p-4 flex items-center justify-between gap-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                        <div className="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
-                                            <Avatar className="h-7 w-7 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
-                                                <AvatarFallback className="bg-amber-100 text-amber-600 font-black text-[9px] tracking-tighter">{adm.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="min-w-0">
-                                                <h4 className="font-black text-slate-900 dark:text-white text-[11px] sm:text-sm leading-tight truncate">{adm.name}</h4>
-                                                <p className="text-[8px] font-bold text-slate-400 truncate uppercase tracking-tighter mt-0.5">{adm.owner} • {adm.email}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            <Button
-                                                size="sm"
-                                                className="h-7 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-black text-[9px] gap-1 text-white border-none"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    updateAdminStatus(adm._id, 'active');
-                                                    toast.success("Account Approved!");
-                                                }}
-                                            >
-                                                <ShieldCheck size={10} /> <span className="hidden sm:inline">Approve</span>
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-7 w-7 p-0 rounded-lg text-slate-400 hover:text-red-500"
-                                                onClick={() => navigate('/superadmin/admins')}
-                                            >
-                                                <ChevronRight size={14} />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            )}
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Growth Chart */}
                 {isSuperAdmin && (
                     <motion.div variants={fadeInUp} className="lg:col-span-2">
-                        <Card className="h-full border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-xl md:rounded-[2rem]">
+                        <Card className="h-full border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-xl md:rounded-[2rem] relative">
+                            {!isSuperAdminRoot && (
+                                <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md z-20 flex flex-col items-center justify-center p-8 text-center">
+                                    <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 shadow-xl">
+                                        <Lock className="text-slate-500" size={28} />
+                                    </div>
+                                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-2 italic">Confidential Growth Data</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase max-w-[200px]">Finance-related insights are restricted to Administrator Root access only.</p>
+                                </div>
+                            )}
                             <CardHeader className="flex flex-row items-center justify-between px-5 md:px-8 py-4 md:py-6 border-b border-slate-50 dark:border-slate-800/50">
                                 <div>
                                     <CardTitle className="text-xs md:text-base font-black uppercase tracking-widest text-slate-900 dark:text-slate-200">Revenue</CardTitle>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase">Growth trends</p>
                                 </div>
-                                <Select defaultValue="6">
+                                <Select defaultValue="6" disabled={!isSuperAdminRoot}>
                                     <SelectTrigger className="w-[90px] md:w-[110px] h-7 md:h-8 text-[8px] md:text-[9px] font-black uppercase tracking-tighter bg-slate-50 border-none dark:bg-slate-800 rounded-lg">
                                         <SelectValue placeholder="Period" />
                                     </SelectTrigger>
@@ -271,7 +233,7 @@ const SuperAdminDashboard = () => {
                                 </Select>
                             </CardHeader>
                             <CardContent className="px-3 md:px-6 pb-4 md:pb-6">
-                                {chartData.length > 0 ? (
+                                {isSuperAdminRoot && chartData.length > 0 ? (
                                     <div className="h-[160px] md:h-[240px] w-full mt-4">
                                         <ResponsiveContainer width="100%" height="100%" debounce={50}>
                                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -312,7 +274,7 @@ const SuperAdminDashboard = () => {
                                     </div>
                                 ) : (
                                     <div className="h-[160px] md:h-[240px] w-full mt-4 flex items-center justify-center">
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No revenue data yet</p>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{isSuperAdminRoot ? 'No revenue data yet' : 'Data Locked'}</p>
                                     </div>
                                 )}
                             </CardContent>
@@ -406,9 +368,9 @@ const SuperAdminDashboard = () => {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-1.5">
                                                     <Avatar className="h-4 w-4">
-                                                        <AvatarFallback className="text-[8px] bg-slate-100 dark:bg-slate-800">{ticket.userId?.name?.charAt(0) || 'U'}</AvatarFallback>
+                                                        <AvatarFallback className="text-[8px] bg-slate-100 dark:bg-slate-800">{ticket.creator?.name?.charAt(0) || 'U'}</AvatarFallback>
                                                     </Avatar>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">{ticket.adminId?.companyName || 'Unknown Company'}</span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">{ticket.companyId?.companyName || 'Unknown Company'}</span>
                                                 </div>
                                                 <span className="text-[9px] font-bold text-slate-400 uppercase">{ticket.createdAt ? format(new Date(ticket.createdAt), 'MMM dd') : 'N/A'}</span>
                                             </div>
@@ -525,10 +487,9 @@ const SuperAdminDashboard = () => {
                                             <TableCell className="py-3 text-right pr-8">
                                                 <Badge className={cn(
                                                     "text-[8px] h-5 px-2 font-black uppercase tracking-widest rounded-full",
-                                                    (adm.subscriptionStatus || 'pending') === 'active' ? "bg-emerald-500" :
-                                                        (adm.subscriptionStatus || 'pending') === 'pending' ? "bg-amber-500" : "bg-red-500"
+                                                    adm.subscriptionStatus === 'active' ? "bg-emerald-500" : "bg-red-500"
                                                 )}>
-                                                    {adm.subscriptionStatus || 'pending'}
+                                                    {adm.subscriptionStatus}
                                                 </Badge>
                                             </TableCell>
                                         </TableRow>
@@ -559,10 +520,9 @@ const SuperAdminDashboard = () => {
                                         </div>
                                         <Badge className={cn(
                                             "text-[8px] h-5 px-2 font-black uppercase tracking-widest rounded-full",
-                                            (adm.subscriptionStatus || 'pending') === 'active' ? "bg-emerald-500" :
-                                                (adm.subscriptionStatus || 'pending') === 'pending' ? "bg-amber-500" : "bg-red-500"
+                                            adm.subscriptionStatus === 'active' ? "bg-emerald-500" : "bg-red-500"
                                         )}>
-                                            {adm.subscriptionStatus || 'pending'}
+                                            {adm.subscriptionStatus}
                                         </Badge>
                                     </div>
                                     <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest border-t border-slate-50 dark:border-slate-800/50 pt-2 text-wrap">

@@ -8,7 +8,8 @@ const router = express.Router();
 router.post('/lead', submitLead);
 
 // Protected route for Super Admin to view leads
-router.get('/admin/support-leads', protect, authorize('superadmin', 'super_admin'), getLeads);
-router.get('/admin/support-leads/:id', protect, authorize('superadmin', 'super_admin'), require('../controllers/supportLeadController').getLead);
+router.get('/admin/support-leads', protect, authorize('superadmin', 'superadmin_staff'), getLeads);
+router.get('/admin/support-leads/:id', protect, authorize('superadmin', 'superadmin_staff'), require('../controllers/supportLeadController').getLead);
+router.put('/admin/support-leads/:id', protect, authorize('superadmin', 'superadmin_staff'), require('../controllers/supportLeadController').updateLead);
 
 module.exports = router;

@@ -47,7 +47,7 @@ const AdminSchema = new mongoose.Schema({
   },
   subscriptionStatus: {
     type: String,
-    enum: ['active', 'inactive', 'expired', 'pending', 'suspended'],
+    enum: ['active', 'inactive', 'expired', 'suspended'],
     default: 'active'
   },
   subscriptionExpiry: {

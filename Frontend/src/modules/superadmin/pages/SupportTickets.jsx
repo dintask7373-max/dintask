@@ -12,6 +12,7 @@ import {
     CreditCard,
     ArrowUpRight,
     Users,
+    ChevronRight,
     X,
     Send,
     Loader2
@@ -81,7 +82,7 @@ const SuperAdminSupport = () => {
 
     const handleTicketSelect = (ticket) => {
         setSelectedTicket(ticket);
-        setIsSheetOpen(true);
+        if (window.innerWidth < 1024) setIsSheetOpen(true);
         // Reset reply
         setReplyMessage('');
     };
@@ -340,6 +341,11 @@ const SuperAdminSupport = () => {
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                {/* Action Arrow */}
+                                                <div className="flex items-center justify-center pl-2 border-l border-slate-100 dark:border-slate-800">
+                                                    <ChevronRight className={`text-slate-300 group-hover:text-indigo-500 transition-all ${selectedTicket?._id === ticket._id ? 'text-indigo-500 translate-x-1' : ''}`} size={20} />
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -377,7 +383,7 @@ const SuperAdminSupport = () => {
 
             {/* Mobile/Tablet Detail Overlay */}
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent side="right" className="p-0 border-none w-full sm:max-w-md bg-transparent">
+                <SheetContent side="right" className="p-0 border-none w-full sm:max-w-md bg-transparent lg:hidden">
                     <AnimatePresence>
                         {selectedTicket && (
                             <div className="h-full pt-10 sm:pt-0">

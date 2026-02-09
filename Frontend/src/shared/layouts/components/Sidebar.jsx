@@ -51,7 +51,9 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const pendingProjectsCount = leads.filter(l => l.status === 'Won' && l.approvalStatus === 'pending_project').length;
 
 
-    const isSuperAdmin = role === 'superadmin';
+    const isSuperAdmin = role === 'superadmin' || role === 'superadmin_staff';
+    const isSuperAdminRoot = role === 'superadmin';
+    const isSuperAdminStaff = role === 'superadmin_staff';
     const isManager = role === 'manager';
     const isAdmin = role === 'admin';
 
@@ -96,6 +98,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Deals', path: '/sales/deals', icon: CheckSquare },
                 { name: 'Clients', path: '/sales/clients', icon: Users },
                 { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
+                { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
                 { name: 'Schedule', path: '/sales/schedule', icon: CalendarIcon },
                 { name: 'Settings', path: '/sales/settings', icon: SettingsIcon },
                 { name: 'Support', path: '/sales/support', icon: LifeBuoy },
@@ -126,19 +129,21 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
             ]
             : []),
-        ...(role === 'superadmin'
+        ...(isSuperAdmin
             ? [
                 { name: 'Dashboard', path: '/superadmin', icon: LayoutDashboard },
                 { name: 'Inquiries', path: '/superadmin/inquiries', icon: ListChecks },
                 { name: 'Admins', path: '/superadmin/admins', icon: Users },
                 { name: 'Global Users', path: '/superadmin/users', icon: Activity },
+                // Management Modules
+                { name: 'Staff', path: '/superadmin/staff', icon: ShieldCheck },
                 { name: 'Billing', path: '/superadmin/billing', icon: Receipt },
-                { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
                 { name: 'History', path: '/superadmin/history', icon: History },
                 { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
+                { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
                 { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
                 { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
-                { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
+                { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
             ]
             : []),
     ];

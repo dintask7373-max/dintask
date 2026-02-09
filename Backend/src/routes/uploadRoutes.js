@@ -4,7 +4,7 @@ const upload = require('../middleware/fileUpload');
 const { protect, authorize } = require('../middleware/auth');
 
 // POST /api/v1/upload
-router.post('/', protect, authorize('superadmin'), upload.single('image'), (req, res) => {
+router.post('/', protect, authorize('superadmin', 'superadmin_staff'), upload.single('image'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Please upload an image file' });

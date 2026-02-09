@@ -296,16 +296,16 @@ const InquiryActions = ({ inq, updateStatus, onView, fullWidth = false }) => (
             <DropdownMenuContent align="end" className="w-56 font-sans">
                 <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => updateStatus(inq.id, 'replied')} className="flex items-center gap-2 py-2.5">
+                <DropdownMenuItem onClick={() => updateStatus(inq._id || inq.id, 'replied')} className="flex items-center gap-2 py-2.5">
                     <CheckCircle2 size={16} className="text-green-500" />
                     <span className="font-medium">Mark as Replied</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => updateStatus(inq.id, 'new')} className="flex items-center gap-2 py-2.5">
+                <DropdownMenuItem onClick={() => updateStatus(inq._id || inq.id, 'new')} className="flex items-center gap-2 py-2.5">
                     <Clock3 size={16} className="text-blue-500" />
                     <span className="font-medium">Mark as New</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => updateStatus(inq.id, 'archived')} className="flex items-center gap-2 py-2.5 text-slate-500">
+                <DropdownMenuItem onClick={() => updateStatus(inq._id || inq.id, 'archived')} className="flex items-center gap-2 py-2.5 text-slate-500">
                     <AlertCircle size={16} />
                     <span className="font-medium">Archive Inquiry</span>
                 </DropdownMenuItem>

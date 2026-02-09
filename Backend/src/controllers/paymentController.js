@@ -177,7 +177,8 @@ exports.downloadInvoice = async (req, res, next) => {
     }
 
     // Verify ownership
-    if (payment.adminId._id.toString() !== req.user.id && req.user.role !== 'super_admin') {
+    const isSuperAdmin = req.user.role === 'superadmin' || req.user.role === 'superadmin_staff' || req.user.role === 'super_admin';
+    if (payment.adminId._id.toString() !== req.user.id && !isSuperAdmin) {
       return res.status(401).json({ success: false, error: 'Not authorized to download this invoice' });
     }
 

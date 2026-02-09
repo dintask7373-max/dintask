@@ -76,6 +76,7 @@ import SalesRegister from '@/modules/sales/pages/SalesRegister';
 import SalesDashboard from '@/modules/sales/pages/Dashboard';
 import Deals from '@/modules/sales/pages/Deals';
 import Clients from '@/modules/sales/pages/Clients';
+import SalesChat from '@/modules/sales/pages/Chat';
 import Schedule from '@/modules/sales/pages/Schedule';
 import SalesReports from '@/modules/sales/pages/Reports';
 import SalesSettings from '@/modules/sales/pages/Settings';
@@ -109,7 +110,6 @@ import PrivacyPolicy from '@/modules/user/pages/PrivacyPolicy';
 import TermsOfService from '@/modules/user/pages/TermsOfService';
 import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
-import JoinWorkspace from '@/modules/user/pages/JoinWorkspace';
 import Checkout from '@/modules/user/pages/Checkout';
 import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
@@ -125,7 +125,11 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
+<<<<<<< HEAD
+import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
+=======
 import IntelManager from '@/modules/superadmin/pages/IntelManager';
+>>>>>>> 132682b6b4813c76cbb4e841ef15d9711eb8c034
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -212,7 +216,6 @@ const AppRouter = () => {
                 <Route path="profile/security" element={<Security />} />
                 <Route path="profile/preferences" element={<Preferences />} />
 
-                <Route path="join" element={<JoinWorkspace />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="profile/help" element={<HelpLegal />} />
                 <Route path="profile/help/privacy" element={<PrivacyPolicy />} />
@@ -234,9 +237,10 @@ const AppRouter = () => {
 
             {/* --- SUPER ADMIN ROUTES --- */}
             {/* Main Super Admin Panel */}
-            <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['superadmin', 'superadmin_employee']}><AdminLayout role="superadmin" /></ProtectedRoute>}>
+            <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['superadmin', 'superadmin_staff', 'superadmin_employee']}><AdminLayout role="superadmin" /></ProtectedRoute>}>
                 <Route index element={<SuperAdminDashboard />} />
                 <Route path="admins" element={<AdminAccounts />} />
+                <Route path="staff" element={<StaffManagement />} />
                 <Route path="users" element={<GlobalUsersOverview />} />
                 <Route path="plans" element={<PlansManagement />} />
                 <Route path="billing" element={<BillingPayments />} />
@@ -278,6 +282,7 @@ const AppRouter = () => {
                 <Route path="clients" element={<Clients />} />
                 <Route path="schedule" element={<Schedule />} />
                 <Route path="reports" element={<SalesReports />} />
+                <Route path="chat" element={<SalesChat />} />
                 <Route path="settings" element={<SalesSettings />} />
                 <Route path="support" element={<SupportCenter />} />
             </Route>

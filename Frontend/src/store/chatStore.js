@@ -1,66 +1,122 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import apiRequest from '@/lib/api';
+import socketService from '@/services/socket';
 
-const useChatStore = create(
-    persist(
-        (set, get) => ({
-            messages: [
-                {
-                    id: 'msg-1',
-                    senderId: 'emp-1',
-                    receiverId: 'manager-1',
-                    text: 'Hello Manager, I have a question regarding the task.',
-                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-                    taskId: 'task-1'
-                },
-                {
-                    id: 'msg-2',
-                    senderId: 'manager-1',
-                    receiverId: 'emp-1',
-                    text: 'Sure, what is it?',
-                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(), // 1 hour ago
-                    taskId: 'task-1'
-                }
-            ],
+const useChatStore = create((set, get) => ({
+    conversations: [],
+    activeConversation: null,
+    messages: [],
+    loading: false,
+    onlineUsers: [],
 
-            sendMessage: (senderId, receiverId, text, taskId = null) => {
-                const newMessage = {
-                    id: `msg-${Date.now()}`,
-                    senderId,
-                    receiverId,
-                    text,
-                    timestamp: new Date().toISOString(),
-                    taskId
-                };
+    setOnlineUsers: (users) => set({ onlineUsers: users }),
+
+    fetchConversations: async () => {
+        set({ loading: true });
+        try {
+            const response = await apiRequest('/chat');
+            if (response.success) {
+                set({ conversations: response.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch conversations:', error);
+        } finally {
+            set({ loading: false });
+        }
+    },
+
+    setActiveConversation: (conversation) => {
+        set({ activeConversation: conversation });
+        if (conversation) {
+            get().fetchMessages(conversation._id);
+            socketService.joinChat(conversation._id);
+        }
+    },
+
+    fetchMessages: async (conversationId) => {
+        set({ loading: true });
+        try {
+            const response = await apiRequest(`/chat/messages/${conversationId}`);
+            if (response.success) {
+                set({ messages: response.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch messages:', error);
+        } finally {
+            set({ loading: false });
+        }
+    },
+
+    sendMessage: async (content, conversationId, senderId, senderModel, participants) => {
+        try {
+            const response = await apiRequest('/chat/message', {
+                method: 'POST',
+                body: { content, conversationId, senderModel }
+            });
+
+            if (response.success) {
+                const newMessage = response.data;
                 set((state) => ({
                     messages: [...state.messages, newMessage]
                 }));
-            },
 
-            getChatPartner: (currentUserId, partnerId) => {
-                return get().messages.filter(msg =>
-                    (msg.senderId === currentUserId && msg.receiverId === partnerId) ||
-                    (msg.senderId === partnerId && msg.receiverId === currentUserId)
-                );
-            },
-
-            getLatestMessagesForUser: (userId) => {
-                const userMessages = get().messages.filter(msg => msg.senderId === userId || msg.receiverId === userId);
-                const partners = new Set();
-                userMessages.forEach(msg => {
-                    partners.add(msg.senderId === userId ? msg.receiverId : msg.senderId);
+                // Emit socket event
+                socketService.sendMessage({
+                    ...newMessage,
+                    participants // Array of participant user IDs
                 });
 
-                return Array.from(partners).map(partnerId => {
-                    const partnerMsgs = userMessages.filter(msg => msg.senderId === partnerId || msg.receiverId === partnerId);
-                    return partnerMsgs[partnerMsgs.length - 1];
-                });
+                // Update conversation list last message
+                get().fetchConversations();
             }
-        }),
-        {
-            name: 'chat-storage',
+        } catch (error) {
+            console.error('Failed to send message:', error);
         }
-    )
-);
+    },
+
+    addMessage: (message) => {
+        const { messages, activeConversation } = get();
+
+        // Check if message already exists in state (by _id)
+        const messageExists = messages.some(m => m._id === message._id);
+        if (messageExists) return;
+
+        // Only add message if it belongs to active conversation
+        const msgConvId = message.conversationId?._id || message.conversationId;
+        if (activeConversation && msgConvId === activeConversation._id) {
+            set({ messages: [...messages, message] });
+        }
+
+        // Always refresh conversations to update last message/unread count
+        get().fetchConversations();
+    },
+
+    accessOrCreateChat: async (userId, userModel, workspaceId) => {
+        set({ loading: true });
+        try {
+            const response = await apiRequest('/chat', {
+                method: 'POST',
+                body: { userId, userModel, workspaceId }
+            });
+            if (response.success) {
+                const conversation = response.data;
+                set((state) => {
+                    const exists = state.conversations.find(c => c._id === conversation._id);
+                    return {
+                        conversations: exists ? state.conversations : [conversation, ...state.conversations],
+                        activeConversation: conversation
+                    };
+                });
+                get().fetchMessages(conversation._id);
+                socketService.joinChat(conversation._id);
+                return conversation;
+            }
+        } catch (error) {
+            console.error('Failed to access/create chat:', error);
+        } finally {
+            set({ loading: false });
+        }
+    }
+}));
 
 export default useChatStore;

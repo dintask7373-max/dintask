@@ -16,7 +16,7 @@ router.get('/approved', getApprovedTestimonials); // Get approved list for landi
 
 // Protected routes (SuperAdmin only)
 router.use(protect);
-router.use(authorize('superadmin'));
+router.use(authorize('superadmin', 'superadmin_staff'));
 
 router.get('/', getAllTestimonials); // Get all (pending + approved)
 router.put('/:id/status', updateTestimonialStatus); // Approve/Reject

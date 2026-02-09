@@ -99,47 +99,6 @@ const Subscription = () => {
 
     return (
         <div className="min-h-full pb-24 px-3 md:px-4 pt-4 md:pt-6">
-            {!workspace && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="max-w-5xl mx-auto mb-8 md:mb-12"
-                >
-                    <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none">
-                        {/* Decorative gradient background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-purple-50 to-pink-50 dark:from-primary-950/20 dark:via-purple-950/20 dark:to-pink-950/20 opacity-60" />
-
-                        {/* Content */}
-                        <div className="relative p-6 md:p-8">
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                {/* Left Content */}
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
-                                            <Star className="text-white w-5 h-5 md:w-6 md:h-6" fill="currentColor" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white">Have an Invite Link?</h3>
-                                            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">Join your organization</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm md:text-base text-slate-600 dark:text-slate-300 ml-0 md:ml-[52px]">
-                                        Connect with your team's workspace and get instant access to all premium features and collaboration tools.
-                                    </p>
-                                </div>
-
-                                {/* Right Button */}
-                                <Button
-                                    onClick={() => navigate('/employee/join')}
-                                    className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-bold px-6 md:px-8 rounded-xl md:rounded-2xl h-11 md:h-12 shadow-lg shadow-primary-500/30 transition-all active:scale-95 shrink-0 w-full md:w-auto"
-                                >
-                                    Join Workspace
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
 
             {workspace && (
                 <div className="max-w-5xl mx-auto mb-8 md:mb-12 p-4 md:p-6 rounded-2xl md:rounded-[32px] bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-3 md:gap-4">

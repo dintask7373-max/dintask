@@ -8,8 +8,8 @@ router.get('/', landingPageController.getAllContent);
 router.get('/:section', landingPageController.getContentBySection);
 
 // Protected routes - superadmin only
-router.put('/:section', protect, authorize('superadmin'), landingPageController.updateContentBySection);
-router.delete('/:section', protect, authorize('superadmin'), landingPageController.deleteContentBySection);
-router.post('/initialize', protect, authorize('superadmin'), landingPageController.initializeDefaultContent);
+router.put('/:section', protect, authorize('superadmin', 'superadmin_staff'), landingPageController.updateContentBySection);
+router.delete('/:section', protect, authorize('superadmin', 'superadmin_staff'), landingPageController.deleteContentBySection);
+router.post('/initialize', protect, authorize('superadmin', 'superadmin_staff'), landingPageController.initializeDefaultContent);
 
 module.exports = router;

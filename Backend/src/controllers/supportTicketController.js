@@ -68,8 +68,8 @@ exports.getTickets = async (req, res, next) => {
         // Build query based on role
         let match = {};
 
-        if (req.user.role === 'superadmin') {
-            // Super Admin sees ONLY Escalated tickets (from Admins) by default
+        if (req.user.role === 'superadmin' || req.user.role === 'superadmin_staff') {
+            // Super Admin or Staff sees ONLY Escalated tickets (from Admins) by default
             match = { isEscalatedToSuperAdmin: true };
         } else if (req.user.role === 'admin') {
             // Check scope from query
@@ -131,7 +131,7 @@ exports.getTicket = async (req, res, next) => {
         }
 
         // Access Control
-        if (req.user.role !== 'superadmin') {
+        if (req.user.role !== 'superadmin' && req.user.role !== 'superadmin_staff') {
             // If not super admin, must belong to same company
             if (ticket.companyId.toString() !== (req.user.role === 'admin' ? req.user.id : req.user.adminId).toString()) {
                 return next(new ErrorResponse('Not authorized to view this ticket', 401));
@@ -158,11 +158,18 @@ exports.updateTicket = async (req, res, next) => {
             return next(new ErrorResponse('Ticket not found', 404));
         }
 
+        // Access Control
+        if (req.user.role !== 'superadmin' && req.user.role !== 'superadmin_staff') {
+            if (ticket.companyId.toString() !== (req.user.role === 'admin' ? req.user.id : req.user.adminId).toString()) {
+                return next(new ErrorResponse('Not authorized to update this ticket', 401));
+            }
+        }
+
         // Add Response Logic
         if (req.body.response) {
             ticket.responses.push({
                 responder: req.user.id,
-                responderModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin',
+                responderModel: (req.user.role === 'superadmin' || req.user.role === 'superadmin_staff') ? 'SuperAdmin' : 'Admin',
                 message: req.body.response
             });
         }
@@ -213,7 +220,7 @@ exports.getTicketStats = async (req, res, next) => {
                 companyId: new mongoose.Types.ObjectId(req.user.id),
                 creator: { $ne: new mongoose.Types.ObjectId(req.user.id) } // Exclude tickets raised BY admin
             };
-        } else if (req.user.role === 'superadmin') {
+        } else if (req.user.role === 'superadmin' || req.user.role === 'superadmin_staff') {
             matchStage = { isEscalatedToSuperAdmin: true };
         } else {
             // For employees, maybe show their own ticket stats? Or just return zeros.

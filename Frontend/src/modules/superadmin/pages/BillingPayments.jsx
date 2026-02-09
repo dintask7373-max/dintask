@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 import {
     CreditCard,
     DollarSign,
@@ -22,9 +24,20 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/shared/components/ui/dialog';
 import useSuperAdminStore from '@/store/superAdminStore';
+import useAuthStore from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 const BillingPayments = () => {
+    const { role } = useAuthStore();
+    const reactNavigate = useNavigate();
+
     const {
         billingStats,
         transactions,
@@ -32,8 +45,75 @@ const BillingPayments = () => {
         fetchTransactions,
         loading
     } = useSuperAdminStore();
+
+    React.useEffect(() => {
+        fetchBillingStats();
+        fetchTransactions();
+    }, [fetchBillingStats, fetchTransactions]);
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+
+    const handleView = (txn) => {
+        setSelectedTransaction(txn);
+        setIsViewOpen(true);
+    };
+
+    const handleDownload = (txn) => {
+        const receiptContent = `ORDER RECEIPT\n----------------\nOrder ID: ${txn.razorpayOrderId}\nDate: ${new Date(txn.createdAt).toLocaleDateString()}\nCompany: ${txn.adminId?.companyName || 'N/A'}\nPlan: ${txn.planId?.name || 'N/A'}\nAmount: ₹${txn.amount}\nStatus: ${txn.status}`;
+        const blob = new Blob([receiptContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Receipt_${txn.razorpayOrderId || 'txn'}.txt`;
+        a.click();
+    };
+
+    const handleFullExport = () => {
+        if (!filteredPayments.length) {
+            toast.error("No transaction data available to export");
+            return;
+        }
+
+        try {
+            const exportRows = filteredPayments.map(txn => ({
+                'Company Name': txn.adminId?.companyName || 'N/A',
+                'Order ID': txn.razorpayOrderId,
+                'Payment ID': txn.razorpayPaymentId || 'N/A',
+                'Date': new Date(txn.createdAt).toLocaleDateString('en-IN'),
+                'Plan Purchased': txn.planId?.name || 'N/A',
+                'Currency': txn.currency,
+                'Amount (INR)': txn.amount,
+                'Status': txn.status.toUpperCase()
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wscols = [
+                { wch: 25 }, // Company
+                { wch: 20 }, // Order ID
+                { wch: 20 }, // Payment ID
+                { wch: 15 }, // Date
+                { wch: 15 }, // Plan
+                { wch: 10 }, // Currency
+                { wch: 15 }, // Amount
+                { wch: 15 }  // Status
+            ];
+            ws['!cols'] = wscols;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `DinTask_Transaction_Audit_${timestamp}.xlsx`;
+
+            XLSX.writeFile(wb, filename);
+            toast.success("Transaction audit report exported successfully");
+        } catch (error) {
+            console.error('Export Error:', error);
+            toast.error("Failed to generate export file");
+        }
+    };
 
     React.useEffect(() => {
         fetchBillingStats();
@@ -88,24 +168,30 @@ const BillingPayments = () => {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global revenue tracking & payment gateway management.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-11 px-6 rounded-xl border-slate-200 bg-white font-black text-[10px] uppercase tracking-[0.2em] gap-2">
-                        <Download size={16} /> EXPORT
-                    </Button>
-                    <Button className="h-11 px-6 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-[0.2em] gap-2 shadow-lg shadow-primary-500/20">
-                        <DollarSign size={16} /> SETTLEMENTS
+                    <Button
+                        onClick={handleFullExport}
+                        disabled={role === 'superadmin_staff'}
+                        variant="outline"
+                        className="h-11 px-6 rounded-xl border-slate-200 bg-white font-black text-[10px] uppercase tracking-[0.2em] gap-2 hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        <Download size={16} /> {role === 'superadmin_staff' ? 'EXPORT LOCKED' : 'EXPORT'}
                     </Button>
                 </div>
             </header>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: 'Total Revenue', value: `₹${(billingStats.totalRevenue).toLocaleString()}`, icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50', trend: '+12.5%', isUp: true },
-                    { label: 'Active Subscriptions', value: billingStats.activeSubscriptions, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+3.2%', isUp: true },
-                    { label: 'Pending Refunds', value: `₹${(billingStats.pendingRefunds).toLocaleString()}`, icon: RotateCcw, color: 'text-amber-600', bg: 'bg-amber-50', trend: '0%', isUp: true },
-                    { label: 'Churn Rate', value: `${billingStats.churnRate}%`, icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', trend: '+0.5%', isUp: false }
+                    { label: 'Total Revenue', value: role === 'superadmin' ? `₹${(billingStats.totalRevenue || 0).toLocaleString()}` : '₹ ••••••', icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50', trend: role === 'superadmin' ? '+12.5%' : 'LOCKED', isUp: true },
+                    { label: 'Active Subscriptions', value: billingStats.activeSubscriptions || 0, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+3.2%', isUp: true },
+                    { label: 'Churn Rate', value: `${billingStats.churnRate || 0}%`, icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', trend: '+0.5%', isUp: false }
                 ].map((stat, i) => (
-                    <Card key={i} className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all rounded-[2rem]">
+                    <Card key={i} className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all rounded-[2rem] relative">
+                        {role === 'superadmin_staff' && stat.label === 'Total Revenue' && (
+                            <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                                <ShieldCheck className="text-primary-200 opacity-20" size={80} />
+                            </div>
+                        )}
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`size-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
@@ -217,7 +303,9 @@ const BillingPayments = () => {
                                         </td>
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex flex-col items-end">
-                                                <span className="text-sm font-black text-slate-900 tracking-tighter">₹{(payment.amount).toLocaleString()}</span>
+                                                <span className="text-sm font-black text-slate-900 tracking-tighter">
+                                                    {role === 'superadmin' ? `₹${(payment.amount).toLocaleString()}` : '₹ ••••••'}
+                                                </span>
                                                 <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Incl. GST</span>
                                             </div>
                                         </td>
@@ -229,14 +317,15 @@ const BillingPayments = () => {
                                         </td>
                                         <td className="px-6 py-5 text-center">
                                             <div className="flex items-center justify-center gap-2">
-                                                <Button variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
+                                                <Button
+                                                    onClick={() => handleDownload(payment)}
+                                                    variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
                                                     <Download size={14} />
                                                 </Button>
-                                                <Button variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
+                                                <Button
+                                                    onClick={() => handleView(payment)}
+                                                    variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
                                                     <FileText size={14} />
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-rose-600 border border-transparent hover:border-slate-100">
-                                                    <RotateCcw size={14} />
                                                 </Button>
                                             </div>
                                         </td>
@@ -258,74 +347,55 @@ const BillingPayments = () => {
                 </div>
             </div>
 
-            {/* Refund & Settings Section */}
-            <div className="grid lg:grid-cols-2 gap-8">
-                {/* Gateway Logs */}
-                <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-                    <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <RefreshCw className="text-indigo-600" size={20} />
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Payment Gateway Logs</h2>
-                        </div>
-                        <Button variant="ghost" size="sm" className="text-xs font-black text-primary-600 uppercase tracking-widest hover:bg-primary-50">View All</Button>
-                    </div>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-50">
-                            {[
-                                { event: 'Webhook Received', provider: 'Razorpay', status: 'delivered', time: '2 mins ago' },
-                                { event: 'Token Created', provider: 'Stripe', status: 'success', time: '14 mins ago' },
-                                { event: 'Refund Processed', provider: 'Razorpay', status: 'failed', time: '1 hour ago' },
-                                { event: 'Payment Intent Created', provider: 'PayPal', status: 'success', time: '3 hours ago' }
-                            ].map((log, i) => (
-                                <div key={i} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight">{log.event}</span>
-                                        <span className="text-[9px] font-bold text-slate-400 mt-0.5">{log.provider} • {log.status}</span>
+
+            {/* Transaction Details Dialog */}
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+                <DialogContent className="max-w-md bg-white border-slate-100 rounded-[2rem] p-8 shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black italic tracking-tight uppercase">Transaction <span className="text-primary-600">Details</span></DialogTitle>
+                    </DialogHeader>
+                    {selectedTransaction && (
+                        <div className="mt-6 space-y-6">
+                            <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100/50 space-y-4">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Company</p>
+                                        <p className="text-xs font-bold text-slate-900">{selectedTransaction.adminId?.companyName || 'N/A'}</p>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[10px] font-bold text-slate-400">{log.time}</span>
-                                        <ExternalLink size={12} className="text-slate-300" />
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Date</p>
+                                        <p className="text-xs font-bold text-slate-900">{new Date(selectedTransaction.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Refund & Policy Quick Actions */}
-                <div className="space-y-6">
-                    <Card className="bg-primary-600 border-none shadow-xl shadow-primary-500/20 rounded-[2rem] text-white overflow-hidden relative group">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                            <ShieldCheck size={120} />
-                        </div>
-                        <CardContent className="p-8 relative z-10">
-                            <div className="size-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
-                                <RotateCcw size={28} />
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="col-span-2">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Order ID</p>
+                                        <p className="text-xs font-mono font-bold text-slate-900 bg-white px-3 py-2 rounded-lg border border-slate-100">{selectedTransaction.razorpayOrderId}</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Plan</p>
+                                        <Badge className="bg-primary-50 text-primary-600 hover:bg-primary-100 border-none text-[9px] font-black uppercase tracking-widest">
+                                            {selectedTransaction.planId?.name || 'N/A'}
+                                        </Badge>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Amount</p>
+                                        <p className="text-sm font-black text-slate-900">
+                                            {role === 'superadmin' ? `₹${(selectedTransaction.amount).toLocaleString()}` : '₹ ••••••'}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 className="text-2xl font-black tracking-tight mb-2">Automated Refunds</h3>
-                            <p className="text-primary-50 opacity-80 text-sm font-medium mb-8 max-w-xs">
-                                Manage double payments and failed upgrades instantly through our tactical refund portal.
-                            </p>
-                            <Button className="bg-white text-primary-600 hover:bg-primary-50 h-12 px-8 rounded-xl font-black text-xs uppercase tracking-widest">
-                                Open Refund Portal
+                            <Button onClick={() => setIsViewOpen(false)} className="w-full bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest h-11 rounded-xl">
+                                Close Details
                             </Button>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
-                            <FileText className="text-slate-400 mb-3" size={24} />
-                            <h4 className="text-xs font-black text-slate-900 uppercase">GST Templates</h4>
-                            <p className="text-[10px] font-medium text-slate-500 mt-1">Manage invoice layouts</p>
-                        </div>
-                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
-                            <RefreshCw className="text-slate-400 mb-3" size={24} />
-                            <h4 className="text-xs font-black text-slate-900 uppercase">Auto Renewal</h4>
-                            <p className="text-[10px] font-medium text-slate-500 mt-1">Subscription cycles</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };

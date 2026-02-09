@@ -12,7 +12,8 @@ const models = {
   manager: Manager,
   admin: Admin,
   super_admin: SuperAdmin, // Support legacy/db role
-  superadmin: SuperAdmin
+  superadmin: SuperAdmin,
+  superadmin_staff: SuperAdmin
 };
 
 // Protect routes

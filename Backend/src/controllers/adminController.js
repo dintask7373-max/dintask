@@ -42,9 +42,10 @@ exports.registerAdmin = async (req, res, next) => {
 
 // @desc    Get all users across all collections (Workspace-specific)
 // @route   GET /api/v1/admin/users
-// @access  Private (Admin)
+// @access  Private
 exports.getAllUsers = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     // For Admin, ID is the workspace ID. For Manager, adminId field is the workspace ID.
     const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
 
@@ -53,21 +54,66 @@ exports.getAllUsers = async (req, res, next) => {
     }
 
     console.log(`[DEBUG] getAllUsers - Role: ${req.user.role}, Workspace Admin ID: ${adminId}`);
+=======
+    let adminId;
+>>>>>>> 940cb77fb658d7d72391569f7f58be5ec344cac3
 
+    // If seeker is admin, adminId is their own ID
+    if (req.user.role === 'admin') {
+      adminId = req.user.id;
+    } else {
+      // If seeker is manager/sales/employee, adminId is stored in their profile
+      const models = {
+        manager: Manager,
+        sales: SalesExecutive,
+        sales_executive: SalesExecutive,
+        employee: Employee
+      };
 
-    // Fetch only users from THIS admin's workspace
-    const [employees, sales, managers] = await Promise.all([
-      Employee.find({ adminId }),
-      SalesExecutive.find({ adminId }),
-      Manager.find({ adminId })
+      const userModel = models[req.user.role];
+      if (!userModel) {
+        return next(new ErrorResponse('User type not supported for directory', 400));
+      }
+
+      const userProfile = await userModel.findById(req.user.id);
+      if (!userProfile) {
+        return next(new ErrorResponse('User profile not found', 404));
+      }
+      adminId = userProfile.adminId;
+    }
+
+    if (!adminId) {
+      return next(new ErrorResponse('Workspace ID not found', 400));
+    }
+
+    console.log(`[DEBUG] getAllUsers - Seeker: ${req.user.role}, Workspace Admin ID: ${adminId}`);
+
+    // Fetch Admin, Managers, Sales, Employees for this workspace
+    const [admin, employees, sales, managers] = await Promise.all([
+      Admin.findById(adminId).select('name email avatar role companyName'),
+      Employee.find({ adminId, status: 'active' }).select('name email avatar role'),
+      SalesExecutive.find({ adminId, status: 'active' }).select('name email avatar role'),
+      Manager.find({ adminId, status: 'active' }).select('name email avatar role')
     ]);
 
-    const allUsers = [...employees, ...sales, ...managers];
+    // Format admin to look like other users and include in list
+    const usersList = [];
+    if (admin) {
+      usersList.push({
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        avatar: admin.avatar,
+        role: 'admin'
+      });
+    }
+
+    usersList.push(...employees, ...sales, ...managers);
 
     res.status(200).json({
       success: true,
-      count: allUsers.length,
-      data: allUsers
+      count: usersList.length,
+      data: usersList
     });
   } catch (err) {
     next(err);

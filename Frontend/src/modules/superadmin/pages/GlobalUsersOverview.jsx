@@ -1,26 +1,18 @@
 import React, { useState } from 'react';
 import {
     Users,
-    UserCheck,
-    UserPlus,
-    Activity,
+    MousePointer2,
+    Calendar,
     Shield,
     Briefcase,
     Target,
-    TrendingUp,
-    Search,
-    Filter,
-    ArrowUpRight,
-    MousePointer2,
-    Calendar,
-    Clock
+    Activity,
+    TrendingUp
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import {
-    LineChart,
-    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -28,8 +20,6 @@ import {
     ResponsiveContainer,
     AreaChart,
     Area,
-    BarChart,
-    Bar,
     Cell,
     PieChart,
     Pie
@@ -42,21 +32,15 @@ const GlobalUsersOverview = () => {
         stats,
         roleDistribution,
         growthData,
-        hourlyActivity,
-        recentLogins,
         fetchDashboardStats,
         fetchRoleDistribution,
-        fetchUserGrowth,
-        fetchHourlyActivity,
-        fetchRecentLogins
+        fetchUserGrowth
     } = useSuperAdminStore();
 
     React.useEffect(() => {
         fetchDashboardStats();
         fetchRoleDistribution();
         fetchUserGrowth();
-        fetchHourlyActivity();
-        fetchRecentLogins();
     }, []);
 
     const roleIcons = {
@@ -217,106 +201,7 @@ const GlobalUsersOverview = () => {
                 </Card>
             </div>
 
-            {/* Bottom Row: Activity Feed & Detailed Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Login Activity Monitoring */}
-                <Card className="border-none shadow-xl shadow-slate-200/50">
-                    <CardHeader className="border-b border-slate-50 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                            <Activity size={14} className="text-primary-600" />
-                            Hourly Peak Activity
-                        </CardTitle>
-                        <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">Online Monitor</Badge>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="h-[250px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={hourlyActivity}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis
-                                        dataKey="time"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }}
-                                    />
-                                    <YAxis hide />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
-                                        cursor={{ fill: '#f8fafc' }}
-                                    />
-                                    <Bar dataKey="active" radius={[4, 4, 0, 0]}>
-                                        {hourlyActivity.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.active > 400 ? '#6366f1' : '#cbd5e1'} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
 
-                {/* Recent Platform Activity */}
-                <Card className="border-none shadow-xl shadow-slate-200/50">
-                    <CardHeader className="border-b border-slate-50">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                            <UserCheck size={14} className="text-primary-600" />
-                            Recent Login Activity
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-slate-50 bg-slate-50/50">
-                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">User Profile</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Activity</th>
-                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {recentLogins.map((login, idx) => (
-                                        <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 group-hover:bg-primary-600 group-hover:text-white transition-all">
-                                                        {login.user.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">{login.user}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{login.company}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <Badge className={`${login.role === 'Admin' ? 'bg-indigo-50 text-indigo-600' :
-                                                    login.role === 'Manager' ? 'bg-purple-50 text-purple-600' :
-                                                        login.role === 'Sales' ? 'bg-amber-50 text-amber-600' :
-                                                            'bg-emerald-50 text-emerald-600'
-                                                    } border-none font-black text-[9px] uppercase tracking-widest px-2 py-0.5`}>
-                                                    {login.role}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
-                                                    <Clock size={12} className="text-slate-300" />
-                                                    {login.time}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-1.5 font-black text-[9px] uppercase tracking-widest">
-                                                    <span className={`size-1.5 rounded-full ${login.status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
-                                                    <span className={login.status === 'Active' ? 'text-emerald-600' : 'text-slate-400'}>{login.status}</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     );
 };

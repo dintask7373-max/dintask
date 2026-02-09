@@ -65,6 +65,7 @@ import {
 import { Label } from "@/shared/components/ui/label";
 
 import useSuperAdminStore from '@/store/superAdminStore';
+import useAuthStore from '@/store/authStore';
 import { cn } from '@/shared/utils/cn';
 import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
 
@@ -78,6 +79,7 @@ const AdminAccounts = () => {
         fetchPlans,
         updateAdminPlan
     } = useSuperAdminStore();
+    const { role } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
 
     React.useEffect(() => {
@@ -122,13 +124,11 @@ const AdminAccounts = () => {
 
     const statusIcons = {
         active: <CheckCircle2 size={14} className="text-emerald-500" />,
-        pending: <Clock size={14} className="text-amber-500" />,
         suspended: <XOctagon size={14} className="text-red-500" />
     };
 
     const statusColors = {
         active: "bg-emerald-50 text-emerald-600 border-emerald-100",
-        pending: "bg-amber-50 text-amber-600 border-amber-100",
         suspended: "bg-red-50 text-red-600 border-red-100"
     };
 
@@ -139,7 +139,7 @@ const AdminAccounts = () => {
         email: '',
         plan: 'Starter',
         planId: '',
-        status: 'pending'
+        status: 'active'
     });
 
     const handleDeleteAdmin = async (id) => {
@@ -170,7 +170,7 @@ const AdminAccounts = () => {
                 email: '',
                 plan: 'Starter',
                 planId: '',
-                status: 'pending'
+                status: 'active'
             });
         } else {
             toast.error(result.error || "Failed to provision account");
@@ -301,7 +301,6 @@ const AdminAccounts = () => {
                                         <TableHead className="pl-8 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[200px]">Company & Owner</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Current Plan</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[90px]">Team Size</TableHead>
-                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Tasks</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Status</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[120px]">Expiry Node</TableHead>
                                         <TableHead className="text-right pr-8 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[50px]">Actions</TableHead>
@@ -311,7 +310,7 @@ const AdminAccounts = () => {
                                     <AnimatePresence mode="popLayout">
                                         {filteredAdmins.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} className="h-48 text-center text-slate-400">
+                                                <TableCell colSpan={5} className="h-48 text-center text-slate-400">
                                                     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full w-fit mx-auto mb-4">
                                                         <ShieldAlert size={32} className="opacity-20 text-slate-900 dark:text-white" />
                                                     </div>
@@ -343,22 +342,27 @@ const AdminAccounts = () => {
                                                                 {adm.subscriptionPlan || 'No Plan'}
                                                             </Badge>
                                                             <p className="text-[10px] text-slate-400 font-bold ml-1">
-                                                                ₹{plans.find(p => p.name === adm.subscriptionPlan)?.price.toLocaleString('en-IN') || '0'} / {plans.find(p => p.name === adm.subscriptionPlan)?.duration || 30}d
+                                                                {role === 'superadmin'
+                                                                    ? `₹${plans.find(p => p.name === adm.subscriptionPlan)?.price.toLocaleString('en-IN') || '0'} / ${plans.find(p => p.name === adm.subscriptionPlan)?.duration || 30}d`
+                                                                    : 'Locked Price'
+                                                                }
                                                             </p>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                                                        {adm.employees} Members
-                                                    </TableCell>
-                                                    <TableCell className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                                                        {adm.tasks} Generated
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[13px] font-black text-slate-900 dark:text-white tracking-tighter italic">
+                                                                {adm.totalUsers || 0} / {adm.userLimit || '∞'}
+                                                            </span>
+                                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Active Nodes</span>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge className={cn(
                                                             "text-[9px] h-6 font-black uppercase tracking-widest gap-1.5 border px-2.5 rounded-full shadow-sm",
-                                                            statusColors[adm.subscriptionStatus || 'pending']
+                                                            statusColors[adm.subscriptionStatus || 'active']
                                                         )}>
-                                                            {statusIcons[adm.subscriptionStatus || 'pending']}
+                                                            {statusIcons[adm.subscriptionStatus || 'active']}
                                                             {adm.subscriptionStatus}
                                                         </Badge>
                                                     </TableCell>
@@ -391,9 +395,7 @@ const AdminAccounts = () => {
                                                                 <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 dark:focus:bg-emerald-900/10" onClick={() => handleStatusChange(adm._id, 'active')}>
                                                                     <CheckCircle2 size={16} /> Mark Active
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-amber-600 focus:text-amber-700 focus:bg-amber-50 dark:focus:bg-amber-900/10" onClick={() => handleStatusChange(adm._id, 'pending')}>
-                                                                    <Clock size={16} /> Mark Pending
-                                                                </DropdownMenuItem>
+
                                                                 <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-900/10" onClick={() => handleStatusChange(adm._id, 'suspended')}>
                                                                     <XOctagon size={16} /> Suspend Account
                                                                 </DropdownMenuItem>
@@ -441,7 +443,7 @@ const AdminAccounts = () => {
                                             <div className="flex flex-col items-end gap-1.5">
                                                 <Badge className={cn(
                                                     "text-[8px] h-5 px-2 font-black uppercase tracking-widest gap-1 border rounded-full",
-                                                    statusColors[adm.subscriptionStatus || 'pending']
+                                                    statusColors[adm.subscriptionStatus || 'active']
                                                 )}>
                                                     {adm.subscriptionStatus}
                                                 </Badge>
@@ -462,10 +464,16 @@ const AdminAccounts = () => {
                                                 </DropdownMenu>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50 dark:border-slate-800">
                                             <div className="space-y-0.5">
                                                 <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Plan</p>
-                                                <p className="text-[10px] font-black text-primary-600 uppercase tracking-tight">{adm.plan}</p>
+                                                <p className="text-[10px] font-black text-primary-600 uppercase tracking-tight">{adm.subscriptionPlan || 'No Plan'}</p>
+                                            </div>
+                                            <div className="space-y-0.5 text-center">
+                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Team Size</p>
+                                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                    {adm.totalUsers || 0}/{adm.userLimit || '∞'}
+                                                </p>
                                             </div>
                                             <div className="space-y-0.5 text-right">
                                                 <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Expiration</p>
@@ -482,7 +490,7 @@ const AdminAccounts = () => {
                 </Card>
             </motion.div>
 
-            <div className="grid grid-cols-3 gap-2 px-1 md:px-0">
+            <div className="grid grid-cols-2 gap-2 px-1 md:px-0">
                 <motion.div variants={fadeInUp} className="p-2 md:p-5 rounded-xl md:rounded-[2rem] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-1.5 md:gap-3 transition-all duration-500 min-w-0">
                     <div className="p-1 md:p-3 bg-white dark:bg-emerald-900/20 rounded-lg md:rounded-2xl shadow-sm shrink-0">
                         <CheckCircle2 className="text-emerald-500 h-3 w-3 md:h-5 md:w-5" />
@@ -492,15 +500,7 @@ const AdminAccounts = () => {
                         <p className="text-[6px] md:text-[8px] font-black text-emerald-600 dark:text-emerald-500/70 uppercase tracking-widest mt-0.5 md:mt-1 truncate">Active</p>
                     </div>
                 </motion.div>
-                <motion.div variants={fadeInUp} className="p-2 md:p-5 rounded-xl md:rounded-[2rem] bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 flex items-center gap-1.5 md:gap-3 transition-all duration-500 min-w-0">
-                    <div className="p-1 md:p-3 bg-white dark:bg-amber-900/20 rounded-lg md:rounded-2xl shadow-sm shrink-0">
-                        <Clock className="text-amber-500 h-3 w-3 md:h-5 md:w-5" />
-                    </div>
-                    <div className="min-w-0 overflow-hidden">
-                        <h4 className="text-sm md:text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tighter leading-none">{(admins || []).filter(a => a.subscriptionStatus === 'pending').length}</h4>
-                        <p className="text-[6px] md:text-[8px] font-black text-amber-600 dark:text-amber-500/70 uppercase tracking-widest mt-0.5 md:mt-1 truncate">Pending</p>
-                    </div>
-                </motion.div>
+
                 <motion.div variants={fadeInUp} className="p-2 md:p-5 rounded-xl md:rounded-[2rem] bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 flex items-center gap-1.5 md:gap-3 transition-all duration-500 min-w-0">
                     <div className="p-1 md:p-3 bg-white dark:bg-red-900/20 rounded-lg md:rounded-2xl shadow-sm shrink-0">
                         <XOctagon className="text-red-500 h-3 w-3 md:h-5 md:w-5" />

@@ -20,21 +20,30 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Input } from '@/shared/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 import useSuperAdminStore from '@/store/superAdminStore';
+import useAuthStore from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 const SubscriptionHistory = () => {
     const {
         subscriptionHistory,
         fetchSubscriptionHistory,
         loading,
-        billingStats
+        billingStats,
+        fetchBillingStats
     } = useSuperAdminStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
 
+    const { role } = useAuthStore();
+    const navigate = useNavigate();
+
     React.useEffect(() => {
         fetchSubscriptionHistory();
-    }, []);
+        fetchBillingStats();
+    }, [fetchSubscriptionHistory, fetchBillingStats]);
 
     const filteredData = (subscriptionHistory || []).filter(item => {
         const matchesSearch = item.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -66,6 +75,56 @@ const SubscriptionHistory = () => {
         });
     };
 
+    const handleExport = () => {
+        if (!filteredData.length) {
+            toast.error("No data available to export");
+            return;
+        }
+
+        try {
+            // Prepare data with proper headers
+            const exportRows = filteredData.map(item => ({
+                'Company Name': item.companyName,
+                'Subscription Plan': item.planName,
+                'Deployment Start': item.startDate ? new Date(item.startDate).toLocaleDateString('en-IN') : 'N/A',
+                'Expiry Date': item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-IN') : 'Permanent',
+                'Status': item.status.toUpperCase(),
+                'Days Remaining': item.daysRemaining,
+                'Total Revenue (INR)': item.revenue
+            }));
+
+            // Create Worksheet
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+
+            // Set column widths for better readability
+            const wscols = [
+                { wch: 30 }, // Company Name
+                { wch: 20 }, // Plan
+                { wch: 15 }, // Start
+                { wch: 15 }, // Expiry
+                { wch: 15 }, // Status
+                { wch: 15 }, // Days
+                { wch: 20 }  // Revenue
+            ];
+            ws['!cols'] = wscols;
+
+            // Create Workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Subscription Audit");
+
+            // Generate Filename with timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `DinTask_Subscription_Audit_${timestamp}.xlsx`;
+
+            // Write File
+            XLSX.writeFile(wb, filename);
+            toast.success("Audit report exported successfully");
+        } catch (error) {
+            console.error('Export Error:', error);
+            toast.error("Failed to generate export file");
+        }
+    };
+
     return (
         <div className="p-8 space-y-8 bg-slate-50/50 min-h-screen">
             {/* Header Section */}
@@ -85,8 +144,13 @@ const SubscriptionHistory = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <Button variant="outline" className="h-11 px-6 border-slate-200 bg-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl flex items-center gap-2 hover:bg-slate-50 shadow-sm">
-                        <Download size={16} /> EXPORT AUDIT
+                    <Button
+                        onClick={handleExport}
+                        disabled={role === 'superadmin_staff'}
+                        variant="outline"
+                        className="h-11 px-6 border-slate-200 bg-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl flex items-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        <Download size={16} /> {role === 'superadmin_staff' ? 'EXPORT LOCKED' : 'EXPORT AUDIT'}
                     </Button>
                     <div className="relative">
                         <Input
@@ -103,17 +167,21 @@ const SubscriptionHistory = () => {
             {/* Tactical Overview Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total Active', val: billingStats.activeSubscriptions, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                    { label: 'Revenue (TOTAL)', val: `₹${(billingStats.totalRevenue / 100000).toFixed(2)}L`, icon: TrendingUp, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-                    { label: 'Expiring Nodes', val: subscriptionHistory.filter(i => i.daysRemaining <= 7 && i.status === 'active').length, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
-                    { label: 'Churn Rate', val: `${billingStats.churnRate}%`, icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-50' },
+                    { label: 'Total Active', val: billingStats.activeSubscriptions || 0, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                    { label: 'Revenue (TOTAL)', val: role === 'superadmin' ? `₹${(billingStats.totalRevenue / 100000).toFixed(2)}L` : '₹ ••••••', icon: TrendingUp, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+                    { label: 'Expiring Nodes', val: (subscriptionHistory || []).filter(i => i.daysRemaining <= 7 && i.status === 'active').length, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
+                    { label: 'Churn Rate', val: `${billingStats.churnRate || 0}%`, icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-50' },
                 ].map((stat, i) => (
                     <motion.div
                         key={stat.label}
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
+                        className="relative"
                     >
+                        {role === 'superadmin_staff' && stat.label === 'Revenue (TOTAL)' && (
+                            <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] z-20 rounded-[2rem]" />
+                        )}
                         <Card className="border-none shadow-sm bg-white overflow-hidden group rounded-[2rem] hover:shadow-md transition-all">
                             <CardContent className="p-6 flex items-center justify-between">
                                 <div>
@@ -167,7 +235,6 @@ const SubscriptionHistory = () => {
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Remaining Validity</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Revenue Value</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -221,19 +288,14 @@ const SubscriptionHistory = () => {
                                                     </Badge>
                                                 </td>
                                                 <td className="px-8 py-6 text-right font-black text-sm text-slate-900 tracking-tighter">
-                                                    ₹{(item.revenue).toLocaleString()}
-                                                </td>
-                                                <td className="px-8 py-6 text-right">
-                                                    <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all">
-                                                        <ArrowUpRight size={20} />
-                                                    </Button>
+                                                    {role === 'superadmin' ? `₹${(item.revenue || 0).toLocaleString()}` : '₹ ••••••'}
                                                 </td>
                                             </motion.tr>
                                         ))}
                                     </AnimatePresence>
                                     {filteredData.length === 0 && !loading && (
                                         <tr>
-                                            <td colSpan={6} className="py-24 text-center">
+                                            <td colSpan={5} className="py-24 text-center">
                                                 <div className="size-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100">
                                                     <CircleDashed className="text-slate-200 animate-pulse" size={32} />
                                                 </div>

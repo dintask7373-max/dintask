@@ -22,6 +22,8 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Switch } from '@/shared/components/ui/switch';
 import { toast } from 'sonner';
 import useSuperAdminStore from '@/store/superAdminStore';
+import useAuthStore from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 
 const PlansManagement = () => {
@@ -40,9 +42,12 @@ const PlansManagement = () => {
     });
     const [featureInput, setFeatureInput] = useState('');
 
+    const { role } = useAuthStore();
+    const navigate = useNavigate();
+
     React.useEffect(() => {
         fetchPlans();
-    }, []);
+    }, [fetchPlans]);
 
     const filteredPlans = (plans || []).filter(plan =>
         plan?.name?.toLowerCase().includes(searchTerm.toLowerCase())

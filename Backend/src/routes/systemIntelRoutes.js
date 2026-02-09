@@ -12,7 +12,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.get('/', getSystemIntel);
 
 // Protected routes
-router.put('/:role', protect, authorize('superadmin'), updateSystemIntel);
-router.post('/seed', protect, authorize('superadmin'), seedSystemIntel);
+router.put('/:role', protect, authorize('superadmin', 'superadmin_staff'), updateSystemIntel);
+router.post('/seed', protect, authorize('superadmin', 'superadmin_staff'), seedSystemIntel);
 
 module.exports = router;

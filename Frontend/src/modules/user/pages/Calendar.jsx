@@ -1,316 +1,368 @@
-import React, { useState, useRef } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import listPlugin from '@fullcalendar/list';
-import interactionPlugin from '@fullcalendar/interaction';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Calendar as CalendarIcon,
-    Clock,
-    MapPin,
     ChevronLeft,
     ChevronRight,
+    Search,
     Plus,
-    StickyNote
+    Bell,
+    Calendar as CalendarIcon
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
-
-import { Card, CardContent } from '@/shared/components/ui/card';
-import { Button } from '@/shared/components/ui/button';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter
-} from '@/shared/components/ui/dialog';
-import { Badge } from '@/shared/components/ui/badge';
+    format,
+    addMonths,
+    subMonths,
+    startOfMonth,
+    endOfMonth,
+    startOfWeek,
+    endOfWeek,
+    isSameMonth,
+    isSameDay,
+    addDays,
+    differenceInHours,
+    differenceInDays
+} from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/utils/cn';
-import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
 
 const EmployeeCalendar = () => {
-    const calendarRef = useRef(null);
     const navigate = useNavigate();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [view, setView] = useState('dayGridMonth');
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDates, setSelectedDates] = useState([
+        new Date(2019, 8, 1),
+        new Date(2019, 8, 5),
+        new Date(2019, 8, 7),
+        new Date(2019, 8, 31)
+    ]);
+    const [activeView, setActiveView] = useState('Month');
 
-    // Mock events for the employee
+    // Mock events mapping to the reference design
     const events = [
         {
             id: '1',
             title: 'Meeting in the centre',
-            start: new Date().toISOString().split('T')[0] + 'T09:00:00',
-            color: '#3b82f6',
-            extendedProps: { type: 'meeting', location: 'Office centre', description: 'Discussing project progress.' }
+            time: new Date().setHours(9, 0, 0, 0),
+            hasNotification: false
         },
         {
             id: '2',
             title: 'Dinner with Jenny',
-            start: new Date().toISOString().split('T')[0] + 'T13:00:00',
-            color: '#3b82f6',
-            extendedProps: { type: 'social', location: 'Restaurant', description: 'Personal meeting.' }
+            time: new Date().setHours(13, 0, 0, 0),
+            hasNotification: true
+        },
+        {
+            id: '3',
+            title: 'Avengers, cinema',
+            time: addDays(new Date(), 1).setHours(20, 30, 0, 0),
+            hasNotification: false
+        },
+        {
+            id: '4',
+            title: 'Meeting',
+            time: addDays(new Date(), 2).setHours(21, 30, 0, 0),
+            hasNotification: false
         }
     ];
 
-    const handleEventClick = (info) => {
-        setSelectedEvent(info.event);
-        setIsModalOpen(true);
+    // Helper: Generate calendar grid
+    const calendarDays = useMemo(() => {
+        const start = startOfMonth(currentDate);
+        const end = endOfMonth(currentDate);
+        const startDate = startOfWeek(start, { weekStartsOn: 1 }); // Start with Monday as per MO in header
+        const endDate = endOfWeek(end, { weekStartsOn: 0 }); // End with Sunday
+
+        const days = [];
+        let day = startDate;
+
+        while (day <= endDate || days.length < 42) {
+            days.push(day);
+            day = addDays(day, 1);
+        }
+        return days;
+    }, [currentDate]);
+
+    // Helper: Format relative time for events
+    const getRelativeTimeString = (eventDate) => {
+        const now = new Date();
+        const diffHours = differenceInHours(eventDate, now);
+        const diffDays = differenceInDays(eventDate, now);
+
+        if (diffHours > 0 && diffHours < 24) return `In ${diffHours} hours`;
+        if (isSameDay(eventDate, addDays(now, 1))) return 'Tomorrow';
+        if (diffDays > 1) return `In ${diffDays} days`;
+        return format(eventDate, 'MMM dd, h:mm a');
+    };
+
+    const toggleDate = (date) => {
+        if (selectedDates.some(d => isSameDay(d, date))) {
+            setSelectedDates(selectedDates.filter(d => !isSameDay(d, date)));
+        } else {
+            setSelectedDates([...selectedDates, date]);
+        }
+    };
+
+    // Helper: Navigation logic based on view
+    const handlePrev = () => {
+        if (activeView === 'Day') setCurrentDate(addDays(currentDate, -1));
+        else if (activeView === 'Week') setCurrentDate(addDays(currentDate, -7));
+        else if (activeView === 'Month') setCurrentDate(subMonths(currentDate, 1));
+        else if (activeView === 'Year') setCurrentDate(new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1));
     };
 
     const handleNext = () => {
-        const calendarApi = calendarRef.current.getApi();
-        calendarApi.next();
-        setCurrentDate(calendarApi.getDate());
+        if (activeView === 'Day') setCurrentDate(addDays(currentDate, 1));
+        else if (activeView === 'Week') setCurrentDate(addDays(currentDate, 7));
+        else if (activeView === 'Month') setCurrentDate(addMonths(currentDate, 1));
+        else if (activeView === 'Year') setCurrentDate(new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), 1));
     };
 
-    const handlePrev = () => {
-        const calendarApi = calendarRef.current.getApi();
-        calendarApi.prev();
-        setCurrentDate(calendarApi.getDate());
+    // Render Logic for different views
+    const renderMonthView = () => (
+        <div className="grid grid-cols-7 gap-y-4 text-center">
+            {['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'].map(day => (
+                <div key={day} className="text-[10px] font-black text-slate-300 tracking-widest mb-2">
+                    {day}
+                </div>
+            ))}
+            {calendarDays.map((day, idx) => {
+                const isSelected = selectedDates.some(d => isSameDay(d, day));
+                const isCurrentMonth = isSameMonth(day, currentDate);
+                return (
+                    <div key={idx} className="flex items-center justify-center p-0.5">
+                        <button
+                            onClick={() => toggleDate(day)}
+                            className={cn(
+                                "size-9 rounded-full flex items-center justify-center text-sm transition-all font-bold",
+                                isSelected ? "bg-[#4461F2] text-white shadow-lg shadow-blue-500/30 scale-110" :
+                                    isCurrentMonth ? "text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800" :
+                                        "text-slate-200 dark:text-slate-700"
+                            )}
+                        >
+                            {format(day, 'd')}
+                        </button>
+                    </div>
+                );
+            })}
+        </div>
+    );
+
+    const renderWeekView = () => {
+        const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const weekDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+        return (
+            <div className="flex flex-col space-y-4">
+                <div className="flex justify-between p-2 mb-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                    {weekDays.map((day, idx) => (
+                        <div key={idx} className="flex flex-col items-center gap-2 flex-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{format(day, 'EEE').slice(0, 2)}</span>
+                            <button
+                                onClick={() => setCurrentDate(day)}
+                                className={cn(
+                                    "size-10 rounded-xl flex items-center justify-center text-xs font-black transition-all",
+                                    isSameDay(day, currentDate)
+                                        ? "bg-[#4461F2] text-white shadow-md shadow-blue-500/20"
+                                        : "text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700"
+                                )}
+                            >
+                                {format(day, 'd')}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+                <div className="space-y-4 max-h-[220px] overflow-y-auto no-scrollbar py-2">
+                    {['09:00', '11:00', '13:00', '15:00', '17:00'].map(hour => (
+                        <div key={hour} className="flex gap-4 items-center pl-2 group">
+                            <span className="text-[10px] font-black text-slate-300 w-10">{hour}</span>
+                            <div className="h-px flex-1 bg-slate-50 dark:bg-slate-800/50 group-hover:bg-blue-100 transition-colors" />
+                        </div>
+                    ))}
+                    <div className="absolute top-1/2 left-12 right-6 h-12 bg-blue-500/10 border-l-4 border-blue-500 rounded-lg p-3 flex items-center pointer-events-none">
+                        <span className="text-[10px] font-black text-[#4461F2] uppercase">Weekly Sync Placeholder</span>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
-    const handleViewChange = (newView) => {
-        const calendarApi = calendarRef.current.getApi();
-        calendarApi.changeView(newView);
-        setView(newView);
-    };
+    const renderDayView = () => (
+        <div className="flex flex-col space-y-6 pt-2">
+            <div className="flex items-center justify-center p-6 bg-[#4461F2]/5 rounded-[2rem] border border-blue-100/50">
+                <div className="text-center">
+                    <p className="text-[10px] font-black text-[#4461F2] uppercase tracking-[0.3em] mb-1">{format(currentDate, 'EEEE')}</p>
+                    <h4 className="text-5xl font-black text-slate-900 dark:text-white">{format(currentDate, 'dd')}</h4>
+                    <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">{format(currentDate, 'MMMM yyyy')}</p>
+                </div>
+            </div>
+            <div className="space-y-6 pl-2 py-4 border-l-2 border-slate-50 dark:border-slate-800 ml-4">
+                {[
+                    { time: '09:00', title: 'Neural Core Meeting', color: 'bg-emerald-500' },
+                    { time: '13:00', title: 'Strategic Negotiation', color: 'bg-blue-500' },
+                    { time: '16:30', title: 'System Diagnostics', color: 'bg-indigo-500' }
+                ].map((slot, i) => (
+                    <div key={i} className="relative group">
+                        <div className={cn("absolute -left-[18px] top-1/2 -translate-y-1/2 size-3 rounded-full border-2 border-white dark:border-slate-900 shadow-sm transition-transform group-hover:scale-125", slot.color)} />
+                        <div className="pl-6">
+                            <p className="text-[9px] font-black text-slate-300 mb-1">{slot.time}</p>
+                            <h5 className="text-[12px] font-black text-slate-900 dark:text-white uppercase tracking-tight">{slot.title}</h5>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
-    const handleToday = () => {
-        const calendarApi = calendarRef.current.getApi();
-        calendarApi.today();
-        setCurrentDate(calendarApi.getDate());
+    const renderYearView = () => {
+        const months = Array.from({ length: 12 }, (_, i) => new Date(currentDate.getFullYear(), i, 1));
+        return (
+            <div className="grid grid-cols-3 gap-3">
+                {months.map((m, i) => (
+                    <button
+                        key={i}
+                        onClick={() => {
+                            setCurrentDate(m);
+                            setActiveView('Month');
+                        }}
+                        className={cn(
+                            "aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 transition-all",
+                            isSameMonth(m, currentDate)
+                                ? "bg-[#4461F2] text-white shadow-lg"
+                                : "bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
+                        )}
+                    >
+                        <span className="text-[10px] font-black uppercase tracking-tighter">{format(m, 'MMM')}</span>
+                        {i % 3 === 0 && <div className={cn("size-1 rounded-full", isSameMonth(m, currentDate) ? "bg-white" : "bg-blue-500")} />}
+                    </button>
+                ))}
+            </div>
+        );
     };
 
     return (
-        <motion.div
-            initial="initial"
-            animate="animate"
-            variants={staggerContainer}
-            className="min-h-screen bg-white dark:bg-slate-950 -m-6 flex flex-col font-sans"
-        >
-            {/* Header Section (White Wash) */}
-            <div className="pt-10 pb-20 px-6 relative overflow-hidden">
-                {/* Premium Background Wash */}
-                <div className="absolute inset-0 z-0 h-[420px]">
-                    <img
-                        src="/WLCOMPAGE .png"
-                        alt="Background"
-                        className="w-full h-full object-cover opacity-70 dark:opacity-30 translate-y-[-10%]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-white dark:from-slate-950/40 dark:via-slate-950/80 dark:to-slate-950" />
-                </div>
+        <div className="min-h-screen bg-[#F8F9FE] dark:bg-slate-950 p-4 sm:p-8 flex flex-col items-center font-sans overflow-x-hidden">
 
-                {/* Top Nav Row */}
-                <div className="flex items-center justify-between mb-8 text-slate-900 dark:text-white relative z-10">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                        <ChevronLeft size={24} />
-                    </button>
-                    <h2 className="text-xl font-black tracking-tight uppercase">Calendar</h2>
-                    <div className="flex gap-4">
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                        </button>
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                            <Plus size={22} strokeWidth={2.5} />
-                        </button>
+            {/* Main Compact Container */}
+            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-white dark:border-slate-800">
+
+                {/* Header Section: Blue Gradient */}
+                <div className="bg-gradient-to-br from-[#4461F2] to-[#2845C7] p-8 pb-12 text-white relative">
+                    <div className="flex items-center justify-between mb-8">
+                        <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => navigate(-1)}
+                            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <ChevronLeft size={24} />
+                        </motion.button>
+                        <h1 className="text-xl font-bold tracking-tight">Calendar</h1>
+                        <div className="flex gap-4">
+                            <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                                <Search size={20} strokeWidth={2.5} />
+                            </button>
+                            <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                                <Plus size={22} strokeWidth={2.5} />
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                {/* View Tabs (Pill style) */}
-                <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900/50 backdrop-blur-sm rounded-full p-1 mb-8 relative z-10 border border-slate-200 dark:border-slate-800 shadow-sm">
-                    {['Day', 'Week', 'Month', 'Year'].map((label) => {
-                        const viewKey = label === 'Day' ? 'dayGridDay' : label === 'Week' ? 'listWeek' : label === 'Month' ? 'dayGridMonth' : 'dayGridYear';
-                        const isActive = view === viewKey;
-                        return (
+                    {/* View Toggles */}
+                    <div className="flex bg-white/20 backdrop-blur-md rounded-full p-1 mb-8">
+                        {['Day', 'Week', 'Month', 'Year'].map((view) => (
                             <button
-                                key={label}
-                                onClick={() => handleViewChange(viewKey)}
+                                key={view}
+                                onClick={() => setActiveView(view)}
                                 className={cn(
-                                    "flex-1 py-1.5 rounded-full text-[11px] font-black transition-all",
-                                    isActive ? "bg-[#4461f2] text-white shadow-lg shadow-[#4461f2]/20" : "text-slate-400 hover:text-slate-600 dark:text-slate-500"
+                                    "flex-1 py-1.5 rounded-full text-[11px] font-bold transition-all uppercase tracking-widest",
+                                    activeView === view
+                                        ? "bg-white text-[#4461F2] shadow-lg"
+                                        : "text-white/70 hover:text-white"
                                 )}
                             >
-                                {label}
+                                {view}
                             </button>
-                        );
-                    })}
-                </div>
-
-                {/* Month/Year Nav Row */}
-                <div className="flex items-center justify-between px-2 relative z-10">
-                    <button onClick={handlePrev} className="p-2.5 bg-white/80 dark:bg-slate-800 shadow-md rounded-full text-slate-600 hover:scale-110 transition-all border border-slate-100 dark:border-slate-700">
-                        <ChevronLeft size={18} />
-                    </button>
-                    <div className="text-center group cursor-pointer" onClick={handleToday}>
-                        <h3 className="text-3xl font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tighter">
-                            {format(currentDate, 'MMMM')}
-                        </h3>
-                        <p className="text-[10px] font-black text-[#4461f2] tracking-[0.2em] leading-none mt-1">
-                            {format(currentDate, 'yyyy')}
-                        </p>
-                    </div>
-                    <button onClick={handleNext} className="p-2.5 bg-white/80 dark:bg-slate-800 shadow-md rounded-full text-slate-600 hover:scale-110 transition-all border border-slate-100 dark:border-slate-700">
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            </div>
-
-            {/* Calendar Card (Overlapping) */}
-            <div className="px-6 -mt-10 relative z-10">
-                <Card className="border-none shadow-[0_15px_35px_rgba(0,0,0,0.1)] bg-white dark:bg-slate-900 rounded-3xl overflow-hidden p-3 pt-4">
-                    <CardContent className="p-0">
-                        <style>{`
-                            .fc { font-family: inherit; border: none !important; }
-                            .fc-theme-standard td, .fc-theme-standard th { border: none !important; }
-                            .fc-col-header-cell-cushion { 
-                                color: #9ca3af !important; 
-                                font-weight: 800 !important; 
-                                font-size: 10px !important;
-                                text-transform: uppercase !important;
-                                padding-bottom: 20px !important;
-                                display: block !important;
-                            }
-                            .fc-daygrid-day-number { 
-                                font-weight: 600 !important;
-                                font-size: 13px !important;
-                                color: #1f2937 !important;
-                                display: flex !important;
-                                align-items: center !important;
-                                justify-content: center !important;
-                                width: 30px !important;
-                                height: 30px !important;
-                                margin: 0 auto !important;
-                                padding: 0 !important;
-                            }
-                            .dark .fc-daygrid-day-number { color: #f3f4f6 !important; }
-                            .fc-daygrid-day-frame { 
-                                min-height: 42px !important; 
-                                display: flex !important;
-                                align-items: center !important;
-                                justify-content: center !important;
-                                margin-bottom: 5px !important;
-                            }
-                            .fc-day-today { background: transparent !important; }
-                            .fc-day-today .fc-daygrid-day-number { 
-                                background: #1a4eff !important; 
-                                color: white !important; 
-                                border-radius: 50% !important;
-                                box-shadow: 0 4px 10px rgba(26, 78, 255, 0.3) !important;
-                            }
-                            .fc-day-other .fc-daygrid-day-number { opacity: 0.2 !important; }
-                            /* Mimic range background from reference image */
-                            .ref-range { background: rgba(26, 78, 255, 0.08) !important; border-radius: 999px !important; }
-                        `}</style>
-                        <FullCalendar
-                            ref={calendarRef}
-                            plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
-                            initialView="dayGridMonth"
-                            headerToolbar={false}
-                            events={events}
-                            height="auto"
-                            eventClick={handleEventClick}
-                            noEventsContent="No events"
-                            firstDay={1}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Upcoming Events Section */}
-            <div className="flex-1 px-6 py-10 space-y-6">
-                <h3 className="text-xl font-black text-[#1f2937] dark:text-white tracking-tight">
-                    Upcoming events
-                </h3>
-                <div className="space-y-3">
-                    {/* Meeting Card */}
-                    <motion.div
-                        whileTap={{ scale: 0.98 }}
-                        className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex items-start justify-between border border-transparent hover:border-blue-100 transition-all cursor-pointer"
-                        onClick={() => { setSelectedEvent(events[0]); setIsModalOpen(true); }}
-                    >
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-bold text-[#1a4eff] dark:text-blue-400">Meeting in the centre</h4>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Today, 9:00 AM</p>
-                        </div>
-                        <div className="text-[11px] font-black text-slate-900 dark:text-white pt-1">
-                            In 2 hours
-                        </div>
-                    </motion.div>
-
-                    {/* Dinner Card */}
-                    <div className="relative group">
-                        <motion.div
-                            whileTap={{ scale: 0.98 }}
-                            className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex items-start justify-between translate-x-4 border border-transparent"
-                            onClick={() => { setSelectedEvent(events[1]); setIsModalOpen(true); }}
-                        >
-                            <div className="space-y-1">
-                                <h4 className="text-sm font-bold text-[#1a4eff] dark:text-blue-400">Dinner with Jenny</h4>
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Today, 1:00 PM</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <span className="text-[11px] font-black text-slate-900 dark:text-white pt-1">In 6 hours</span>
-                                <button className="text-blue-600 dark:text-blue-400 p-1">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                                </button>
-                            </div>
-                        </motion.div>
+                        ))}
                     </div>
 
-                    {/* Movie Card */}
-                    <motion.div
-                        whileTap={{ scale: 0.98 }}
-                        className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex items-start justify-between border border-transparent transition-all cursor-pointer opacity-80"
-                    >
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-bold text-[#1a4eff] dark:text-blue-400">Avengers, cinema</h4>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Sept 26, 8:30 PM</p>
-                        </div>
-                        <div className="text-[11px] font-black text-slate-900 dark:text-white pt-1">
-                            Tomorrow
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-
-            {/* Event Detail Modal (Themed) */}
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="w-[85%] max-w-sm rounded-[2.5rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
-                    <div className="flex flex-col items-center text-center space-y-6">
-                        <div className="size-16 rounded-[1.5rem] bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#1a4eff]">
-                            <CalendarIcon size={32} />
-                        </div>
-                        <div className="space-y-2">
-                            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
-                                {selectedEvent?.title}
-                            </DialogTitle>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                Event Details
+                    <div className="flex items-center justify-between px-2">
+                        <button onClick={handlePrev} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            <ChevronLeft size={20} strokeWidth={3} />
+                        </button>
+                        <div className="text-center">
+                            <h3 className="text-3xl font-black">
+                                {activeView === 'Year' ? format(currentDate, 'yyyy') : format(currentDate, 'MMMM')}
+                            </h3>
+                            <p className="text-sm font-bold text-white/60 tracking-widest leading-none mt-1">
+                                {activeView === 'Year' ? 'SELECT MONTH' : format(currentDate, 'yyyy')}
                             </p>
                         </div>
-
-                        <div className="w-full space-y-4">
-                            <div className="flex items-center gap-4 text-sm font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl">
-                                <Clock size={16} className="text-blue-500" />
-                                {selectedEvent ? format(new Date(selectedEvent.start), 'p, EEEE') : ''}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl">
-                                <MapPin size={16} className="text-red-500" />
-                                {selectedEvent?.extendedProps?.location}
-                            </div>
-                        </div>
-
-                        <Button onClick={() => setIsModalOpen(false)} className="w-full h-14 rounded-2xl bg-[#1a4eff] hover:bg-blue-700 text-white text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95">
-                            Close
-                        </Button>
+                        <button onClick={handleNext} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            <ChevronRight size={20} strokeWidth={3} />
+                        </button>
                     </div>
-                </DialogContent>
-            </Dialog>
-        </motion.div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 px-6 pt-8 pb-6 relative z-10 -mt-6 rounded-t-[2.5rem]">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeView + currentDate}
+                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                            className="min-h-[300px]"
+                        >
+                            {activeView === 'Month' && renderMonthView()}
+                            {activeView === 'Week' && renderWeekView()}
+                            {activeView === 'Day' && renderDayView()}
+                            {activeView === 'Year' && renderYearView()}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
+            </div>
+
+            {/* Upcoming Events Section (Separate Div) */}
+            <div className="w-full max-w-md mt-8 space-y-6">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight px-1">
+                    Upcoming events
+                </h3>
+
+                <div className="space-y-4">
+                    {events.map((event) => (
+                        <motion.div
+                            key={event.id}
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-[0_15px_35px_rgb(0,0,0,0.03)] border border-white dark:border-slate-800 flex items-center justify-between group cursor-pointer"
+                        >
+                            <div className="space-y-1">
+                                <h4 className="text-[13px] font-black text-[#4461F2] dark:text-blue-400">
+                                    {event.title}
+                                </h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                                    {isSameDay(event.time, new Date())
+                                        ? `Today, ${format(event.time, 'h:mm a')}`
+                                        : format(event.time, 'MMM d, h:mm a')}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-black text-slate-900 dark:text-white">
+                                    {getRelativeTimeString(event.time)}
+                                </span>
+                                {event.hasNotification && (
+                                    <div className="bg-blue-50 dark:bg-blue-900/30 p-1.5 rounded-full text-[#4461F2]">
+                                        <Bell size={12} fill="currentColor" strokeWidth={0} />
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Bottom Signature Spacer */}
+            <div className="py-10 text-center">
+                <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">Neural Calendar Terminal v2.0</p>
+            </div>
+        </div>
     );
 };
 

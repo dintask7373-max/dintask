@@ -14,7 +14,7 @@ const LoginActivitySchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['admin', 'manager', 'sales', 'employee', 'super_admin']
+        enum: ['admin', 'manager', 'sales', 'employee', 'super_admin', 'superadmin_staff']
     },
     loginAt: {
         type: Date,
