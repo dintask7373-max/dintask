@@ -187,6 +187,43 @@ exports.login = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'Your account request has been rejected.' });
     }
 
+    // Check admin subscription for team members
+    const teamMemberRoles = ['employee', 'manager', 'sales_executive'];
+    if (teamMemberRoles.includes(user.role)) {
+      const adminId = user.adminId;
+
+      if (!adminId) {
+        return res.status(403).json({
+          success: false,
+          subscriptionExpired: true,
+          error: 'No associated admin found. Please contact support.'
+        });
+      }
+
+      const admin = await Admin.findById(adminId);
+
+      if (!admin) {
+        return res.status(403).json({
+          success: false,
+          subscriptionExpired: true,
+          error: 'Associated admin not found. Please contact support.'
+        });
+      }
+
+      // Check if admin subscription has expired
+      const now = new Date();
+      const expiryDate = new Date(admin.subscriptionExpiry);
+
+      if (expiryDate < now) {
+        return res.status(403).json({
+          success: false,
+          subscriptionExpired: true,
+          error: 'Your organization\'s subscription has expired. Please contact your administrator to renew the plan.',
+          expiryDate: admin.subscriptionExpiry
+        });
+      }
+    }
+
     await sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -298,5 +335,67 @@ exports.updatePassword = async (req, res, next) => {
     sendTokenResponse(user, 200, res);
   } catch (err) {
     next(err);
+  }
+};
+
+// @desc    Check subscription status for team members
+// @route   GET /api/v1/auth/subscription-status
+// @access  Private (Team Members)
+exports.checkSubscriptionStatus = async (req, res, next) => {
+  try {
+    const teamMemberRoles = ['employee', 'manager', 'sales'];
+
+    // Only team members need this check
+    if (!teamMemberRoles.includes(req.user.role)) {
+      return res.status(200).json({
+        success: true,
+        subscriptionActive: true,
+        message: 'Not applicable for this role'
+      });
+    }
+
+    const adminId = req.user.adminId;
+
+    if (!adminId) {
+      return res.status(403).json({
+        success: false,
+        subscriptionActive: false,
+        subscriptionExpired: true,
+        message: 'No associated admin found'
+      });
+    }
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        subscriptionActive: false,
+        subscriptionExpired: true,
+        message: 'Associated admin not found'
+      });
+    }
+
+    const now = new Date();
+    const expiryDate = new Date(admin.subscriptionExpiry);
+
+    if (expiryDate < now) {
+      return res.status(403).json({
+        success: false,
+        subscriptionActive: false,
+        subscriptionExpired: true,
+        message: 'Organization subscription has expired',
+        expiryDate: admin.subscriptionExpiry
+      });
+    }
+
+    // Subscription is active
+    res.status(200).json({
+      success: true,
+      subscriptionActive: true,
+      expiryDate: admin.subscriptionExpiry
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 };

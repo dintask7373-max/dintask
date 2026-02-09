@@ -79,14 +79,24 @@ const EmployeeManagement = () => {
         loadData();
     }, []);
 
+    // Filter to only show employees (not managers or sales executives)
+    const employeesOnly = useMemo(() => {
+        return employees.filter(user => user.role === 'employee');
+    }, [employees]);
+
+    // Extract managers from employees list for dropdowns and lookups
+    const managersList = useMemo(() => {
+        return employees.filter(user => user.role === 'manager');
+    }, [employees]);
+
     // Limit based on plan from backend
     const EMPLOYEE_LIMIT = limitStatus?.limit || user?.planDetails?.userLimit || 2;
-    const currentCount = limitStatus?.current || (employees.length + managers.length + (salesExecutives?.length || 0));
+    const currentCount = limitStatus?.current || employees.length;
     const isLimitReached = limitStatus?.allowed === false || currentCount >= EMPLOYEE_LIMIT;
 
     const employeeStats = useMemo(() => {
         const stats = {};
-        employees.forEach(emp => {
+        employeesOnly.forEach(emp => {
             const empId = emp._id || emp.id;
             if (!empId) return;
             // assignedTo is likely an array of strings (IDs)
@@ -100,16 +110,16 @@ const EmployeeManagement = () => {
             };
         });
         return stats;
-    }, [employees, tasks]);
+    }, [employeesOnly, tasks]);
 
     const filteredEmployees = useMemo(() => {
-        return employees.filter(emp => {
+        return employeesOnly.filter(emp => {
             const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 emp.email.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesStatus = filterStatus === 'all' || emp.status === filterStatus;
             return matchesSearch && matchesStatus;
         });
-    }, [employees, searchTerm, filterStatus]);
+    }, [employeesOnly, searchTerm, filterStatus]);
 
     const handleAddEmployee = async (e) => {
         e.preventDefault();
@@ -427,7 +437,7 @@ const EmployeeManagement = () => {
                                     <div>
                                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Reports To</p>
                                         <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                                            {managers.find(m => m.id === emp.managerId)?.name || 'Unassigned'}
+                                            {employees.find(m => m._id === emp.managerId)?.name || 'Unassigned'}
                                         </p>
                                     </div>
                                     <div>
@@ -517,8 +527,8 @@ const EmployeeManagement = () => {
                                 onChange={(e) => setNewEmployee({ ...newEmployee, managerId: e.target.value })}
                             >
                                 <option value="">No Manager (Unassigned)</option>
-                                {managers.map(mgr => (
-                                    <option key={mgr.id} value={mgr.id}>{mgr.name} ({mgr.department})</option>
+                                {managersList.map(mgr => (
+                                    <option key={mgr._id} value={mgr._id}>{mgr.name} ({mgr.department || 'No Dept'})</option>
                                 ))}
                             </select>
                         </div>

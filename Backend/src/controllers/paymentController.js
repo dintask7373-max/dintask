@@ -21,9 +21,25 @@ exports.createOrder = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Plan not found' });
     }
 
+    // Get admin details
+    const admin = await Admin.findById(req.user.id);
+
+    // Check if trying to select the same active plan before expiry
+    if (admin.subscriptionPlanId && admin.subscriptionPlanId.toString() === planId) {
+      const now = new Date();
+      const expiryDate = new Date(admin.subscriptionExpiry);
+
+      // If subscription hasn't expired, don't allow selecting the same plan
+      if (expiryDate > now) {
+        return res.status(400).json({
+          success: false,
+          error: 'You are already subscribed to this plan. Please wait until it expires or choose a different plan.'
+        });
+      }
+    }
+
     if (plan.price === 0) {
       // Free plan - update directly
-      const admin = await Admin.findById(req.user.id);
       admin.subscriptionPlan = plan.name;
       admin.subscriptionPlanId = plan._id;
       admin.subscriptionStatus = 'active';
