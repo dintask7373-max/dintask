@@ -27,13 +27,22 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/shared/components/ui/dialog';
+import { Sheet, SheetContent } from '@/shared/components/ui/sheet';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/utils/cn';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/shared/components/ui/select";
 import useAuthStore from '@/store/authStore';
 import useTicketStore from '@/store/ticketStore';
 
 const SupportCenter = () => {
     const { user, role } = useAuthStore();
-    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats } = useTicketStore();
+    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket } = useTicketStore();
 
     React.useEffect(() => {
         fetchTickets();
@@ -50,6 +59,135 @@ const SupportCenter = () => {
         priority: 'Medium'
     });
 
+    // Detail View State
+    const [selectedTicket, setSelectedTicket] = useState(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [replyMessage, setReplyMessage] = useState('');
+    const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
+    const handleTicketSelect = (ticket) => {
+        setSelectedTicket(ticket);
+        if (window.innerWidth < 1024) setIsSheetOpen(true);
+        setReplyMessage('');
+    };
+
+    const handleReply = async () => {
+        if (!replyMessage.trim() || !selectedTicket) return;
+        setIsSubmittingReply(true);
+        // Assuming replyToTicket exists in store and handles API
+        const success = await replyToTicket(selectedTicket._id, replyMessage);
+        if (success) {
+            setReplyMessage('');
+        }
+        setIsSubmittingReply(false);
+    };
+
+    const handleStatusChange = async (value) => {
+        if (!selectedTicket) return;
+        const success = await updateTicketStatus(selectedTicket._id, value);
+        if (success) {
+            setSelectedTicket(prev => ({ ...prev, status: value }));
+        }
+    };
+
+    const renderDetailContent = () => (
+        <div className="h-full flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 rounded-[2.5rem] overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                <div className="flex justify-between items-start mb-4">
+                    {role?.startsWith('superadmin') ? (
+                        <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
+                            <SelectTrigger className={cn("h-7 w-auto min-w-[100px] text-[10px] font-black uppercase tracking-widest border-none px-3", getStatusStyle(selectedTicket.status))}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Open">Open</SelectItem>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="Resolved">Resolved</SelectItem>
+                                <SelectItem value="Closed">Closed</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    ) : (
+                        <Badge className={cn("px-3 py-1 text-[10px] font-black uppercase tracking-widest", getStatusStyle(selectedTicket.status))}>
+                            {selectedTicket.status}
+                        </Badge>
+                    )}
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {new Date(selectedTicket.createdAt).toLocaleDateString()}
+                    </span>
+                </div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight leading-snug mb-2">
+                    {selectedTicket.subject}
+                </h3>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <User size={12} /> {selectedTicket.creator?.name || 'Unknown User'}
+                </div>
+            </div>
+
+            {/* Content Scroll */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {selectedTicket.description}
+                    </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <MessageSquare size={12} /> Discussion
+                    </label>
+                    <div className="space-y-4">
+                        {selectedTicket.responses?.length > 0 ? selectedTicket.responses.map((msg, i) => {
+                            const userModel = role?.startsWith('superadmin') ? 'SuperAdmin' :
+                                role === 'admin' ? 'Admin' :
+                                    role === 'sales' ? 'SalesExecutive' :
+                                        role.charAt(0).toUpperCase() + role.slice(1);
+                            const isMe = msg.responderModel === userModel;
+                            return (
+                                <div key={i} className={cn("flex gap-3", isMe ? "flex-row-reverse" : "")}>
+                                    <div className={cn("size-8 rounded-full flex items-center justify-center shrink-0", isMe ? "bg-[#4461f2] text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
+                                        <User size={14} />
+                                    </div>
+                                    <div className={cn("flex-1 space-y-1", isMe ? "text-right" : "")}>
+                                        <div className={cn("p-3 rounded-2xl text-xs inline-block text-left max-w-[85%]", isMe ? "bg-[#4461f2] text-white rounded-tr-sm" : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-tl-sm")}>
+                                            {msg.message}
+                                        </div>
+                                        <p className="text-[9px] text-slate-400 font-bold">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                    </div>
+                                </div>
+                            );
+                        }) : (
+                            <div className="text-center py-10 text-slate-300 dark:text-slate-700">
+                                <p className="text-[10px] uppercase tracking-widest font-bold">No messages yet</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Input Area */}
+            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                <div className="relative">
+                    <Textarea
+                        placeholder="Type your reply..."
+                        className="min-h-[80px] w-full resize-none pr-12 text-xs bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-[#4461f2]/20"
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                    />
+                    <Button
+                        size="icon"
+                        onClick={handleReply}
+                        disabled={isSubmittingReply || !replyMessage.trim()}
+                        className="absolute bottom-2 right-2 size-8 bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20"
+                    >
+                        {isSubmittingReply ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={16} />}
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+
     const categories = ['Technical', 'Billing', 'Account', 'Feature Request', 'Other'];
     const priorities = ['Low', 'Medium', 'High', 'Urgent'];
 
@@ -58,7 +196,7 @@ const SupportCenter = () => {
         const matchesSearch = t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             t.ticketId?.toLowerCase().includes(searchQuery.toLowerCase());
 
-        if (role === 'superadmin') {
+        if (role?.startsWith('superadmin')) {
             return t.isEscalatedToSuperAdmin && matchesSearch;
         }
 
@@ -133,14 +271,14 @@ const SupportCenter = () => {
                         </h1>
                         <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mt-1.5 flex items-center gap-2">
                             <LifeBuoy size={14} className="text-[#4461f2]" />
-                            {role === 'superadmin' ? 'Managing Administrator Escalations' :
+                            {role?.startsWith('superadmin') ? 'Managing Administrator Escalations' :
                                 role === 'admin' ? 'Unified Support Hub & Platform Requests' :
                                     'Raise tickets for technical & account issues'}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {role !== 'superadmin' && (
+                        {!role?.startsWith('superadmin') && (
                             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                                 <DialogTrigger asChild>
                                     <Button className="h-12 px-6 rounded-2xl bg-[#4461f2] hover:bg-[#3451e2] text-white font-black text-[10px] uppercase tracking-widest gap-3 shadow-lg shadow-[#4461f2]/20 border-none transition-all active:scale-95">
@@ -253,7 +391,11 @@ const SupportCenter = () => {
                                             initial={{ opacity: 0, scale: 0.95 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ delay: index * 0.05 }}
-                                            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 p-5 rounded-[2rem] shadow-[0_15px_35px_-8px_rgba(0,0,0,0.06)] hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer"
+                                            onClick={() => handleTicketSelect(ticket)}
+                                            className={cn(
+                                                "bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 p-5 rounded-[2rem] shadow-[0_15px_35px_-8px_rgba(0,0,0,0.06)] hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer",
+                                                selectedTicket?._id === ticket._id ? "ring-2 ring-[#4461f2] ring-offset-2 dark:ring-offset-slate-950" : ""
+                                            )}
                                         >
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                                                 <div className="flex items-start gap-5">
@@ -326,67 +468,43 @@ const SupportCenter = () => {
                         </div>
                     </div>
 
-                    {/* Stats Sidebar */}
-                    <div className="lg:col-span-4 space-y-6">
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 rounded-[2.5rem] p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] space-y-8"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="size-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                    <CheckCircle2 size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">Resolution</h4>
-                                    <p className="text-lg font-black text-slate-900 dark:text-white leading-none">Global Stats</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                {[
-                                    { label: 'Avg Feedback', val: `${stats?.avgFeedback || 0}/5`, color: 'bg-emerald-500', width: `${((stats?.avgFeedback || 0) / 5) * 100}%` },
-                                    { label: 'Resolved Rate', val: `${stats?.resolvedRate || 0}%`, color: 'bg-[#4461f2]', width: `${stats?.resolvedRate || 0}%` },
-                                    { label: 'SLA Adherence', val: `${stats?.inTimeResolution || 0}%`, color: 'bg-amber-500', width: `${stats?.inTimeResolution || 0}%` }
-                                ].map((stat, i) => (
-                                    <div key={i} className="space-y-2.5">
-                                        <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
-                                            <span className="text-slate-400">{stat.label}</span>
-                                            <span className="text-slate-900 dark:text-slate-200 font-black tracking-tight">{stat.val}</span>
-                                        </div>
-                                        <div className="h-2 w-full bg-slate-50 dark:bg-slate-950 rounded-full overflow-hidden shadow-inner">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: stat.width }}
-                                                transition={{ duration: 1, delay: i * 0.1 }}
-                                                className={`h-full ${stat.color} rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
-                                            />
-                                        </div>
+                    {/* Detail Panel Desktop */}
+                    <div className="hidden lg:block lg:col-span-4 h-[calc(100vh-140px)] sticky top-24">
+                        <AnimatePresence mode="wait">
+                            {selectedTicket ? (
+                                <motion.div
+                                    key={selectedTicket._id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="h-full"
+                                >
+                                    {renderDetailContent()}
+                                </motion.div>
+                            ) : (
+                                <div className="h-full bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center p-8">
+                                    <div className="size-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+                                        <MessageSquare size={32} className="text-slate-300 dark:text-slate-600" />
                                     </div>
-                                ))}
-                            </div>
-
-                            <div className="pt-6 border-t border-slate-50 dark:border-slate-800/50">
-                                <p className="text-[10px] leading-relaxed text-slate-400 font-bold uppercase tracking-widest italic text-center">
-                                    "Your satisfaction is our primary metric of success."
-                                </p>
-                            </div>
-                        </motion.div>
-
-                        {/* Quick Tip */}
-                        <div className="p-6 bg-[#4461f2]/10 rounded-[2rem] border border-[#4461f2]/20 flex gap-4">
-                            <AlertTriangle className="text-[#4461f2] shrink-0 mt-0.5" size={18} />
-                            <div>
-                                <h5 className="text-[11px] font-black text-[#4461f2] uppercase tracking-[0.1em] mb-1">PRO TIP</h5>
-                                <p className="text-[10px] leading-snug text-[#4461f2]/80 font-bold italic">
-                                    Include screenshots or record IDs in your ticket description for faster resolution.
-                                </p>
-                            </div>
-                        </div>
+                                    <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-widest text-xs mb-2">Select a ticket</h3>
+                                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">View conversation & details</p>
+                                </div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent className="w-full sm:max-w-md p-0 border-none bg-transparent lg:hidden">
+                    {selectedTicket && (
+                        <div className="h-full pt-10">
+                            {renderDetailContent()}
+                        </div>
+                    )}
+                </SheetContent>
+            </Sheet>
+        </div >
     );
 };
 

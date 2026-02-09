@@ -29,8 +29,8 @@ const useSuperAdminStore = create(
             inquiries: [],
             roleDistribution: [],
             growthData: [],
-            hourlyActivity: [],
-            recentLogins: [],
+            staffMembers: [],
+
             transactions: [],
             subscriptionHistory: [],
             billingStats: {
@@ -193,27 +193,7 @@ const useSuperAdminStore = create(
                 }
             },
 
-            fetchHourlyActivity: async () => {
-                try {
-                    const response = await apiRequest('/superadmin/dashboard/hourly-activity');
-                    if (response.success) {
-                        set({ hourlyActivity: response.data });
-                    }
-                } catch (err) {
-                    console.error('Failed to fetch hourly activity:', err);
-                }
-            },
 
-            fetchRecentLogins: async () => {
-                try {
-                    const response = await apiRequest('/superadmin/dashboard/recent-logins');
-                    if (response.success) {
-                        set({ recentLogins: response.data });
-                    }
-                } catch (err) {
-                    console.error('Failed to fetch recent logins:', err);
-                }
-            },
 
             updateSystemSettings: (settings) => {
                 set((state) => ({
@@ -376,12 +356,25 @@ const useSuperAdminStore = create(
                 }));
             },
 
-            updateInquiryStatus: (id, status) => {
-                set((state) => ({
-                    inquiries: state.inquiries.map((inq) =>
-                        inq.id === id ? { ...inq, status } : inq
-                    ),
-                }));
+            updateInquiryStatus: async (id, status) => {
+                try {
+                    const response = await apiRequest(`/support/admin/support-leads/${id}`, {
+                        method: 'PUT',
+                        body: { status }
+                    });
+
+                    if (response.success) {
+                        set((state) => ({
+                            inquiries: state.inquiries.map((inq) =>
+                                (inq._id === id || inq.id === id) ? { ...inq, status } : inq
+                            ),
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update inquiry status:', err);
+                }
+                return false;
             },
 
             fetchInquiries: async () => {
@@ -454,6 +447,73 @@ const useSuperAdminStore = create(
                     console.error('Failed to fetch subscription history:', err);
                     set({ loading: false });
                 }
+            },
+
+            // --- Super Admin Staff Management ---
+            fetchStaff: async () => {
+                set({ loading: true });
+                try {
+                    const response = await apiRequest('/superadmin/staff');
+                    if (response.success) {
+                        set({ staffMembers: response.data, loading: false });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch staff:', err);
+                    set({ loading: false });
+                }
+            },
+
+            addStaff: async (staffData) => {
+                try {
+                    const response = await apiRequest('/superadmin/staff', {
+                        method: 'POST',
+                        body: staffData
+                    });
+                    if (response.success) {
+                        set((state) => ({
+                            staffMembers: [response.data, ...state.staffMembers]
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to add staff:', err);
+                }
+                return false;
+            },
+
+            updateStaff: async (id, staffData) => {
+                try {
+                    const response = await apiRequest(`/superadmin/staff/${id}`, {
+                        method: 'PUT',
+                        body: staffData
+                    });
+                    if (response.success) {
+                        set((state) => ({
+                            staffMembers: state.staffMembers.map(s => s._id === id ? response.data : s)
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update staff:', err);
+                }
+                return false;
+            },
+
+            deleteStaff: async (id) => {
+                try {
+                    const response = await apiRequest(`/superadmin/staff/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.success) {
+                        set((state) => ({
+                            staffMembers: state.staffMembers.filter(s => s._id !== id)
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to delete staff:', err);
+                }
+                return false;
             },
         }),
         {

@@ -87,7 +87,7 @@ const useAuthStore = create(
 
                 try {
                     let response;
-                    if (role === 'superadmin' || role === 'super_admin') {
+                    if (role === 'superadmin' || role === 'super_admin' || role === 'superadmin_staff') {
                         response = await apiRequest('/superadmin/me');
                     } else {
                         response = await apiRequest('/auth/me');
@@ -111,7 +111,18 @@ const useAuthStore = create(
                 }
             },
 
-            logout: () => {
+            logout: async () => {
+                const { role } = get();
+
+                // If superadmin, call the backend logout endpoint
+                if (role === 'superadmin' || role === 'superadmin_staff') {
+                    try {
+                        await apiRequest('/superadmin/logout');
+                    } catch (err) {
+                        console.error('Logout API failed:', err);
+                    }
+                }
+
                 set({
                     user: null,
                     role: null,
@@ -127,7 +138,7 @@ const useAuthStore = create(
 
                 try {
                     let response;
-                    if (role === 'superadmin') {
+                    if (role === 'superadmin' || role === 'superadmin_staff') {
                         // Handle form data if it contains a file
                         const body = updatedData;
                         response = await apiRequest('/superadmin/updateprofile', {
@@ -163,7 +174,7 @@ const useAuthStore = create(
 
                 try {
                     let response;
-                    if (role === 'superadmin') {
+                    if (role === 'superadmin' || role === 'superadmin_staff') {
                         response = await apiRequest('/superadmin/changepassword', {
                             method: 'PUT',
                             body: { currentPassword, newPassword }

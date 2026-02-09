@@ -23,6 +23,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -49,6 +50,7 @@ const SupportManagement = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState('All');
     const [selectedTicket, setSelectedTicket] = useState(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('team'); // 'team' or 'my'
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -345,7 +347,10 @@ const SupportManagement = () => {
                                     <Card
                                         className={`border border-slate-100 dark:border-slate-900 hover:border-primary-200 dark:hover:border-primary-900/50 transition-all cursor-pointer overflow-hidden group ${selectedTicket?._id === ticket._id ? 'ring-2 ring-primary-500 bg-primary-50/10 dark:bg-primary-900/5' : 'bg-white dark:bg-slate-900'
                                             }`}
-                                        onClick={() => setSelectedTicket(ticket)}
+                                        onClick={() => {
+                                            setSelectedTicket(ticket);
+                                            if (window.innerWidth < 1024) setIsSheetOpen(true);
+                                        }}
                                     >
                                         <CardContent className="p-0">
                                             <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -583,6 +588,85 @@ const SupportManagement = () => {
                     </AnimatePresence>
                 </div>
             </div>
+
+
+
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent side="right" className="p-0 border-none w-full sm:max-w-md bg-transparent lg:hidden">
+                    {selectedTicket && (
+                        <div className="h-full pt-10 sm:pt-0 bg-white dark:bg-slate-900 overflow-y-auto">
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-950/50 sticky top-0 z-10">
+                                <div className={`p-2 rounded-lg ${getStatusStyle(selectedTicket.status)} border shrink-0`}>
+                                    {selectedTicket.isEscalatedToSuperAdmin ? <AlertTriangle size={18} /> : <MessageSquare size={18} />}
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight line-clamp-1">{selectedTicket.title}</h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedTicket.ticketId}</p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 space-y-4">
+                                {/* Description */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Issue Description</label>
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-xs text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800">
+                                        {selectedTicket.description}
+                                    </div>
+                                </div>
+
+                                {/* Conversation */}
+                                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        <MessageSquare size={12} /> Conversation History
+                                    </label>
+
+                                    <div className="space-y-4">
+                                        {selectedTicket.responses?.map((msg, i) => {
+                                            const isMe = msg.responderModel === 'Admin';
+                                            return (
+                                                <div key={i} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`size-8 rounded-full flex items-center justify-center shrink-0 ${isMe ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                        {isMe ? <User size={14} /> : <ShieldAlert size={14} />}
+                                                    </div>
+                                                    <div className={`flex-1 space-y-1 ${isMe ? 'text-right' : ''}`}>
+                                                        <div className={`p-3 rounded-xl border text-xs inline-block text-left ${isMe
+                                                            ? 'bg-indigo-600 border-indigo-600 text-white rounded-tr-none'
+                                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-tl-none'
+                                                            }`}>
+                                                            {msg.message}
+                                                        </div>
+                                                        <p className="text-[9px] text-slate-400">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Reply Input */}
+                            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 sticky bottom-0">
+                                <div className="relative">
+                                    <Textarea
+                                        placeholder="Type your reply..."
+                                        className="min-h-[80px] w-full resize-none pr-12 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+                                        value={replyMessage}
+                                        onChange={(e) => setReplyMessage(e.target.value)}
+                                    />
+                                    <Button
+                                        size="icon"
+                                        className="absolute bottom-2 right-2 size-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
+                                        onClick={handleReply}
+                                        disabled={isSubmitting || !replyMessage.trim()}
+                                    >
+                                        {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </SheetContent>
+            </Sheet>
         </div>
     );
 };

@@ -16,15 +16,19 @@ const {
     getSummary,
     getRoleDistribution,
     getUserGrowth,
-    getHourlyActivity,
-    getRecentLogins,
+
     getPlanDistribution,
     updateAdminPlan,
     getBillingStats,
     getAllTransactions,
     getSubscriptionHistory,
     getPendingSupport,
-    getRecentInquiries
+    getRecentInquiries,
+    logout,
+    getStaff,
+    createStaff,
+    updateStaff,
+    deleteStaff
 } = require('../controllers/superAdminController');
 const upload = require('../middleware/upload');
 
@@ -41,10 +45,11 @@ const router = express.Router();
 router.post('/login', login);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:resettoken', resetPassword);
+router.get('/logout', logout);
 
-// ONLY Super Admin can access
+// ONLY Super Admin can access (Root superadmin or Staff)
 router.use(protect);
-router.use(authorize('superadmin'));
+router.use(authorize('superadmin', 'superadmin_staff'));
 
 router.put('/changepassword', changePassword);
 router.put('/updateprofileimage', upload.single('image'), updateProfileImage);
@@ -71,11 +76,19 @@ router.route('/plans/:id')
 router.get('/dashboard/summary', getSummary);
 router.get('/dashboard/role-distribution', getRoleDistribution);
 router.get('/dashboard/user-growth', getUserGrowth);
-router.get('/dashboard/hourly-activity', getHourlyActivity);
-router.get('/dashboard/recent-logins', getRecentLogins);
+
 router.get('/dashboard/plan-distribution', getPlanDistribution);
 router.get('/dashboard/pending-support', getPendingSupport);
 router.get('/dashboard/recent-inquiries', getRecentInquiries);
+
+// Staff Management
+router.route('/staff')
+    .get(getStaff)
+    .post(createStaff);
+
+router.route('/staff/:id')
+    .put(updateStaff)
+    .delete(deleteStaff);
 
 // Billing & History
 router.get('/billing/stats', getBillingStats);

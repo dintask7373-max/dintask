@@ -33,7 +33,63 @@ exports.getStats = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getAdmins = async (req, res, next) => {
   try {
-    const admins = await Admin.find().populate('subscriptionPlanId');
+    const admins = await Admin.aggregate([
+      {
+        $lookup: {
+          from: 'plans',
+          localField: 'subscriptionPlanId',
+          foreignField: '_id',
+          as: 'plan'
+        }
+      },
+      { $unwind: { path: '$plan', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'managers',
+          localField: '_id',
+          foreignField: 'adminId',
+          as: 'managers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'salesexecutives',
+          localField: '_id',
+          foreignField: 'adminId',
+          as: 'sales'
+        }
+      },
+      {
+        $lookup: {
+          from: 'employees',
+          localField: '_id',
+          foreignField: 'adminId',
+          as: 'employees'
+        }
+      },
+      {
+        $addFields: {
+          totalUsers: {
+            $add: [
+              { $size: '$managers' },
+              { $size: '$sales' },
+              { $size: '$employees' }
+            ]
+          },
+          userLimit: '$plan.userLimit'
+        }
+      },
+      {
+        $project: {
+          managers: 0,
+          sales: 0,
+          employees: 0,
+          password: 0
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
+
     res.status(200).json({
       success: true,
       count: admins.length,
@@ -231,11 +287,26 @@ exports.login = async (req, res, next) => {
   }
 };
 
+// @desc    Logout Super Admin / Clear Cookie
+// @route   GET /api/v1/superadmin/logout
+// @access  Public
+exports.logout = async (req, res, next) => {
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {}
+  });
+};
+
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
-  // Create token - ALWAYS use 'superadmin' as role for SuperAdmin users
+  // Use the actual role from the user model
   const token = jwt.sign(
-    { id: user._id, role: 'superadmin' },
+    { id: user._id, role: user.role || 'superadmin' },
     process.env.JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -247,7 +318,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      role: 'superadmin' // Normalize for frontend
+      role: user.role || 'superadmin'
     }
   });
 };
@@ -477,15 +548,23 @@ exports.getSummary = async (req, res, next) => {
     ]);
     const averageSessionTimeInMinutes = avgSessionAgg.length > 0 ? Math.round(avgSessionAgg[0].avgDuration) : 0;
 
+    const data = {
+      totalUsers,
+      activeUsers: activeUsersCount,
+      activeCompanies,
+      averageSessionTimeInMinutes
+    };
+
+    // Mask growth for staff
+    if (req.user.role === 'superadmin_staff') {
+      data.monthlyGrowthPercentage = 0;
+    } else {
+      data.monthlyGrowthPercentage = monthlyGrowthPercentage;
+    }
+
     res.status(200).json({
       success: true,
-      data: {
-        totalUsers,
-        activeUsers: activeUsersCount,
-        activeCompanies,
-        monthlyGrowthPercentage,
-        averageSessionTimeInMinutes
-      }
+      data
     });
   } catch (err) {
     next(err);
@@ -543,54 +622,7 @@ exports.getUserGrowth = async (req, res, next) => {
   }
 };
 
-// @desc    Get Hourly Peak Activity
-// @route   GET /api/v1/superadmin/dashboard/hourly-activity
-// @access  Private (Super Admin)
-exports.getHourlyActivity = async (req, res, next) => {
-  try {
-    const hourlyActivity = await LoginActivity.aggregate([
-      { $match: { role: { $ne: 'super_admin' } } },
-      {
-        $group: {
-          _id: { $hour: '$loginAt' },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
 
-    const formattedActivity = Array.from({ length: 24 }, (_, i) => {
-      const found = hourlyActivity.find(item => item._id === i);
-      return { hour: i, count: found ? found.count : 0 };
-    });
-
-    res.status(200).json({
-      success: true,
-      data: formattedActivity
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// @desc    Get Recent Login Activity
-// @route   GET /api/v1/superadmin/dashboard/recent-logins
-// @access  Private (Super Admin)
-exports.getRecentLogins = async (req, res, next) => {
-  try {
-    const logs = await LoginActivity.find({ role: { $ne: 'super_admin' } })
-      .sort({ loginAt: -1 })
-      .limit(10)
-      .populate('userId', 'name email companyName');
-
-    res.status(200).json({
-      success: true,
-      data: logs
-    });
-  } catch (err) {
-    next(err);
-  }
-};
 
 // @desc    Get Plan Distribution/Adoption
 // @route   GET /api/v1/superadmin/dashboard/plan-distribution
@@ -694,16 +726,26 @@ exports.getBillingStats = async (req, res, next) => {
     const pendingRefunds = 0; // Placeholder for now
     const churnRate = 2.4; // Placeholder for now
 
+    const data = {
+      activeSubscriptions,
+      pendingRefunds,
+      churnRate
+    };
+
+    // Mask revenue for staff
+    if (req.user.role === 'superadmin_staff') {
+      data.totalRevenue = 0;
+      data.revenueTrends = [];
+      data.growthPercentage = 0;
+    } else {
+      data.totalRevenue = totalRevenue.length > 0 ? totalRevenue[0].total : 0;
+      data.revenueTrends = revenueTrends;
+      data.growthPercentage = parseFloat(growthPercentage);
+    }
+
     res.status(200).json({
       success: true,
-      data: {
-        totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
-        activeSubscriptions,
-        pendingRefunds,
-        churnRate,
-        revenueTrends,
-        growthPercentage: parseFloat(growthPercentage)
-      }
+      data
     });
   } catch (err) {
     next(err);
@@ -735,15 +777,46 @@ exports.getAllTransactions = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getSubscriptionHistory = async (req, res, next) => {
   try {
-    const admins = await Admin.find()
-      .populate('subscriptionPlanId')
-      .sort('-subscriptionExpiry');
+    const admins = await Admin.aggregate([
+      {
+        $lookup: {
+          from: 'payments',
+          localField: '_id',
+          foreignField: 'adminId',
+          as: 'payments'
+        }
+      },
+      {
+        $addFields: {
+          paidPayments: {
+            $filter: {
+              input: '$payments',
+              as: 'p',
+              cond: { $eq: ['$$p.status', 'paid'] }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          companyName: 1,
+          subscriptionPlan: 1,
+          subscriptionStatus: 1,
+          subscriptionExpiry: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          totalRevenue: { $sum: '$paidPayments.amount' },
+          lastPaymentDate: { $max: '$paidPayments.createdAt' }
+        }
+      },
+      { $sort: { subscriptionExpiry: -1 } }
+    ]);
 
     const history = admins.map(admin => {
       let daysRemaining = 0;
       if (admin.subscriptionExpiry) {
         const today = new Date();
-        const diff = admin.subscriptionExpiry - today;
+        const diff = new Date(admin.subscriptionExpiry) - today;
         daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
       }
 
@@ -753,9 +826,9 @@ exports.getSubscriptionHistory = async (req, res, next) => {
         planName: admin.subscriptionPlan,
         status: admin.subscriptionStatus,
         expiryDate: admin.subscriptionExpiry,
-        startDate: admin.updatedAt, // Assuming last update was renewal/activation
+        startDate: admin.lastPaymentDate || admin.createdAt,
         daysRemaining,
-        revenue: admin.subscriptionPlanId?.price || 0
+        revenue: admin.totalRevenue || 0
       };
     });
 
@@ -779,15 +852,17 @@ exports.getPendingSupport = async (req, res, next) => {
     const { limit = 10 } = req.query;
 
     const pendingTickets = await SupportTicket.find({
-      status: { $in: ['open', 'pending'] }
+      status: { $in: ['Pending'] },
+      isEscalatedToSuperAdmin: true
     })
-      .populate('userId', 'name email')
-      .populate('adminId', 'companyName')
+      .populate('creator', 'name email')
+      .populate('companyId', 'companyName')
       .sort('-createdAt')
       .limit(parseInt(limit));
 
     const totalPending = await SupportTicket.countDocuments({
-      status: { $in: ['open', 'pending'] }
+      status: { $in: ['Pending'] },
+      isEscalatedToSuperAdmin: true
     });
 
     res.status(200).json({
@@ -823,6 +898,97 @@ exports.getRecentInquiries = async (req, res, next) => {
       total: totalInquiries,
       pending: pendingInquiries,
       data: recentInquiries
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+// @desc    Get All SuperAdmin Staff
+// @route   GET /api/v1/superadmin/staff
+// @access  Private (SuperAdmin Root)
+exports.getStaff = async (req, res, next) => {
+  try {
+    const staff = await SuperAdmin.find({ role: 'superadmin_staff' });
+    res.status(200).json({
+      success: true,
+      count: staff.length,
+      data: staff
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Create SuperAdmin Staff
+// @route   POST /api/v1/superadmin/staff
+// @access  Private (SuperAdmin Root)
+exports.createStaff = async (req, res, next) => {
+  try {
+    const { name, email, password, phoneNumber } = req.body;
+
+    const existingUser = await SuperAdmin.findOne({ email });
+    if (existingUser) {
+      return next(new ErrorResponse('Staff with this email already exists', 400));
+    }
+
+    const staff = await SuperAdmin.create({
+      name,
+      email,
+      password,
+      phoneNumber,
+      role: 'superadmin_staff'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: staff
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Update SuperAdmin Staff
+// @route   PUT /api/v1/superadmin/staff/:id
+// @access  Private (SuperAdmin Root)
+exports.updateStaff = async (req, res, next) => {
+  try {
+    let staff = await SuperAdmin.findById(req.params.id);
+
+    if (!staff || staff.role !== 'superadmin_staff') {
+      return next(new ErrorResponse('Staff not found', 404));
+    }
+
+    staff = await SuperAdmin.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: staff
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Delete SuperAdmin Staff
+// @route   DELETE /api/v1/superadmin/staff/:id
+// @access  Private (SuperAdmin Root)
+exports.deleteStaff = async (req, res, next) => {
+  try {
+    const staff = await SuperAdmin.findById(req.params.id);
+
+    if (!staff || staff.role !== 'superadmin_staff') {
+      return next(new ErrorResponse('Staff not found', 404));
+    }
+
+    await SuperAdmin.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      data: {}
     });
   } catch (err) {
     next(err);

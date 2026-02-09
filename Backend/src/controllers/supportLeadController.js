@@ -95,3 +95,32 @@ exports.getLead = async (req, res, next) => {
         next(err);
     }
 };
+
+// @desc    Update lead status (Mark as replied, archived, etc.)
+// @route   PUT /api/v1/admin/support-leads/:id
+// @access  Private (Super Admin)
+exports.updateLead = async (req, res, next) => {
+    try {
+        const { status } = req.body;
+
+        // Find lead
+        let lead = await SupportLead.findById(req.params.id);
+
+        if (!lead) {
+            return next(new ErrorResponse(`Lead not found with id of ${req.params.id}`, 404));
+        }
+
+        // Update lead
+        lead = await SupportLead.findByIdAndUpdate(req.params.id, { status }, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({
+            success: true,
+            data: lead
+        });
+    } catch (err) {
+        next(err);
+    }
+};

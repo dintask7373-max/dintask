@@ -52,7 +52,7 @@ const SupportLeadSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['new', 'contacted', 'converted', 'closed'],
+        enum: ['new', 'contacted', 'converted', 'closed', 'replied', 'archived'],
         default: 'new'
     },
     source: {

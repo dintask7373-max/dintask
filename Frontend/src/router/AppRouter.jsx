@@ -126,6 +126,7 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
+import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -234,9 +235,10 @@ const AppRouter = () => {
 
             {/* --- SUPER ADMIN ROUTES --- */}
             {/* Main Super Admin Panel */}
-            <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['superadmin', 'superadmin_employee']}><AdminLayout role="superadmin" /></ProtectedRoute>}>
+            <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['superadmin', 'superadmin_staff', 'superadmin_employee']}><AdminLayout role="superadmin" /></ProtectedRoute>}>
                 <Route index element={<SuperAdminDashboard />} />
                 <Route path="admins" element={<AdminAccounts />} />
+                <Route path="staff" element={<StaffManagement />} />
                 <Route path="users" element={<GlobalUsersOverview />} />
                 <Route path="plans" element={<PlansManagement />} />
                 <Route path="billing" element={<BillingPayments />} />
