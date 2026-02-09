@@ -35,6 +35,10 @@ const EmployeeSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Admin'
   },
+  managerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Manager'
+  },
   status: {
     type: String,
     enum: ['pending', 'active', 'rejected'],

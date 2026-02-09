@@ -25,6 +25,8 @@ const LeadsManagement = () => {
     addLead,
     editLead,
     deleteLead,
+    bulkDeleteLeads,
+    assignLead,
   } = useCRMStore();
 
   React.useEffect(() => {
@@ -222,6 +224,15 @@ const LeadsManagement = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedLeads.length === 0) return;
+
+    if (confirm(`Are you sure you want to delete ${selectedLeads.length} leads?`)) {
+      await bulkDeleteLeads(selectedLeads);
+      setSelectedLeads([]);
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
@@ -256,6 +267,25 @@ const LeadsManagement = () => {
                 <FileUp className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
                 <span>Import Assets</span>
               </Button>
+
+              {selectedLeads.length > 0 && (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                  <Button
+                    onClick={() => setIsBulkAssignOpen(true)}
+                    variant="outline"
+                    className="h-9 px-4 border-primary-100 bg-primary-50/50 text-primary-600 rounded-xl font-black text-[9px] uppercase tracking-widest"
+                  >
+                    Bulk Assign ({selectedLeads.length})
+                  </Button>
+                  <Button
+                    onClick={handleBulkDelete}
+                    variant="outline"
+                    className="h-9 px-4 border-red-100 bg-red-50 text-red-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-red-100"
+                  >
+                    Delete Selected
+                  </Button>
+                </div>
+              )}
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">

@@ -63,7 +63,7 @@ exports.protect = async (req, res, next) => {
 // Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    console.log(`[AUTH DEBUG] User Role: '${req.user.role}', Required Roles: ${JSON.stringify(roles)}`);
+    console.log(`[AUTH DEBUG] User: ${req.user?._id}, Role: '${req.user?.role}' (len: ${req.user?.role?.length}), Required: ${JSON.stringify(roles)}`);
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,

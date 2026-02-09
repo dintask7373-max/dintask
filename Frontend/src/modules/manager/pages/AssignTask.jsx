@@ -41,6 +41,7 @@ import useAuthStore from '@/store/authStore';
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
 import useProjectStore from '@/store/projectStore';
+import useTeamStore from '@/store/teamStore';
 import useNotificationStore from '@/store/notificationStore';
 import { useSearchParams } from 'react-router-dom';
 
@@ -48,7 +49,9 @@ const AssignTask = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { addTask, tasks, fetchTasks } = useTaskStore();
-    const employees = useEmployeeStore(state => state.employees);
+    const { employees, fetchEmployees } = useEmployeeStore();
+    const { projects, fetchProjects } = useProjectStore();
+    const { teams, fetchTeams } = useTeamStore();
     const addNotification = useNotificationStore(state => state.addNotification);
     const [searchParams] = useSearchParams();
     const urlProjectId = searchParams.get('projectId');
@@ -56,12 +59,21 @@ const AssignTask = () => {
     React.useEffect(() => {
         fetchProjects();
         fetchTasks();
+        fetchEmployees();
+        fetchTeams();
         if (urlProjectId) {
             setFormData(prev => ({ ...prev, projectId: urlProjectId }));
         }
     }, [urlProjectId]);
 
-    const subEmployees = employees.filter(e => e.managerId === user?.id);
+    const subEmployees = employees.filter(e => {
+        const userId = (user?._id || user?.id)?.toString();
+        const userAdminId = (user?.adminId?._id || user?.adminId)?.toString();
+        const empAdminId = (e.adminId?._id || e.adminId)?.toString();
+        const empManagerId = (e.managerId?._id || e.managerId)?.toString();
+
+        return e.role === 'employee' && (empManagerId === userId || empAdminId === userAdminId);
+    });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [date, setDate] = useState();
@@ -69,9 +81,10 @@ const AssignTask = () => {
         title: '',
         description: '',
         priority: 'medium',
-        assignedTo: '',
+        assignedTo: 'none',
         labels: '',
-        projectId: 'none'
+        projectId: 'none',
+        teamId: 'none'
     });
 
     const handleInputChange = (e) => {
@@ -85,8 +98,8 @@ const AssignTask = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.title || !formData.assignedTo || !date) {
-            toast.error("Tactical parameters incomplete");
+        if (!formData.title || (!formData.assignedTo && formData.teamId === 'none') || !date) {
+            toast.error("Tactical parameters incomplete. Assign to a Personnel or Team.");
             return;
         }
 
@@ -98,10 +111,13 @@ const AssignTask = () => {
                 description: formData.description,
                 deadline: date ? date.toISOString() : null,
                 priority: formData.priority,
-                assignedTo: [formData.assignedTo], // Backend expects array
+                assignedTo: formData.assignedTo !== 'none' ? [formData.assignedTo] : [],
+                team: formData.teamId === 'none' ? undefined : formData.teamId,
                 project: formData.projectId === 'none' ? undefined : formData.projectId,
                 labels: formData.labels.split(',').map(l => l.trim()).filter(l => l)
             };
+
+            console.log("Deploying Task Payload:", newTaskPayload);
 
             await addTask(newTaskPayload);
 
@@ -248,6 +264,26 @@ const AssignTask = () => {
                             </div>
 
                             <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Tactical Team (Optional)</Label>
+                                <Select
+                                    value={formData.teamId}
+                                    onValueChange={(val) => handleSelectChange('teamId', val)}
+                                >
+                                    <SelectTrigger className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4">
+                                        <SelectValue placeholder="Select Team" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                                        <SelectItem value="none" className="text-[10px] font-black uppercase">No Team</SelectItem>
+                                        {teams.map(team => (
+                                            <SelectItem key={team._id} value={team._id} className="text-[10px] font-black uppercase">
+                                                {team.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset ID</Label>
                                 <Select
                                     value={formData.assignedTo}
@@ -257,15 +293,16 @@ const AssignTask = () => {
                                         <SelectValue placeholder="IDENTIFY TARGET" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-none shadow-2xl">
+                                        <SelectItem value="none" className="text-[10px] font-black uppercase">No Personnel</SelectItem>
                                         {subEmployees.length > 0 ? (
                                             subEmployees.map(emp => (
-                                                <SelectItem key={emp.id} value={emp.id}>
+                                                <SelectItem key={emp._id || emp.id} value={emp._id || emp.id}>
                                                     <div className="flex items-center gap-2">
                                                         <Avatar className="h-5 w-5 bg-primary-100">
-                                                            <AvatarImage src={emp.avatar} />
-                                                            <AvatarFallback className="text-[8px] font-black">{emp.name.charAt(0)}</AvatarFallback>
+                                                            <AvatarImage src={emp.avatar || emp.profileImage} />
+                                                            <AvatarFallback className="text-[8px] font-black">{emp?.name?.charAt(0) || '?'}</AvatarFallback>
                                                         </Avatar>
-                                                        <span className="text-[10px] font-black">{emp.name.toUpperCase()}</span>
+                                                        <span className="text-[10px] font-black">{(emp?.name || 'Unknown').toUpperCase()}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))

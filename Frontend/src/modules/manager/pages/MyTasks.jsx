@@ -43,10 +43,17 @@ const MyTasks = () => {
     };
 
     const myTasks = useMemo(() => {
-        return tasks.filter(t =>
-            t.assignedToManager === user?.id &&
-            !t.delegatedBy
-        ).filter(t => {
+        const userId = (user?._id || user?.id)?.toString();
+        return tasks.filter(t => {
+            const isAssignedToMe = Array.isArray(t.assignedTo)
+                ? t.assignedTo.some(id => (id._id || id)?.toString() === userId)
+                : (t.assignedTo?._id || t.assignedTo)?.toString() === userId;
+
+            const isAssignedByMe = (t.assignedBy?._id || t.assignedBy)?.toString() === userId;
+
+            // Managers see tasks they assigned OR tasks assigned to them
+            return isAssignedToMe || isAssignedByMe;
+        }).filter(t => {
             const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
             return matchesSearch && matchesStatus;

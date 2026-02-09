@@ -72,13 +72,34 @@ const ManagerReports = () => {
     const tasks = useTaskStore(state => state.tasks);
     const employees = useEmployeeStore(state => state.employees);
 
-    const teamTasks = useMemo(() => tasks.filter(t => t.delegatedBy === user?.id || t.assignedToManager === user?.id), [tasks, user]);
-    const teamMembers = useMemo(() => employees.filter(emp => emp.managerId === user?.id), [employees, user]);
+    const teamTasks = useMemo(() => {
+        const userId = (user?._id || user?.id)?.toString();
+        return tasks.filter(t => {
+            const isAssignedByMe = (t.assignedBy?._id || t.assignedBy)?.toString() === userId;
+            const isAssignedToMe = Array.isArray(t.assignedTo)
+                ? t.assignedTo.some(id => (id._id || id)?.toString() === userId)
+                : (t.assignedTo?._id || t.assignedTo)?.toString() === userId;
+            return isAssignedByMe || isAssignedToMe;
+        });
+    }, [tasks, user]);
+
+    const teamMembers = useMemo(() => {
+        const userId = (user?._id || user?.id)?.toString();
+        const userAdminId = (user?.adminId?._id || user?.adminId)?.toString();
+
+        return employees.filter(e => {
+            const empAdminId = (e.adminId?._id || e.adminId)?.toString();
+            const empManagerId = (e.managerId?._id || e.managerId)?.toString();
+
+            return e.role === 'employee' &&
+                (empManagerId === userId || empAdminId === userAdminId);
+        });
+    }, [employees, user]);
 
     const stats = useMemo(() => {
         const total = teamTasks.length;
         const completed = teamTasks.filter(t => t.status === 'completed').length;
-        const pending = teamTasks.filter(t => t.status === 'pending').length;
+        const pending = teamTasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
         const highPriority = teamTasks.filter(t => t.priority === 'high' || t.priority === 'urgent').length;
         const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -93,7 +114,7 @@ const ManagerReports = () => {
     const statusData = useMemo(() => {
         const completed = teamTasks.filter(t => t.status === 'completed').length;
         const pending = teamTasks.filter(t => t.status === 'pending').length;
-        const inProgress = teamTasks.filter(t => t.status === 'in-progress' || (t.progress > 0 && t.progress < 100)).length;
+        const inProgress = teamTasks.filter(t => t.status === 'in_progress' || (t.progress > 0 && t.progress < 100)).length;
 
         return [
             { name: 'FULFILLED', value: completed, color: '#10b981' },
@@ -104,7 +125,11 @@ const ManagerReports = () => {
 
     const performanceData = useMemo(() => {
         return teamMembers.map(emp => {
-            const empTasks = teamTasks.filter(t => t.assignedTo?.includes(emp.id));
+            const memberId = (emp._id || emp.id)?.toString();
+            const empTasks = teamTasks.filter(t => {
+                const assignees = Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo];
+                return assignees.some(a => (a?._id || a || "").toString() === memberId);
+            });
             const total = empTasks.length;
             const completed = empTasks.filter(t => t.status === 'completed').length;
             const totalProgress = empTasks.reduce((acc, t) => acc + (t.progress || 0), 0);
@@ -113,9 +138,10 @@ const ManagerReports = () => {
             let color = '#ef4444'; // Red (Low Progress / <50%)
             if (percentage >= 70) color = '#22c55e'; // Green (Good / >=70%)
             else if (percentage >= 50) color = '#eab308'; // Yellow (Mediocre / 50-69%)
+            else if (percentage > 0) color = '#f97316'; // Orange
 
             return {
-                name: emp.name.toUpperCase().split(' ')[0],
+                name: (emp.name || 'Unknown').toUpperCase().split(' ')[0],
                 completed,
                 total,
                 color,

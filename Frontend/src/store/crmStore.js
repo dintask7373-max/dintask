@@ -113,6 +113,24 @@ const useCRMStore = create(
         }
       },
 
+      // Bulk Delete Leads
+      bulkDeleteLeads: async (leadIds) => {
+        try {
+          const res = await api('/crm/bulk-delete', {
+            method: 'POST',
+            body: { ids: leadIds }
+          });
+          if (res.success) {
+            set((state) => ({
+              leads: state.leads.filter(l => !leadIds.includes(l._id || l.id))
+            }));
+            toast.success(res.message || "Leads deleted successfully");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to delete some leads");
+        }
+      },
+
       // Assign Lead
       assignLead: async (leadId, employeeId) => {
         try {

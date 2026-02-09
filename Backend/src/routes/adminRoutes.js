@@ -20,9 +20,9 @@ router.post('/register', registerAdmin);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:resettoken', resetPassword);
 
-// Only Admin and Super Admin can access these routes
+// Admins, Managers, and Super Admins can access these routes
 router.use(protect);
-router.use(authorize('admin', 'superadmin'));
+router.use(authorize('admin', 'superadmin', 'manager'));
 
 router.get('/users', getAllUsers);
 router.get('/plans', getPlans);

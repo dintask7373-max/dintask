@@ -20,6 +20,10 @@ const TaskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Manager' // Or Admin.
   },
+  team: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
+  },
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Admin',

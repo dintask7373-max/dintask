@@ -87,7 +87,7 @@ const Deals = () => {
     const filteredDeals = useMemo(() => {
         if (!user) return [];
 
-        let myDeals = leads || [];
+        let myDeals = (leads || []).filter(lead => lead.status === 'Won');
 
         return myDeals
             .filter(deal => {

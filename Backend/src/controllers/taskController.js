@@ -3,6 +3,7 @@ const Project = require('../models/Project');
 const Manager = require('../models/Manager');
 const Employee = require('../models/Employee');
 const SalesExecutive = require('../models/SalesExecutive');
+const Team = require('../models/Team');
 
 // @desc    Get All Tasks (Filtered by role)
 // @route   GET /api/tasks
@@ -73,7 +74,7 @@ exports.getTasks = async (req, res) => {
 // @access  Private (Manager, Admin)
 exports.createTask = async (req, res) => {
   try {
-    const { assignedTo, project } = req.body;
+    const { assignedTo, project, team } = req.body;
     let adminId;
 
     // Get adminId based on user role
@@ -85,6 +86,22 @@ exports.createTask = async (req, res) => {
       adminId = manager.adminId;
     } else {
       return res.status(403).json({ success: false, error: 'Not authorized to create tasks' });
+    }
+
+    // Prepare final assignment list
+    let finalAssignedTo = Array.isArray(assignedTo) ? [...assignedTo] : (assignedTo ? [assignedTo] : []);
+
+    // If team specified, add team members to finalAssignedTo
+    if (team) {
+      const foundTeam = await Team.findById(team);
+      if (foundTeam) {
+        // Add all team members, ensuring uniqueness
+        foundTeam.members.forEach(memberId => {
+          if (!finalAssignedTo.includes(memberId.toString())) {
+            finalAssignedTo.push(memberId.toString());
+          }
+        });
+      }
     }
 
     // If project specified, verify ownership and same workspace
@@ -99,7 +116,8 @@ exports.createTask = async (req, res) => {
     const task = await Task.create({
       ...req.body,
       assignedBy: req.user.id,
-      assignedTo: Array.isArray(assignedTo) ? assignedTo : [assignedTo],
+      assignedTo: finalAssignedTo,
+      team: team || undefined,
       adminId: adminId
     });
 

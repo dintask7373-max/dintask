@@ -45,22 +45,40 @@ const TeamProgress = () => {
         return tasks.filter(t => t.delegatedBy === user?.id);
     }, [tasks, user]);
 
+    const teamMembers = useMemo(() => {
+        const userId = (user?._id || user?.id)?.toString();
+        const userAdminId = (user?.adminId?._id || user?.adminId)?.toString();
+
+        return employees.filter(e => {
+            const empAdminId = (e.adminId?._id || e.adminId)?.toString();
+            const empManagerId = (e.managerId?._id || e.managerId)?.toString();
+
+            return e.role === 'employee' &&
+                (empManagerId === userId || empAdminId === userAdminId);
+        });
+    }, [employees, user]);
+
     const performanceData = useMemo(() => {
-        const teamMembers = employees.filter(e => e.managerId === user?.id);
         return teamMembers.map(member => {
-            const memberTasks = tasks.filter(t => t.assignedTo?.includes(member.id));
+            const memberId = (member._id || member.id)?.toString();
+            const memberTasks = tasks.filter(t => {
+                const assignees = Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo];
+                return assignees.some(a => (a?._id || a || "").toString() === memberId);
+            });
+
             const completed = memberTasks.filter(t => t.status === 'completed').length;
             const activeTasks = memberTasks.length - completed;
             const rate = memberTasks.length > 0 ? Math.round((completed / memberTasks.length) * 100) : 0;
+
             return {
-                name: member.name.split(' ')[0],
+                name: (member.name || 'Unknown').split(' ')[0],
                 tasks: memberTasks.length,
                 completed: completed,
                 rate: rate,
                 efficiency: Math.min(100, rate + (activeTasks > 0 ? 10 : 0))
             };
         });
-    }, [tasks, employees, user]);
+    }, [tasks, teamMembers]);
 
     const stats = useMemo(() => {
         const completed = teamTasks.filter(t => t.status === 'completed').length;

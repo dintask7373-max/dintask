@@ -219,6 +219,41 @@ exports.deleteLead = async (req, res) => {
   }
 };
 
+// @desc    Bulk delete leads
+// @route   POST /api/crm/leads/bulk-delete
+// @access  Private (Admin, Sales)
+exports.bulkDeleteLeads = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'Lead IDs are required' });
+    }
+
+    // Get user's adminId
+    let userAdminId;
+    if (req.user.role === 'admin') {
+      userAdminId = req.user.id;
+    } else if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
+      const salesExec = await SalesExecutive.findById(req.user.id);
+      userAdminId = salesExec?.adminId;
+    }
+
+    // Delete leads that belong to this admin's workspace
+    const result = await Lead.deleteMany({
+      _id: { $in: ids },
+      adminId: userAdminId
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {},
+      message: `Successfully deleted ${result.deletedCount} leads`
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
 
 // @desc    Request project conversion
 // @route   PUT /api/crm/leads/:id/request-project

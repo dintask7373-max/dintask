@@ -45,8 +45,14 @@ exports.registerAdmin = async (req, res, next) => {
 // @access  Private (Admin)
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const adminId = req.user.id; // Get admin's ID
-    console.log(`[DEBUG] getAllUsers - Logged in Admin ID: ${adminId}, Email: ${req.user.email}`);
+    // For Admin, ID is the workspace ID. For Manager, adminId field is the workspace ID.
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+
+    if (!adminId) {
+      return next(new ErrorResponse('Workspace ID not found for this user', 400));
+    }
+
+    console.log(`[DEBUG] getAllUsers - Role: ${req.user.role}, Workspace Admin ID: ${adminId}`);
 
 
     // Fetch only users from THIS admin's workspace
@@ -335,6 +341,7 @@ exports.addTeamMember = async (req, res, next) => {
       password,
       role,
       adminId,
+      managerId: req.body.managerId,
       phoneNumber,
       status: 'active', // Direct add is active
       isActive: true
@@ -354,7 +361,10 @@ exports.addTeamMember = async (req, res, next) => {
 // @access  Private (Admin)
 exports.getSubscriptionLimitStatus = async (req, res, next) => {
   try {
-    const adminId = req.user.id;
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+    if (!adminId) {
+      return next(new ErrorResponse('Workspace ID not found for this user', 400));
+    }
     const checkUserLimit = require('../utils/checkUserLimit');
 
     const limitStatus = await checkUserLimit(adminId);

@@ -60,17 +60,28 @@ const TaskDelegation = () => {
     };
 
     const pendingTasks = useMemo(() => {
-        return tasks.filter(t =>
-            t.assignedToManager === user?.id &&
-            !t.delegatedBy &&
-            t.status !== 'completed'
-        ).filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
+        const userId = (user?._id || user?.id)?.toString();
+        return tasks.filter(t => {
+            const isAssignedToMe = Array.isArray(t.assignedTo)
+                ? t.assignedTo.some(id => (id._id || id)?.toString() === userId)
+                : (t.assignedTo?._id || t.assignedTo)?.toString() === userId;
+
+            const isAssignedByMe = (t.assignedBy?._id || t.assignedBy)?.toString() === userId;
+
+            // Pending in delegation means assigned to me but not yet further delegated
+            // Or just generally tasks I have oversight of.
+            // For now, let's keep it consistent: tasks where I'm involved.
+            return (isAssignedToMe || isAssignedByMe) && t.status !== 'completed';
+        }).filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [tasks, user, searchTerm]);
 
     const delegatedTasks = useMemo(() => {
-        return tasks.filter(t =>
-            t.delegatedBy === user?.id
-        ).filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
+        const userId = (user?._id || user?.id)?.toString();
+        return tasks.filter(t => {
+            const isAssignedByMe = (t.assignedBy?._id || t.assignedBy)?.toString() === userId;
+            // A task is "delegated" if I assigned it to others.
+            return isAssignedByMe;
+        }).filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [tasks, user, searchTerm]);
 
     const teamMembers = useMemo(() => {

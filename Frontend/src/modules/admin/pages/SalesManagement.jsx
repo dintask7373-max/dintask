@@ -553,7 +553,7 @@ const SalesManagement = () => {
                 <DialogContent className="sm:max-w-md rounded-3xl">
                     <DialogHeader>
                         <DialogTitle>Add New Sales Rep</DialogTitle>
-                        <DialogDescription>Create a new sales representative account.</DialogDescription>
+                        <DialogDescription>Input personnel details to initialize a new sales representative account.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddRep} className="space-y-4 py-4">
                         <div className="grid gap-2 text-left">
@@ -577,7 +577,7 @@ const SalesManagement = () => {
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Add New Deal</DialogTitle>
-                        <DialogDescription>Create a new deal and assign it to a team member.</DialogDescription>
+                        <DialogDescription>Initialize a new sales opportunity and assign it to a designated representative.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">

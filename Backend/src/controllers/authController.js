@@ -35,7 +35,8 @@ const sendTokenResponse = async (user, statusCode, res) => {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: normalizedRole
+    role: normalizedRole,
+    adminId: user.adminId
   };
 
   // Include plan details for Admins
@@ -254,7 +255,8 @@ exports.getMe = async (req, res, next) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      adminId: user.adminId
     };
 
     if (user.role === 'admin') {
