@@ -173,28 +173,15 @@ const AppRouter = () => {
             {/* --- ADMIN ROUTES --- */}
             {/* Main Admin Panel */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout role="admin" /></ProtectedRoute>}>
-<<<<<<< HEAD
-                <Route index element={<AdminSubscriptionProtectedRoute><AdminDashboard /></AdminSubscriptionProtectedRoute>} />
-                <Route path="managers" element={<AdminSubscriptionProtectedRoute><ManagerManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="employees" element={<AdminSubscriptionProtectedRoute><EmployeeManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="sales" element={<AdminSubscriptionProtectedRoute><SalesManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="projects" element={<AdminSubscriptionProtectedRoute><AdminProjects /></AdminSubscriptionProtectedRoute>} />
-                <Route path="projects/approvals" element={<AdminSubscriptionProtectedRoute><ProjectApprovals /></AdminSubscriptionProtectedRoute>} />
-                <Route path="reports" element={<AdminSubscriptionProtectedRoute><Reports /></AdminSubscriptionProtectedRoute>} />
-                <Route path="chat" element={<AdminSubscriptionProtectedRoute><AdminChat /></AdminSubscriptionProtectedRoute>} />
-                <Route path="calendar" element={<AdminSubscriptionProtectedRoute><AdminCalendar /></AdminSubscriptionProtectedRoute>} />
-                {/* Subscription page is NOT wrapped - always accessible */}
-=======
                 <Route index element={<AdminDashboard />} />
                 <Route path="managers" element={<ManagerManagement />} />
                 <Route path="employees" element={<EmployeeManagement />} />
                 <Route path="sales" element={<SalesManagement />} />
-                {/* Task module removed for Admin as they don't assign tasks anymore */}
+                <Route path="projects" element={<AdminProjects />} />
                 <Route path="projects/approvals" element={<ProjectApprovals />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="chat" element={<AdminChat />} />
                 <Route path="calendar" element={<AdminCalendar />} />
->>>>>>> 1ec903f5e54852f8dcedfd9abae5d0c06d05223d
                 <Route path="subscription" element={<AdminSubscription />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="requests" element={<JoinRequests />} />
