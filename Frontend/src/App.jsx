@@ -5,11 +5,12 @@ import AppRouter from './router/AppRouter';
 import useAuthStore from './store/authStore';
 import useSubscriptionMonitor from './hooks/useSubscriptionMonitor';
 import SubscriptionExpiredModal from './shared/components/SubscriptionExpiredModal';
+import AdminSubscriptionExpiredModal from './shared/components/AdminSubscriptionExpiredModal';
 import './index.css';
 
 function App() {
   const { isAuthenticated, fetchProfile } = useAuthStore();
-  const { showExpiredModal, handleLogout } = useSubscriptionMonitor();
+  const { showTeamExpiredModal, showAdminExpiredModal, handleTeamLogout, adminExpiryDate } = useSubscriptionMonitor();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -23,10 +24,16 @@ function App() {
         <AppRouter />
         <Toaster richColors position="top-right" />
 
-        {/* Subscription Expiry Modal for Team Members */}
+        {/* Team Member: Subscription Expiry Modal (Forces Logout) */}
         <SubscriptionExpiredModal
-          isOpen={showExpiredModal}
-          onLogout={handleLogout}
+          isOpen={showTeamExpiredModal}
+          onLogout={handleTeamLogout}
+        />
+
+        {/* Admin: Subscription Expiry Modal (Restricts Access) */}
+        <AdminSubscriptionExpiredModal
+          isOpen={showAdminExpiredModal}
+          expiryDate={adminExpiryDate}
         />
       </div>
     </BrowserRouter>

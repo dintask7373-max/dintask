@@ -43,7 +43,15 @@ const sendTokenResponse = async (user, statusCode, res) => {
     // We need to populate it if not already
     await user.populate('subscriptionPlanId');
     userData.subscriptionPlan = user.subscriptionPlan;
+    userData.subscriptionPlanId = user.subscriptionPlanId?._id;
     userData.planDetails = user.subscriptionPlanId;
+    userData.subscriptionStatus = user.subscriptionStatus;
+    userData.subscriptionExpiry = user.subscriptionExpiry;
+
+    // Check if subscription has expired
+    const now = new Date();
+    const expiryDate = new Date(user.subscriptionExpiry);
+    userData.subscriptionExpired = expiryDate < now;
   }
 
   res.status(statusCode).json({
@@ -251,9 +259,15 @@ exports.getMe = async (req, res, next) => {
 
     if (user.role === 'admin') {
       userData.subscriptionPlan = user.subscriptionPlan;
+      userData.subscriptionPlanId = user.subscriptionPlanId?._id;
       userData.planDetails = user.subscriptionPlanId;
       userData.subscriptionStatus = user.subscriptionStatus;
       userData.subscriptionExpiry = user.subscriptionExpiry;
+
+      // Check if subscription has expired
+      const now = new Date();
+      const expiryDate = new Date(user.subscriptionExpiry);
+      userData.subscriptionExpired = expiryDate < now;
     }
 
     res.status(200).json({
