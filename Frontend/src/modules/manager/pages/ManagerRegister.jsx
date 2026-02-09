@@ -102,137 +102,125 @@ const ManagerRegister = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 relative overflow-hidden font-sans">
-            {/* Background elements */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-600 via-indigo-600 to-primary-600" />
-            <div className="absolute -top-24 -left-24 size-96 bg-primary-600/5 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -right-24 size-96 bg-indigo-600/5 rounded-full blur-3xl" />
-
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-[420px] z-10"
-            >
-                <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-white/20">
-                    <CardHeader className="text-center space-y-1 pt-10 pb-6 px-8">
-                        <div className="flex justify-center mb-6">
-                            <div className="relative group">
-                                <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full scale-150 group-hover:bg-primary-500/30 transition-all" />
-                                <div className={cn(
-                                    "relative p-4 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl border transition-all duration-500 group-hover:rotate-6",
-                                    referralCode ? "border-emerald-100 dark:border-emerald-900/20 text-emerald-600" : adminId ? "border-indigo-100 dark:border-indigo-900/20 text-indigo-600" : "border-primary-100 dark:border-primary-900/20 text-primary-600"
-                                )}>
-                                    {referralCode ? <Link2 className="w-10 h-10" /> : adminId ? <Mail className="w-10 h-10" /> : <ShieldCheck className="w-10 h-10" />}
-                                </div>
-                            </div>
-                        </div>
-                        <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">
-                            {referralCode ? 'Join' : adminId ? 'Accept' : 'Register'} <span className="text-primary-600">Asset</span>
-                        </CardTitle>
-                        <CardDescription className="text-[10px] font-black font-mono text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] italic mt-2">
-                            {referralCode ? (
-                                <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">
-                                    NODE_UPLINK: {referralCode}
-                                </span>
-                            ) : adminId ? (
-                                <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-full">
-                                    SECURE_INVITE: RECEIVED
-                                </span>
-                            ) : '[ NEW_FORCE_APPLICATION ]'}
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-6 px-8 pb-8">
-                        <form onSubmit={handleRegister} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="fullName" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset Nomenclature</Label>
-                                <div className="relative group">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
-                                    <Input
-                                        id="fullName"
-                                        type="text"
-                                        placeholder="FULL_NAME"
-                                        value={formData.fullName}
-                                        onChange={handleChange}
-                                        className="h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs uppercase"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="email" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Force Identity (Email)</Label>
-                                <div className="relative group">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="SYNC@DINTASK.SOL"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        readOnly={!!inviteEmail}
-                                        className={`h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs uppercase ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="password" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Primary Key</Label>
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            placeholder="••••"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            className="h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="confirmPassword" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Verify Key</Label>
-                                    <div className="relative group">
-                                        <Shield className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
-                                        <Input
-                                            id="confirmPassword"
-                                            type="password"
-                                            placeholder="••••"
-                                            value={formData.confirmPassword}
-                                            onChange={handleChange}
-                                            className="h-11 pl-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-bold text-xs"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full h-12 text-[10px] font-black uppercase tracking-[0.2em] transition-all bg-slate-900 hover:bg-primary-600 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-primary-600 dark:hover:text-white rounded-2xl shadow-xl shadow-slate-900/10 active:scale-95"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="size-4 animate-spin rounded-full border-2 border-slate-400 border-t-white" />
-                                        COMMITTING...
-                                    </div>
-                                ) : (
-                                    <><Zap size={14} className="mr-2 fill-current" /> Register Profile</>
-                                )}
-                            </Button>
-                        </form>
-                    </CardContent>
-                    <CardFooter className="px-8 py-6 bg-slate-50/30 dark:bg-slate-900/50 border-t border-slate-50 dark:border-slate-800/50 flex justify-center">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                            Already Authenticated? <Link to="/manager/login" className="text-primary-1000 dark:text-primary-400 hover:underline">LOGIN ASSET</Link>
-                        </p>
-                    </CardFooter>
-                </Card>
-                <div className="mt-8 flex justify-center items-center gap-3 text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] opacity-40">
-                    <Terminal size={12} /> PROTOCOL_V4.2_REG_MODULE
+        <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
+            {/* Brand Side */}
+            <div className="hidden md:flex md:w-1/2 bg-slate-900 relative items-center justify-center p-12 overflow-hidden">
+                <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+                <div className="relative z-10 text-white space-y-6 max-w-md">
+                    <div className="h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-900/30">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-9 w-9 object-contain" />
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight">Deploy your leadership potential.</h1>
+                    <p className="text-slate-400 text-lg">Join the DinTask ecosystem to orchestrate teams, manage complex workflows, and drive organizational success.</p>
                 </div>
-            </motion.div>
+            </div>
+
+            {/* Form Side */}
+            <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+                {/* Decorative element for mobile */}
+                <div className="md:hidden absolute top-0 left-0 w-full h-1 bg-primary-600 shadow-[0_0_20px_rgba(99,116,242,0.5)]" />
+
+                <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="text-center md:text-left">
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                            {referralCode ? 'Join Workspace' : adminId ? 'Accept Invite' : 'Manager Registration'}
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2">
+                            {referralCode ? `Initiating uplink to node: ${referralCode}` : adminId ? 'Secure invitation accepted. Build your profile.' : 'Create your credentials to join the force.'}
+                        </p>
+                    </div>
+
+                    <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
+                        <CardContent className="pt-8 pb-8 px-8 space-y-6">
+                            <form onSubmit={handleRegister} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Asset Nomenclature</Label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <Input
+                                            id="fullName"
+                                            type="text"
+                                            placeholder="FULL NAME"
+                                            value={formData.fullName}
+                                            onChange={handleChange}
+                                            className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Work Email</Label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="manager@company.com"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            readOnly={!!inviteEmail}
+                                            className={cn(
+                                                "h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800",
+                                                inviteEmail && "opacity-70 cursor-not-allowed"
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Security Key</Label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                placeholder="••••"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Verify Key</Label>
+                                        <div className="relative">
+                                            <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <Input
+                                                id="confirmPassword"
+                                                type="password"
+                                                placeholder="••••"
+                                                value={formData.confirmPassword}
+                                                onChange={handleChange}
+                                                className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20 active:scale-95 transition-transform"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Registering...' : <><Zap size={16} className="mr-2 fill-current" /> Register Profile</>}
+                                </Button>
+                            </form>
+
+                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Already a manager?</span>
+                                <Link to="/manager/login" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-600 hover:text-primary-700 underline decoration-2 underline-offset-4">
+                                    Login Asset
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <p className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        &copy; 2026 DinTask Inc. Protocol V4.2_REG_MODULE
+                    </p>
+                </div>
+            </div>
         </div>
     );
 };

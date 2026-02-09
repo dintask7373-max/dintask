@@ -68,150 +68,198 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
     };
 
     return (
-        <div className="min-h-screen w-full bg-slate-50 relative flex flex-col items-center justify-start font-sans overflow-x-hidden">
-            {/* Horizontal Top Background */}
-            <div className="w-full h-[320px] relative overflow-hidden">
-                <img
-                    src="/WLCOMPAGE .png"
-                    alt="Background"
-                    className="w-full h-full object-cover object-top"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+        <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
+            {/* Brand Side */}
+            <div className="hidden md:flex md:w-1/2 bg-slate-900 relative items-center justify-center p-12 overflow-hidden">
+                <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+                <div className="relative z-10 text-white space-y-6 max-w-md">
+                    <div className="h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-900/30">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-9 w-9 object-contain" />
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight">Security & Identity Management</h1>
+                    <p className="text-slate-400 text-lg">Regain access to your tactical workspace through our encrypted recovery protocol.</p>
+
+                    <div className="pt-8 grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                            <Shield className="text-primary-400 mb-2" size={20} />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">Hardened</h3>
+                            <p className="text-[10px] text-slate-500">End-to-end encryption for all recovery steps.</p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                            <Zap className="text-amber-400 mb-2" size={20} />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">Swift</h3>
+                            <p className="text-[10px] text-slate-500">Real-time OTP delivery via secure channels.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Premium Forgot Password Card */}
-            <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
-                <div className="bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] p-10 md:p-12 border border-white/40">
-                    <div className="text-center mb-10">
-                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">
-                            {step === 0 && 'Reset'}
-                            {step === 1 && 'Verify'}
-                            {step === 2 && 'New Key'}
-                            {step === 3 && 'Restored'}
-                        </h1>
-                        <p className="text-slate-400 text-xs font-medium italic">
-                            {step === 0 && 'Confirm your identity'}
-                            {step === 1 && 'Enter verification code'}
-                            {step === 2 && 'Create new credentials'}
-                            {step === 3 && 'Password successfully updated'}
+            {/* Form Side */}
+            <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+                {/* Decorative element for mobile */}
+                <div className="md:hidden absolute top-0 left-0 w-full h-1 bg-primary-600 shadow-[0_0_20px_rgba(99,116,242,0.5)]" />
+
+                <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="text-center md:text-left">
+                        <button
+                            onClick={() => step > 0 ? setStep(step - 1) : navigate(returnPath)}
+                            className="group mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary-600 transition-colors"
+                        >
+                            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                            {step === 0 ? 'Back to Login' : 'Previous Step'}
+                        </button>
+
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                            {step === 0 && 'Identity Recovery'}
+                            {step === 1 && 'Confirm Entry'}
+                            {step === 2 && 'New Encryption Key'}
+                            {step === 3 && 'Access Restored'}
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2">
+                            {step === 0 && 'Provide your linked work email to initiate reset.'}
+                            {step === 1 && 'A secure cipher has been dispatched to your email.'}
+                            {step === 2 && 'Create a strong, unique password for your account.'}
+                            {step === 3 && 'Verification protocols complete. Redirecting enabled.'}
                         </p>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Step 0: Email Input */}
-                        {step === 0 && (
-                            <form onSubmit={handleSendOTP} className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="email" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Email Address</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="name@company.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
-                                    />
-                                </div>
-                                <Button
-                                    type="submit"
-                                    className="w-full h-12 text-sm font-bold bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20 transition-all active:scale-[0.98] mt-2"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? 'Processing...' : 'Send Recovery Code'}
-                                </Button>
-                            </form>
-                        )}
-
-                        {/* Step 1: OTP Input */}
-                        {step === 1 && (
-                            <form onSubmit={handleVerifyOTP} className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="otp" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Verification Code</Label>
-                                    <Input
-                                        id="otp"
-                                        type="text"
-                                        placeholder="• • • • • •"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-bold text-xl tracking-[0.4em] text-center placeholder:text-slate-200 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
-                                        maxLength={6}
-                                    />
-                                    <p className="text-[10px] text-center text-slate-400 mt-2 font-bold uppercase tracking-wider italic">Sent to: {email}</p>
-                                </div>
-                                <Button
-                                    type="submit"
-                                    className="w-full h-12 text-sm font-bold bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20 transition-all active:scale-[0.98] mt-2"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? 'Verifying...' : 'Verify Access'}
-                                </Button>
-                                <button type="button" onClick={() => setStep(0)} className="w-full text-center text-[11px] font-bold text-slate-400 hover:text-[#4461f2] uppercase tracking-[0.15em]">
-                                    Use Different ID
-                                </button>
-                            </form>
-                        )}
-
-                        {/* Step 2: New Password Input */}
-                        {step === 2 && (
-                            <form onSubmit={handleResetPassword} className="space-y-6">
-                                <div className="space-y-4">
+                    <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
+                        <CardContent className="pt-8 pb-8 px-8 space-y-6">
+                            {/* Step 0: Email Input */}
+                            {step === 0 && (
+                                <form onSubmit={handleSendOTP} className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="new-pass" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">New Password</Label>
-                                        <Input
-                                            id="new-pass"
-                                            type="password"
-                                            placeholder="••••••••"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
-                                        />
+                                        <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Work Email</Label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                placeholder="admin@company.com"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="confirm-pass" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Confirm Password</Label>
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Dispatching...' : 'Initiate Recovery'}
+                                    </Button>
+                                </form>
+                            )}
+
+                            {/* Step 1: OTP Input */}
+                            {step === 1 && (
+                                <form onSubmit={handleVerifyOTP} className="space-y-6">
+                                    <div className="space-y-2 text-center">
+                                        <Label htmlFor="otp" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Verification Code</Label>
                                         <Input
-                                            id="confirm-pass"
-                                            type="password"
-                                            placeholder="••••••••"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                            id="otp"
+                                            type="text"
+                                            placeholder="••••••"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            className="h-14 px-5 bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-2xl tracking-[0.4em] text-center"
+                                            maxLength={6}
                                         />
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-4">
+                                            Identity ID: <span className="text-slate-600 dark:text-slate-200 italic">{email}</span>
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Decrypting...' : 'Verify Identity'}
+                                    </Button>
+                                </form>
+                            )}
+
+                            {/* Step 2: New Password Input */}
+                            {step === 2 && (
+                                <form onSubmit={handleResetPassword} className="space-y-4">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="new-pass" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">New Password</Label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                                <Input
+                                                    id="new-pass"
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="confirm-pass" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Confirm Identity Key</Label>
+                                            <div className="relative">
+                                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                                <Input
+                                                    id="confirm-pass"
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Applying Security...' : 'Commit New Key'}
+                                    </Button>
+                                </form>
+                            )}
+
+                            {/* Step 3: Success */}
+                            {step === 3 && (
+                                <div className="space-y-6 text-center py-4">
+                                    <div className="flex justify-center">
+                                        <div className="size-20 rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center animate-bounce">
+                                            <CheckCircle2 size={40} />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Deployment Success</h3>
+                                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 italic leading-relaxed">
+                                        Account security protocols updated. Identity verified. You may now proceed to the portal.
+                                    </p>
+                                    <Button
+                                        onClick={() => navigate(returnPath)}
+                                        className="w-full h-12 text-sm font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-900/20"
+                                    >
+                                        Return to Secure Portal
+                                    </Button>
+                                </div>
+                            )}
+
+                            {step < 3 && (
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-3">
+                                        <Terminal className="text-slate-400 animate-pulse" size={14} />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                            L2 Identity Recovery Tunnel ACTIVE
+                                        </span>
                                     </div>
                                 </div>
-                                <Button
-                                    type="submit"
-                                    className="w-full h-12 text-sm font-bold bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20 transition-all active:scale-[0.98] mt-2"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? 'Updating...' : 'Set New Credentials'}
-                                </Button>
-                            </form>
-                        )}
+                            )}
+                        </CardContent>
+                    </Card>
 
-                        {/* Step 3: Success */}
-                        {step === 3 && (
-                            <div className="space-y-8 text-center">
-                                <div className="py-4 flex justify-center">
-                                    <div className="size-20 rounded-3xl bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)]">
-                                        <CheckCircle2 size={40} />
-                                    </div>
-                                </div>
-                                <p className="text-sm font-bold text-slate-500 max-w-[280px] mx-auto italic leading-relaxed">
-                                    Your account security has been restored. You can now sign in with your new password.
-                                </p>
-                                <Button
-                                    onClick={() => navigate(returnPath)}
-                                    className="w-full h-12 text-sm font-bold bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20 transition-all active:scale-[0.98]"
-                                >
-                                    Return to Sign In
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mt-12 text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em] italic">
-                        Access Security Protocol ACTIVE
-                    </div>
+                    <p className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        &copy; 2026 DinTask Inc. Recovery Node • DT-REC-009
+                    </p>
                 </div>
             </div>
         </div>
