@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Search,
     Send,
+    Plus,
     MessageSquare,
     User,
     ArrowLeft,
@@ -40,6 +41,7 @@ const AdminChat = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [newMessage, setNewMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [showAllUsers, setShowAllUsers] = useState(false);
     const scrollRef = useRef(null);
 
     // Initial load
@@ -94,11 +96,14 @@ const AdminChat = () => {
         const targetModel = targetUser.role ? getModelName(targetUser.role) : 'Employee';
         await accessOrCreateChat(targetUser._id, targetModel, currentUser.workspaceId || 'global');
         setSearchTerm('');
+        setShowAllUsers(false);
     };
 
     const getChatPartner = (chat) => {
+        if (!chat) return null;
         if (chat.isGroup) return { name: chat.groupName, avatar: chat.groupAvatar };
-        return chat.participants.find(p => p.user._id !== currentUser?._id)?.user || { name: 'Unknown', avatar: '' };
+        const currentId = currentUser?._id || currentUser?.id;
+        return chat.participants.find(p => (p.user?._id || p.user?.id) !== currentId)?.user || { name: 'Unknown', avatar: '' };
     };
 
     return (
@@ -110,11 +115,24 @@ const AdminChat = () => {
                     activeConversation ? "hidden lg:flex" : "flex"
                 )}>
                     <div className="p-4 lg:p-6 border-b border-slate-50 dark:border-slate-800">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="lg:hidden w-8 h-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                                <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="lg:hidden w-8 h-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                                    <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                                </div>
+                                <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight">Messenger</h1>
                             </div>
-                            <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight">Messenger</h1>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowAllUsers(!showAllUsers)}
+                                className={cn(
+                                    "size-8 rounded-lg transition-all",
+                                    showAllUsers ? "bg-primary-600 text-white shadow-lg rotate-45" : "bg-slate-50 dark:bg-slate-800 text-slate-400"
+                                )}
+                            >
+                                <Plus size={16} />
+                            </Button>
                         </div>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
@@ -122,13 +140,49 @@ const AdminChat = () => {
                                 placeholder="Search employees..."
                                 className="h-9 pl-9 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-xs font-bold"
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    if (e.target.value) setShowAllUsers(false);
+                                }}
                             />
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-2 space-y-1">
+                            {/* Full Connection List */}
+                            {showAllUsers && !searchTerm && (
+                                <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <p className="px-3 text-[9px] font-black text-primary-600 uppercase tracking-widest mb-2">Internal Directory</p>
+                                    {employees.filter(u => u._id !== currentUser?._id).map(emp => (
+                                        <button
+                                            key={emp._id}
+                                            onClick={() => handleStartChat(emp)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/20 text-left transition-all"
+                                        >
+                                            <div className="relative">
+                                                <Avatar className="h-9 w-9">
+                                                    <AvatarImage src={emp.avatar} />
+                                                    <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
+                                                        {emp.name.charAt(0)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                                    {emp.name}
+                                                    <Badge className="bg-slate-100 text-slate-500 text-[7px] h-3 px-1 border-none">
+                                                        {emp.role?.toUpperCase() || 'MEMBER'}
+                                                    </Badge>
+                                                </h3>
+                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
+                                </div>
+                            )}
                             {/* Search Results */}
                             {searchTerm && filteredEmployees.length > 0 && (
                                 <div className="mb-4">
@@ -276,6 +330,17 @@ const AdminChat = () => {
                                                     "max-w-[85%] sm:max-w-[70%] space-y-1",
                                                     isMe ? "items-end" : "items-start"
                                                 )}>
+                                                    <div className="flex items-center gap-1.5 px-1 mb-1">
+                                                        <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                            {isMe ? `YOU (${currentUser?.name})` : (msg.senderId?.name || "Partner")}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "text-[7px] font-bold text-white uppercase tracking-widest px-1.5 py-0.5 rounded",
+                                                            isMe ? "bg-slate-500" : "bg-primary-600"
+                                                        )}>
+                                                            {isMe ? 'ADMIN' : (msg.senderId?.role || 'MEMBER').toUpperCase()}
+                                                        </span>
+                                                    </div>
                                                     <div className={cn(
                                                         "px-4 py-2 sm:px-5 sm:py-3 rounded-2xl group relative",
                                                         isMe

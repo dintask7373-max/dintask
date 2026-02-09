@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Search,
     Send,
+    Plus,
     MessageSquare,
     User,
     ArrowLeft,
@@ -45,6 +46,7 @@ const ManagerChat = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [newMessage, setNewMessage] = useState('');
+    const [showAllUsers, setShowAllUsers] = useState(false);
     const scrollRef = useRef(null);
 
     // Initial load
@@ -99,11 +101,14 @@ const ManagerChat = () => {
         const targetModel = targetUser.role ? getModelName(targetUser.role) : 'Employee';
         await accessOrCreateChat(targetUser._id, targetModel, currentUser.workspaceId || 'global');
         setSearchTerm('');
+        setShowAllUsers(false);
     };
 
     const getChatPartner = (chat) => {
+        if (!chat) return null;
         if (chat.isGroup) return { name: chat.groupName, avatar: chat.groupAvatar };
-        return chat.participants.find(p => p.user._id !== currentUser?._id)?.user || { name: 'Unknown', avatar: '' };
+        const currentId = currentUser?._id || currentUser?.id;
+        return chat.participants.find(p => (p.user?._id || p.user?.id) !== currentId)?.user || { name: 'Unknown', avatar: '' };
     };
 
     return (
@@ -116,7 +121,20 @@ const ManagerChat = () => {
                 <div className="p-5 border-b border-slate-50 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4 px-1">
                         <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Neural <span className="text-primary-600">Links</span></h1>
-                        <Badge variant="ghost" className="bg-primary-50 text-primary-600 text-[8px] font-black tracking-widest px-2 h-5">ENCRYPTED</Badge>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowAllUsers(!showAllUsers)}
+                                className={cn(
+                                    "size-8 rounded-lg transition-all",
+                                    showAllUsers ? "bg-primary-600 text-white shadow-lg rotate-45" : "bg-slate-50 dark:bg-slate-800 text-slate-400"
+                                )}
+                            >
+                                <Plus size={16} />
+                            </Button>
+                            <Badge variant="ghost" className="bg-primary-50 text-primary-600 text-[8px] font-black tracking-widest px-2 h-5">ENCRYPTED</Badge>
+                        </div>
                     </div>
                     <div className="relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
@@ -124,13 +142,49 @@ const ManagerChat = () => {
                             placeholder="SEARCH NODE ID..."
                             className="h-11 pl-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-black text-[10px] uppercase tracking-widest placeholder:text-slate-300"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                if (e.target.value) setShowAllUsers(false);
+                            }}
                         />
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
                     <div className="p-2.5 space-y-1">
+                        {/* Full Connection List */}
+                        {showAllUsers && !searchTerm && (
+                            <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <p className="px-3 text-[8px] font-black text-primary-600 uppercase tracking-[0.3em] mb-3">Available Neural Nodes</p>
+                                {employees.filter(e => e._id !== currentUser?._id).map(emp => (
+                                    <button
+                                        key={emp._id}
+                                        onClick={() => handleStartChat(emp)}
+                                        className="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/30 text-left transition-all"
+                                    >
+                                        <div className="relative">
+                                            <Avatar className="h-11 w-11 rounded-xl">
+                                                <AvatarImage src={emp.avatar} />
+                                                <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs">
+                                                    {emp.name.charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-[3px] border-white dark:border-slate-900 rounded-lg shadow-sm" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                                {emp.name}
+                                                <Badge className="bg-slate-100 text-slate-500 text-[8px] h-4 px-1.5 border-none">
+                                                    {emp.role?.toUpperCase() || 'MEMBER'}
+                                                </Badge>
+                                            </h3>
+                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-4 mx-2" />
+                            </div>
+                        )}
                         {/* Search Results */}
                         {searchTerm && filteredResults.length > 0 && (
                             <div className="mb-4">
@@ -299,6 +353,17 @@ const ManagerChat = () => {
                                                     "max-w-[85%] sm:max-w-[70%] space-y-1.5 flex flex-col",
                                                     isMe ? "items-end" : "items-start"
                                                 )}>
+                                                    <div className="flex items-center gap-1.5 px-1">
+                                                        <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                            {isMe ? `YOU (${currentUser?.name})` : (msg.senderId?.name || "Partner")}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "text-[7px] font-bold text-white uppercase tracking-widest px-1.5 py-0.5 rounded",
+                                                            isMe ? "bg-slate-500" : "bg-primary-600"
+                                                        )}>
+                                                            {isMe ? 'OPERATOR' : (msg.senderId?.role || 'EMPLOYEE').toUpperCase()}
+                                                        </span>
+                                                    </div>
                                                     <div className={cn(
                                                         "px-4 py-3 rounded-2xl text-[13px] font-bold shadow-xl transition-all duration-300 relative",
                                                         isMe

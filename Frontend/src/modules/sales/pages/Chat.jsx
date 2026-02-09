@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Search,
     Send,
+    Plus,
     MessageSquare,
     User,
     ArrowLeft,
@@ -25,10 +26,11 @@ import { Badge } from '@/shared/components/ui/badge';
 
 import useAuthStore from '@/store/authStore';
 import useChatStore from '@/store/chatStore';
-import useCRMStore from '@/store/crmStore';
+import useEmployeeStore from '@/store/employeeStore';
 
 const SalesChat = () => {
     const { user: currentUser, role: userRole } = useAuthStore();
+    const { employees: allUsers, fetchEmployees } = useEmployeeStore();
     const {
         conversations,
         activeConversation,
@@ -42,12 +44,14 @@ const SalesChat = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [newMessage, setNewMessage] = useState('');
+    const [showAllUsers, setShowAllUsers] = useState(false);
     const scrollRef = useRef(null);
 
     // Initial load
     useEffect(() => {
         fetchConversations();
-    }, [fetchConversations]);
+        fetchEmployees();
+    }, [fetchConversations, fetchEmployees]);
 
     // Map role to DB Model
     const getModelName = (role) => {
@@ -60,6 +64,40 @@ const SalesChat = () => {
         };
         return maps[role] || 'Employee';
     };
+
+    const getChatPartner = (chat) => {
+        if (!chat) return null;
+        if (chat.isGroup) return { name: chat.groupName, avatar: chat.groupAvatar };
+        const currentId = currentUser?._id || currentUser?.id;
+        return chat.participants.find(p => (p.user?._id || p.user?.id) !== currentId)?.user || { name: 'Unknown', avatar: '' };
+    };
+
+    // Filter users for search (Filter out self)
+    const filteredResults = useMemo(() => {
+        if (!searchTerm) return [];
+        const lowTerm = searchTerm.toLowerCase();
+        return allUsers.filter(u =>
+            u._id !== currentUser?._id && (
+                u.name.toLowerCase().includes(lowTerm) ||
+                u.email?.toLowerCase().includes(lowTerm) ||
+                (u.role || 'member').toLowerCase().includes(lowTerm)
+            )
+        );
+    }, [allUsers, currentUser, searchTerm]);
+
+    // Filter existing conversations
+    const filteredConversations = useMemo(() => {
+        if (!searchTerm) return conversations;
+        const lowTerm = searchTerm.toLowerCase();
+        return conversations.filter(chat => {
+            const partner = getChatPartner(chat);
+            return (
+                partner?.name?.toLowerCase().includes(lowTerm) ||
+                partner?.email?.toLowerCase().includes(lowTerm) ||
+                (partner?.role || 'member').toLowerCase().includes(lowTerm)
+            );
+        });
+    }, [conversations, searchTerm]);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -84,20 +122,16 @@ const SalesChat = () => {
     };
 
     const handleStartChat = async (targetUser) => {
-        // targetUser could be anyone from search
         const targetModel = targetUser.role ? getModelName(targetUser.role) : 'Employee';
         await accessOrCreateChat(targetUser._id, targetModel, currentUser.workspaceId || 'global');
         setSearchTerm('');
+        setShowAllUsers(false);
     };
 
-    const getChatPartner = (chat) => {
-        if (!chat) return null;
-        if (chat.isGroup) return { name: chat.groupName, avatar: chat.groupAvatar };
-        return chat.participants.find(p => p.user._id !== currentUser?._id)?.user || { name: 'Unknown', avatar: '' };
-    };
+    const noResultsFound = searchTerm && filteredResults.length === 0 && filteredConversations.length === 0;
 
     return (
-        <div className="flex h-[calc(100vh-140px)] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all duration-500">
+        <div className="flex h-[calc(100vh-180px)] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all duration-500">
             {/* Sales Comms Sidebar */}
             <div className={cn(
                 "w-full md:w-80 flex-shrink-0 border-r border-slate-50 dark:border-slate-800 flex flex-col transition-all",
@@ -106,13 +140,111 @@ const SalesChat = () => {
                 <div className="p-5 border-b border-slate-50 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4 px-1">
                         <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic text-emerald-600">Sales <span className="text-slate-900 dark:text-white">Uplink</span></h1>
-                        <Badge variant="outline" className="text-[8px] font-black tracking-widest px-2 h-5 border-emerald-500/20 text-emerald-600">ENCRYPTED</Badge>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowAllUsers(!showAllUsers)}
+                                className={cn(
+                                    "size-8 rounded-lg transition-all",
+                                    showAllUsers ? "bg-emerald-600 text-white rotate-45" : "bg-slate-50 dark:bg-slate-800 text-slate-400"
+                                )}
+                            >
+                                <Plus size={16} />
+                            </Button>
+                            <Badge variant="outline" className="text-[8px] font-black tracking-widest px-2 h-5 border-emerald-500/20 text-emerald-600">ENCRYPTED</Badge>
+                        </div>
+                    </div>
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                        <Input
+                            placeholder="SEARCH BY NAME, EMAIL OR ROLE..."
+                            className="h-11 pl-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-black text-[10px] uppercase tracking-widest placeholder:text-slate-300 shadow-inner"
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                if (e.target.value) setShowAllUsers(false);
+                            }}
+                        />
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
                     <div className="p-2.5 space-y-1">
-                        {conversations.length > 0 ? conversations.map((chat) => {
+                        {/* Full Connection List */}
+                        {showAllUsers && !searchTerm && (
+                            <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="flex items-center justify-between px-3 mb-3">
+                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.3em]">Connected Terminals</p>
+                                    <span className="text-[7px] font-bold text-slate-400">{allUsers.length - 1} ONLINE</span>
+                                </div>
+                                {allUsers.filter(u => u._id !== currentUser?._id).map(person => (
+                                    <button
+                                        key={person._id}
+                                        onClick={() => handleStartChat(person)}
+                                        className="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/30 text-left transition-all group"
+                                    >
+                                        <div className="relative">
+                                            <Avatar className="h-11 w-11 rounded-xl">
+                                                <AvatarImage src={person.avatar} className="object-cover" />
+                                                <AvatarFallback className="bg-emerald-50 text-emerald-600 font-black text-xs uppercase">
+                                                    {person.name.charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-[3px] border-white dark:border-slate-900 rounded-lg shadow-sm" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                                {person.name}
+                                                <Badge className="bg-slate-100 text-slate-500 text-[8px] h-4 px-1.5 border-none">
+                                                    {person.role?.toUpperCase() || 'MEMBER'}
+                                                </Badge>
+                                            </h3>
+                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">{person.email}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-4 mx-2" />
+                            </div>
+                        )}
+                        {noResultsFound && (
+                            <div className="p-8 text-center">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">No match found for "{searchTerm}"</p>
+                            </div>
+                        )}
+                        {/* Search Results */}
+                        {searchTerm && filteredResults.length > 0 && (
+                            <div className="mb-4">
+                                <p className="px-3 text-[8px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Initialize Connection</p>
+                                {filteredResults.map(person => (
+                                    <button
+                                        key={person._id}
+                                        onClick={() => handleStartChat(person)}
+                                        className="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/30 text-left transition-all"
+                                    >
+                                        <Avatar className="h-11 w-11 rounded-xl">
+                                            <AvatarImage src={person.avatar} className="object-cover" />
+                                            <AvatarFallback className="bg-emerald-50 text-emerald-600 font-black text-xs uppercase">
+                                                {person.name.charAt(0)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                                {person.name}
+                                                <Badge className="bg-slate-100 text-slate-500 text-[8px] h-4 px-1.5 border-none">
+                                                    {person.role?.toUpperCase() || 'MEMBER'}
+                                                </Badge>
+                                            </h3>
+                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">{person.email}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-4 mx-2" />
+                            </div>
+                        )}
+
+                        {/* Filtered Active Conversations */}
+                        {filteredConversations.length > 0 ? filteredConversations.map((chat) => {
                             const partner = getChatPartner(chat);
                             const isActive = activeConversation?._id === chat._id;
 
@@ -208,13 +340,6 @@ const SalesChat = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all">
-                                    <Phone size={16} />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all">
-                                    <Video size={16} />
-                                </Button>
-                                <div className="w-px h-4 bg-slate-100 dark:bg-slate-800 mx-1" />
                                 <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                     <MoreVertical size={16} />
                                 </Button>
@@ -243,6 +368,17 @@ const SalesChat = () => {
                                                     "max-w-[85%] sm:max-w-[70%] space-y-1.5 flex flex-col",
                                                     isMe ? "items-end" : "items-start"
                                                 )}>
+                                                    <div className="flex items-center gap-1.5 px-1">
+                                                        <span className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                            {isMe ? `YOU (${currentUser?.name})` : (msg.senderId?.name || "Partner")}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "text-[7px] font-bold text-white uppercase tracking-widest px-1.5 py-0.5 rounded",
+                                                            isMe ? "bg-slate-500" : "bg-emerald-600"
+                                                        )}>
+                                                            {isMe ? 'OPERATOR' : (msg.senderId?.role || 'MEMBER').toUpperCase()}
+                                                        </span>
+                                                    </div>
                                                     <div className={cn(
                                                         "px-4 py-3 rounded-2xl text-[13px] font-bold shadow-xl transition-all duration-300 relative",
                                                         isMe

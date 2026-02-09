@@ -110,7 +110,6 @@ import PrivacyPolicy from '@/modules/user/pages/PrivacyPolicy';
 import TermsOfService from '@/modules/user/pages/TermsOfService';
 import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
-import JoinWorkspace from '@/modules/user/pages/JoinWorkspace';
 import Checkout from '@/modules/user/pages/Checkout';
 import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
@@ -213,7 +212,6 @@ const AppRouter = () => {
                 <Route path="profile/security" element={<Security />} />
                 <Route path="profile/preferences" element={<Preferences />} />
 
-                <Route path="join" element={<JoinWorkspace />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="profile/help" element={<HelpLegal />} />
                 <Route path="profile/help/privacy" element={<PrivacyPolicy />} />

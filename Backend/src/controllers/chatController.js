@@ -1,6 +1,19 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 
+// Helper to get correct model name from role
+const getModelNameFromRole = (role) => {
+    const maps = {
+        'admin': 'Admin',
+        'manager': 'Manager',
+        'employee': 'Employee',
+        'sales': 'SalesExecutive',
+        'sales_executive': 'SalesExecutive',
+        'superadmin': 'SuperAdmin'
+    };
+    return maps[role] || 'Employee';
+};
+
 // @desc    Access or Create 1-to-1 Chat
 // @route   POST /api/v1/chat
 exports.accessChat = async (req, res) => {
@@ -27,7 +40,7 @@ exports.accessChat = async (req, res) => {
             workspaceId,
             isGroup: false,
             participants: [
-                { user: req.user.id, onModel: req.user.role === 'employee' ? 'Employee' : req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1) },
+                { user: req.user.id, onModel: getModelNameFromRole(req.user.role) },
                 { user: userId, onModel: userModel }
             ]
         };
@@ -119,7 +132,7 @@ exports.createGroupChat = async (req, res) => {
         return res.status(400).json({ success: false, error: "Minimum 3 users required for group (including you)" });
     }
 
-    participants.push({ user: req.user.id, onModel: req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1) });
+    participants.push({ user: req.user.id, onModel: getModelNameFromRole(req.user.role) });
 
     try {
         const groupChat = await Conversation.create({
