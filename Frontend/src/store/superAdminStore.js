@@ -15,6 +15,10 @@ const useSuperAdminStore = create(
                 activeUsers: 0,
                 monthlyGrowthPercentage: 0
             },
+            planDistribution: [],
+            revenueTrends: [],
+            pendingSupport: [],
+            recentInquiries: [],
             systemSettings: {
                 platformName: 'DinTask CRM',
                 supportEmail: 'support@dintask.com',
@@ -60,12 +64,103 @@ const useSuperAdminStore = create(
                                 totalUsers: response.data.totalUsers,
                                 activeUsers: response.data.activeUsers,
                                 monthlyGrowthPercentage: response.data.monthlyGrowthPercentage,
-                                activeCompanies: response.data.totalUsers
+                                activeCompanies: response.data.activeCompanies || 0
                             }
                         }));
                     }
                 } catch (err) {
                     console.error('Failed to fetch dashboard stats:', err);
+                }
+            },
+
+            fetchPlanDistribution: async () => {
+                try {
+                    const response = await apiRequest('/superadmin/dashboard/plan-distribution');
+                    if (response.success) {
+                        set({ planDistribution: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch plan distribution:', err);
+                }
+            },
+
+            fetchPendingSupport: async () => {
+                try {
+                    const response = await apiRequest('/superadmin/dashboard/pending-support?limit=5');
+                    if (response.success) {
+                        set({ pendingSupport: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch pending support:', err);
+                }
+            },
+
+            // --- Full Support Module Actions ---
+            supportTickets: [],
+            fetchSupportTickets: async () => {
+                set({ loading: true });
+                try {
+                    // Backend automatically filters for SuperAdmin (escalated tickets)
+                    const response = await apiRequest('/support-tickets');
+                    if (response.success) {
+                        set({ supportTickets: response.data, loading: false });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch support tickets:', err);
+                    set({ loading: false });
+                }
+            },
+
+            replyToSupportTicket: async (id, message) => {
+                try {
+                    const response = await apiRequest(`/support-tickets/${id}`, {
+                        method: 'PUT',
+                        body: { response: message }
+                    });
+
+                    if (response.success) {
+                        set((state) => ({
+                            supportTickets: state.supportTickets.map((t) =>
+                                t._id === id ? response.data : t
+                            )
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Reply Error:', err);
+                }
+                return false;
+            },
+
+            updateSupportTicketStatus: async (id, status) => {
+                try {
+                    const response = await apiRequest(`/support-tickets/${id}`, {
+                        method: 'PUT',
+                        body: { status }
+                    });
+                    if (response.success) {
+                        set((state) => ({
+                            supportTickets: state.supportTickets.map((t) =>
+                                t._id === id ? response.data : t
+                            )
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Status Update Error:', err);
+                }
+                return false;
+            },
+            // ----------------------------------
+
+            fetchRecentInquiries: async () => {
+                try {
+                    const response = await apiRequest('/superadmin/dashboard/recent-inquiries?limit=5');
+                    if (response.success) {
+                        set({ recentInquiries: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch recent inquiries:', err);
                 }
             },
 
@@ -321,7 +416,14 @@ const useSuperAdminStore = create(
                 try {
                     const response = await apiRequest('/superadmin/billing/stats');
                     if (response.success) {
-                        set({ billingStats: response.data });
+                        set({
+                            billingStats: response.data,
+                            revenueTrends: response.data.revenueTrends || [],
+                            stats: {
+                                ...get().stats,
+                                totalRevenue: response.data.totalRevenue || 0
+                            }
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch billing stats:', err);

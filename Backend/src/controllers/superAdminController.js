@@ -455,6 +455,11 @@ exports.getSummary = async (req, res, next) => {
 
     const totalUsers = adminCount + managerCount + salesCount + employeeCount;
 
+    // Active Companies (Admins with active subscription)
+    const activeCompanies = await Admin.countDocuments({
+      subscriptionStatus: 'active'
+    });
+
     // Active Users (Logged in within last 24 hours)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const activeUsersCount = await LoginActivity.distinct('userId', {
@@ -477,6 +482,7 @@ exports.getSummary = async (req, res, next) => {
       data: {
         totalUsers,
         activeUsers: activeUsersCount,
+        activeCompanies,
         monthlyGrowthPercentage,
         averageSessionTimeInMinutes
       }
@@ -586,6 +592,47 @@ exports.getRecentLogins = async (req, res, next) => {
   }
 };
 
+// @desc    Get Plan Distribution/Adoption
+// @route   GET /api/v1/superadmin/dashboard/plan-distribution
+// @access  Private (Super Admin)
+exports.getPlanDistribution = async (req, res, next) => {
+  try {
+    const planDistribution = await Admin.aggregate([
+      {
+        $group: {
+          _id: '$subscriptionPlan',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Get all plans from Plan model for colors/details
+    const allPlans = await Plan.find({});
+
+    // Format data for pie chart
+    const formattedData = planDistribution.map(item => {
+      const plan = allPlans.find(p => p.name === item._id);
+      return {
+        name: item._id || 'No Plan',
+        value: item.count,
+        // Assign colors based on plan names
+        color: item._id === 'Starter' ? '#94a3b8' :
+          item._id === 'Pro Team' ? '#3b82f6' :
+            item._id === 'Business' ? '#8b5cf6' :
+              item._id === 'Enterprise' ? '#7c3aed' : '#cbd5e1'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedData
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const Payment = require('../models/Payment');
 
 // @desc    Get Billing Stats (Total Revenue, Active Subs, etc.)
@@ -602,6 +649,48 @@ exports.getBillingStats = async (req, res, next) => {
       subscriptionStatus: 'active'
     });
 
+    // Get monthly revenue trends for the last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const revenueByMonth = await Payment.aggregate([
+      {
+        $match: {
+          status: 'paid',
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          revenue: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // Format revenue trends for frontend chart
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const revenueTrends = revenueByMonth.map(item => ({
+      name: monthNames[item._id.month - 1],
+      revenue: item.revenue,
+      count: item.count
+    }));
+
+    // Calculate growth percentage
+    let growthPercentage = 0;
+    if (revenueTrends.length >= 2) {
+      const currentMonth = revenueTrends[revenueTrends.length - 1].revenue;
+      const previousMonth = revenueTrends[revenueTrends.length - 2].revenue;
+      if (previousMonth > 0) {
+        growthPercentage = ((currentMonth - previousMonth) / previousMonth * 100).toFixed(1);
+      }
+    }
+
     const pendingRefunds = 0; // Placeholder for now
     const churnRate = 2.4; // Placeholder for now
 
@@ -611,7 +700,9 @@ exports.getBillingStats = async (req, res, next) => {
         totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
         activeSubscriptions,
         pendingRefunds,
-        churnRate
+        churnRate,
+        revenueTrends,
+        growthPercentage: parseFloat(growthPercentage)
       }
     });
   } catch (err) {
@@ -671,6 +762,67 @@ exports.getSubscriptionHistory = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: history
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const SupportTicket = require('../models/SupportTicket');
+const SupportLead = require('../models/SupportLead');
+
+// @desc    Get Pending Support Tickets
+// @route   GET /api/v1/superadmin/dashboard/pending-support
+// @access  Private (Super Admin)
+exports.getPendingSupport = async (req, res, next) => {
+  try {
+    const { limit = 10 } = req.query;
+
+    const pendingTickets = await SupportTicket.find({
+      status: { $in: ['open', 'pending'] }
+    })
+      .populate('userId', 'name email')
+      .populate('adminId', 'companyName')
+      .sort('-createdAt')
+      .limit(parseInt(limit));
+
+    const totalPending = await SupportTicket.countDocuments({
+      status: { $in: ['open', 'pending'] }
+    });
+
+    res.status(200).json({
+      success: true,
+      count: pendingTickets.length,
+      total: totalPending,
+      data: pendingTickets
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Recent Inquiries
+// @route   GET /api/v1/superadmin/dashboard/recent-inquiries
+// @access  Private (Super Admin)
+exports.getRecentInquiries = async (req, res, next) => {
+  try {
+    const { limit = 10 } = req.query;
+
+    const recentInquiries = await SupportLead.find()
+      .sort('-createdAt')
+      .limit(parseInt(limit));
+
+    const totalInquiries = await SupportLead.countDocuments();
+    const pendingInquiries = await SupportLead.countDocuments({
+      status: { $in: ['new', 'pending'] }
+    });
+
+    res.status(200).json({
+      success: true,
+      count: recentInquiries.length,
+      total: totalInquiries,
+      pending: pendingInquiries,
+      data: recentInquiries
     });
   } catch (err) {
     next(err);
