@@ -216,10 +216,19 @@ const Subscription = () => {
                     </CardContent>
                     <CardFooter className="bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center">
                         <p className="text-[11px] text-slate-400 italic">Payments are secured via Stripe API.</p>
-                        <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="text-xs">Cancel</Button>
-                            <Button variant="outline" size="sm" className="text-xs h-8 border-slate-200 dark:border-slate-800">Update Payment</Button>
-                        </div>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs bg-primary-600 hover:bg-primary-700"
+                            onClick={() => {
+                                const plansSection = document.getElementById('plans-section');
+                                if (plansSection) {
+                                    plansSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }}
+                        >
+                            Upgrade Plan
+                        </Button>
                     </CardFooter>
                 </Card>
 
@@ -370,18 +379,29 @@ const Subscription = () => {
             </div>
 
             {/* Upgrade Options Table */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+            <div id="plans-section" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
                 {(plans || []).map((plan, i) => {
                     const isCurrent = user?.subscriptionPlanId === plan._id;
+
+                    // Check if subscription has expired
+                    const subscriptionExpired = user?.subscriptionExpiry
+                        ? new Date(user.subscriptionExpiry) < new Date()
+                        : false;
+
+                    // Disable current plan only if subscription is still active (not expired)
+                    const isDisabled = isCurrent && !subscriptionExpired;
+
                     return (
                         <Card key={i} className={cn(
                             "border-2 transition-all duration-300",
                             isCurrent
                                 ? "border-primary-500 shadow-xl shadow-primary-100 dark:shadow-none bg-white dark:bg-slate-900"
-                                : "border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                                : "border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700",
+                            isDisabled && "opacity-60"
                         )}>
                             <CardHeader>
-                                {isCurrent && <Badge className="w-fit mb-2 bg-primary-600">Current Plan</Badge>}
+                                {isCurrent && !subscriptionExpired && <Badge className="w-fit mb-2 bg-primary-600">Current Plan</Badge>}
+                                {isCurrent && subscriptionExpired && <Badge className="w-fit mb-2 bg-red-600">Expired Plan</Badge>}
                                 <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
                                 <CardDescription className="text-2xl font-black text-slate-900 dark:text-white mt-2">
                                     ₹{plan.price}
@@ -402,15 +422,29 @@ const Subscription = () => {
                                     </li>
                                 </ul>
                             </CardContent>
-                            <CardFooter>
+                            <CardFooter className="flex flex-col gap-2">
                                 <Button
-                                    variant={isCurrent ? "default" : "outline"}
+                                    variant={isCurrent && !subscriptionExpired ? "default" : "outline"}
                                     className="w-full font-bold"
-                                    disabled={isCurrent || loadingPlan === plan._id}
+                                    disabled={isDisabled || loadingPlan === plan._id}
                                     onClick={() => handlePayment(plan)}
                                 >
-                                    {loadingPlan === plan._id ? 'Processing...' : (isCurrent ? 'Your Active Plan' : `Upgrade to ${plan.name}`)}
+                                    {loadingPlan === plan._id
+                                        ? 'Processing...'
+                                        : isDisabled
+                                            ? 'Active Until Expiry'
+                                            : subscriptionExpired && isCurrent
+                                                ? 'Renew Plan'
+                                                : isCurrent
+                                                    ? 'Your Active Plan'
+                                                    : `Upgrade to ${plan.name}`
+                                    }
                                 </Button>
+                                {isDisabled && (
+                                    <p className="text-[10px] text-center text-slate-400 italic">
+                                        You can change plans after {format(new Date(user.subscriptionExpiry), 'MMM dd, yyyy')}
+                                    </p>
+                                )}
                             </CardFooter>
                         </Card>
                     );

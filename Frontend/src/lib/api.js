@@ -32,7 +32,18 @@ const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Something went wrong');
+      // Check if response indicates subscription expiry
+      if (data.subscriptionExpired || (response.status === 403 && data.message?.includes('subscription'))) {
+        // Dispatch custom event for subscription expiry
+        window.dispatchEvent(new CustomEvent('subscriptionExpired', {
+          detail: {
+            message: data.message || data.error,
+            expiryDate: data.expiryDate
+          }
+        }));
+      }
+
+      throw new Error(data.error || data.message || 'Something went wrong');
     }
 
     return data;
@@ -43,3 +54,4 @@ const apiRequest = async (endpoint, options = {}) => {
 };
 
 export default apiRequest;
+

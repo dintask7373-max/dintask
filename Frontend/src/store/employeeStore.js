@@ -37,25 +37,10 @@ const useEmployeeStore = create((set, get) => ({
             const res = await api('/admin/users');
             if (res.success) {
                 const allUsers = res.data || [];
-                const employees = allUsers.filter(u => u.role === 'employee');
-                const managers = allUsers.filter(u => u.role === 'manager');
-                const sales = allUsers.filter(u => u.role === 'sales' || u.role === 'sales_executive');
 
-                // Store only employees for the Employee Management page
-                set({ employees: employees, loading: false });
-
-                // Update other stores if they exist/are imported? 
-                // Actually, EmployeeManagement uses separate hooks. 
-                // We should probably just use 'employees' (allUsers) as the main list for the table.
-                // But for "Reports To" lookup, we need managers.
-
-                // Hack: We will just store everyone in 'employees' for the table.
-                // But we need to make sure the "Reports To" lookup works. 
-                // We'll expose a computed 'allManagers' from this store or ensure ManagerStore is populated.
-
-                // Ideally, we should dispatch to other stores, but to keep it simple and working:
-                // We will rely on 'employees' containing everyone for the list.
-                // And we will use the same list to find managers for the "Reports To" column if needed.
+                // Store ALL users (employees, managers, sales executives) 
+                // Components will filter based on role as needed
+                set({ employees: allUsers, loading: false });
             }
         } catch (error) {
             console.error("Fetch Employees Error", error);
