@@ -192,7 +192,7 @@ const SalesManagement = () => {
         }
     };
 
-    const onDragEnd = (result) => {
+    const onDragEnd = async (result) => {
         const { destination, source, draggableId } = result;
 
         if (!destination) return;
@@ -207,7 +207,7 @@ const SalesManagement = () => {
         const startStage = source.droppableId;
         const finishStage = destination.droppableId;
 
-        moveLead(draggableId, startStage, finishStage);
+        await moveLead(draggableId, startStage, finishStage);
         toast.success(`Moved to ${finishStage}`);
     };
 
@@ -493,9 +493,9 @@ const SalesManagement = () => {
                                                                                     size="sm"
                                                                                     variant="outline"
                                                                                     className="h-5 text-[8px] px-2 bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100"
-                                                                                    onClick={(e) => {
+                                                                                    onClick={async (e) => {
                                                                                         e.stopPropagation(); // prevent drag interference if button clicked
-                                                                                        requestProjectConversion(lead.id);
+                                                                                        await requestProjectConversion(lead.id);
                                                                                         toast.success("Project conversion requested sent to Admin");
                                                                                     }}
                                                                                     onMouseDown={(e) => e.stopPropagation()} // Important for button inside draggable
@@ -546,10 +546,10 @@ const SalesManagement = () => {
                         </div>
                     </DragDropContext>
                 </TabsContent>
-            </Tabs>
+            </Tabs >
 
             {/* Add Rep Dialog */}
-            <Dialog open={isAddRepModalOpen} onOpenChange={setIsAddRepModalOpen}>
+            < Dialog open={isAddRepModalOpen} onOpenChange={setIsAddRepModalOpen} >
                 <DialogContent className="sm:max-w-md rounded-3xl">
                     <DialogHeader>
                         <DialogTitle>Add New Sales Rep</DialogTitle>
@@ -570,10 +570,10 @@ const SalesManagement = () => {
                         </DialogFooter>
                     </form>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Add Deal Dialog */}
-            <Dialog open={isAddDealModalOpen} onOpenChange={setIsAddDealModalOpen}>
+            < Dialog open={isAddDealModalOpen} onOpenChange={setIsAddDealModalOpen} >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Add New Deal</DialogTitle>
@@ -622,8 +622,8 @@ const SalesManagement = () => {
                         <Button onClick={handleAddDeal}>Create Deal</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
-        </div>
+            </Dialog >
+        </div >
     );
 };
 
