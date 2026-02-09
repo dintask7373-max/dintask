@@ -50,6 +50,7 @@ app.use('/api/v1/upload', uploadRoutes); // Mount upload routes
 app.use('/api/v1/crm', require('./routes/crmRoutes')); // New CRM Routes
 app.use('/api/v1/projects', require('./routes/projectRoutes')); // Project Routes
 app.use('/api/v1/tasks', require('./routes/taskRoutes')); // Task Routes
+app.use('/api/v1/notifications', require('./routes/notificationRoutes')); // Notification Routes
 
 // Serve static assets - Uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

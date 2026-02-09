@@ -48,7 +48,7 @@ import useManagerStore from '@/store/managerStore'; // Kept in case required by 
 
 const SalesManagement = () => {
     const { salesReps, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
-    const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion } = useCRMStore();
+    const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion, fetchLeads } = useCRMStore();
     const { employees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { managers } = useManagerStore();
     const { user } = useAuthStore();
@@ -72,6 +72,7 @@ const SalesManagement = () => {
     React.useEffect(() => {
         const loadData = async () => {
             await fetchSalesReps();
+            await fetchLeads();
             await fetchSubscriptionLimit();
         };
         loadData();

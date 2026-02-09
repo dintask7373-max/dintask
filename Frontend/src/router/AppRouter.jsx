@@ -273,7 +273,6 @@ const AppRouter = () => {
             <Route path="/sales" element={<ProtectedRoute allowedRoles={['sales']}><ManagerLayout role="sales" /></ProtectedRoute>}>
                 <Route index element={<SalesDashboard />} />
                 <Route path="deals" element={<Deals />} />
-                <Route path="tasks" element={<SalesTasks />} />
                 <Route path="clients" element={<Clients />} />
                 <Route path="schedule" element={<Schedule />} />
                 <Route path="reports" element={<SalesReports />} />

@@ -59,8 +59,13 @@ const SalesPipeline = () => {
     editLead,
     deleteLead,
     pipelineStages,
-    requestProjectConversion
+    requestProjectConversion,
+    fetchLeads
   } = useCRMStore();
+
+  React.useEffect(() => {
+    fetchLeads();
+  }, []);
 
   const [draggedLead, setDraggedLead] = useState(null);
   const [draggedFromStage, setDraggedFromStage] = useState(null);
