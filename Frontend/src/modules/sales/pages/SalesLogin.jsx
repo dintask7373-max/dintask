@@ -15,13 +15,6 @@ const SalesLogin = () => {
     const { login, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
 
-    // Auto-redirect if already logged in
-    useEffect(() => {
-        if (isAuthenticated && role === 'sales') {
-            navigate('/sales');
-        }
-    }, [isAuthenticated, role, navigate]);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!email || !password) {
@@ -43,48 +36,43 @@ const SalesLogin = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 font-sans relative overflow-hidden">
-            {/* Ambient Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] size-[40%] bg-primary-500/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] size-[40%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-screen w-full bg-slate-50 relative flex flex-col items-center justify-start font-sans overflow-x-hidden">
+            {/* Horizontal Top Background */}
+            <div className="w-full h-[320px] relative overflow-hidden">
+                <img
+                    src="/WLCOMPAGE .png"
+                    alt="Background"
+                    className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+            </div>
 
-            <Card className="w-full max-w-[420px] border-none shadow-2xl shadow-primary-500/10 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden relative z-10">
-                <div className="h-2 bg-gradient-to-r from-primary-600 to-blue-600 w-full" />
-
-                <CardHeader className="text-center space-y-2 pt-10 pb-6">
-                    <div className="flex justify-center mb-6">
-                        <div className="size-16 rounded-[1.5rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center p-3 relative group">
-                            <div className="absolute inset-0 bg-primary-500/20 rounded-[1.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <img src="/dintask-logo.png" alt="DinTask" className="size-full object-contain relative z-10" />
-                        </div>
+            {/* Premium Sign In Card */}
+            <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
+                <div className="bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] p-10 md:p-12 border border-white/40">
+                    <div className="text-center mb-10">
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Sales Portal</h1>
+                        <p className="text-slate-400 text-xs font-medium italic">Strategic CRM Infrastructure</p>
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
-                        Sales <span className="text-primary-600">Portal</span>
-                    </CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                        Strategic CRM Infrastructure
-                    </CardDescription>
-                </CardHeader>
 
-                <CardContent className="px-8 pb-8 space-y-6">
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Access Identifier</Label>
+                            <Label htmlFor="email" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Access Identifier</Label>
                             <Input
                                 id="email"
                                 type="email"
                                 placeholder="sales@dintask.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="h-12 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
                             />
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex items-center justify-between px-1">
-                                <Label htmlFor="password" text-slate-400 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Key</Label>
-                                <a href="/sales/forgot-password" className="text-[9px] font-black uppercase tracking-widest text-primary-600 hover:text-primary-500">
-                                    Lost Key?
+                                <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Security Key</Label>
+                                <a href="/sales/forgot-password" size="sm" className="text-[11px] font-bold text-primary-600 hover:underline uppercase tracking-wide">
+                                    Lost?
                                 </a>
                             </div>
                             <Input
@@ -93,55 +81,48 @@ const SalesLogin = () => {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="h-12 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
                             />
+                        </div>
+
+                        <div className="flex items-center px-1">
+                            <label className="flex items-center group cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    className="size-4 rounded border-slate-200 text-primary-600 focus:ring-primary-600 transition-all cursor-pointer"
+                                />
+                                <span className="ml-2.5 text-[11px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors uppercase tracking-wide">Maintain Link</span>
+                            </label>
                         </div>
 
                         <Button
                             type="submit"
-                            className="w-full h-14 text-xs font-black uppercase tracking-[0.2em] transition-all bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-500/20 rounded-xl"
+                            className="w-full h-12 text-sm font-bold bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-600/20 transition-all active:scale-[0.98] mt-2 group"
                             disabled={loading}
                         >
                             {loading ? (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    Decrypting...
+                                    <span>Decrypting...</span>
                                 </div>
                             ) : (
-                                <><LogIn size={18} className="mr-2" /> Verify Access</>
+                                <><LogIn size={18} className="mr-2 group-hover:translate-x-1 transition-transform" /> Verify Access</>
                             )}
                         </Button>
                     </form>
-                </CardContent>
 
-                <CardFooter className="flex flex-col space-y-5 p-8 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="w-full space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tactical Links</span>
-                            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3">
-                            <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm flex flex-col items-center justify-center text-center group transition-all hover:bg-slate-50">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">New Operator?</p>
-                                <Link to="/sales/register" className="text-xs font-black text-primary-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4">
-                                    Establish Link
-                                </Link>
-                            </div>
-
-                            <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col items-center justify-center text-center">
-                                <span className="text-[8px] uppercase font-black tracking-[0.3em] text-primary-500 mb-1">Simulated Access</span>
-                                <span className="text-[10px] font-mono font-bold text-slate-300">sales@dintask.com / sales123</span>
-                            </div>
-                        </div>
+                    <div className="text-center mt-10 space-y-4">
+                        <div className="h-px w-full bg-slate-100" />
+                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                            New Operator? <Link to="/sales/register" className="text-primary-600 hover:underline ml-1 font-bold">Establish Link</Link>
+                        </p>
+                        <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">
+                            Protected by DinTask Neural Firewall v4.0
+                        </p>
                     </div>
-
-                    <p className="text-[8px] font-bold text-slate-400 text-center uppercase tracking-widest">
-                        Protected by DinTask Neural Firewall v4.0
-                    </p>
-                </CardFooter>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 };

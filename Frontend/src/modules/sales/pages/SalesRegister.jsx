@@ -82,15 +82,16 @@ const SalesRegister = () => {
                     }
                 }
             } else if (referralCode) {
-                addPendingRequest({
+                const success = await addPendingRequest({
                     fullName,
                     email,
                     password,
                     workspaceId: referralCode,
                     role: 'Sales'
                 });
-                toast.success('Join request transmitted. Pending Command approval.');
-                navigate('/employee/success-join');
+                if (success) {
+                    navigate('/employee/success-join');
+                }
             } else {
                 toast.error("Integration failure. Invitation or Link required.");
             }
@@ -102,131 +103,122 @@ const SalesRegister = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 font-sans relative overflow-hidden">
-            {/* Ambient Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] size-[40%] bg-primary-500/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] size-[40%] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-screen w-full bg-slate-50 relative flex flex-col items-center justify-start font-sans overflow-x-hidden">
+            {/* Horizontal Top Background */}
+            <div className="w-full h-[320px] relative overflow-hidden">
+                <img
+                    src="/WLCOMPAGE .png"
+                    alt="Background"
+                    className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+            </div>
 
-            <Card className="w-full max-w-[480px] border-none shadow-2xl shadow-primary-500/10 bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden relative z-10">
-                <div className={cn(
-                    "h-2 bg-gradient-to-r w-full",
-                    referralCode ? "from-emerald-600 to-blue-600" : adminId ? "from-blue-600 to-indigo-600" : "from-primary-600 to-blue-600"
-                )} />
+            {/* Premium Register Card */}
+            <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
+                <div className="bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] p-10 md:p-12 border border-white/40">
+                    <div className="text-center mb-10">
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2 uppercase">
+                            {referralCode ? 'Force Link' : adminId ? 'Invite Sync' : 'Operator Sync'}
+                        </h1>
+                        <p className="text-slate-400 text-xs font-medium italic">Establish your tactical presence</p>
 
-                <CardHeader className="text-center space-y-2 pt-10 pb-6 px-10">
-                    <div className="flex justify-center mb-6">
-                        <div className={cn(
-                            "size-16 rounded-[1.5rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center p-3 relative group transition-all",
-                            referralCode ? "text-emerald-600" : adminId ? "text-blue-600" : "text-primary-600"
-                        )}>
-                            <div className={cn(
-                                "absolute inset-0 rounded-[1.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity",
-                                referralCode ? "bg-emerald-500/20" : adminId ? "bg-blue-500/20" : "bg-primary-500/20"
-                            )} />
-                            {referralCode ? <Link2 size={32} className="relative z-10" /> : adminId ? <Mail size={32} className="relative z-10" /> : <UserPlus size={32} className="relative z-10" />}
-                        </div>
+                        {referralCode && (
+                            <div className="mt-4 inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full border border-emerald-100">
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Workspace: {referralCode}</span>
+                            </div>
+                        )}
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
-                        {referralCode ? 'Force <span className="text-emerald-600">Link</span>' : adminId ? 'Invite <span className="text-blue-600">Sync</span>' : 'Operator <span className="text-primary-600">Sync</span>'}
-                    </CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                        {referralCode ? (
-                            <span className="flex items-center justify-center gap-1.5 text-emerald-600 font-black">
-                                <ShieldCheck size={12} /> External Workspace: {referralCode}
-                            </span>
-                        ) : adminId ? 'Secure Invitation Protocol' : 'Scale the sales infrastructure'}
-                    </CardDescription>
-                </CardHeader>
 
-                <CardContent className="px-10 pb-8 space-y-6">
-                    <form onSubmit={handleRegister} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Legal Designation</Label>
-                                <Input
-                                    id="fullName"
-                                    type="text"
-                                    placeholder="Operator Name"
-                                    value={formData.fullName}
-                                    onChange={handleChange}
-                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Comm Link</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="operator@entity.com"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    readOnly={!!inviteEmail}
-                                    className={`h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                />
-                            </div>
+                    <form onSubmit={handleRegister} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="fullName" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Legal Designation</Label>
+                            <Input
+                                id="fullName"
+                                type="text"
+                                placeholder="Operator Name"
+                                value={formData.fullName}
+                                onChange={handleChange}
+                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Security Key</Label>
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Comm Link</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="operator@entity.com"
+                                value={formData.email}
+                                onChange={handleChange}
+                                readOnly={!!inviteEmail}
+                                className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Security Key</Label>
                                 <Input
                                     id="password"
                                     type="password"
                                     placeholder="••••••••"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                    className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
                                 />
                             </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm Key</Label>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmPassword" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Confirm Key</Label>
                                 <Input
                                     id="confirmPassword"
                                     type="password"
                                     placeholder="••••••••"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="h-11 bg-slate-50 border-none rounded-xl font-bold text-sm px-5"
+                                    className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
                                 />
                             </div>
+                        </div>
+
+                        <div className="flex items-start space-x-2.5 px-1 py-1">
+                            <input
+                                type="checkbox"
+                                id="consent"
+                                className="mt-0.5 size-4 rounded border-slate-200 text-primary-600 focus:ring-primary-600 transition-all cursor-pointer"
+                                required
+                            />
+                            <Label htmlFor="consent" className="text-[11px] font-medium text-slate-500 cursor-pointer leading-tight">
+                                I agree to the <span className="text-primary-600 font-bold underline cursor-pointer">Security Protocol</span>
+                            </Label>
                         </div>
 
                         <Button
                             type="submit"
                             className={cn(
-                                "w-full h-14 mt-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl rounded-xl",
-                                referralCode ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" : adminId ? "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20" : "bg-primary-600 hover:bg-primary-700 shadow-primary-500/20"
+                                "w-full h-12 text-sm font-bold text-white rounded-xl shadow-lg transition-all active:scale-[0.98] mt-2 group",
+                                referralCode ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20" : adminId ? "bg-blue-600 hover:bg-blue-700 shadow-blue-600/20" : "bg-primary-600 hover:bg-primary-700 shadow-primary-600/20"
                             )}
                             disabled={loading}
                         >
                             {loading ? (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    Synchronizing...
+                                    <span>Syncing...</span>
                                 </div>
                             ) : (
-                                <><UserPlus size={18} className="mr-2" /> Initialize Account</>
+                                <><UserPlus size={18} className="mr-2 group-hover:scale-110 transition-transform" /> Initialize Account</>
                             )}
                         </Button>
                     </form>
-                </CardContent>
 
-                <CardFooter className="flex flex-col space-y-5 p-10 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="w-full flex items-center justify-between gap-4">
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 whitespace-nowrap">Existing Operator?</span>
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+                    <div className="text-center mt-10">
+                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                            Member? <Link to="/sales/login" className="text-primary-600 hover:underline ml-1 font-bold">Return to Portal</Link>
+                        </p>
                     </div>
-
-                    <Link to="/sales/login" className="w-full h-12 rounded-xl bg-white dark:bg-slate-800 border-none shadow-sm flex items-center justify-center text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest hover:bg-slate-50 transition-colors">
-                        Return to Portal
-                    </Link>
-
-                    <p className="text-[8px] font-bold text-slate-400 text-center uppercase tracking-[0.2em]">
-                        Neural Enrollment Protocol v2.8
-                    </p>
-                </CardFooter>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 };

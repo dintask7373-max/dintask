@@ -1,7 +1,6 @@
 ﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
-import AdminSubscriptionProtectedRoute from '../components/AdminSubscriptionProtectedRoute';
 import useAuthStore from '@/store/authStore';
 
 const NotFoundRedirect = () => {
@@ -52,6 +51,7 @@ import Settings from '@/modules/admin/pages/Settings';
 import JoinRequests from '@/modules/admin/pages/JoinRequests';
 import SalesManagement from '@/modules/admin/pages/SalesManagement';
 import ProjectApprovals from '@/modules/admin/pages/ProjectApprovals';
+import AdminProjects from '@/modules/admin/pages/Projects';
 
 import ManagerLogin from '@/modules/manager/pages/ManagerLogin';
 import ManagerRegister from '@/modules/manager/pages/ManagerRegister';
@@ -76,10 +76,10 @@ import SalesRegister from '@/modules/sales/pages/SalesRegister';
 import SalesDashboard from '@/modules/sales/pages/Dashboard';
 import Deals from '@/modules/sales/pages/Deals';
 import Clients from '@/modules/sales/pages/Clients';
+import SalesChat from '@/modules/sales/pages/Chat';
 import Schedule from '@/modules/sales/pages/Schedule';
 import SalesReports from '@/modules/sales/pages/Reports';
 import SalesSettings from '@/modules/sales/pages/Settings';
-import SalesTasks from '@/modules/sales/pages/SalesTasks';
 
 // CRM Pages
 import CRMHome from '@/modules/crm/pages/CRMHome';
@@ -110,7 +110,6 @@ import PrivacyPolicy from '@/modules/user/pages/PrivacyPolicy';
 import TermsOfService from '@/modules/user/pages/TermsOfService';
 import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
-import JoinWorkspace from '@/modules/user/pages/JoinWorkspace';
 import Checkout from '@/modules/user/pages/Checkout';
 import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
@@ -126,7 +125,11 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
+<<<<<<< HEAD
 import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
+=======
+import IntelManager from '@/modules/superadmin/pages/IntelManager';
+>>>>>>> 132682b6b4813c76cbb4e841ef15d9711eb8c034
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -174,27 +177,27 @@ const AppRouter = () => {
             {/* --- ADMIN ROUTES --- */}
             {/* Main Admin Panel */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout role="admin" /></ProtectedRoute>}>
-                <Route index element={<AdminSubscriptionProtectedRoute><AdminDashboard /></AdminSubscriptionProtectedRoute>} />
-                <Route path="managers" element={<AdminSubscriptionProtectedRoute><ManagerManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="employees" element={<AdminSubscriptionProtectedRoute><EmployeeManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="sales" element={<AdminSubscriptionProtectedRoute><SalesManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="projects/approvals" element={<AdminSubscriptionProtectedRoute><ProjectApprovals /></AdminSubscriptionProtectedRoute>} />
-                <Route path="reports" element={<AdminSubscriptionProtectedRoute><Reports /></AdminSubscriptionProtectedRoute>} />
-                <Route path="chat" element={<AdminSubscriptionProtectedRoute><AdminChat /></AdminSubscriptionProtectedRoute>} />
-                <Route path="calendar" element={<AdminSubscriptionProtectedRoute><AdminCalendar /></AdminSubscriptionProtectedRoute>} />
-                {/* Subscription page is NOT wrapped - always accessible */}
+                <Route index element={<AdminDashboard />} />
+                <Route path="managers" element={<ManagerManagement />} />
+                <Route path="employees" element={<EmployeeManagement />} />
+                <Route path="sales" element={<SalesManagement />} />
+                <Route path="projects" element={<AdminProjects />} />
+                <Route path="projects/approvals" element={<ProjectApprovals />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="chat" element={<AdminChat />} />
+                <Route path="calendar" element={<AdminCalendar />} />
                 <Route path="subscription" element={<AdminSubscription />} />
-                <Route path="settings" element={<AdminSubscriptionProtectedRoute><Settings /></AdminSubscriptionProtectedRoute>} />
-                <Route path="requests" element={<AdminSubscriptionProtectedRoute><JoinRequests /></AdminSubscriptionProtectedRoute>} />
-                <Route path="support" element={<AdminSubscriptionProtectedRoute><SupportCenter /></AdminSubscriptionProtectedRoute>} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="requests" element={<JoinRequests />} />
+                <Route path="support" element={<SupportCenter />} />
             </Route>
 
             {/* Admin CRM Panel */}
             <Route path="/admin/crm" element={<ProtectedRoute allowedRoles={['admin']}><CRMLayout role="admin" /></ProtectedRoute>}>
-                <Route index element={<AdminSubscriptionProtectedRoute><AdminCRM /></AdminSubscriptionProtectedRoute>} />
-                <Route path="leads" element={<AdminSubscriptionProtectedRoute><LeadsManagement /></AdminSubscriptionProtectedRoute>} />
-                <Route path="pipeline" element={<AdminSubscriptionProtectedRoute><SalesPipeline /></AdminSubscriptionProtectedRoute>} />
-                <Route path="follow-ups" element={<AdminSubscriptionProtectedRoute><FollowUps /></AdminSubscriptionProtectedRoute>} />
+                <Route index element={<AdminCRM />} />
+                <Route path="leads" element={<LeadsManagement />} />
+                <Route path="pipeline" element={<SalesPipeline />} />
+                <Route path="follow-ups" element={<FollowUps />} />
             </Route>
 
             {/* --- EMPLOYEE ROUTES --- */}
@@ -213,7 +216,6 @@ const AppRouter = () => {
                 <Route path="profile/security" element={<Security />} />
                 <Route path="profile/preferences" element={<Preferences />} />
 
-                <Route path="join" element={<JoinWorkspace />} />
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="profile/help" element={<HelpLegal />} />
                 <Route path="profile/help/privacy" element={<PrivacyPolicy />} />
@@ -247,6 +249,7 @@ const AppRouter = () => {
                 <Route path="history" element={<SubscriptionHistory />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="landing-page" element={<LandingPageManager />} />
+                <Route path="system-intel" element={<IntelManager />} />
                 <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
                 <Route path="calendar" element={<div>System Calendar (Coming Soon)</div>} />
             </Route>
@@ -279,6 +282,7 @@ const AppRouter = () => {
                 <Route path="clients" element={<Clients />} />
                 <Route path="schedule" element={<Schedule />} />
                 <Route path="reports" element={<SalesReports />} />
+                <Route path="chat" element={<SalesChat />} />
                 <Route path="settings" element={<SalesSettings />} />
                 <Route path="support" element={<SupportCenter />} />
             </Route>

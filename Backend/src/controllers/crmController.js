@@ -60,6 +60,7 @@ exports.getLeads = async (req, res) => {
 // @access  Private (Admin, Sales)
 exports.createLead = async (req, res) => {
   try {
+    const leadData = { ...req.body };
     let adminId = req.user.id;
     let owner = null;
 
@@ -69,21 +70,23 @@ exports.createLead = async (req, res) => {
       owner = salesExec._id;
     } else {
       // Admin creating: Owner is optional or provided in body
-      if (req.body.owner) owner = req.body.owner;
+      if (leadData.owner) owner = leadData.owner;
     }
 
     // Sanitize owner field to avoid CastErrors
-    let leadData = { ...req.body };
-    if (leadData.owner === "") {
+    if (leadData.owner === "" || leadData.owner === "unassigned") {
       delete leadData.owner;
-      owner = undefined;
+      owner = undefined; // Ensure the 'owner' variable used in Lead.create is also undefined
     }
 
-    const lead = await Lead.create({
+    let lead = await Lead.create({
       ...leadData,
       adminId,
       owner: owner || undefined
     });
+
+    // Populate owner for consistent frontend display
+    lead = await Lead.findById(lead._id).populate('owner', 'name email');
 
     // If owner is assigned during creation, send notification
     if (owner) {
@@ -129,6 +132,10 @@ exports.updateLead = async (req, res) => {
     // Check if lead belongs to user's workspace
     if (lead.adminId.toString() !== userAdminId?.toString()) {
       return res.status(403).json({ success: false, error: 'Not authorized to update this lead - different workspace' });
+    }
+
+    if (req.body.owner === 'unassigned') {
+      req.body.owner = null;
     }
 
     lead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
@@ -268,6 +275,17 @@ exports.approveProject = async (req, res) => {
     lead.approvalStatus = 'approved_project';
     lead.projectRef = project._id;
     await lead.save();
+
+    // Create Notification for the Manager
+    const Notification = require('../models/Notification');
+    await Notification.create({
+      recipient: managerId,
+      sender: req.user.id,
+      type: 'project_assigned',
+      title: 'New Project Assigned',
+      message: `You have been assigned a new project: ${project.name}`,
+      link: `/manager/projects/${project._id}`
+    });
 
     res.status(200).json({ success: true, data: project, lead: lead, message: 'Project approved and assigned' });
 

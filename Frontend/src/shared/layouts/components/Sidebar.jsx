@@ -96,9 +96,9 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Dashboard', path: '/sales', icon: LayoutDashboard },
                 { name: 'CRM', path: '/sales/crm', icon: Briefcase },
                 { name: 'Deals', path: '/sales/deals', icon: CheckSquare },
-                { name: 'Sales Tasks', path: '/sales/tasks', icon: CheckSquare },
                 { name: 'Clients', path: '/sales/clients', icon: Users },
                 { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
+                { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
                 { name: 'Schedule', path: '/sales/schedule', icon: CalendarIcon },
                 { name: 'Settings', path: '/sales/settings', icon: SettingsIcon },
                 { name: 'Support', path: '/sales/support', icon: LifeBuoy },
@@ -112,6 +112,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Managers', path: '/admin/managers', icon: ShieldCheck },
                 { name: 'Employees', path: '/admin/employees', icon: Users },
                 { name: 'Sales', path: '/admin/sales', icon: TrendingUp },
+                { name: 'Projects', path: '/admin/projects', icon: Briefcase },
                 // Added Project Approvals
                 {
                     name: 'Project Approvals',
@@ -141,7 +142,8 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
                 { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
                 { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
-                { name: 'Settings', path: `/superadmin/settings`, icon: SettingsIcon },
+                { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
+                { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
             ]
             : []),
     ];

@@ -20,11 +20,15 @@ router.post('/register', registerAdmin);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:resettoken', resetPassword);
 
-// Only Admin and Super Admin can access these routes
+// Only Authenticated users can access these
 router.use(protect);
+
+// Shared route for Chat/Directory - now accessible by Managers/Sales/Employees etc.
+router.get('/users', getAllUsers);
+
+// Only Admin and Super Admin can access these routes
 router.use(authorize('admin', 'superadmin'));
 
-router.get('/users', getAllUsers);
 router.get('/plans', getPlans);
 router.get('/subscription-limit', getSubscriptionLimitStatus);
 router.delete('/users/:id', deleteUser);

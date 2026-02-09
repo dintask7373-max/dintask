@@ -1,5 +1,4 @@
-import React from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { useNavigate, Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     Calendar as CalendarIcon,
@@ -7,7 +6,9 @@ import {
     User,
     Bell,
     Users,
-    LifeBuoy
+    LifeBuoy,
+    LogOut,
+    MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,26 +20,63 @@ import { scaleOnTap } from '@/shared/utils/animations';
 
 const EmployeeLayout = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user, logout } = useAuthStore();
 
     const navItems = [
         { name: 'Home', path: '/employee', icon: LayoutDashboard },
         { name: 'Calendar', path: '/employee/calendar', icon: CalendarIcon },
-        { name: 'Join', path: '/employee/join', icon: Users },
+        { name: 'Chat', path: '/employee/chat', icon: MessageSquare },
         { name: 'Notes', path: '/employee/notes', icon: StickyNote },
-        { name: 'Profile', path: '/employee/profile', icon: User },
         { name: 'Support', path: '/employee/support', icon: LifeBuoy },
     ];
 
-    const mainPaths = ['/employee', '/employee/calendar', '/employee/notes', '/employee/profile', '/employee/join', '/employee/support'];
-    const showFooter = mainPaths.includes(location.pathname);
+    const mainPaths = ['/employee', '/employee/calendar', '/employee/notes', '/employee/support', '/employee/profile'];
+    const isChatPage = location.pathname === '/employee/chat';
+    const showFooter = mainPaths.includes(location.pathname) && !isChatPage;
 
     return (
-        <div className="fixed inset-0 h-[100dvh] w-full flex flex-col bg-white dark:bg-slate-950 font-display transition-colors duration-300 overflow-hidden">
+        <div className="fixed inset-0 h-[100dvh] w-full flex flex-col bg-slate-50 dark:bg-slate-950 font-display transition-colors duration-300 overflow-hidden">
+            {/* Top Header */}
+            {!isChatPage && (
+                <header className="h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between px-6 z-50">
+                    <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl overflow-hidden shadow-sm border border-slate-100/50">
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        </div>
+                        <span className="font-black text-lg text-slate-900 dark:text-white tracking-tighter italic">Din<span className="text-[#4461f2]">Task</span></span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-[#4461f2]"
+                            onClick={() => navigate('/employee/notifications')}
+                        >
+                            <Bell size={18} />
+                        </Button>
+                        <button
+                            onClick={() => navigate('/employee/profile')}
+                            className="flex items-center gap-2 pl-2 focus:outline-none"
+                        >
+                            <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none transition-transform active:scale-90">
+                                <AvatarImage src={user?.avatar} />
+                                <AvatarFallback className="bg-[#4461f2] text-white font-black text-[10px] uppercase">
+                                    {user?.name?.charAt(0)}
+                                </AvatarFallback>
+                            </Avatar>
+                        </button>
+                    </div>
+                </header>
+            )}
+
             {/* Page Content */}
-            <main className="flex-1 overflow-y-auto no-scrollbar relative w-full">
+            <main className="flex-1 overflow-y-auto no-scrollbar relative w-full pt-0">
                 <div className={cn(
-                    "max-w-[480px] mx-auto w-full h-full",
-                    showFooter ? "pb-28" : "pb-6"
+                    isChatPage ? "max-w-full" : "max-w-[480px] mx-auto pt-4",
+                    "w-full h-full",
+                    showFooter ? "pb-28" : "pb-0"
                 )}>
                     <Outlet />
                 </div>

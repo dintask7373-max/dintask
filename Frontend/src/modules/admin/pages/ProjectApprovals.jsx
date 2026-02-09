@@ -40,10 +40,11 @@ import { toast } from 'sonner';
 
 const ProjectApprovals = () => {
   const { pendingProjects, fetchPendingProjects, approveProject } = useCRMStore();
-  const { managers } = useManagerStore();
+  const { managers, fetchManagers } = useManagerStore();
 
   React.useEffect(() => {
     fetchPendingProjects();
+    fetchManagers();
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');

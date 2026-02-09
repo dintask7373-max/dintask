@@ -13,8 +13,10 @@ import { Plus, Edit, Trash2, Search, FileUp } from 'lucide-react';
 import useCRMStore from '@/store/crmStore';
 import { cn } from '@/shared/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
+import useAuthStore from '@/store/authStore';
 
 const LeadsManagement = () => {
+  const { role } = useAuthStore();
   const {
     leads,
     salesExecutives,
@@ -35,6 +37,16 @@ const LeadsManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [open, setOpen] = useState(false);
+
+  // Import Assignment State
+  const [importData, setImportData] = useState([]);
+  const [isImportAssignOpen, setIsImportAssignOpen] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState('');
+  const [selectedLeads, setSelectedLeads] = useState([]);
+  const [isBulkAssignOpen, setIsBulkAssignOpen] = useState(false);
+  const [bulkAssignee, setBulkAssignee] = useState('');
+  const [isAssigning, setIsAssigning] = useState(false);
+
   const [editingLead, setEditingLead] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -88,6 +100,20 @@ const LeadsManagement = () => {
     }
   };
 
+  const toggleLeadSelection = (id) => {
+    setSelectedLeads((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAllLeads = () => {
+    if (selectedLeads.length === filteredLeads.length) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(filteredLeads.map((l) => l._id || l.id));
+    }
+  };
+
   const resetForm = () => {
     setEditingLead(null);
     setFormData({
@@ -120,32 +146,80 @@ const LeadsManagement = () => {
           return;
         }
 
-        let importedCount = 0;
-        jsonData.forEach((row) => {
-          const leadData = {
-            name: row.Name || row.name || 'Unnamed Lead',
-            mobile: String(row.Mobile || row.mobile || ''),
-            email: row.Email || row.email || '',
-            company: row.Company || row.company || '',
-            source: row.Source || row.source || 'Excel Import',
-            owner: '',
-            status: 'New',
-            notes: row.Notes || row.notes || '',
+        const parsedData = jsonData.map((row) => {
+          // Helper to find value by multiple possible header names
+          const getValue = (keys) => {
+            const foundKey = Object.keys(row).find(k =>
+              keys.some(key => k.toLowerCase().trim() === key.toLowerCase())
+            );
+            return foundKey ? row[foundKey] : null;
           };
 
-          if (leadData.name && (leadData.mobile || leadData.email)) {
-            addLead(leadData);
-            importedCount++;
-          }
-        });
+          return {
+            name: getValue(['Name', 'Full Name', 'Contact Name', 'name', 'full name']) || 'Unnamed Lead',
+            mobile: String(getValue(['Mobile', 'Mobile Number', 'Phone', 'Contact Number', 'mobile', 'phone']) || ''),
+            email: getValue(['Email', 'Email Address', 'Email ID', 'email', 'email address']) || '',
+            company: getValue(['Company', 'Company Name', 'Organization', 'Business', 'company', 'company name']) || '',
+            source: getValue(['Source', 'Source Type', 'source']) || 'Excel Import',
+            owner: '',
+            status: 'New',
+            notes: getValue(['Notes', 'Notes/Remarks', 'Remarks', 'Description', 'notes', 'remarks']) || '',
+          };
+        }).filter(lead => lead.name && (lead.mobile || lead.email));
 
-        toast.success(`Imported ${importedCount} leads`);
+        if (parsedData.length === 0) {
+          toast.error('No valid leads found in file');
+          return;
+        }
+
+        setImportData(parsedData);
+        setIsImportAssignOpen(true);
       } catch (error) {
         toast.error('Failed to parse Excel file');
       }
     };
     reader.readAsArrayBuffer(file);
     e.target.value = null;
+  };
+
+  const handleConfirmImport = async () => {
+    if (!selectedAssignee) {
+      toast.error("Please select a sales person to assign leads to");
+      return;
+    }
+
+    let importedCount = 0;
+    for (const lead of importData) {
+      const leadData = { ...lead, owner: selectedAssignee };
+      await addLead(leadData);
+      importedCount++;
+    }
+
+    toast.success(`Imported & Assigned ${importedCount} leads`);
+    setIsImportAssignOpen(false);
+    setImportData([]);
+    setSelectedAssignee('');
+  };
+
+  const handleBulkAssign = async () => {
+    if (!bulkAssignee || selectedLeads.length === 0) return;
+
+    setIsAssigning(true);
+    let successCount = 0;
+    try {
+      for (const leadId of selectedLeads) {
+        await assignLead(leadId, bulkAssignee);
+        successCount++;
+      }
+      toast.success(`Successfully assigned ${successCount} leads`);
+      setSelectedLeads([]);
+      setIsBulkAssignOpen(false);
+      setBulkAssignee('');
+    } catch (error) {
+      toast.error('Failed to assign some leads');
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   return (
@@ -165,154 +239,238 @@ const LeadsManagement = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".xlsx, .xls, .csv"
-            className="hidden"
-          />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            className="h-9 px-4 sm:px-6 border-slate-200 dark:border-slate-800 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
-            <FileUp className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
-            <span>Import Assets</span>
-          </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
-                <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>Initialize Lead</span>
+          {!['sales', 'sales_executive'].includes(role) && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".xlsx, .xls, .csv"
+                className="hidden"
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                className="h-9 px-4 sm:px-6 border-slate-200 dark:border-slate-800 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                <FileUp className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
+                <span>Import Assets</span>
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
+                    <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span>Initialize Lead</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>{editingLead ? 'Edit Lead' : 'Add New Lead'}</DialogTitle>
+                    <DialogDescription>
+                      {editingLead ? 'Update the lead information below.' : 'Enter the lead details below.'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="mobile">Mobile Number</Label>
+                        <Input
+                          id="mobile"
+                          value={formData.mobile}
+                          onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="company">Company Name</Label>
+                        <Input
+                          id="company"
+                          value={formData.company}
+                          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="source">Lead Source</Label>
+                        <Select
+                          value={formData.source}
+                          onValueChange={(value) => setFormData({ ...formData, source: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select source" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {leadSources.map((source) => (
+                              <SelectItem key={source} value={source}>
+                                {source}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Lead Status</Label>
+                        <Select
+                          value={formData.status}
+                          onValueChange={(value) => setFormData({ ...formData, status: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {leadStatuses.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="owner">Lead Owner</Label>
+                      <Select
+                        value={formData.owner}
+                        onValueChange={(value) => setFormData({ ...formData, owner: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select owner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {salesExecutives.length > 0 ? (
+                            salesExecutives.map((exec) => (
+                              <SelectItem key={exec._id} value={exec._id}>
+                                {exec.name} ({exec.email})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="unassigned" disabled>No Sales Executives Found</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Notes</Label>
+                      <Input
+                        id="notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Add any additional notes"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button variant="ghost" onClick={() => setOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit">
+                        {editingLead ? 'Update Lead' : 'Add Lead'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
+
+          {/* Import Assignment Dialog */}
+          <Dialog open={isImportAssignOpen} onOpenChange={setIsImportAssignOpen}>
+            <DialogContent className="sm:max-w-[400px]">
               <DialogHeader>
-                <DialogTitle>{editingLead ? 'Edit Lead' : 'Add New Lead'}</DialogTitle>
+                <DialogTitle>Assign Imported Leads</DialogTitle>
                 <DialogDescription>
-                  {editingLead ? 'Update the lead information below.' : 'Enter the lead details below.'}
+                  You are importing {importData.length} leads. Who should manage them?
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile Number</Label>
-                    <Input
-                      id="mobile"
-                      value={formData.mobile}
-                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company Name</Label>
-                    <Input
-                      id="company"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="source">Lead Source</Label>
-                    <Select
-                      value={formData.source}
-                      onValueChange={(value) => setFormData({ ...formData, source: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select source" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {leadSources.map((source) => (
-                          <SelectItem key={source} value={source}>
-                            {source}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Lead Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData({ ...formData, status: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {leadStatuses.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="owner">Lead Owner</Label>
-                  <Select
-                    value={formData.owner}
-                    onValueChange={(value) => setFormData({ ...formData, owner: value })}
-                  >
+                  <Label>Select Sales Executive</Label>
+                  <Select value={selectedAssignee} onValueChange={setSelectedAssignee}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select owner" />
+                      <SelectValue placeholder="Choose Assignee..." />
                     </SelectTrigger>
                     <SelectContent>
                       {salesExecutives.length > 0 ? (
                         salesExecutives.map((exec) => (
-                          <SelectItem key={exec._id} value={exec._id}>
-                            {exec.name} ({exec.email})
+                          <SelectItem key={exec._id || exec.id} value={exec._id || exec.id}>
+                            {exec.name}
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="unassigned" disabled>No Sales Executives Found</SelectItem>
+                        <SelectItem value="none" disabled>No Sales Executives</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Add any additional notes"
-                  />
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsImportAssignOpen(false)}>Cancel</Button>
+                <Button onClick={handleConfirmImport} disabled={!selectedAssignee} className="bg-primary-600 hover:bg-primary-700 text-white">
+                  Import & Assign
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          {/* Bulk Assignment Dialog */}
+          <Dialog open={isBulkAssignOpen} onOpenChange={setIsBulkAssignOpen}>
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Assign Multiple Leads</DialogTitle>
+                <DialogDescription>
+                  Choose a sales representative to assign the {selectedLeads.length} selected leads to.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Select Owner</Label>
+                    <Select value={bulkAssignee} onValueChange={setBulkAssignee}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a sales representative" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        {salesExecutives.map((exec) => (
+                          <SelectItem key={exec._id || exec.id} value={exec._id || exec.id}>
+                            {exec.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <DialogFooter>
-                  <Button variant="ghost" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingLead ? 'Update Lead' : 'Add Lead'}
-                  </Button>
-                </DialogFooter>
-              </form>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setIsBulkAssignOpen(false)}>Cancel</Button>
+                <Button
+                  onClick={handleBulkAssign}
+                  disabled={!bulkAssignee || isAssigning}
+                  className="bg-primary-600 hover:bg-primary-700 text-white"
+                >
+                  {isAssigning ? 'Assigning...' : 'Assign Leads'}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -368,6 +526,14 @@ const LeadsManagement = () => {
             <Table>
               <TableHeader>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                  <th className="p-4 w-10">
+                    <input
+                      type="checkbox"
+                      className="rounded border-slate-300"
+                      checked={selectedLeads.length > 0 && selectedLeads.length === filteredLeads.length}
+                      onChange={toggleAllLeads}
+                    />
+                  </th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Lead ID</th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Company</th>
@@ -380,7 +546,15 @@ const LeadsManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead) => (
-                  <TableRow key={lead._id || lead.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/20 border-slate-100 dark:border-slate-800 transition-colors">
+                  <TableRow key={lead._id || lead.id} className={cn("hover:bg-slate-50/30 dark:hover:bg-slate-800/20 border-slate-100 dark:border-slate-800 transition-colors", selectedLeads.includes(lead._id || lead.id) && "bg-primary-50/30 dark:bg-primary-900/10")}>
+                    <TableCell className="p-4 w-10">
+                      <input
+                        type="checkbox"
+                        className="rounded border-slate-300"
+                        checked={selectedLeads.includes(lead._id || lead.id)}
+                        onChange={() => toggleLeadSelection(lead._id || lead.id)}
+                      />
+                    </TableCell>
                     <TableCell className="p-4 font-black text-xs text-slate-400 tracking-tighter">
                       {(lead._id || lead.id).substr(-6)}
                     </TableCell>

@@ -79,16 +79,17 @@ const EmployeeRegister = () => {
                     }
                 }
             } else if (referralCode) {
-                // Join via Referal Code (Pending Request)
-                addPendingRequest({
+                // Join via Referral Code (Pending Request)
+                const success = await addPendingRequest({
                     fullName,
                     email,
                     password,
                     workspaceId: referralCode,
                     role: 'Employee'
                 });
-                toast.success('Join request sent! Waiting for Admin approval.');
-                navigate('/employee/success-join');
+                if (success) {
+                    navigate('/employee/success-join');
+                }
             } else {
                 // Standalone registration (fallback, though usually employees need an invite or code)
                 // For now, assuming direct reg requires adminId or refCode usually, but leaving basic flow
@@ -154,16 +155,29 @@ const EmployeeRegister = () => {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmPassword" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Confirm Password</Label>
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex items-start space-x-2.5 px-1 py-1">
