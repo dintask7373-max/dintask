@@ -82,15 +82,16 @@ const ManagerRegister = () => {
                     }
                 }
             } else if (referralCode) {
-                addPendingRequest({
+                const success = await addPendingRequest({
                     fullName,
                     email,
                     password,
                     workspaceId: referralCode,
                     role: 'Manager'
                 });
-                toast.success('Join request sent! Awaiting Admin authorization.');
-                navigate('/employee/success-join');
+                if (success) {
+                    navigate('/employee/success-join');
+                }
             } else {
                 toast.error("Process Terminated. Invitation or Link required.");
             }

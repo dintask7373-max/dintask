@@ -12,9 +12,9 @@ const useProjectStore = create((set, get) => ({
   fetchProjects: async () => {
     set({ loading: true });
     try {
-      const res = await api.get('/projects');
-      if (res.data.success) {
-        set({ projects: res.data.data, loading: false });
+      const res = await api('/projects');
+      if (res.success) {
+        set({ projects: res.data, loading: false });
       }
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -26,9 +26,9 @@ const useProjectStore = create((set, get) => ({
   fetchProject: async (id) => {
     set({ loading: true });
     try {
-      const res = await api.get(`/projects/${id}`);
-      if (res.data.success) {
-        set({ currentProject: res.data.data, loading: false });
+      const res = await api(`/projects/${id}`);
+      if (res.success) {
+        set({ currentProject: res.data, loading: false });
       }
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -39,8 +39,11 @@ const useProjectStore = create((set, get) => ({
   // Update Project Status
   updateProjectStatus: async (id, status) => {
     try {
-      const res = await api.put(`/projects/${id}`, { status });
-      if (res.data.success) {
+      const res = await api(`/projects/${id}`, {
+        method: 'PUT',
+        body: { status }
+      });
+      if (res.success) {
         set(state => ({
           projects: state.projects.map(p => p._id === id ? { ...p, status } : p),
           currentProject: state.currentProject?._id === id ? { ...state.currentProject, status } : state.currentProject

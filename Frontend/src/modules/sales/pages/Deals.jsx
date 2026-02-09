@@ -252,13 +252,7 @@ const Deals = () => {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button
-                        onClick={() => setIsAddOpen(true)}
-                        className="flex-1 sm:flex-none h-10 px-6 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] uppercase tracking-widest whitespace-nowrap"
-                    >
-                        <Plus size={16} />
-                        <span>New Deal</span>
-                    </Button>
+                    {/* New Deal button removed as per request */}
                 </div>
             </div>
 
@@ -346,6 +340,7 @@ const Deals = () => {
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent border-slate-50 dark:border-slate-800">
                                     <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Entity</TableHead>
+                                    <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Name</TableHead>
                                     <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Valuation</TableHead>
                                     <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Deployment</TableHead>
                                     <TableHead className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Priority</TableHead>
@@ -365,6 +360,9 @@ const Deals = () => {
                                                     <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Node ID: {String(deal._id || deal.id).substring(0, 8)}</p>
                                                 </div>
                                             </div>
+                                        </TableCell>
+                                        <TableCell className="px-6 py-3">
+                                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{deal.name}</p>
                                         </TableCell>
                                         <TableCell className="px-6 py-3">
                                             <p className="text-sm font-black text-slate-900 dark:text-white leading-none">₹{(deal.amount || 0).toLocaleString()}</p>
@@ -517,29 +515,6 @@ const Deals = () => {
                         </div>
 
                         <DialogFooter className="gap-2 pt-4 border-t border-slate-100">
-                            <Button variant="ghost" className="flex-1 h-10 rounded-xl text-red-500 font-black text-[9px] uppercase tracking-widest hover:bg-red-50" onClick={handleDeleteDeal}>
-                                Terminate
-                            </Button>
-                            <Button variant="outline" className="flex-1 h-10 rounded-xl text-primary-600 font-black text-[9px] uppercase tracking-widest" onClick={handleEditDeal}>
-                                Recalibrate
-                            </Button>
-                            {selectedDeal?.status === 'Won' && (
-                                (selectedDeal?.approvalStatus && selectedDeal.approvalStatus !== 'none') ? (
-                                    <div className="flex-1 flex items-center justify-center h-10 rounded-xl bg-slate-100 text-slate-500 font-bold text-[9px] uppercase tracking-widest border border-slate-200">
-                                        Status: {selectedDeal.approvalStatus.replace('_', ' ')}
-                                    </div>
-                                ) : (
-                                    <Button
-                                        className="flex-1 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20"
-                                        onClick={() => {
-                                            requestProjectConversion(selectedDeal._id || selectedDeal.id);
-                                            setIsViewOpen(false);
-                                        }}
-                                    >
-                                        Convert to Project
-                                    </Button>
-                                )
-                            )}
                             <Button className="flex-1 h-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-primary-500/20" onClick={() => setIsViewOpen(false)}>
                                 Exit
                             </Button>

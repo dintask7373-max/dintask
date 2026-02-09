@@ -82,15 +82,16 @@ const SalesRegister = () => {
                     }
                 }
             } else if (referralCode) {
-                addPendingRequest({
+                const success = await addPendingRequest({
                     fullName,
                     email,
                     password,
                     workspaceId: referralCode,
                     role: 'Sales'
                 });
-                toast.success('Join request transmitted. Pending Command approval.');
-                navigate('/employee/success-join');
+                if (success) {
+                    navigate('/employee/success-join');
+                }
             } else {
                 toast.error("Integration failure. Invitation or Link required.");
             }

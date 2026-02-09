@@ -94,7 +94,6 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Dashboard', path: '/sales', icon: LayoutDashboard },
                 { name: 'CRM', path: '/sales/crm', icon: Briefcase },
                 { name: 'Deals', path: '/sales/deals', icon: CheckSquare },
-                { name: 'Sales Tasks', path: '/sales/tasks', icon: CheckSquare },
                 { name: 'Clients', path: '/sales/clients', icon: Users },
                 { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
                 { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
@@ -111,6 +110,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Managers', path: '/admin/managers', icon: ShieldCheck },
                 { name: 'Employees', path: '/admin/employees', icon: Users },
                 { name: 'Sales', path: '/admin/sales', icon: TrendingUp },
+                { name: 'Projects', path: '/admin/projects', icon: Briefcase },
                 // Added Project Approvals
                 {
                     name: 'Project Approvals',

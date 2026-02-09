@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 const ManagerProjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { projects, fetchProjects } = useProjectStore(); // Or fetchProject(id) if available
+  const { projects, fetchProjects, updateProjectStatus } = useProjectStore(); // Or fetchProject(id) if available
   const { tasks, fetchTasks } = useTaskStore(); // Or fetchTasksByProject(id)
 
   useEffect(() => {
@@ -42,8 +42,17 @@ const ManagerProjectDetails = () => {
             </span>
           </div>
         </div>
-        <div className="ml-auto">
-          <Button onClick={() => navigate('/manager/delegation')} className="font-black uppercase tracking-widest text-xs">
+        <div className="ml-auto flex gap-2">
+          {project.status === 'active' && (
+            <Button
+              variant="outline"
+              onClick={() => updateProjectStatus(project._id || project.id, 'completed')}
+              className="font-black uppercase tracking-widest text-xs border-emerald-200 text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+            >
+              Mark Completed
+            </Button>
+          )}
+          <Button onClick={() => navigate(`/manager/assign-task?projectId=${project._id || project.id}`)} className="font-black uppercase tracking-widest text-xs">
             Assign New Task
           </Button>
         </div>

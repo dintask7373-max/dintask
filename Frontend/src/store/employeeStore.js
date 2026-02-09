@@ -138,7 +138,36 @@ const useEmployeeStore = create((set, get) => ({
         }
     },
 
-    // ... other actions if needed ...
+    addPendingRequest: async (requestData) => {
+        set({ loading: true });
+        try {
+            // Map workspaceId to adminId for the backend register endpoint
+            // and normalize role
+            const registrationData = {
+                name: requestData.fullName,
+                email: requestData.email,
+                password: requestData.password,
+                role: requestData.role?.toLowerCase() === 'sales' ? 'sales_executive' : requestData.role?.toLowerCase(),
+                adminId: requestData.workspaceId
+            };
+
+            const res = await api('/auth/register', {
+                method: 'POST',
+                body: registrationData
+            });
+
+            if (res.success) {
+                toast.success('Join request sent! Awaiting Admin approval.');
+                set({ loading: false });
+                return true;
+            }
+        } catch (error) {
+            console.error("Add Pending Request Error", error);
+            toast.error(error.message || 'Failed to send join request');
+            set({ loading: false });
+            throw error;
+        }
+    }
 }));
 
 export default useEmployeeStore;

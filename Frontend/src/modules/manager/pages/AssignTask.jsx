@@ -41,6 +41,8 @@ import useAuthStore from '@/store/authStore';
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
 import useProjectStore from '@/store/projectStore';
+import useNotificationStore from '@/store/notificationStore';
+import { useSearchParams } from 'react-router-dom';
 
 const AssignTask = () => {
     const navigate = useNavigate();
@@ -48,12 +50,16 @@ const AssignTask = () => {
     const { addTask, tasks, fetchTasks } = useTaskStore();
     const employees = useEmployeeStore(state => state.employees);
     const addNotification = useNotificationStore(state => state.addNotification);
-    const { projects, fetchProjects } = useProjectStore();
+    const [searchParams] = useSearchParams();
+    const urlProjectId = searchParams.get('projectId');
 
     React.useEffect(() => {
         fetchProjects();
         fetchTasks();
-    }, []);
+        if (urlProjectId) {
+            setFormData(prev => ({ ...prev, projectId: urlProjectId }));
+        }
+    }, [urlProjectId]);
 
     const subEmployees = employees.filter(e => e.managerId === user?.id);
 

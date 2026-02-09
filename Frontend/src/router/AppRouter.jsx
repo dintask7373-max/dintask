@@ -51,6 +51,7 @@ import Settings from '@/modules/admin/pages/Settings';
 import JoinRequests from '@/modules/admin/pages/JoinRequests';
 import SalesManagement from '@/modules/admin/pages/SalesManagement';
 import ProjectApprovals from '@/modules/admin/pages/ProjectApprovals';
+import AdminProjects from '@/modules/admin/pages/Projects';
 
 import ManagerLogin from '@/modules/manager/pages/ManagerLogin';
 import ManagerRegister from '@/modules/manager/pages/ManagerRegister';
@@ -79,7 +80,6 @@ import SalesChat from '@/modules/sales/pages/Chat';
 import Schedule from '@/modules/sales/pages/Schedule';
 import SalesReports from '@/modules/sales/pages/Reports';
 import SalesSettings from '@/modules/sales/pages/Settings';
-import SalesTasks from '@/modules/sales/pages/SalesTasks';
 
 // CRM Pages
 import CRMHome from '@/modules/crm/pages/CRMHome';
@@ -178,7 +178,7 @@ const AppRouter = () => {
                 <Route path="managers" element={<ManagerManagement />} />
                 <Route path="employees" element={<EmployeeManagement />} />
                 <Route path="sales" element={<SalesManagement />} />
-                {/* Task module removed for Admin as they don't assign tasks anymore */}
+                <Route path="projects" element={<AdminProjects />} />
                 <Route path="projects/approvals" element={<ProjectApprovals />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="chat" element={<AdminChat />} />
