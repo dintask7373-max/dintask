@@ -42,7 +42,7 @@ const Deals = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { salesReps, getSalesRepByEmail } = useSalesStore();
-    const { leads, fetchLeads, addLead, editLead, deleteLead, pipelineStages } = useCRMStore();
+    const { leads, fetchLeads, addLead, editLead, deleteLead, pipelineStages, requestProjectConversion } = useCRMStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStage, setSelectedStage] = useState('all');
@@ -85,14 +85,21 @@ const Deals = () => {
 
     // Filter and sort deals
     const filteredDeals = useMemo(() => {
-        if (!salesRep && !user) return [];
-        let myDeals = leads;
+        if (!user) return [];
+
+        let myDeals = leads || [];
 
         return myDeals
             .filter(deal => {
-                const matchesSearch = (deal.company || deal.name).toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesSearch = (deal.company || deal.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+                // Allow 'Won' deals to appear regardless of stage filter if they are not in the current filter but relevant? 
+                // No, standard behavior is to respect the filter.
+                // But let's ensure 'All Sectors' (selectedStage === 'all') includes everything.
+
                 const matchesStage = selectedStage === 'all' || deal.status === selectedStage;
                 const matchesPriority = selectedPriority === 'all' || deal.priority === selectedPriority;
+
                 return matchesSearch && matchesStage && matchesPriority;
             })
             .sort((a, b) => {
@@ -123,7 +130,7 @@ const Deals = () => {
                 if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
                 return 0;
             });
-    }, [leads, searchTerm, selectedStage, selectedPriority, sortBy, sortOrder, salesRep, user]);
+    }, [leads, searchTerm, selectedStage, selectedPriority, sortBy, sortOrder, user]);
 
     const dealStats = useMemo(() => {
         const totalDeals = filteredDeals.length;
@@ -373,13 +380,50 @@ const Deals = () => {
                                                     deal.priority === 'high' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' :
                                                         deal.priority === 'medium' ? 'bg-amber-500' : 'bg-slate-300')}
                                                 />
-                                                <span className="text-[9px] font-black uppercase text-slate-500">{deal.priority}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-6 py-3 text-right">
-                                            <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-white dark:hover:bg-slate-800">
-                                                <ArrowRight size={14} className="text-slate-400 group-hover:text-primary-600 group-hover:translate-x-0.5 transition-all" />
-                                            </Button>
+                                            <div className="flex justify-end items-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedDeal(deal);
+                                                        setEditDealData({
+                                                            name: deal.name,
+                                                            company: deal.company,
+                                                            amount: deal.amount,
+                                                            status: deal.status,
+                                                            priority: deal.priority
+                                                        });
+                                                        setIsEditOpen(true);
+                                                    }}
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                                </Button>
+
+                                                {deal.status === 'Won' && (
+                                                    (deal.approvalStatus && deal.approvalStatus !== 'none') ? (
+                                                        <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest border-emerald-200 text-emerald-600 bg-emerald-50">
+                                                            {deal.approvalStatus.replace('_', ' ')}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-7 px-3 text-[9px] font-black uppercase tracking-widest text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-500/20"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                requestProjectConversion(deal._id || deal.id);
+                                                            }}
+                                                        >
+                                                            Convert
+                                                        </Button>
+                                                    )
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -479,6 +523,23 @@ const Deals = () => {
                             <Button variant="outline" className="flex-1 h-10 rounded-xl text-primary-600 font-black text-[9px] uppercase tracking-widest" onClick={handleEditDeal}>
                                 Recalibrate
                             </Button>
+                            {selectedDeal?.status === 'Won' && (
+                                (selectedDeal?.approvalStatus && selectedDeal.approvalStatus !== 'none') ? (
+                                    <div className="flex-1 flex items-center justify-center h-10 rounded-xl bg-slate-100 text-slate-500 font-bold text-[9px] uppercase tracking-widest border border-slate-200">
+                                        Status: {selectedDeal.approvalStatus.replace('_', ' ')}
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className="flex-1 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20"
+                                        onClick={() => {
+                                            requestProjectConversion(selectedDeal._id || selectedDeal.id);
+                                            setIsViewOpen(false);
+                                        }}
+                                    >
+                                        Convert to Project
+                                    </Button>
+                                )
+                            )}
                             <Button className="flex-1 h-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-[9px] font-black uppercase tracking-widest text-white shadow-lg shadow-primary-500/20" onClick={() => setIsViewOpen(false)}>
                                 Exit
                             </Button>

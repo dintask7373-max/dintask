@@ -143,7 +143,9 @@ const ProjectApprovals = () => {
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Closed By</p>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Sales Rep (ID: {project.owner})</p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Sales Rep: {project.owner?.name || project.owner?._id || project.owner || 'Unknown'}
+                      </p>
                     </div>
                   </div>
 
