@@ -27,6 +27,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/shared/components/ui/dialog';
+import { cn } from '@/shared/utils/cn';
 import useAuthStore from '@/store/authStore';
 import useTicketStore from '@/store/ticketStore';
 

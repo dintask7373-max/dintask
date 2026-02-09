@@ -9,22 +9,48 @@ const Notification = require('../models/Notification');
 // @access  Private (Admin, Sales)
 exports.getLeads = async (req, res) => {
   try {
+    console.log(`[CRM DEBUG] Fetching Leads for User: ${req.user.name} (${req.user.id}), Role: ${req.user.role}`);
+
     let query = { adminId: req.user.id }; // By default, fetch leads for this admin's workspace
 
     // If Sales Executive is requesting, filter by owner
     if (req.user.role === 'sales_executive' || req.user.role === 'sales') {
       const salesExec = await SalesExecutive.findById(req.user.id);
-      if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Rep not found' });
+      if (!salesExec) {
+        console.log(`[CRM DEBUG] Sales Rep NOT found for ID: ${req.user.id}`);
+        return res.status(404).json({ success: false, error: 'Sales Rep not found' });
+      }
+
+      // Detailed logging for Sales Exec
+      console.log(`[CRM DEBUG] Found Sales Exec: ${salesExec.name}, AdminID: ${salesExec.adminId}`);
+
+      // Construct query: ensure correct adminId and owner
       query = { owner: salesExec._id, adminId: salesExec.adminId };
+      console.log(`[CRM DEBUG] Query used:`, JSON.stringify(query));
     }
     // If Admin is requesting, fetch all leads associated with their adminId (which is req.user.id for Admin)
     else if (req.user.role === 'admin') {
       query = { adminId: req.user.id };
+      console.log(`[CRM DEBUG] Admin Query used:`, JSON.stringify(query));
     }
 
     const leads = await Lead.find(query).populate('owner', 'name email');
+
+    // Log the results overview
+    console.log(`[CRM DEBUG] Leads Found: ${leads.length}`);
+    if (leads.length > 0) {
+      const statuses = leads.reduce((acc, lead) => {
+        acc[lead.status] = (acc[lead.status] || 0) + 1;
+        return acc;
+      }, {});
+      console.log(`[CRM DEBUG] Status Breakdown:`, statuses);
+    } else {
+      console.log(`[CRM DEBUG] No leads found matching the criteria.`);
+    }
+
     res.status(200).json({ success: true, count: leads.length, data: leads });
   } catch (err) {
+    console.error(`[CRM DEBUG] Error in getLeads:`, err);
     res.status(500).json({ success: false, error: err.message });
   }
 };

@@ -18,12 +18,12 @@ const AdminLogin = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        const success = await login(email, password, 'admin');
-        if (success) {
+        const result = await login(email, password, 'admin');
+        if (result.success) {
             toast.success('Access Granted');
             navigate('/admin');
         } else {
-            toast.error(error || 'Authentication failed');
+            toast.error(result.error || 'Authentication failed');
         }
     };
 

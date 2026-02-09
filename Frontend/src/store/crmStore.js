@@ -181,16 +181,25 @@ const useCRMStore = create(
 
       // Helper: Move Lead (Calls editLead)
       moveLead: async (leadId, fromStage, toStage) => {
+        const { leads } = get();
         // Optimistic update
         set(state => ({
-          leads: state.leads.map(l => l._id === leadId ? { ...l, status: toStage } : l)
+          leads: state.leads.map(l => (l._id === leadId || l.id === leadId) ? { ...l, status: toStage } : l)
         }));
+
+        // Find the lead to ensure we have the correct ID for API
+        const lead = leads.find(l => l._id === leadId || l.id === leadId);
+        const actualId = lead?._id || lead?.id || leadId;
 
         // API Call
         try {
-          await get().editLead(leadId, { status: toStage });
+          await get().editLead(actualId, { status: toStage });
         } catch (err) {
           // Revert if failed (optional, but good practice)
+          console.error("Move lead failed", err);
+          set(state => ({
+            leads: state.leads.map(l => (l._id === leadId || l.id === leadId) ? { ...l, status: fromStage } : l)
+          }));
         }
       },
 

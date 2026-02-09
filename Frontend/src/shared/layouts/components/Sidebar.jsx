@@ -137,7 +137,6 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'History', path: '/superadmin/history', icon: History },
                 { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
                 { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
-                { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
                 { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
             ]
             : []),

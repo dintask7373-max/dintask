@@ -116,6 +116,8 @@ const SalesPipeline = () => {
     setDraggedFromStage(stage);
     // Add a ghost class to the dragged element if needed
     e.dataTransfer.effectAllowed = 'move';
+    // Set data for compatibility
+    e.dataTransfer.setData('text/plain', leadId);
   };
 
   const handleDragOver = (e) => {
@@ -128,7 +130,7 @@ const SalesPipeline = () => {
       moveLead(draggedLead, draggedFromStage, toStage);
 
       if (toStage === 'Won' || toStage === 'Lost') {
-        const lead = leads.find(l => l.id === draggedLead);
+        const lead = leads.find(l => (l._id === draggedLead || l.id === draggedLead));
         setSelectedLead({ ...lead, status: toStage }); // Temporarily update status for dialog
         setIsOutcomeOpen(true);
       } else {
@@ -298,9 +300,9 @@ const SalesPipeline = () => {
                 ) : (
                   stageLeads.map((lead) => (
                     <div
-                      key={lead.id}
+                      key={lead._id || lead.id}
                       draggable
-                      onDragStart={(e) => handleDragStart(e, lead.id, stage)}
+                      onDragStart={(e) => handleDragStart(e, lead._id || lead.id, stage)}
                       className="group bg-white dark:bg-slate-900 p-2.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900/50 transition-all relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 dark:bg-slate-800/30 rounded-bl-full -mr-5 -mt-5 group-hover:scale-110 transition-transform" />

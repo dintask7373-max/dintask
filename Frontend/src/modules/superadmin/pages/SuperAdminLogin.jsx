@@ -29,12 +29,12 @@ const SuperAdminLogin = () => {
         // Map UI role to system role
         const systemRole = role === 'admin' ? 'superadmin' : 'superadmin_employee';
 
-        const success = await login(email, password, systemRole);
-        if (success) {
+        const result = await login(email, password, systemRole);
+        if (result.success) {
             toast.success('System Access Granted');
             navigate('/superadmin');
         } else {
-            toast.error(error || 'Access Denied');
+            toast.error(result.error || 'Access Denied');
         }
     };
 

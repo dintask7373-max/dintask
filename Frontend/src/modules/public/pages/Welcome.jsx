@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,24 +18,18 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import useSuperAdminStore from '@/store/superAdminStore';
 
 const Welcome = () => {
     const navigate = useNavigate();
     const [showIntel, setShowIntel] = useState(false);
-    const { systemIntel, fetchSystemIntel } = useSuperAdminStore();
 
-    useEffect(() => {
-        fetchSystemIntel();
-    }, []);
-
-    const baseModuleDetails = [
+    const moduleDetails = [
         {
             role: 'Admin',
+            title: 'Strategic Command',
             icon: Shield,
             color: 'text-blue-500',
             bg: 'bg-blue-500/10',
-            title: 'Strategic Command',
             process: 'Infrastructure Oversight -> Resource Allocation -> Performance Intelligence',
             flow: [
                 'Manage entire workspace hierarchy (Managers, Sales, Employees)',
@@ -47,10 +41,10 @@ const Welcome = () => {
         },
         {
             role: 'Manager',
+            title: 'Execution Orchestrator',
             icon: Briefcase,
             color: 'text-amber-500',
             bg: 'bg-amber-500/10',
-            title: 'Execution Orchestrator',
             process: 'Project Definition -> Task Delegation -> Velocity Monitoring',
             flow: [
                 'Create and manage complex project roadmaps',
@@ -62,10 +56,10 @@ const Welcome = () => {
         },
         {
             role: 'Sales',
+            title: 'Revenue Architect',
             icon: BarChart3,
             color: 'text-emerald-500',
             bg: 'bg-emerald-500/10',
-            title: 'Revenue Architect',
             process: 'Lead Acquisition -> Deal Negotiation -> Conversion Success',
             flow: [
                 'Full lifecycle Deal & Client Relationship Management',
@@ -77,10 +71,10 @@ const Welcome = () => {
         },
         {
             role: 'Employee',
+            title: 'Operational Specialist',
             icon: Users,
             color: 'text-primary-500',
             bg: 'bg-primary-500/10',
-            title: 'Operational Specialist',
             process: 'Personal Backlog -> Task Execution -> Progress Deployment',
             flow: [
                 'Manage personal task backlog and priorities',
@@ -91,12 +85,6 @@ const Welcome = () => {
             features: ['Task Home', 'Personal Notes', 'Activity Log', 'Sync Portal']
         }
     ];
-
-    // Merge dynamic intel into base details
-    const moduleDetails = baseModuleDetails.map(base => {
-        const dynamic = systemIntel?.find(item => item.role === base.role);
-        return dynamic ? { ...base, ...dynamic } : base;
-    });
 
     return (
         <div
@@ -114,6 +102,22 @@ const Welcome = () => {
 
             {/* Top-Right Controls */}
             <div className="absolute top-6 right-6 md:top-12 md:right-12 z-50 flex items-center gap-3 md:gap-5">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.1 }}
+                >
+                    <button
+                        onClick={() => navigate('/superadmin/login')}
+                        className="size-10 md:size-14 rounded-full bg-slate-900/10 backdrop-blur-xl border border-slate-900/20 flex items-center justify-center text-slate-900 dark:text-white hover:bg-slate-900/20 transition-all shadow-2xl group"
+                    >
+                        <Shield size={20} className="md:size-6 group-hover:rotate-12 transition-transform" />
+                        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest text-slate-900/60 dark:text-white/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                            System Portal
+                        </span>
+                    </button>
+                </motion.div>
+
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}

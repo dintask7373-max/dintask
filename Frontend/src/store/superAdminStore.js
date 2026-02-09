@@ -35,7 +35,6 @@ const useSuperAdminStore = create(
                 pendingRefunds: 0,
                 churnRate: 0
             },
-            systemIntel: [],
             loading: false,
 
             fetchAdmins: async () => {
@@ -353,50 +352,6 @@ const useSuperAdminStore = create(
                     console.error('Failed to fetch subscription history:', err);
                     set({ loading: false });
                 }
-            },
-
-            fetchSystemIntel: async () => {
-                try {
-                    const response = await apiRequest('/system-intel');
-                    if (response.success) {
-                        set({ systemIntel: response.data });
-                    }
-                } catch (err) {
-                    console.error('Failed to fetch system intel:', err);
-                }
-            },
-
-            updateSystemIntel: async (role, data) => {
-                try {
-                    const response = await apiRequest(`/system-intel/${role}`, {
-                        method: 'PUT',
-                        body: data
-                    });
-                    if (response.success) {
-                        set((state) => ({
-                            systemIntel: state.systemIntel.map(item =>
-                                item.role === role ? response.data : item
-                            )
-                        }));
-                        return true;
-                    }
-                } catch (err) {
-                    console.error('Failed to update system intel:', err);
-                }
-                return false;
-            },
-
-            seedSystemIntel: async () => {
-                try {
-                    const response = await apiRequest('/system-intel/seed', { method: 'POST' });
-                    if (response.success) {
-                        set({ systemIntel: response.data });
-                        return true;
-                    }
-                } catch (err) {
-                    console.error('Failed to seed system intel:', err);
-                }
-                return false;
             },
         }),
         {
