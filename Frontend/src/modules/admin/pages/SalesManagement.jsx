@@ -394,7 +394,7 @@ const SalesManagement = () => {
                         </div>
 
                         {/* Pagination Controls */}
-                        {salesPagination && salesPagination.pages > 1 && (
+                        {salesPagination && salesPagination.total > 0 && (
                             <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20 flex items-center justify-between">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                     Page {salesPagination.page} of {salesPagination.pages}
@@ -423,9 +423,9 @@ const SalesManagement = () => {
                                                     size="sm"
                                                     onClick={() => handlePageChange(p)}
                                                     className={cn(
-                                                        "h-8 w-8 p-0 rounded-lg text-xs font-bold",
+                                                        "h-8 w-8 p-0 rounded-lg text-xs font-bold transition-all",
                                                         currentPage === p
-                                                            ? "bg-primary-600 text-white shadow-md shadow-primary-500/20"
+                                                            ? "bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-500/20 ring-2 ring-primary-100 dark:ring-primary-900"
                                                             : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                                                     )}
                                                 >
@@ -560,7 +560,7 @@ const SalesManagement = () => {
                                                     </div>
                                                 ) : (
                                                     stageLeads.map((lead, index) => (
-                                                        <Draggable key={lead._id || lead.id} draggableId={lead._id || lead.id} index={index}>
+                                                        <Draggable key={lead._id || lead.id} draggableId={lead._id || lead.id} index={index} isDragDisabled={true}>
                                                             {(provided, snapshot) => (
                                                                 <div
                                                                     ref={provided.innerRef}
