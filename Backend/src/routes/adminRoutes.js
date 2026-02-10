@@ -14,7 +14,8 @@ const {
     approveJoinRequest,
     rejectJoinRequest,
     addTeamMember,
-    getSubscriptionLimitStatus
+    getSubscriptionLimitStatus,
+    getDashboardStats
 } = require('../controllers/adminController');
 const { getPlans } = require('../controllers/planController');
 
@@ -34,6 +35,7 @@ router.get('/users', getAllUsers);
 router.use(authorize('admin', 'superadmin', 'manager'));
 router.get('/plans', getPlans);
 router.get('/subscription-limit', getSubscriptionLimitStatus);
+router.get('/dashboard-stats', getDashboardStats);
 
 // Restricted Admin and Super Admin only routes
 router.use(authorize('admin', 'superadmin'));

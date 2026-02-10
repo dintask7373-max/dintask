@@ -621,6 +621,99 @@ exports.getSubscriptionLimitStatus = async (req, res, next) => {
   }
 };
 
+// @desc    Get Dashboard Statistics
+// @route   GET /api/v1/admin/dashboard-stats
+// @access  Private (Admin only)
+exports.getDashboardStats = async (req, res, next) => {
+  try {
+    // Ensure user is authenticated and has admin role
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access dashboard stats', 403));
+    }
+
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    // Get Total Revenue from all Sales (Won deals)
+    const revenueResult = await require('../models/Lead').aggregate([
+      {
+        $match: {
+          adminId: adminObjectId,
+          status: 'Won'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$amount' }
+        }
+      }
+    ]);
+    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+
+    // Get Active Projects count
+    const activeProjects = await require('../models/Project').countDocuments({
+      adminId: adminObjectId,
+      status: 'active'
+    });
+
+    // Get Total Staff (Managers + Employees + Sales Reps)
+    const [managersCount, employeesCount, salesRepsCount] = await Promise.all([
+      Manager.countDocuments({ adminId: adminObjectId }),
+      Employee.countDocuments({ adminId: adminObjectId }),
+      SalesExecutive.countDocuments({ adminId: adminObjectId })
+    ]);
+    const totalStaff = managersCount + employeesCount + salesRepsCount;
+
+    // Get Admin's subscription plan limit
+    const admin = await Admin.findById(adminId).populate('subscriptionPlan');
+    const staffLimit = admin?.subscriptionPlan?.userLimit || 0;
+
+    // Get Pending Actions count
+    // Note: Since there's no JoinRequest model, we'll count project conversion requests
+    // (leads with status 'Won' that haven't been converted to projects yet)
+    const wonLeads = await require('../models/Lead').countDocuments({
+      adminId: adminObjectId,
+      status: 'Won'
+    });
+
+    const existingProjects = await require('../models/Project').countDocuments({
+      adminId: adminObjectId
+    });
+
+    // Approximate pending project conversions (this is a simplified calculation)
+    const pendingProjectConversions = Math.max(0, wonLeads - existingProjects);
+
+    // Get open support tickets
+    const openTickets = await require('../models/SupportTicket').countDocuments({
+      companyId: adminObjectId,
+      status: { $in: ['Open', 'Pending', 'Escalated'] }
+    });
+
+    const pendingActions = pendingProjectConversions + openTickets;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalRevenue,
+        activeProjects,
+        totalStaff,
+        staffLimit,
+        pendingActions,
+        breakdown: {
+          managers: managersCount,
+          employees: employeesCount,
+          salesReps: salesRepsCount,
+          pendingProjectConversions,
+          openTickets
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
