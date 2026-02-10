@@ -7,6 +7,7 @@ import {
     Trash2,
     Edit2,
     Clock,
+    Pin,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
@@ -36,7 +37,7 @@ import { cn } from '@/shared/utils/cn';
 import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
 
 const Notes = () => {
-    const { notes, addNote, updateNote, deleteNote } = useNotesStore();
+    const { notes, loading, fetchNotes, addNote, updateNote, deleteNote, togglePin } = useNotesStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -46,26 +47,31 @@ const Notes = () => {
 
     const [listRef] = useAutoAnimate();
 
+    React.useEffect(() => {
+        fetchNotes();
+    }, [fetchNotes]);
+
     const filteredNotes = notes.filter(note =>
-        note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.content.toLowerCase().includes(searchTerm.toLowerCase())
+        note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.content?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleSaveNote = () => {
+    const handleSaveNote = async () => {
         if (!newNote.title || !newNote.content) return;
 
-        if (editingId) {
-            // Update existing note
-            updateNote(editingId, newNote);
-        } else {
-            // Create new note
-            addNote(newNote);
+        try {
+            if (editingId) {
+                await updateNote(editingId, newNote);
+            } else {
+                await addNote(newNote);
+            }
+            // Reset state
+            setNewNote({ title: '', content: '', category: 'General' });
+            setEditingId(null);
+            setIsAddModalOpen(false);
+        } catch (error) {
+            console.error('Failed to save note:', error);
         }
-
-        // Reset state
-        setNewNote({ title: '', content: '', category: 'General' });
-        setEditingId(null);
-        setIsAddModalOpen(false);
     };
 
     const handleEditClick = (note) => {
@@ -74,7 +80,7 @@ const Notes = () => {
             content: note.content,
             category: note.category
         });
-        setEditingId(note.id);
+        setEditingId(note._id || note.id);
         setIsAddModalOpen(true);
     };
 
@@ -84,8 +90,33 @@ const Notes = () => {
         setIsAddModalOpen(true);
     };
 
-    const handleDeleteNote = (id) => {
-        deleteNote(id);
+    const handleDeleteNote = async (id) => {
+        if (window.confirm('Delete this note permanentely?')) {
+            await deleteNote(id);
+        }
+    };
+
+    // Helper to highlight search matches
+    const HighlightText = ({ text, highlight }) => {
+        if (!highlight.trim()) {
+            return <span>{text}</span>;
+        }
+        const regex = new RegExp(`(${highlight})`, 'gi');
+        const parts = text.split(regex);
+
+        return (
+            <span>
+                {parts.map((part, i) =>
+                    part.toLowerCase() === highlight.toLowerCase() ? (
+                        <span key={i} className="bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 px-0.5 rounded shadow-[0_0_10px_rgba(234,179,8,0.1)]">
+                            {part}
+                        </span>
+                    ) : (
+                        part
+                    )
+                )}
+            </span>
+        );
     };
 
     return (
@@ -137,7 +168,13 @@ const Notes = () => {
                 {/* Notes Feed */}
                 <div ref={listRef} className="space-y-4">
                     <AnimatePresence mode="popLayout">
-                        {filteredNotes.length === 0 ? (
+                        {loading && notes.length === 0 ? (
+                            <div className="space-y-4">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="h-32 w-full bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] animate-pulse" />
+                                ))}
+                            </div>
+                        ) : filteredNotes.length === 0 ? (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -151,46 +188,69 @@ const Notes = () => {
                         ) : (
                             filteredNotes.map((note, index) => (
                                 <motion.div
-                                    key={note.id}
+                                    key={note._id || note.id}
                                     variants={fadeInUp}
                                     custom={index}
                                     layout
                                 >
-                                    <Card className="border-none shadow-[0_15px_35px_-8px_rgba(0,0,0,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[1.5rem] overflow-hidden group hover:shadow-lg transition-all duration-300">
+                                    <Card className={cn(
+                                        "border-none shadow-[0_15px_35px_-8px_rgba(0,0,0,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[1.5rem] overflow-hidden group hover:shadow-lg transition-all duration-300",
+                                        note.isPinned && "ring-2 ring-primary-500/20 shadow-primary-500/5"
+                                    )}>
                                         <CardContent className="p-4">
                                             <div className="flex justify-between items-start mb-1">
-                                                <Badge className="text-[7px] font-black uppercase tracking-[0.1em] px-1.5 py-0.5 bg-[#4461f2]/10 text-[#4461f2] border-none rounded-md">
-                                                    {note.category}
-                                                </Badge>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-                                                            <MoreVertical size={12} className="text-slate-400" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="rounded-2xl border-slate-100 dark:border-slate-800 p-1.5 shadow-xl">
-                                                        <DropdownMenuItem
-                                                            className="gap-3 text-xs font-bold rounded-xl cursor-pointer py-1.5"
-                                                            onClick={() => handleEditClick(note)}
-                                                        >
-                                                            <Edit2 size={12} className="text-blue-500" /> Edit Note
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="gap-3 text-xs font-bold text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10 rounded-xl cursor-pointer py-1.5"
-                                                            onClick={() => handleDeleteNote(note.id)}
-                                                        >
-                                                            <Trash2 size={12} /> Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className="text-[7px] font-black uppercase tracking-[0.1em] px-1.5 py-0.5 bg-[#4461f2]/10 text-[#4461f2] border-none rounded-md">
+                                                        {note.category}
+                                                    </Badge>
+                                                    {note.isPinned && (
+                                                        <Pin size={10} className="text-primary-600 fill-primary-600" />
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn(
+                                                            "h-5 w-5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity",
+                                                            note.isPinned ? "text-primary-600" : "text-slate-300"
+                                                        )}
+                                                        onClick={() => togglePin(note._id || note.id)}
+                                                    >
+                                                        <Pin size={10} className={note.isPinned ? "fill-primary-600" : ""} />
+                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                                                                <MoreVertical size={12} className="text-slate-400" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="rounded-2xl border-slate-100 dark:border-slate-800 p-1.5 shadow-xl">
+                                                            <DropdownMenuItem
+                                                                className="gap-3 text-xs font-bold rounded-xl cursor-pointer py-1.5"
+                                                                onClick={() => handleEditClick(note)}
+                                                            >
+                                                                <Edit2 size={12} className="text-blue-500" /> Edit Note
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="gap-3 text-xs font-bold text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10 rounded-xl cursor-pointer py-1.5"
+                                                                onClick={() => handleDeleteNote(note._id || note.id)}
+                                                            >
+                                                                <Trash2 size={12} /> Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
                                             </div>
-                                            <h4 className="text-sm font-black text-slate-900 dark:text-white mb-0.5 leading-tight">{note.title}</h4>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed mb-1.5">
-                                                {note.content}
+                                            <h4 className="text-sm font-black text-slate-900 dark:text-white mb-0.5 leading-tight">
+                                                <HighlightText text={note.title || ''} highlight={searchTerm} />
+                                            </h4>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed mb-1.5 whitespace-pre-wrap">
+                                                <HighlightText text={note.content || ''} highlight={searchTerm} />
                                             </p>
                                             <div className="flex items-center gap-1.5 text-[8px] text-slate-400 font-bold uppercase tracking-wider italic">
                                                 <Clock size={10} className="text-slate-300" />
-                                                {format(new Date(note.createdAt), 'MMM dd, p')}
+                                                {note.createdAt ? format(new Date(note.createdAt), 'MMM dd, p') : 'Just now'}
                                             </div>
                                         </CardContent>
                                     </Card>

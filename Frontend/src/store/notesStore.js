@@ -1,87 +1,89 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import apiRequest from '@/lib/api';
 
-const useNotesStore = create(
-    persist(
-        (set, get) => ({
-            // ... (store logic)
-            notes: [
-                {
-                    id: '1',
-                    title: 'Daily Checklist',
-                    content: 'Check upcoming tasks, update status of yesterday tasks, sync with manager.',
-                    category: 'Work',
-                    createdAt: new Date().toISOString(),
-                    color: 'bg-blue-50'
-                },
-                {
-                    id: '2',
-                    title: 'Meeting Notes: Frontend Review',
-                    content: 'Need to improve the sidebar animation and add dark mode support.',
-                    category: 'Meetings',
-                    createdAt: new Date(Date.now() - 86400000).toISOString(),
-                    color: 'bg-emerald-50'
-                },
-                {
-                    id: '3',
-                    title: 'Idea: Task Gamification',
-                    content: 'Maybe add points or badges for completing tasks on time? Needs discussion with management.',
-                    category: 'Internal',
-                    createdAt: new Date(Date.now() - 172800000).toISOString(),
-                    color: 'bg-amber-50'
-                },
-                {
-                    id: '4',
-                    title: 'Project Alpha Requirements',
-                    content: '1. React Native for mobile\n2. GraphQL for API\n3. Shared component library with the web app.',
-                    category: 'Engineering',
-                    createdAt: new Date(Date.now() - 259200000).toISOString(),
-                    color: 'bg-purple-50'
-                },
-                {
-                    id: '5',
-                    title: 'Weekend Self-Improvement',
-                    content: 'Finish the Advanced TypeScript course on Coursera. Practice with the new generic utility types.',
-                    category: 'Personal',
-                    createdAt: new Date(Date.now() - 432000000).toISOString(),
-                    color: 'bg-pink-50'
-                }
-            ],
-            loading: false,
+const useNotesStore = create((set, get) => ({
+    notes: [],
+    loading: false,
+    error: null,
 
-            addNote: (note) => {
+    fetchNotes: async () => {
+        set({ loading: true, error: null });
+        try {
+            const response = await apiRequest('/notes');
+            if (response.success) {
+                set({ notes: response.data, loading: false });
+            }
+        } catch (error) {
+            set({ error: error.message, loading: false });
+        }
+    },
+
+    addNote: async (note) => {
+        set({ loading: true });
+        try {
+            const response = await apiRequest('/notes', {
+                method: 'POST',
+                body: note
+            });
+            if (response.success) {
                 set((state) => ({
-                    notes: [
-                        {
-                            ...note,
-                            id: Date.now().toString(),
-                            createdAt: new Date().toISOString(),
-                            color: note.color || 'bg-white'
-                        },
-                        ...state.notes,
-                    ],
+                    notes: [response.data, ...state.notes],
+                    loading: false
                 }));
-            },
+            }
+        } catch (error) {
+            set({ error: error.message, loading: false });
+            throw error;
+        }
+    },
 
-            updateNote: (id, updatedData) => {
+    updateNote: async (id, updatedData) => {
+        set({ loading: true });
+        try {
+            const response = await apiRequest(`/notes/${id}`, {
+                method: 'PUT',
+                body: updatedData
+            });
+            if (response.success) {
                 set((state) => ({
                     notes: state.notes.map((note) =>
-                        note.id === id ? { ...note, ...updatedData } : note
+                        (note._id === id || note.id === id) ? response.data : note
                     ),
+                    loading: false
                 }));
-            },
-
-            deleteNote: (id) => {
-                set((state) => ({
-                    notes: state.notes.filter((note) => note.id !== id),
-                }));
-            },
-        }),
-        {
-            name: 'dintask-notes-storage',
-            storage: createJSONStorage(() => sessionStorage),
+            }
+        } catch (error) {
+            set({ error: error.message, loading: false });
+            throw error;
         }
-    )
-);
+    },
+
+    deleteNote: async (id) => {
+        set({ loading: true });
+        try {
+            const response = await apiRequest(`/notes/${id}`, {
+                method: 'DELETE'
+            });
+            if (response.success) {
+                set((state) => ({
+                    notes: state.notes.filter((note) => (note._id !== id && note.id !== id)),
+                    loading: false
+                }));
+            }
+        } catch (error) {
+            set({ error: error.message, loading: false });
+            throw error;
+        }
+    },
+
+    togglePin: async (id) => {
+        const note = get().notes.find(n => n._id === id || n.id === id);
+        if (!note) return;
+
+        await get().updateNote(id, { isPinned: !note.isPinned });
+        // After toggle pin, re-fetch or re-sort
+        get().fetchNotes();
+    }
+}));
 
 export default useNotesStore;
