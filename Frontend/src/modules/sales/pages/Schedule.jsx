@@ -75,7 +75,7 @@ const SalesSchedule = () => {
     const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
 
     const getDailyEvents = (day) => {
-        const myTasks = tasks.filter(t => {
+        const myTasks = (Array.isArray(tasks) ? tasks : []).filter(t => {
             const isAssigned = t.assignedTo?.some(id => id === user?.id || id === '1');
             return isAssigned && t.deadline && isSameDay(new Date(t.deadline), day);
         }).map(t => ({
@@ -87,13 +87,13 @@ const SalesSchedule = () => {
             date: t.deadline
         }));
 
-        const mySchedules = schedules.filter(s => isSameDay(new Date(s.date), day)).map(s => ({
+        const mySchedules = (Array.isArray(schedules) ? schedules : []).filter(s => isSameDay(new Date(s.date), day)).map(s => ({
             ...s,
             source: 'schedule'
         }));
 
-        const myFollowUps = followUps.filter(f => f.scheduledAt && isSameDay(new Date(f.scheduledAt), day)).map(f => {
-            const lead = leads.find(l => l.id === f.leadId);
+        const myFollowUps = (Array.isArray(followUps) ? followUps : []).filter(f => f.scheduledAt && isSameDay(new Date(f.scheduledAt), day)).map(f => {
+            const lead = (leads || []).find(l => (l._id || l.id) === f.leadId);
             return {
                 id: f.id,
                 title: `${f.type === 'meeting' ? 'Meeting' : 'Call'} with ${lead?.name || 'Lead'}`,
@@ -169,8 +169,8 @@ const SalesSchedule = () => {
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-8 px-1">
                 <div className="flex items-center gap-3">
-                    <div className="lg:hidden size-9 sm:size-11 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    <div className="lg:hidden size-9 sm:size-11 shrink-0">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
                     </div>
                     <div>
                         <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-tight">

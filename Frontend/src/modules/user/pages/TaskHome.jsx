@@ -196,8 +196,7 @@ const TaskHome = () => {
                 <Plus size={28} />
             </motion.button>
 
-            {/* -- Aesthetic Blur Gradient -- */}
-            <div className="fixed bottom-0 left-0 w-full h-24 bg-gradient-to-t from-background-light dark:from-background-dark to-transparent pointer-events-none z-10"></div>
+
         </div>
     );
 };

@@ -66,8 +66,8 @@ const Clients = () => {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 mb-2">
                 <div className="flex items-center gap-3">
-                    <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    <div className="lg:hidden size-9 shrink-0">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
                     </div>
                     <div>
                         <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
@@ -132,8 +132,8 @@ const Clients = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {myClients.map((client) => (
-                                    <TableRow key={client.id} className="group border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                {myClients.map((client, index) => (
+                                    <TableRow key={`${client._id || client.id || 'new'}-${index}`} className="group border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <TableCell className="px-4 sm:px-6 py-3">
                                             <div className="flex items-center gap-2.5 sm:gap-3">
                                                 <div className="size-7 sm:size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-slate-500 uppercase shrink-0">

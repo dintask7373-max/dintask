@@ -1,9 +1,34 @@
 const LandingPageContent = require('../models/LandingPageContent');
+const Plan = require('../models/Plan');
 
 // Get all landing page content (public)
 exports.getAllContent = async (req, res) => {
     try {
         const content = await LandingPageContent.find({ isActive: true });
+
+        // Find pricing section and inject real plans
+        const pricingIndex = content.findIndex(c => c.section === 'pricing');
+        if (pricingIndex !== -1) {
+            const realPlans = await Plan.find({ isActive: true }).sort({ price: 1 });
+            const formattedPlans = realPlans.map(plan => ({
+                id: plan._id,
+                name: plan.name,
+                price: plan.price === 0 ? 'Free' : `₹${plan.price}`,
+                duration: plan.price === 0 ? 'Forever' : (plan.duration >= 365 ? 'year' : 'month'),
+                description: plan.description || `${plan.name} Tier`,
+                features: plan.features && plan.features.length > 0 ? plan.features : ['All basic features', 'Email support'],
+                userLimit: plan.userLimit,
+                cta: plan.price === 0 ? 'Get Started' : (plan.name.toLowerCase() === 'enterprise' ? 'Contact Sales' : 'Subscribe Now'),
+                variant: plan.price === 0 ? 'outline' : 'default',
+                popular: plan.name.toLowerCase().includes('pro') || plan.name.toLowerCase().includes('plus')
+            }));
+
+            // We need to convert to a plain object to modify it
+            const contentArray = content.map(c => c.toObject());
+            contentArray[pricingIndex].plans = formattedPlans;
+            return res.json({ success: true, data: contentArray });
+        }
+
         res.json({ success: true, data: content });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching content', error: error.message });
@@ -20,7 +45,27 @@ exports.getContentBySection = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Section not found' });
         }
 
-        res.json({ success: true, data: content });
+        let responseData = content.toObject();
+
+        // If section is pricing, fetch real plans
+        if (section === 'pricing') {
+            const realPlans = await Plan.find({ isActive: true }).sort({ price: 1 });
+            const formattedPlans = realPlans.map(plan => ({
+                id: plan._id,
+                name: plan.name,
+                price: plan.price === 0 ? 'Free' : `₹${plan.price}`,
+                duration: plan.price === 0 ? 'Forever' : (plan.duration >= 365 ? 'year' : 'month'),
+                description: plan.description || `${plan.name} Tier`,
+                features: plan.features && plan.features.length > 0 ? plan.features : ['All basic features', 'Email support'],
+                userLimit: plan.userLimit,
+                cta: plan.price === 0 ? 'Get Started' : (plan.name.toLowerCase() === 'enterprise' ? 'Contact Sales' : 'Subscribe Now'),
+                variant: plan.price === 0 ? 'outline' : 'default',
+                popular: plan.name.toLowerCase().includes('pro') || plan.name.toLowerCase().includes('plus')
+            }));
+            responseData.plans = formattedPlans;
+        }
+
+        res.json({ success: true, data: responseData });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching content', error: error.message });
     }

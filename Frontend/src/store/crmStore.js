@@ -10,8 +10,28 @@ const useCRMStore = create(
       leads: [],
       salesExecutives: [],
       pendingProjects: [],
+      followUps: [],
       loading: false,
       error: null,
+
+      // Follow-up Actions
+      addFollowUp: (followUp) => {
+        set((state) => ({
+          followUps: [...state.followUps, { ...followUp, id: Date.now().toString() }]
+        }));
+      },
+
+      updateFollowUp: (id, updatedData) => {
+        set((state) => ({
+          followUps: state.followUps.map((f) => f.id === id ? { ...f, ...updatedData } : f)
+        }));
+      },
+
+      deleteFollowUp: (id) => {
+        set((state) => ({
+          followUps: state.followUps.filter((f) => f.id !== id)
+        }));
+      },
 
       // Sales Pipeline Stages (Configurable)
       pipelineStages: ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'],
