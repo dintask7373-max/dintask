@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Employee = require('../models/Employee');
 const SalesExecutive = require('../models/SalesExecutive');
 const Manager = require('../models/Manager');
@@ -80,9 +81,9 @@ exports.getAllUsers = async (req, res, next) => {
     // Fetch Admin, Managers, Sales, Employees for this workspace
     const [admin, employees, sales, managers] = await Promise.all([
       Admin.findById(adminId).select('name email avatar role companyName'),
-      Employee.find({ adminId, status: 'active' }).select('name email avatar role'),
-      SalesExecutive.find({ adminId, status: 'active' }).select('name email avatar role'),
-      Manager.find({ adminId, status: 'active' }).select('name email avatar role')
+      Employee.find({ adminId, status: { $in: ['active', 'inactive'] } }).select('name email avatar role status'),
+      SalesExecutive.find({ adminId, status: { $in: ['active', 'inactive'] } }).select('name email avatar role status'),
+      Manager.find({ adminId, status: { $in: ['active', 'inactive'] } }).select('name email avatar role status')
     ]);
 
     // Format admin to look like other users and include in list
@@ -109,7 +110,213 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// @desc    Delete a user from any collection (Workspace-specific)
+// @desc    Get Managers with pagination and search
+// @route   GET /api/v1/admin/managers
+// @access  Private (Admin)
+exports.getManagers = async (req, res, next) => {
+  try {
+    const { search } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    let adminId;
+    if (req.user.role === 'admin') {
+      adminId = req.user.id;
+    } else {
+      // For now, restrict to Admin only or handle other roles if needed
+      return next(new ErrorResponse('Not authorized to view managers', 403));
+    }
+
+    const matchQuery = {
+      adminId: new mongoose.Types.ObjectId(adminId),
+      role: 'manager'
+    };
+
+    if (search) {
+      matchQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phoneNumber: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const result = await Manager.aggregate([
+      { $match: matchQuery },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            // Lookup for teams/project counts or other related info can be added here if needed
+            {
+              $lookup: {
+                from: 'teams',
+                localField: '_id',
+                foreignField: 'managerId',
+                as: 'managedTeams'
+              }
+            },
+            {
+              $addFields: {
+                activeTeamsCount: { $size: '$managedTeams' }
+              }
+            },
+            { $project: { password: 0, managedTeams: 0 } }
+          ]
+        }
+      }
+    ]);
+
+    const managers = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
+
+    res.status(200).json({
+      success: true,
+      count: managers.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
+      data: managers
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Employees with pagination and search
+// @route   GET /api/v1/admin/employees
+// @access  Private (Admin)
+exports.getEmployees = async (req, res, next) => {
+  try {
+    const { search } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    let adminId;
+    if (req.user.role === 'admin') {
+      adminId = req.user.id;
+    } else {
+      return next(new ErrorResponse('Not authorized to view employees', 403));
+    }
+
+    const matchQuery = {
+      adminId: new mongoose.Types.ObjectId(adminId),
+      role: 'employee'
+    };
+
+    if (search) {
+      matchQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phoneNumber: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const result = await Employee.aggregate([
+      { $match: matchQuery },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            { $project: { password: 0 } }
+          ]
+        }
+      }
+    ]);
+
+    const employees = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
+
+    res.status(200).json({
+      success: true,
+      count: employees.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
+      data: employees
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Sales Executives with pagination and search
+// @route   GET /api/v1/admin/sales-executives
+// @access  Private (Admin)
+exports.getSalesExecutives = async (req, res, next) => {
+  try {
+    const { search } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    let adminId;
+    if (req.user.role === 'admin') {
+      adminId = req.user.id;
+    } else {
+      return next(new ErrorResponse('Not authorized to view sales executives', 403));
+    }
+
+    const matchQuery = {
+      adminId: new mongoose.Types.ObjectId(adminId),
+      role: 'sales_executive'
+    };
+
+    if (search) {
+      matchQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phoneNumber: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const result = await SalesExecutive.aggregate([
+      { $match: matchQuery },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            { $project: { password: 0 } }
+          ]
+        }
+      }
+    ]);
+
+    const salesExecutives = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
+
+    res.status(200).json({
+      success: true,
+      count: salesExecutives.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
+      data: salesExecutives
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @route   DELETE /api/v1/admin/users/:id
 // @access  Private (Admin)
 exports.deleteUser = async (req, res, next) => {
@@ -170,9 +377,10 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/admin/resetpassword/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}?role=admin`;
 
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.`;
 
     try {
       await sendEmail({
@@ -407,6 +615,99 @@ exports.getSubscriptionLimitStatus = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: limitStatus
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Dashboard Statistics
+// @route   GET /api/v1/admin/dashboard-stats
+// @access  Private (Admin only)
+exports.getDashboardStats = async (req, res, next) => {
+  try {
+    // Ensure user is authenticated and has admin role
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access dashboard stats', 403));
+    }
+
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    // Get Total Revenue from all Sales (Won deals)
+    const revenueResult = await require('../models/Lead').aggregate([
+      {
+        $match: {
+          adminId: adminObjectId,
+          status: 'Won'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$amount' }
+        }
+      }
+    ]);
+    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+
+    // Get Active Projects count
+    const activeProjects = await require('../models/Project').countDocuments({
+      adminId: adminObjectId,
+      status: 'active'
+    });
+
+    // Get Total Staff (Managers + Employees + Sales Reps)
+    const [managersCount, employeesCount, salesRepsCount] = await Promise.all([
+      Manager.countDocuments({ adminId: adminObjectId }),
+      Employee.countDocuments({ adminId: adminObjectId }),
+      SalesExecutive.countDocuments({ adminId: adminObjectId })
+    ]);
+    const totalStaff = managersCount + employeesCount + salesRepsCount;
+
+    // Get Admin's subscription plan limit
+    const admin = await Admin.findById(adminId).populate('subscriptionPlan');
+    const staffLimit = admin?.subscriptionPlan?.userLimit || 0;
+
+    // Get Pending Actions count
+    // Note: Since there's no JoinRequest model, we'll count project conversion requests
+    // (leads with status 'Won' that haven't been converted to projects yet)
+    const wonLeads = await require('../models/Lead').countDocuments({
+      adminId: adminObjectId,
+      status: 'Won'
+    });
+
+    const existingProjects = await require('../models/Project').countDocuments({
+      adminId: adminObjectId
+    });
+
+    // Approximate pending project conversions (this is a simplified calculation)
+    const pendingProjectConversions = Math.max(0, wonLeads - existingProjects);
+
+    // Get open support tickets
+    const openTickets = await require('../models/SupportTicket').countDocuments({
+      companyId: adminObjectId,
+      status: { $in: ['Open', 'Pending', 'Escalated'] }
+    });
+
+    const pendingActions = pendingProjectConversions + openTickets;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalRevenue,
+        activeProjects,
+        totalStaff,
+        staffLimit,
+        pendingActions,
+        breakdown: {
+          managers: managersCount,
+          employees: employeesCount,
+          salesReps: salesRepsCount,
+          pendingProjectConversions,
+          openTickets
+        }
+      }
     });
   } catch (err) {
     next(err);

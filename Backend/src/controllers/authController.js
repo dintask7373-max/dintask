@@ -7,6 +7,8 @@ const SuperAdmin = require('../models/SuperAdmin');
 
 const checkUserLimit = require('../utils/checkUserLimit');
 const ErrorResponse = require('../utils/errorResponse');
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
 
 const Plan = require('../models/Plan');
 
@@ -16,7 +18,9 @@ const models = {
   sales: SalesExecutive, // Added for normalized role support
   manager: Manager,
   admin: Admin,
-  superadmin: SuperAdmin
+  superadmin: SuperAdmin,
+  super_admin: SuperAdmin,
+  superadmin_staff: SuperAdmin
 };
 
 // Helper to get token from model, create cookie and send response
@@ -130,6 +134,10 @@ exports.register = async (req, res, next) => {
       });
     }
 
+    // Set status to active on registration (auto-login)
+    user.status = 'active';
+    await user.save();
+
     await sendTokenResponse(user, 201, res);
   } catch (err) {
     next(err);
@@ -233,9 +241,32 @@ exports.login = async (req, res, next) => {
       }
     }
 
+    // Set status to active on login
+    user.status = 'active';
+    await user.save();
+
     await sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Log user out / clear cookie
+// @route   GET /api/v1/auth/logout
+// @access  Private
+exports.logout = async (req, res, next) => {
+  try {
+    if (req.user) {
+      req.user.status = 'inactive';
+      await req.user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -415,3 +446,131 @@ exports.checkSubscriptionStatus = async (req, res, next) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+// @desc    Forgot password
+// @route   POST /api/v1/auth/forgotpassword
+// @access  Public
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email, role } = req.body;
+
+    if (!email) {
+      return next(new ErrorResponse('Please provide an email', 400));
+    }
+
+    let user;
+    let UserModel;
+
+    // Search across all models if role not provided, else search specific
+    if (role && models[role]) {
+      UserModel = models[role];
+      user = await UserModel.findOne({ email });
+    } else {
+      for (const [r, Model] of Object.entries(models)) {
+        user = await Model.findOne({ email });
+        if (user) {
+          UserModel = Model;
+          break;
+        }
+      }
+    }
+
+    if (!user) {
+      return next(new ErrorResponse('There is no user with that email', 404));
+    }
+
+    // Get reset token
+    const resetToken = user.getResetPasswordToken();
+
+    // Save with reset token and expire
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset url
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    // We append role to query so frontend knows which endpoint to hit if needed, or just centralize
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}?role=${user.role}`;
+
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Password Reset Request - DinTask',
+        message
+      });
+
+      res.status(200).json({
+        success: true,
+        data: 'Email sent'
+      });
+    } catch (err) {
+      console.error('Reset Email Error:', err);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return next(new ErrorResponse('Email could not be sent', 500));
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reset password
+// @route   PUT /api/v1/auth/resetpassword/:resettoken
+// @access  Public
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const { role } = req.query;
+
+    if (!password) {
+      return next(new ErrorResponse('Please provide a new password', 400));
+    }
+
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.resettoken)
+      .digest('hex');
+
+    let user;
+    let UserModel;
+
+    if (role && models[role]) {
+      UserModel = models[role];
+      user = await UserModel.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() }
+      });
+    } else {
+      // Search all
+      for (const [r, Model] of Object.entries(models)) {
+        user = await Model.findOne({
+          resetPasswordToken,
+          resetPasswordExpire: { $gt: Date.now() }
+        });
+        if (user) {
+          UserModel = Model;
+          break;
+        }
+      }
+    }
+
+    if (!user) {
+      return next(new ErrorResponse('Invalid or expired token', 400));
+    }
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    await sendTokenResponse(user, 200, res);
+  } catch (err) {
+    next(err);
+  }
+};
+

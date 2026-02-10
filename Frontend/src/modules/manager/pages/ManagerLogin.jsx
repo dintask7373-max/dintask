@@ -75,6 +75,7 @@ const ManagerLogin = () => {
                                             placeholder="manager@company.com"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
+                                            autoComplete="email"
                                             className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
                                         />
                                     </div>
@@ -95,6 +96,7 @@ const ManagerLogin = () => {
                                             placeholder="••••••••"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
+                                            autoComplete="current-password"
                                             className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
                                         />
                                     </div>

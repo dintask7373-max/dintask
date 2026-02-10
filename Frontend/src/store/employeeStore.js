@@ -4,8 +4,15 @@ import { toast } from 'sonner';
 
 const useEmployeeStore = create((set, get) => ({
     employees: [],
+    allEmployees: [], // Full list for lookups/stats
     pendingRequests: [],
     loading: false,
+    employeePagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 1
+    },
     subscriptionLimit: null, // Will be fetched from backend
     limitStatus: {
         allowed: true,
@@ -31,22 +38,43 @@ const useEmployeeStore = create((set, get) => ({
         }
     },
 
-    fetchEmployees: async () => {
+    // Paginated fetch for the main table
+    fetchEmployees: async (params = {}) => {
         set({ loading: true });
         try {
-            const res = await api('/admin/users');
-            if (res.success) {
-                const allUsers = res.data || [];
+            const queryParams = new URLSearchParams();
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            if (params.search) queryParams.append('search', params.search);
 
-                // Store ALL users (employees, managers, sales executives) 
-                // Components will filter based on role as needed
-                set({ employees: allUsers, loading: false });
+            const res = await api(`/admin/employees?${queryParams.toString()}`);
+            if (res.success) {
+                set({
+                    employees: res.data,
+                    employeePagination: res.pagination || { page: 1, limit: 10, total: 0, pages: 1 },
+                    loading: false
+                });
             }
         } catch (error) {
             console.error("Fetch Employees Error", error);
             set({ loading: false });
         }
     },
+
+    // Full fetch for lookups (manager team lists, etc.)
+    fetchAllEmployees: async () => {
+        try {
+            const res = await api('/admin/users');
+            if (res.success) {
+                // /admin/users returns ALL users; filtered by component usage or here?
+                // For now, store all, components handle filtering
+                set({ allEmployees: res.data || [] });
+            }
+        } catch (error) {
+            console.error("Fetch All Employees Error", error);
+        }
+    },
+
 
     fetchPendingRequests: async () => {
         try {

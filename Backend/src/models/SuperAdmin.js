@@ -26,7 +26,7 @@ const SuperAdminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['superadmin', 'superadmin_staff'],
+    enum: ['superadmin', 'superadmin_staff', 'super_admin'],
     default: 'superadmin'
   },
   isActive: {
@@ -34,7 +34,12 @@ const SuperAdminSchema = new mongoose.Schema({
     default: true
   },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'inactive'
+  }
 }, { timestamps: true });
 
 SuperAdminSchema.pre('save', async function () {

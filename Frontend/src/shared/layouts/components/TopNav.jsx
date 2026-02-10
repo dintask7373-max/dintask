@@ -12,12 +12,20 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import useAuthStore from '@/store/authStore';
+import useNotificationStore from '@/store/notificationStore';
+import NotificationPanel from './NotificationPanel';
 import { cn } from '@/shared/utils/cn';
 
 const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
     const { user, logout, role } = useAuthStore();
+    const { unreadCount, fetchNotifications } = useNotificationStore();
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     const toggleDarkMode = () => {
         setIsDarkMode(!isDarkMode);
@@ -48,14 +56,17 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                         <Menu className="h-6 w-6" />
                     </Button>
 
-                    <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 w-64">
-                        <Search className="h-4 w-4 text-slate-400 mr-2" />
-                        <input
-                            type="text"
-                            placeholder="Search tasks, people..."
-                            className="bg-transparent border-none outline-none text-sm w-full dark:text-slate-200"
-                        />
-                    </div>
+                    {/* Search Bar - Hidden for Super Admin */}
+                    {!['superadmin', 'superadmin_staff'].includes(role) && (
+                        <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 w-64">
+                            <Search className="h-4 w-4 text-slate-400 mr-2" />
+                            <input
+                                type="text"
+                                placeholder="Search tasks, people..."
+                                className="bg-transparent border-none outline-none text-sm w-full dark:text-slate-200"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -68,10 +79,27 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                         {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                     </Button>
 
-                    <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-primary-600">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                    </Button>
+                    <div className="relative">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "relative text-slate-500 hover:text-primary-600 transition-all",
+                                isNotificationOpen && "bg-primary-50 text-primary-600 dark:bg-primary-900/20"
+                            )}
+                            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                        >
+                            <Bell className="h-5 w-5" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            )}
+                        </Button>
+
+                        <NotificationPanel
+                            isOpen={isNotificationOpen}
+                            onClose={() => setIsNotificationOpen(false)}
+                        />
+                    </div>
 
                     <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
 

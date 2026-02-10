@@ -37,13 +37,16 @@ import { Button } from '@/shared/components/ui/button';
 import useAuthStore from '@/store/authStore';
 import useSuperAdminStore from '@/store/superAdminStore';
 import useCRMStore from '@/store/crmStore'; // To show pending count
+import useNotificationStore from '@/store/notificationStore';
 
 const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const logout = useAuthStore(state => state.logout);
     const navigate = useNavigate();
     const location = useLocation();
+    const authRole = useAuthStore(state => state.role);
     const inquiries = useSuperAdminStore(state => state.inquiries);
     const leads = useCRMStore(state => state.leads);
+    const unreadCount = useNotificationStore(state => state.unreadCount);
 
     // Counts
     const newInquiriesCount = inquiries.filter(inq => inq.status === 'new').length;
@@ -52,8 +55,9 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
 
 
     const isSuperAdmin = role === 'superadmin' || role === 'superadmin_staff';
-    const isSuperAdminRoot = role === 'superadmin';
-    const isSuperAdminStaff = role === 'superadmin_staff';
+    // Fix: Check authRole to differentiate between root and staff when role prop is generic
+    const isSuperAdminRoot = (role === 'superadmin' || role === 'superadmin_staff') && authRole === 'superadmin';
+    const isSuperAdminStaff = (role === 'superadmin' || role === 'superadmin_staff') && authRole === 'superadmin_staff';
     const isManager = role === 'manager';
     const isAdmin = role === 'admin';
 
@@ -135,15 +139,19 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Inquiries', path: '/superadmin/inquiries', icon: ListChecks },
                 { name: 'Admins', path: '/superadmin/admins', icon: Users },
                 { name: 'Global Users', path: '/superadmin/users', icon: Activity },
-                // Management Modules
-                { name: 'Staff', path: '/superadmin/staff', icon: ShieldCheck },
-                { name: 'Billing', path: '/superadmin/billing', icon: Receipt },
-                { name: 'History', path: '/superadmin/history', icon: History },
-                { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
+                { name: 'Notifications', path: '/superadmin/notifications', icon: Bell, badge: unreadCount },
+                ...(isSuperAdminRoot ? [
+                    { name: 'Staff', path: '/superadmin/staff', icon: ShieldCheck },
+                    { name: 'Billing', path: '/superadmin/billing', icon: Receipt },
+                    { name: 'History', path: '/superadmin/history', icon: History },
+                    { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
+                ] : []),
                 { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
-                { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
-                { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
-                { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
+                ...(isSuperAdminRoot ? [
+                    { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
+                    { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
+                    { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
+                ] : []),
             ]
             : []),
     ];

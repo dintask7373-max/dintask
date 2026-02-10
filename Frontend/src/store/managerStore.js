@@ -4,20 +4,47 @@ import { toast } from 'sonner';
 
 const useManagerStore = create((set, get) => ({
     managers: [],
+    allManagers: [], // Full list for dropdowns
     loading: false,
     error: null,
+    managerPagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 1
+    },
 
-    fetchManagers: async () => {
+    fetchManagers: async (params = {}) => {
         set({ loading: true });
         try {
-            const res = await api('/admin/users');
+            const queryParams = new URLSearchParams();
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            if (params.search) queryParams.append('search', params.search);
+
+            const res = await api(`/admin/managers?${queryParams.toString()}`);
             if (res.success) {
-                const managers = (res.data || []).filter(u => u.role === 'manager');
-                set({ managers, loading: false });
+                set({
+                    managers: res.data,
+                    managerPagination: res.pagination || { page: 1, limit: 10, total: 0, pages: 1 },
+                    loading: false
+                });
             }
         } catch (error) {
             console.error("Fetch Managers Error", error);
             set({ loading: false, error: error.message });
+        }
+    },
+
+    fetchAllManagers: async () => {
+        try {
+            // Fetch with high limit to get all managers for dropdowns
+            const res = await api('/admin/managers?limit=1000');
+            if (res.success) {
+                set({ allManagers: res.data });
+            }
+        } catch (error) {
+            console.error("Fetch All Managers Error", error);
         }
     },
 

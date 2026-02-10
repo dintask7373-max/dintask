@@ -27,7 +27,7 @@ const SuperAdminLogin = () => {
         e.preventDefault();
 
         // Map UI role to system role
-        const systemRole = role === 'admin' ? 'superadmin' : 'superadmin_employee';
+        const systemRole = role === 'admin' ? 'superadmin' : 'superadmin_staff';
 
         const result = await login(email, password, systemRole);
         if (result.success) {

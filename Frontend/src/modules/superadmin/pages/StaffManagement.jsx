@@ -45,6 +45,13 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Label } from '@/shared/components/ui/label';
 
 import useSuperAdminStore from '@/store/superAdminStore';
@@ -59,6 +66,7 @@ const StaffManagement = () => {
   const {
     staffMembers,
     fetchStaff,
+    staffPagination,
     addStaff,
     updateStaff,
     deleteStaff,
@@ -71,6 +79,8 @@ const StaffManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -85,8 +95,27 @@ const StaffManagement = () => {
       navigate('/superadmin');
       return;
     }
-    fetchStaff();
-  }, [isEligible, fetchStaff, navigate]);
+  }, [isEligible, navigate]);
+
+  // Debounced search and pagination effect
+  useEffect(() => {
+    if (!isEligible) return;
+
+    const handler = setTimeout(() => {
+      fetchStaff({
+        page: currentPage,
+        limit: pageSize,
+        search: searchQuery.trim()
+      });
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [isEligible, fetchStaff, currentPage, pageSize, searchQuery]);
+
+  // Reset to page 1 when search or limit changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, pageSize]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -140,10 +169,8 @@ const StaffManagement = () => {
     setIsEditDialogOpen(true);
   };
 
-  const filteredStaff = staffMembers.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtered logic is now handled server-side
+  const displayStaff = staffMembers || [];
 
   return (
     <motion.div
@@ -178,7 +205,7 @@ const StaffManagement = () => {
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Staff</p>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white">{staffMembers.length}</h3>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white">{staffPagination?.total || 0}</h3>
             </div>
           </CardContent>
         </Card>
@@ -210,15 +237,35 @@ const StaffManagement = () => {
       <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
         <CardHeader className="p-6 border-b border-slate-50 dark:border-slate-800">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <CardTitle className="text-sm font-black uppercase tracking-widest italic opacity-70">Staff Registry</CardTitle>
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold"
-              />
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-sm font-black uppercase tracking-widest italic opacity-70">Staff Registry</CardTitle>
+              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
+                {staffPagination?.total || 0} Members
+              </Badge>
+            </div>
+            <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Show</span>
+                <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(parseInt(val))}>
+                  <SelectTrigger className="w-[80px] h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-xl">
+                    {[5, 10, 20, 50].map(size => (
+                      <SelectItem key={size} value={size.toString()} className="text-xs font-bold rounded-xl">{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-10 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -237,12 +284,38 @@ const StaffManagement = () => {
                 <TableRow>
                   <TableCell colSpan={4} className="h-32 text-center text-xs font-bold text-slate-400">Loading staff data...</TableCell>
                 </TableRow>
-              ) : filteredStaff.length === 0 ? (
+              ) : displayStaff.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-32 text-center text-xs font-bold text-slate-400">No staff members found.</TableCell>
+                  <TableCell colSpan={4} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
+                        <Users size={48} className="text-slate-300 dark:text-slate-700" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                          {searchQuery ? `No matches for "${searchQuery}"` : "No staff found"}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose max-w-[200px] mx-auto">
+                          {searchQuery
+                            ? "Try adjusting your search or filters to find what you're looking for."
+                            : "Your staff registry is currently empty."}
+                        </p>
+                      </div>
+                      {searchQuery && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSearchQuery('')}
+                          className="rounded-xl border-slate-200 dark:border-slate-800 font-black text-[10px] uppercase tracking-widest h-9"
+                        >
+                          Clear Search
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ) : (
-                filteredStaff.map((staff) => (
+                displayStaff.map((staff) => (
                   <TableRow key={staff._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-slate-50 dark:border-slate-800">
                     <TableCell className="pl-8 py-4">
                       <div className="flex items-center gap-3">
@@ -308,6 +381,45 @@ const StaffManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination UI - Matched with Inquiries.jsx */}
+      {staffPagination.total > 0 && (
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+            className="rounded-xl border-slate-200 dark:border-slate-800"
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {[...Array(staffPagination?.pages || 0)].map((_, i) => (
+              <Button
+                key={i + 1}
+                variant={currentPage === i + 1 ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentPage(i + 1)}
+                className={cn(
+                  "w-9 h-9 p-0 rounded-xl",
+                  currentPage === i + 1 ? "" : "border-slate-200 dark:border-slate-800"
+                )}
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === staffPagination?.pages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            className="rounded-xl border-slate-200 dark:border-slate-800"
+          >
+            Next
+          </Button>
+        </div>
+      )}
       {/* Modals */}
       <AnimatePresence>
         {(isAddDialogOpen || isEditDialogOpen) && (

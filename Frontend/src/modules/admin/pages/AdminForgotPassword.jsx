@@ -9,58 +9,30 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 
+import useAuthStore from '@/store/authStore';
+
 const AdminForgotPassword = () => {
-    // Steps: 0 = Email, 1 = OTP, 2 = New Password, 3 = Success
     const [step, setStep] = useState(0);
     const [email, setEmail] = useState('');
-    const [otp, setOtp] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const { forgotPassword, loading, error, clearError } = useAuthStore();
 
     const navigate = useNavigate();
 
-    const handleSendOTP = async (e) => {
+    const handleSendResetLink = async (e) => {
         e.preventDefault();
         if (!email) {
             toast.error('Identity required');
             return;
         }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setStep(1);
-        toast.success(`Access code sent to ${email}`);
-    };
 
-    const handleVerifyOTP = async (e) => {
-        e.preventDefault();
-        if (!otp || otp.length < 4) {
-            toast.error('Invalid OTP');
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsLoading(false);
-        setStep(2);
-        toast.success('Identity Verified');
-    };
+        const result = await forgotPassword(email, 'admin');
 
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-        if (!newPassword || !confirmPassword) {
-            toast.error('Fields incomplete');
-            return;
+        if (result.success) {
+            setStep(1);
+            toast.success(`Access code dispatched to ${email}`);
+        } else {
+            toast.error(result.error || 'Identity verification failed');
         }
-        if (newPassword !== confirmPassword) {
-            toast.error('Passwords mismatch');
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setStep(3);
-        toast.success('Password updated successfully');
     };
 
     return (
@@ -84,9 +56,7 @@ const AdminForgotPassword = () => {
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Account Recovery</h2>
                         <p className="text-slate-500 dark:text-slate-400 mt-2">
                             {step === 0 && 'Enter your work email to initiate recall.'}
-                            {step === 1 && 'Authentication code sent to your inbox.'}
-                            {step === 2 && 'Set a new secure master password.'}
-                            {step === 3 && 'Access successfully restored.'}
+                            {step === 1 && 'Authentication link dispatched to your inbox.'}
                         </p>
                     </div>
 
@@ -99,7 +69,7 @@ const AdminForgotPassword = () => {
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -20 }}
-                                        onSubmit={handleSendOTP}
+                                        onSubmit={handleSendResetLink}
                                         className="space-y-4"
                                     >
                                         <div className="space-y-2">
@@ -116,94 +86,14 @@ const AdminForgotPassword = () => {
                                         <Button
                                             type="submit"
                                             className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20"
-                                            disabled={isLoading}
+                                            disabled={loading}
                                         >
-                                            {isLoading ? 'Processing...' : 'Send Recovery Link'}
+                                            {loading ? 'Processing...' : 'Send Recovery Link'}
                                         </Button>
                                     </motion.form>
                                 )}
 
                                 {step === 1 && (
-                                    <motion.form
-                                        key="step1"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        onSubmit={handleVerifyOTP}
-                                        className="space-y-4"
-                                    >
-                                        <div className="space-y-2 text-center">
-                                            <Label className="text-slate-500 font-medium">Verify 6-digit code</Label>
-                                            <Input
-                                                id="otp"
-                                                placeholder="• • • • • •"
-                                                value={otp}
-                                                onChange={(e) => setOtp(e.target.value)}
-                                                className="h-14 text-center text-3xl font-black tracking-[0.5em] rounded-xl bg-slate-50 border-none"
-                                                maxLength={6}
-                                            />
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white"
-                                            disabled={isLoading}
-                                        >
-                                            {isLoading ? 'Verifying...' : 'Authenticate'}
-                                        </Button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(0)}
-                                            className="w-full text-xs font-bold text-slate-400 hover:text-primary-600 uppercase tracking-widest"
-                                        >
-                                            Resend Code
-                                        </button>
-                                    </motion.form>
-                                )}
-
-                                {step === 2 && (
-                                    <motion.form
-                                        key="step2"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        onSubmit={handleResetPassword}
-                                        className="space-y-4"
-                                    >
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="new-pass">New Password</Label>
-                                                <Input
-                                                    id="new-pass"
-                                                    type="password"
-                                                    placeholder="••••••••"
-                                                    value={newPassword}
-                                                    onChange={(e) => setNewPassword(e.target.value)}
-                                                    className="h-11 rounded-lg"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="confirm-pass">Confirm Password</Label>
-                                                <Input
-                                                    id="confirm-pass"
-                                                    type="password"
-                                                    placeholder="••••••••"
-                                                    value={confirmPassword}
-                                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    className="h-11 rounded-lg"
-                                                />
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white"
-                                            disabled={isLoading}
-                                        >
-                                            {isLoading ? 'Updating...' : 'Reset Access'}
-                                        </Button>
-                                    </motion.form>
-                                )}
-
-                                {step === 3 && (
                                     <motion.div
                                         key="step3"
                                         initial={{ opacity: 0, scale: 0.9 }}
@@ -214,8 +104,10 @@ const AdminForgotPassword = () => {
                                             <CheckCircle2 size={40} />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Security Updated</h3>
-                                            <p className="text-slate-500 text-sm mt-1">Your new password is now active.</p>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Link Dispatched</h3>
+                                            <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+                                                A secure recovery link has been sent to <b>{email}</b>. Please check your inbox to restore access.
+                                            </p>
                                         </div>
                                         <Button
                                             onClick={() => navigate('/admin/login')}

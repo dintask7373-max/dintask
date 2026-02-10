@@ -30,6 +30,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/shared/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/shared/components/ui/select';
 import useSuperAdminStore from '@/store/superAdminStore';
 import useAuthStore from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -41,19 +48,41 @@ const BillingPayments = () => {
     const {
         billingStats,
         transactions,
+        transactionPagination,
         fetchBillingStats,
         fetchTransactions,
         loading
     } = useSuperAdminStore();
 
-    React.useEffect(() => {
-        fetchBillingStats();
-        fetchTransactions();
-    }, [fetchBillingStats, fetchTransactions]);
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
+
+    // Initial load and dependency-based fetch
+    React.useEffect(() => {
+        fetchBillingStats();
+    }, [fetchBillingStats]);
+
+    React.useEffect(() => {
+        const handler = setTimeout(() => {
+            fetchTransactions({
+                page: currentPage,
+                limit: pageSize,
+                search: searchQuery.trim(),
+                status: activeTab
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [fetchTransactions, currentPage, pageSize, searchQuery, activeTab]);
+
+    // Reset to page 1 on search or filter change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, activeTab, pageSize]);
 
     const handleView = (txn) => {
         setSelectedTransaction(txn);
@@ -71,13 +100,13 @@ const BillingPayments = () => {
     };
 
     const handleFullExport = () => {
-        if (!filteredPayments.length) {
+        if (!displayTransactions.length) {
             toast.error("No transaction data available to export");
             return;
         }
 
         try {
-            const exportRows = filteredPayments.map(txn => ({
+            const exportRows = displayTransactions.map(txn => ({
                 'Company Name': txn.adminId?.companyName || 'N/A',
                 'Order ID': txn.razorpayOrderId,
                 'Payment ID': txn.razorpayPaymentId || 'N/A',
@@ -115,29 +144,7 @@ const BillingPayments = () => {
         }
     };
 
-    React.useEffect(() => {
-        fetchBillingStats();
-        fetchTransactions();
-    }, []);
-
-    const tabMappings = {
-        'success': 'paid',
-        'failed': 'failed',
-        'refunded': 'refunded'
-    };
-
-    const filteredPayments = (transactions || []).filter(p => {
-        const companyName = p.adminId?.companyName || '';
-        const txnId = p.razorpayOrderId || '';
-        const matchesSearch = companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            txnId.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesTab = activeTab === 'all' ||
-            (activeTab === 'success' && p.status === 'paid') ||
-            (p.status === tabMappings[activeTab]);
-
-        return matchesSearch && matchesTab;
-    });
+    const displayTransactions = transactions || [];
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -248,7 +255,7 @@ const BillingPayments = () => {
                     </div>
                     <div className="flex items-center gap-2">
                         <Badge variant="outline" className="bg-white border-slate-200 text-slate-600 font-black px-3 py-1 uppercase text-[9px] tracking-widest">
-                            {filteredPayments.length} TOTAL
+                            {transactionPagination?.total || 0} TOTAL
                         </Badge>
                     </div>
                 </div>
@@ -267,84 +274,173 @@ const BillingPayments = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             <AnimatePresence mode='popLayout'>
-                                {filteredPayments.map((payment) => (
-                                    <motion.tr
-                                        layout
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        key={payment._id}
-                                        className="group hover:bg-slate-50/50 transition-colors"
-                                    >
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black text-slate-900 uppercase tracking-tight group-hover:text-primary-600 transition-colors">
-                                                    {payment.adminId?.companyName || 'Deleted Admin'}
-                                                </span>
-                                                <span className="text-[9px] font-bold text-slate-400 mt-0.5">{payment.razorpayOrderId}</span>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <RefreshCw className="text-primary-600 animate-spin" size={32} />
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loading Transactions...</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-slate-700 uppercase">Subscription Purchase</span>
-                                                <span className="text-[10px] font-black text-primary-600 mt-0.5 uppercase tracking-wider">{payment.planId?.name || '---'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-700 uppercase">
-                                                    <Calendar size={12} className="text-slate-400" />
-                                                    {new Date(payment.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </tr>
+                                ) : displayTransactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-32 text-center">
+                                            <div className="flex flex-col items-center justify-center space-y-4">
+                                                <div className="p-4 bg-slate-50 rounded-full">
+                                                    <History size={48} className="text-slate-300" />
                                                 </div>
-                                                <span className="text-[9px] font-bold text-slate-400 mt-0.5 flex items-center gap-1 uppercase tracking-widest">
-                                                    <ShieldCheck size={10} /> Razorpay
-                                                </span>
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-black text-slate-900 uppercase tracking-widest">
+                                                        {searchQuery ? `No matches for "${searchQuery}"` : "No transactions found"}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose max-w-[250px] mx-auto">
+                                                        {searchQuery
+                                                            ? "Try adjusting your search terms or filters to find the specific transaction."
+                                                            : "Your transaction history is currently empty."}
+                                                    </p>
+                                                </div>
+                                                {searchQuery && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setSearchQuery('')}
+                                                        className="mt-2 rounded-xl border-slate-200 font-black text-[10px] uppercase tracking-widest h-9 px-6"
+                                                    >
+                                                        Clear Search
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-sm font-black text-slate-900 tracking-tighter">
-                                                    {role === 'superadmin' ? `₹${(payment.amount).toLocaleString()}` : '₹ ••••••'}
-                                                </span>
-                                                <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Incl. GST</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${getStatusStyle(payment.status)}`}>
-                                                {getStatusIcon(payment.status)}
-                                                {payment.status === 'paid' ? 'SUCCESS' : payment.status.toUpperCase()}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Button
-                                                    onClick={() => handleDownload(payment)}
-                                                    variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
-                                                    <Download size={14} />
-                                                </Button>
-                                                <Button
-                                                    onClick={() => handleView(payment)}
-                                                    variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
-                                                    <FileText size={14} />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </motion.tr>
-                                ))}
+                                    </tr>
+                                ) : (
+                                    displayTransactions.map((payment) => (
+                                        <motion.tr
+                                            layout
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            key={payment._id}
+                                            className="group hover:bg-slate-50/50 transition-colors"
+                                        >
+                                            <td className="px-6 py-5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-black text-slate-900 uppercase tracking-tight group-hover:text-primary-600 transition-colors">
+                                                        {payment.adminId?.companyName || 'Deleted Admin'}
+                                                    </span>
+                                                    <span className="text-[9px] font-bold text-slate-400 mt-0.5">{payment.razorpayOrderId}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black text-slate-700 uppercase">Subscription Purchase</span>
+                                                    <span className="text-[10px] font-black text-primary-600 mt-0.5 uppercase tracking-wider">{payment.planId?.name || '---'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-700 uppercase">
+                                                        <Calendar size={12} className="text-slate-400" />
+                                                        {new Date(payment.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                    </div>
+                                                    <span className="text-[9px] font-bold text-slate-400 mt-0.5 flex items-center gap-1 uppercase tracking-widest">
+                                                        <ShieldCheck size={10} /> Razorpay
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-sm font-black text-slate-900 tracking-tighter">
+                                                        {role === 'superadmin' ? `₹${(payment.amount).toLocaleString()}` : '₹ ••••••'}
+                                                    </span>
+                                                    <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Incl. GST</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${getStatusStyle(payment.status)}`}>
+                                                    {getStatusIcon(payment.status)}
+                                                    {payment.status === 'paid' ? 'SUCCESS' : payment.status.toUpperCase()}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Button
+                                                        onClick={() => handleDownload(payment)}
+                                                        variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
+                                                        <Download size={14} />
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => handleView(payment)}
+                                                        variant="ghost" size="sm" className="size-8 p-0 rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-primary-600 border border-transparent hover:border-slate-100">
+                                                        <FileText size={14} />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))
+                                )}
                             </AnimatePresence>
                         </tbody>
                     </table>
                 </div>
 
-                {/* Pagination Placeholder */}
-                <div className="p-6 border-t border-slate-50 bg-slate-50/20 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Showing 1 to {filteredPayments.length} of {filteredPayments.length} entries</p>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" disabled className="h-8 px-4 rounded-lg font-black text-[10px] border-slate-200">PREV</Button>
-                        <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg font-black text-[10px] bg-white border-slate-200 text-primary-600 shadow-sm">1</Button>
-                        <Button variant="outline" size="sm" disabled className="h-8 px-4 rounded-lg font-black text-[10px] border-slate-200">NEXT</Button>
+                {/* Pagination UI */}
+                {transactionPagination?.total > 0 && (
+                    <div className="p-6 border-t border-slate-50 bg-slate-50/20 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, transactionPagination.total)} of {transactionPagination.total} entries
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Page Size</span>
+                                <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(parseInt(val))}>
+                                    <SelectTrigger className="w-[70px] h-8 rounded-lg bg-white border-slate-200 font-bold text-[10px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        {[5, 10, 20, 50].map(size => (
+                                            <SelectItem key={size} value={size.toString()} className="text-[10px] font-bold rounded-lg">{size}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => prev - 1)}
+                                className="h-8 px-4 rounded-lg font-black text-[10px] border-slate-200"
+                            >
+                                PREV
+                            </Button>
+
+                            {/* Simple pagination logic to avoid huge arrays if pages > 10 */}
+                            {[...Array(transactionPagination.pages)].map((_, i) => (
+                                <Button
+                                    key={i + 1}
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`h-8 w-8 p-0 rounded-lg font-black text-[10px] border-slate-200 ${currentPage === i + 1 ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600'}`}
+                                >
+                                    {i + 1}
+                                </Button>
+                            ))}
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === transactionPagination.pages}
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                className="h-8 px-4 rounded-lg font-black text-[10px] border-slate-200"
+                            >
+                                NEXT
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
 

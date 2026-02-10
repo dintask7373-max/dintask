@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const SuperAdmin = require('../models/SuperAdmin');
 const Admin = require('../models/Admin');
 const Manager = require('../models/Manager');
@@ -9,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const Plan = require('../models/Plan');
+const Payment = require('../models/Payment');
 
 // @desc    Get system stats
 // @route   GET /api/v1/superadmin/stats
@@ -33,66 +35,100 @@ exports.getStats = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getAdmins = async (req, res, next) => {
   try {
-    const admins = await Admin.aggregate([
+    const { search } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Search query
+    const matchQuery = {};
+    if (search) {
+      matchQuery.$or = [
+        { companyName: { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const result = await Admin.aggregate([
+      { $match: matchQuery },
       {
-        $lookup: {
-          from: 'plans',
-          localField: 'subscriptionPlanId',
-          foreignField: '_id',
-          as: 'plan'
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            {
+              $lookup: {
+                from: 'plans',
+                localField: 'subscriptionPlanId',
+                foreignField: '_id',
+                as: 'plan'
+              }
+            },
+            { $unwind: { path: '$plan', preserveNullAndEmptyArrays: true } },
+            {
+              $lookup: {
+                from: 'managers',
+                localField: '_id',
+                foreignField: 'adminId',
+                as: 'managers'
+              }
+            },
+            {
+              $lookup: {
+                from: 'salesexecutives',
+                localField: '_id',
+                foreignField: 'adminId',
+                as: 'sales'
+              }
+            },
+            {
+              $lookup: {
+                from: 'employees',
+                localField: '_id',
+                foreignField: 'adminId',
+                as: 'employees'
+              }
+            },
+            {
+              $addFields: {
+                totalUsers: {
+                  $add: [
+                    { $size: '$managers' },
+                    { $size: '$sales' },
+                    { $size: '$employees' }
+                  ]
+                },
+                userLimit: '$plan.userLimit'
+              }
+            },
+            {
+              $project: {
+                managers: 0,
+                sales: 0,
+                employees: 0,
+                password: 0
+              }
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit }
+          ]
         }
-      },
-      { $unwind: { path: '$plan', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'managers',
-          localField: '_id',
-          foreignField: 'adminId',
-          as: 'managers'
-        }
-      },
-      {
-        $lookup: {
-          from: 'salesexecutives',
-          localField: '_id',
-          foreignField: 'adminId',
-          as: 'sales'
-        }
-      },
-      {
-        $lookup: {
-          from: 'employees',
-          localField: '_id',
-          foreignField: 'adminId',
-          as: 'employees'
-        }
-      },
-      {
-        $addFields: {
-          totalUsers: {
-            $add: [
-              { $size: '$managers' },
-              { $size: '$sales' },
-              { $size: '$employees' }
-            ]
-          },
-          userLimit: '$plan.userLimit'
-        }
-      },
-      {
-        $project: {
-          managers: 0,
-          sales: 0,
-          employees: 0,
-          password: 0
-        }
-      },
-      { $sort: { createdAt: -1 } }
+      }
     ]);
+
+    const admins = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       count: admins.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: admins
     });
   } catch (err) {
@@ -281,6 +317,10 @@ exports.login = async (req, res, next) => {
       return next(new ErrorResponse('Invalid credentials', 401));
     }
 
+    // Set status to active
+    superAdmin.status = 'active';
+    await superAdmin.save();
+
     sendTokenResponse(superAdmin, 200, res);
   } catch (err) {
     next(err);
@@ -291,15 +331,23 @@ exports.login = async (req, res, next) => {
 // @route   GET /api/v1/superadmin/logout
 // @access  Public
 exports.logout = async (req, res, next) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
-  });
+  try {
+    if (req.user) {
+      await SuperAdmin.findByIdAndUpdate(req.user.id, { status: 'inactive' });
+    }
 
-  res.status(200).json({
-    success: true,
-    data: {}
-  });
+    res.cookie('token', 'none', {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // Helper to get token from model, create cookie and send response
@@ -351,9 +399,10 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/superadmin/resetpassword/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}?role=${user.role}`;
 
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.`;
 
     try {
       await sendEmail({
@@ -476,7 +525,7 @@ exports.getMe = async (req, res, next) => {
       success: true,
       data: {
         ...user.toObject(),
-        role: 'superadmin' // Normalize for frontend
+        role: user.role || 'superadmin'
       }
     });
   } catch (err) {
@@ -531,28 +580,41 @@ exports.getSummary = async (req, res, next) => {
       subscriptionStatus: 'active'
     });
 
-    // Active Users (Logged in within last 24 hours)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const activeUsersCount = await LoginActivity.distinct('userId', {
-      loginAt: { $gte: twentyFourHoursAgo },
-      role: { $ne: 'super_admin' }
-    }).then(ids => ids.length);
-
-    // Mocking growth data
-    const monthlyGrowthPercentage = 12.5;
-
-    // Average Session Duration
-    const avgSessionAgg = await LoginActivity.aggregate([
-      { $match: { role: { $ne: 'super_admin' }, sessionDuration: { $exists: true } } },
-      { $group: { _id: null, avgDuration: { $avg: '$sessionDuration' } } }
+    // Active Users (Status is 'active')
+    const [activeAdmins, activeManagers, activeSales, activeEmployees] = await Promise.all([
+      Admin.countDocuments({ status: 'active' }),
+      Manager.countDocuments({ status: 'active' }),
+      SalesExecutive.countDocuments({ status: 'active' }),
+      Employee.countDocuments({ status: 'active' })
     ]);
-    const averageSessionTimeInMinutes = avgSessionAgg.length > 0 ? Math.round(avgSessionAgg[0].avgDuration) : 0;
+
+    const activeUsersCount = activeAdmins + activeManagers + activeSales + activeEmployees;
+
+    // Calculate real monthly growth percentage (total users vs last month total)
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [prevAdmins, prevManagers, prevSales, prevEmployees] = await Promise.all([
+      Admin.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
+      Manager.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
+      SalesExecutive.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
+      Employee.countDocuments({ createdAt: { $lt: startOfCurrentMonth } })
+    ]);
+
+    const totalUsersLastMonth = prevAdmins + prevManagers + prevSales + prevEmployees;
+    let monthlyGrowthPercentage = 0;
+
+    if (totalUsersLastMonth > 0) {
+      monthlyGrowthPercentage = ((totalUsers - totalUsersLastMonth) / totalUsersLastMonth * 100).toFixed(1);
+    } else if (totalUsers > 0) {
+      monthlyGrowthPercentage = 100;
+    }
 
     const data = {
       totalUsers,
-      activeUsers: activeUsersCount,
+      activeUsers: activeUsersCount, // Now reflects real active status
       activeCompanies,
-      averageSessionTimeInMinutes
+      // Removed averageSessionTimeInMinutes
     };
 
     // Mask growth for staff
@@ -603,15 +665,84 @@ exports.getRoleDistribution = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getUserGrowth = async (req, res, next) => {
   try {
-    // Mock data for chart
-    const growthData = [
-      { month: 'Jan', count: 10 },
-      { month: 'Feb', count: 15 },
-      { month: 'Mar', count: 25 },
-      { month: 'Apr', count: 30 },
-      { month: 'May', count: 45 },
-      { month: 'Jun', count: 60 }
-    ];
+    // Get period from query, default to 6 months
+    const period = parseInt(req.query.period) || 6;
+    let months = period;
+
+    // Ensure valid period
+    if (![6, 12].includes(months)) {
+      months = 6;
+    }
+
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - (months - 1));
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Base count before start date
+    const [baseAdmins, baseManagers, baseSales, baseEmployees] = await Promise.all([
+      Admin.countDocuments({ createdAt: { $lt: startDate } }),
+      Manager.countDocuments({ createdAt: { $lt: startDate } }),
+      SalesExecutive.countDocuments({ createdAt: { $lt: startDate } }),
+      Employee.countDocuments({ createdAt: { $lt: startDate } })
+    ]);
+
+    let runningTotal = baseAdmins + baseManagers + baseSales + baseEmployees;
+
+    const aggregateGrowth = async (Model) => {
+      return await Model.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+    };
+
+    const [adminGrowth, managerGrowth, salesGrowth, employeeGrowth] = await Promise.all([
+      aggregateGrowth(Admin),
+      aggregateGrowth(Manager),
+      aggregateGrowth(SalesExecutive),
+      aggregateGrowth(Employee)
+    ]);
+
+    // Merge logic
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const growthData = [];
+
+    let currentDate = new Date(startDate);
+    const today = new Date();
+
+    while (currentDate <= today || (currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear())) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+
+      const getCount = (data) => {
+        const found = data.find(d => d._id.year === year && d._id.month === month);
+        return found ? found.count : 0;
+      };
+
+      const newUsersThisMonth = getCount(adminGrowth) + getCount(managerGrowth) + getCount(salesGrowth) + getCount(employeeGrowth);
+      runningTotal += newUsersThisMonth;
+
+      growthData.push({
+        month: monthNames[month - 1],
+        users: runningTotal, // Cumulative
+        newUsers: newUsersThisMonth, // Also useful
+        fullDate: `${monthNames[month - 1]} ${year}`
+      });
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
 
     res.status(200).json({
       success: true,
@@ -645,14 +776,14 @@ exports.getPlanDistribution = async (req, res, next) => {
     // Format data for pie chart
     const formattedData = planDistribution.map(item => {
       const plan = allPlans.find(p => p.name === item._id);
+
+      let color = plan && plan.color ? plan.color : '#dadce0';
+      const planName = item._id || 'No Plan';
+
       return {
-        name: item._id || 'No Plan',
+        name: planName,
         value: item.count,
-        // Assign colors based on plan names
-        color: item._id === 'Starter' ? '#94a3b8' :
-          item._id === 'Pro Team' ? '#3b82f6' :
-            item._id === 'Business' ? '#8b5cf6' :
-              item._id === 'Enterprise' ? '#7c3aed' : '#cbd5e1'
+        color: color
       };
     });
 
@@ -665,7 +796,7 @@ exports.getPlanDistribution = async (req, res, next) => {
   }
 };
 
-const Payment = require('../models/Payment');
+
 
 // @desc    Get Billing Stats (Total Revenue, Active Subs, etc.)
 // @route   GET /api/v1/superadmin/billing/stats
@@ -681,15 +812,21 @@ exports.getBillingStats = async (req, res, next) => {
       subscriptionStatus: 'active'
     });
 
-    // Get monthly revenue trends for the last 6 months
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // Get period from query, default to 6 months
+    const period = parseInt(req.query.period) || 6;
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - (period - 1));
+    startDate.setDate(1); // Start from the 1st of the starting month
+    startDate.setHours(0, 0, 0, 0);
 
     const revenueByMonth = await Payment.aggregate([
       {
         $match: {
           status: 'paid',
-          createdAt: { $gte: sixMonthsAgo }
+          createdAt: { $gte: startDate }
         }
       },
       {
@@ -705,26 +842,43 @@ exports.getBillingStats = async (req, res, next) => {
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
 
-    // Format revenue trends for frontend chart
+    // Generate all months in the range to ensure continuous data
+    const revenueTrends = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const revenueTrends = revenueByMonth.map(item => ({
-      name: monthNames[item._id.month - 1],
-      revenue: item.revenue,
-      count: item.count
-    }));
 
-    // Calculate growth percentage
+    let currentDate = new Date(startDate);
+    const today = new Date();
+
+    while (currentDate <= today || (currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear())) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1; // 1-indexed for comparison
+
+      const existingData = revenueByMonth.find(item => item._id.year === year && item._id.month === month);
+
+      revenueTrends.push({
+        name: monthNames[month - 1], // + ` '${year.toString().substr(2)}`, // Optional: Add Year
+        fullName: `${monthNames[month - 1]} ${year}`,
+        revenue: existingData ? existingData.revenue : 0,
+        count: existingData ? existingData.count : 0
+      });
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    // Calculate growth percentage (based on last 2 available months inc. current)
     let growthPercentage = 0;
     if (revenueTrends.length >= 2) {
       const currentMonth = revenueTrends[revenueTrends.length - 1].revenue;
       const previousMonth = revenueTrends[revenueTrends.length - 2].revenue;
       if (previousMonth > 0) {
         growthPercentage = ((currentMonth - previousMonth) / previousMonth * 100).toFixed(1);
+      } else if (currentMonth > 0) {
+        growthPercentage = 100; // 100% growth if prev was 0
       }
     }
 
-    const pendingRefunds = 0; // Placeholder for now
-    const churnRate = 2.4; // Placeholder for now
+    const pendingRefunds = await Payment.countDocuments({ status: 'refund_pending' }) || 0;
+    const churnRate = 2.4; // Valid calculation requires historical snapshots
 
     const data = {
       activeSubscriptions,
@@ -757,17 +911,105 @@ exports.getBillingStats = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getAllTransactions = async (req, res, next) => {
   try {
-    const transactions = await Payment.find()
-      .populate('adminId', 'name companyName email')
-      .populate('planId', 'name price')
-      .sort('-createdAt');
+    const { search, status } = req.query;
+    console.log('getAllTransactions Query Params:', req.query);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Base match stage
+    const matchStage = {};
+    if (status && status !== 'all') {
+      matchStage.status = status === 'success' ? 'paid' : status;
+    }
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'admins',
+          localField: 'adminId',
+          foreignField: '_id',
+          as: 'adminDetails'
+        }
+      },
+      { $unwind: { path: '$adminDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'plans',
+          localField: 'planId',
+          foreignField: '_id',
+          as: 'planDetails'
+        }
+      },
+      { $unwind: { path: '$planDetails', preserveNullAndEmptyArrays: true } }
+    ];
+
+    // Search stage
+    if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'adminDetails.companyName': { $regex: safeSearch, $options: 'i' } },
+            { razorpayOrderId: { $regex: safeSearch, $options: 'i' } }
+          ]
+        }
+      });
+    }
+
+    // Final result with pagination
+    const result = await Payment.aggregate([
+      ...pipeline,
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                adminId: {
+                  _id: '$adminDetails._id',
+                  name: '$adminDetails.name',
+                  companyName: '$adminDetails.companyName',
+                  email: '$adminDetails.email'
+                },
+                planId: {
+                  _id: '$planDetails._id',
+                  name: '$planDetails.name',
+                  price: '$planDetails.price'
+                },
+                razorpayOrderId: 1,
+                razorpayPaymentId: 1,
+                amount: 1,
+                currency: 1,
+                status: 1,
+                createdAt: 1
+              }
+            }
+          ]
+        }
+      }
+    ]);
+
+    const transactions = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       count: transactions.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: transactions
     });
   } catch (err) {
+    console.error('getAllTransactions Error:', err);
     next(err);
   }
 };
@@ -777,7 +1019,13 @@ exports.getAllTransactions = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getSubscriptionHistory = async (req, res, next) => {
   try {
-    const admins = await Admin.aggregate([
+    const { search, status } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Base pipeline to get Admin data and calculate revenue
+    const pipeline = [
       {
         $lookup: {
           from: 'payments',
@@ -808,15 +1056,71 @@ exports.getSubscriptionHistory = async (req, res, next) => {
           totalRevenue: { $sum: '$paidPayments.amount' },
           lastPaymentDate: { $max: '$paidPayments.createdAt' }
         }
-      },
-      { $sort: { subscriptionExpiry: -1 } }
+      }
+    ];
+
+    // Search Stage
+    if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pipeline.push({
+        $match: {
+          $or: [
+            { companyName: { $regex: safeSearch, $options: 'i' } },
+            { subscriptionPlan: { $regex: safeSearch, $options: 'i' } }
+          ]
+        }
+      });
+    }
+
+    // Status Filter Stage
+    if (status && status !== 'All') {
+      const today = new Date();
+      if (status === 'Expiring') {
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+        pipeline.push({
+          $match: {
+            subscriptionStatus: 'active',
+            subscriptionExpiry: {
+              $gt: today,
+              $lte: sevenDaysFromNow
+            }
+          }
+        });
+      } else {
+        pipeline.push({
+          $match: {
+            subscriptionStatus: { $regex: `^${status}$`, $options: 'i' }
+          }
+        });
+      }
+    }
+
+    // Sort Stage
+    pipeline.push({ $sort: { subscriptionExpiry: -1 } });
+
+    // Pagination using $facet
+    const result = await Admin.aggregate([
+      ...pipeline,
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: skip },
+            { $limit: limit }
+          ]
+        }
+      }
     ]);
 
+    const admins = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
+
+    // Map to final format
     const history = admins.map(admin => {
       let daysRemaining = 0;
       if (admin.subscriptionExpiry) {
-        const today = new Date();
-        const diff = new Date(admin.subscriptionExpiry) - today;
+        const diff = new Date(admin.subscriptionExpiry) - new Date();
         daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
       }
 
@@ -834,6 +1138,13 @@ exports.getSubscriptionHistory = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      count: history.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: history
     });
   } catch (err) {
@@ -908,10 +1219,40 @@ exports.getRecentInquiries = async (req, res, next) => {
 // @access  Private (SuperAdmin Root)
 exports.getStaff = async (req, res, next) => {
   try {
-    const staff = await SuperAdmin.find({ role: 'superadmin_staff' });
+    const { search } = req.query;
+    console.log('GET /superadmin/staff - Search Query:', search);
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Search query
+    const matchQuery = { role: 'superadmin_staff' };
+    if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      matchQuery.$or = [
+        { name: { $regex: safeSearch, $options: 'i' } },
+        { email: { $regex: safeSearch, $options: 'i' } },
+        { phoneNumber: { $regex: safeSearch, $options: 'i' } }
+      ];
+    }
+    const total = await SuperAdmin.countDocuments(matchQuery);
+
+    const staff = await SuperAdmin.find(matchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select('-password');
+
     res.status(200).json({
       success: true,
       count: staff.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: staff
     });
   } catch (err) {

@@ -25,6 +25,13 @@ import {
     Pie
 } from 'recharts';
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/shared/components/ui/select";
 import useSuperAdminStore from '@/store/superAdminStore';
 
 const GlobalUsersOverview = () => {
@@ -37,11 +44,16 @@ const GlobalUsersOverview = () => {
         fetchUserGrowth
     } = useSuperAdminStore();
 
+    const [growthPeriod, setGrowthPeriod] = useState('6');
+
     React.useEffect(() => {
         fetchDashboardStats();
         fetchRoleDistribution();
-        fetchUserGrowth();
     }, []);
+
+    React.useEffect(() => {
+        fetchUserGrowth(parseInt(growthPeriod));
+    }, [growthPeriod]);
 
     const roleIcons = {
         'Admins': Shield,
@@ -67,16 +79,14 @@ const GlobalUsersOverview = () => {
                         Tactical Platform Monitoring & User Analytics
                     </p>
                 </div>
-
             </div>
 
             {/* Tactical Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
                     { label: 'Total Users', value: stats.totalUsers || 0, icon: Users, trend: `${stats.monthlyGrowthPercentage > 0 ? '+' : ''}${stats.monthlyGrowthPercentage}%`, color: 'from-blue-600 to-indigo-600' },
-                    { label: 'Active Now', value: stats.activeUsers || 0, icon: Activity, trend: 'Live', color: 'from-emerald-500 to-teal-600' },
-                    { label: 'Growth', value: `${stats.monthlyGrowthPercentage || 0}%`, icon: TrendingUp, trend: 'Monthly', color: 'from-amber-500 to-orange-600' },
-                    { label: 'Avg Session', value: '24m', icon: MousePointer2, trend: '-2m', color: 'from-purple-600 to-pink-600' }
+                    { label: 'Active Now', value: stats.activeUsers || 0, icon: Activity, trend: 'Live', color: 'from-emerald-500 to-teal-600' }, // Now reflects real Active Users (status='active')
+                    { label: 'Growth', value: `${stats.monthlyGrowthPercentage || 0}%`, icon: TrendingUp, trend: 'Monthly', color: 'from-amber-500 to-orange-600' }
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-xl shadow-slate-200/50 overflow-hidden group">
                         <CardContent className="p-0">
@@ -158,13 +168,15 @@ const GlobalUsersOverview = () => {
                             <TrendingUp size={14} className="text-primary-600" />
                             User Growth Analysis
                         </CardTitle>
-                        <div className="flex gap-2">
-                            {['6M', '1Y', 'ALL'].map(t => (
-                                <button key={t} className={`text-[10px] font-black px-3 py-1 rounded-full transition-all ${t === '6M' ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
-                                    {t}
-                                </button>
-                            ))}
-                        </div>
+                        <Select value={growthPeriod} onValueChange={setGrowthPeriod}>
+                            <SelectTrigger className="w-[110px] h-8 text-[9px] font-black uppercase tracking-tighter bg-slate-50 border-none dark:bg-slate-800 rounded-lg">
+                                <SelectValue placeholder="Period" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                <SelectItem value="6" className="text-[10px] font-bold">Last 6 Months</SelectItem>
+                                <SelectItem value="12" className="text-[10px] font-bold">Last 1 Year</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="h-[350px]">

@@ -1,7 +1,8 @@
 ﻿import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import useAuthStore from '@/store/authStore';
+
 
 const NotFoundRedirect = () => {
     const { isAuthenticated, role } = useAuthStore();
@@ -127,6 +128,7 @@ import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
 import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
 import IntelManager from '@/modules/superadmin/pages/IntelManager';
+import SuperAdminNotifications from '@/modules/superadmin/pages/Notifications';
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -140,6 +142,7 @@ import Welcome from '@/modules/public/pages/Welcome';
 import CRMLayout from '@/shared/layouts/CRMLayout';
 
 import InitialSplash from '@/modules/public/pages/InitialSplash';
+import ResetPassword from '@/modules/user/pages/ResetPassword';
 
 const AppRouter = () => {
     return (
@@ -170,6 +173,7 @@ const AppRouter = () => {
             <Route path="/sales/login" element={<SalesLogin />} />
             <Route path="/sales/register" element={<SalesRegister />} />
             <Route path="/sales/forgot-password" element={<ForgotPassword returnPath="/sales/login" />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
 
             {/* --- ADMIN ROUTES --- */}
             {/* Main Admin Panel */}
@@ -237,18 +241,22 @@ const AppRouter = () => {
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['superadmin', 'superadmin_staff', 'superadmin_employee']}><AdminLayout role="superadmin" /></ProtectedRoute>}>
                 <Route index element={<SuperAdminDashboard />} />
                 <Route path="admins" element={<AdminAccounts />} />
-                <Route path="staff" element={<StaffManagement />} />
                 <Route path="users" element={<GlobalUsersOverview />} />
-                <Route path="plans" element={<PlansManagement />} />
-                <Route path="billing" element={<BillingPayments />} />
                 <Route path="inquiries" element={<Inquiries />} />
                 <Route path="support" element={<SupportCenter />} />
                 <Route path="history" element={<SubscriptionHistory />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
+                <Route path="notifications" element={<SuperAdminNotifications />} />
                 <Route path="landing-page" element={<LandingPageManager />} />
                 <Route path="system-intel" element={<IntelManager />} />
-                <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
-                <Route path="calendar" element={<div>System Calendar (Coming Soon)</div>} />
+
+                {/* Restricted Routes for Root SuperAdmin Only */}
+                <Route element={<ProtectedRoute allowedRoles={['superadmin']}><Outlet /></ProtectedRoute>}>
+                    <Route path="staff" element={<StaffManagement />} />
+                    <Route path="plans" element={<PlansManagement />} />
+                    <Route path="billing" element={<BillingPayments />} />
+                    <Route path="history" element={<SubscriptionHistory />} />
+                </Route>
             </Route>
 
 

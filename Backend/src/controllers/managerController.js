@@ -31,7 +31,7 @@ exports.getEmployees = async (req, res, next) => {
     // Fetch only employees from THIS manager's workspace
     const employees = await Employee.find({
       adminId: manager.adminId,
-      status: 'active'  // Only active employees
+      status: { $in: ['active', 'inactive'] }  // Approved employees (online or offline)
     });
 
     res.status(200).json({

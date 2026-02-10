@@ -45,10 +45,11 @@ const router = express.Router();
 router.post('/login', login);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:resettoken', resetPassword);
-router.get('/logout', logout);
-
 // ONLY Super Admin can access (Root superadmin or Staff)
 router.use(protect);
+
+router.get('/logout', logout);
+
 router.use(authorize('superadmin', 'superadmin_staff'));
 
 router.put('/changepassword', changePassword);
