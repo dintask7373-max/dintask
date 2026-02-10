@@ -7,6 +7,12 @@ const useSalesStore = create(
     persist(
         (set, get) => ({
             salesReps: [],
+            salesPagination: {
+                page: 1,
+                limit: 10,
+                total: 0,
+                pages: 1
+            },
             loading: false,
             error: null,
 
@@ -27,26 +33,31 @@ const useSalesStore = create(
                 }
             ],
 
-            fetchSalesReps: async () => {
+            fetchSalesReps: async (params = {}) => {
                 set({ loading: true });
                 try {
-                    const res = await api('/admin/users');
-                    if (res.success) {
-                        const allUsers = res.data || [];
-                        // Filter for Sales roles
-                        const sales = allUsers.filter(u => u.role === 'sales' || u.role === 'sales_executive');
+                    const queryParams = new URLSearchParams();
+                    if (params.page) queryParams.append('page', params.page);
+                    if (params.limit) queryParams.append('limit', params.limit);
+                    if (params.search) queryParams.append('search', params.search);
 
-                        // Map to preserve UI fields that aren't in backend yet (mocking stats)
-                        const mappedSales = sales.map(rep => ({
+                    const res = await api(`/admin/sales-executives?${queryParams.toString()}`);
+                    if (res.success) {
+                        const mappedSales = (res.data || []).map(rep => ({
                             ...rep,
-                            id: rep._id, // Ensure ID compatibility
+                            id: rep._id, // Ensure ID compatibility for UI
+                            // Mock stats if not provided by backend yet
                             totalSales: rep.totalSales || 0,
                             activeDeals: rep.activeDeals || 0,
                             conversionRate: rep.conversionRate || 0,
                             status: rep.status || 'active'
                         }));
 
-                        set({ salesReps: mappedSales, loading: false });
+                        set({
+                            salesReps: mappedSales,
+                            salesPagination: res.pagination || { page: 1, limit: 10, total: 0, pages: 1 },
+                            loading: false
+                        });
                     }
                 } catch (error) {
                     console.error("Fetch Sales Reps Error", error);

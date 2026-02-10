@@ -12,12 +12,20 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import useAuthStore from '@/store/authStore';
+import useNotificationStore from '@/store/notificationStore';
+import NotificationPanel from './NotificationPanel';
 import { cn } from '@/shared/utils/cn';
 
 const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
     const { user, logout, role } = useAuthStore();
+    const { unreadCount, fetchNotifications } = useNotificationStore();
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     const toggleDarkMode = () => {
         setIsDarkMode(!isDarkMode);
@@ -68,10 +76,27 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                         {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                     </Button>
 
-                    <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-primary-600">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                    </Button>
+                    <div className="relative">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "relative text-slate-500 hover:text-primary-600 transition-all",
+                                isNotificationOpen && "bg-primary-50 text-primary-600 dark:bg-primary-900/20"
+                            )}
+                            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                        >
+                            <Bell className="h-5 w-5" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            )}
+                        </Button>
+
+                        <NotificationPanel
+                            isOpen={isNotificationOpen}
+                            onClose={() => setIsNotificationOpen(false)}
+                        />
+                    </div>
 
                     <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
 

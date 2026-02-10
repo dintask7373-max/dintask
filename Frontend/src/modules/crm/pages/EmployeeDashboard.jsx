@@ -24,45 +24,82 @@ import useTaskStore from '@/store/taskStore';
 import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
 import { cn } from '@/shared/utils/cn';
 
-const chartData = [
-  { name: 'Mon', leads: 4, tasks: 2 },
-  { name: 'Tue', leads: 7, tasks: 5 },
-  { name: 'Wed', leads: 5, tasks: 8 },
-  { name: 'Thu', leads: 8, tasks: 3 },
-  { name: 'Fri', leads: 12, tasks: 6 },
-  { name: 'Sat', leads: 9, tasks: 4 },
-  { name: 'Sun', leads: 6, tasks: 2 },
-];
-
 const EmployeeDashboard = () => {
   const { user } = useAuthStore();
-  const { tasks } = useTaskStore();
+  const { tasks, fetchTasks } = useTaskStore();
   const {
     followUps,
+    leads,
+    fetchFollowUps,
+    fetchLeads
   } = useCRMStore();
 
-  const currentUserId = user?.id;
+  useEffect(() => {
+    fetchTasks();
+    fetchLeads();
+    fetchFollowUps();
+  }, [fetchTasks, fetchLeads, fetchFollowUps]);
+
+  const currentUserId = user?._id || user?.id;
+
+  // Real Chart Data: Tasks and Leads created in the last 7 days
+  const chartData = useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return {
+        name: days[d.getDay()],
+        date: d.toISOString().split('T')[0],
+        leads: 0,
+        tasks: 0
+      };
+    }).reverse();
+
+    leads.forEach(l => {
+      const dateStr = new Date(l.createdAt).toISOString().split('T')[0];
+      const day = last7Days.find(d => d.date === dateStr);
+      if (day) day.leads++;
+    });
+
+    tasks.forEach(t => {
+      const dateStr = new Date(t.createdAt).toISOString().split('T')[0];
+      const day = last7Days.find(d => d.date === dateStr);
+      if (day) day.tasks++;
+    });
+
+    return last7Days;
+  }, [leads, tasks]);
 
   // Today's follow-ups
   const todayFollowUps = useMemo(() => {
-    if (!currentUserId || !followUps) return [];
-    const today = new Date();
+    if (!followUps) return [];
+    const today = new Date().toDateString();
     return followUps.filter(followUp => {
-      const followUpDate = new Date(followUp.scheduledAt);
-      return (
-        followUpDate.toDateString() === today.toDateString() &&
-        followUp.status !== 'Completed'
-      );
+      const followUpDate = new Date(followUp.scheduledAt).toDateString();
+      return followUpDate === today && followUp.status !== 'Completed';
     });
-  }, [followUps, currentUserId]);
+  }, [followUps]);
 
   const pendingTasks = useMemo(() => {
-    if (!currentUserId || !tasks) return [];
-    return tasks.filter(task =>
-      task.status !== 'completed' &&
-      (Array.isArray(task.assignedTo) ? task.assignedTo.includes(currentUserId) : task.assignedTo === currentUserId)
-    );
+    if (!tasks) return [];
+    const userIdStr = currentUserId?.toString();
+    return tasks.filter(task => {
+      const isCompleted = task.status === 'completed';
+      const assignees = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
+      const isAssignedToMe = assignees.some(a => (a?._id || a || "").toString() === userIdStr);
+      return !isCompleted && isAssignedToMe;
+    });
   }, [tasks, currentUserId]);
+
+  const completionRate = useMemo(() => {
+    if (leads.length === 0) return '0%';
+    const won = leads.filter(l => l.status === 'Won').length;
+    const lost = leads.filter(l => l.status === 'Lost').length;
+    const closed = won + lost;
+    if (closed === 0) return '0%';
+    return Math.round((won / closed) * 100) + '%';
+  }, [leads]);
 
   return (
     <motion.div
@@ -95,7 +132,7 @@ const EmployeeDashboard = () => {
         {[
           { label: 'Follow-ups', value: todayFollowUps.length, icon: CalendarIcon, color: 'amber', trend: 'Today' },
           { label: 'Pending Tasks', value: pendingTasks.length, icon: ListTodo, color: 'emerald', trend: 'Active' },
-          { label: 'Completion Rate', value: '85%', icon: TrendingUp, color: 'primary', trend: 'This Week' }
+          { label: 'Completion Rate', value: completionRate, icon: TrendingUp, color: 'primary', trend: 'Won/Closed' }
         ].map((stat, i) => (
           <motion.div key={i} variants={fadeInUp}>
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden group border border-slate-50 dark:border-slate-800/50 hover:shadow-xl hover:shadow-primary-500/5 transition-all">

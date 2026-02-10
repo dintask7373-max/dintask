@@ -10,6 +10,7 @@ const useCRMStore = create(
       leads: [],
       salesExecutives: [],
       pendingProjects: [],
+      followUps: [],
       loading: false,
       error: null,
 
@@ -184,6 +185,74 @@ const useCRMStore = create(
           }
         } catch (error) {
           toast.error(error.message || "Failed to approve project");
+        }
+      },
+
+      // Fetch Follow-ups
+      fetchFollowUps: async () => {
+        set({ loading: true });
+        try {
+          const res = await api('/follow-ups');
+          if (res.success) {
+            set({ followUps: res.data, loading: false });
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          console.error("Failed to fetch follow-ups", error);
+        }
+      },
+
+      // Add Follow-up
+      addFollowUp: async (followUpData) => {
+        try {
+          const res = await api('/follow-ups', {
+            method: 'POST',
+            body: followUpData
+          });
+          if (res.success) {
+            set((state) => ({
+              followUps: [...state.followUps, res.data]
+            }));
+            toast.success("Follow-up scheduled");
+            return res.data;
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to schedule follow-up");
+        }
+      },
+
+      // Update Follow-up
+      updateFollowUp: async (id, followUpData) => {
+        try {
+          const res = await api(`/follow-ups/${id}`, {
+            method: 'PUT',
+            body: followUpData
+          });
+          if (res.success) {
+            set((state) => ({
+              followUps: state.followUps.map(f => (f._id === id || f.id === id) ? res.data : f)
+            }));
+            toast.success("Follow-up updated");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to update follow-up");
+        }
+      },
+
+      // Delete Follow-up
+      deleteFollowUp: async (id) => {
+        try {
+          const res = await api(`/follow-ups/${id}`, {
+            method: 'DELETE'
+          });
+          if (res.success) {
+            set((state) => ({
+              followUps: state.followUps.filter(f => (f._id !== id && f.id !== id))
+            }));
+            toast.success("Follow-up deleted");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to delete follow-up");
         }
       },
 

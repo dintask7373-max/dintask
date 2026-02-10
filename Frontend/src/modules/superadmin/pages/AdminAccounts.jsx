@@ -73,6 +73,7 @@ const AdminAccounts = () => {
     const {
         admins,
         fetchAdmins,
+        adminPagination,
         updateAdminStatus,
         deleteAdmin,
         plans,
@@ -81,28 +82,32 @@ const AdminAccounts = () => {
     } = useSuperAdminStore();
     const { role } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     React.useEffect(() => {
-        fetchAdmins();
         fetchPlans();
-    }, [fetchAdmins, fetchPlans]);
+    }, [fetchPlans]);
 
-    // Handle default plan setup once plans are loaded
+    // Debounced search and pagination effect
     React.useEffect(() => {
-        if (plans && plans.length > 0 && !newAdmin.planId) {
-            const defaultPlan = plans.find(p => p.name === 'Starter') || plans[0];
-            setNewAdmin(prev => ({
-                ...prev,
-                plan: defaultPlan.name,
-                planId: defaultPlan._id
-            }));
-        }
-    }, [plans]);
-    const filteredAdmins = (admins || []).filter(adm =>
-        adm.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        adm.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        adm.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        const handler = setTimeout(() => {
+            fetchAdmins({
+                page: currentPage,
+                limit: pageSize,
+                search: searchTerm.trim()
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [fetchAdmins, currentPage, pageSize, searchTerm]);
+
+    // Reset to page 1 when search or limit changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, pageSize]);
+    // Filtered logic is now handled server-side, using admins from store directly
+    const displayAdmins = admins || [];
 
     const handleStatusChange = async (id, newStatus) => {
         const success = await updateAdminStatus(id, newStatus);
@@ -280,15 +285,36 @@ const AdminAccounts = () => {
 
             <motion.div variants={fadeInUp}>
                 <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-2xl sm:rounded-[2rem]">
-                    <div className="p-3 sm:p-4 border-b border-slate-50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <div className="relative w-full sm:w-72">
-                            <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
-                            <Input
-                                placeholder="Search companies..."
-                                className="pl-9 h-9 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-bold text-[11px] focus:ring-2 focus:ring-primary-500/10"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 border-b border-slate-50 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-sm font-extrabold uppercase tracking-widest text-slate-400 italic">Company Directory</h2>
+                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
+                                {adminPagination?.total || 0} Companies
+                            </Badge>
+                        </div>
+                        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Show</span>
+                                <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(parseInt(val))}>
+                                    <SelectTrigger className="w-[80px] h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold text-xs shadow-none">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        {[5, 10, 20, 50].map(size => (
+                                            <SelectItem key={size} value={size.toString()} className="text-xs font-bold rounded-xl">{size}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="relative w-full md:w-72">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                <Input
+                                    placeholder="Search companies or admins..."
+                                    className="pl-11 h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl text-[12px] font-bold focus-visible:ring-primary-500/10 transition-all placeholder:text-slate-300 shadow-none"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -308,17 +334,38 @@ const AdminAccounts = () => {
                                 </TableHeader>
                                 <TableBody>
                                     <AnimatePresence mode="popLayout">
-                                        {filteredAdmins.length === 0 ? (
+                                        {displayAdmins.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-48 text-center text-slate-400">
-                                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full w-fit mx-auto mb-4">
-                                                        <ShieldAlert size={32} className="opacity-20 text-slate-900 dark:text-white" />
+                                                <TableCell colSpan={6} className="h-64 text-center">
+                                                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
+                                                            <Building2 size={48} className="text-slate-300 dark:text-slate-700" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                                                                {searchTerm ? `No matches for "${searchTerm}"` : "No accounts found"}
+                                                            </p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose max-w-[200px] mx-auto">
+                                                                {searchTerm
+                                                                    ? "Try adjusting your search query to find the company you're looking for."
+                                                                    : "There are currently no administrative accounts in the system."}
+                                                            </p>
+                                                        </div>
+                                                        {searchTerm && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setSearchTerm('')}
+                                                                className="rounded-xl border-slate-200 dark:border-slate-800 font-black text-[10px] uppercase tracking-widest h-9"
+                                                            >
+                                                                Clear Search
+                                                            </Button>
+                                                        )}
                                                     </div>
-                                                    <p className="font-bold text-slate-900 dark:text-white">No administrative accounts found.</p>
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            filteredAdmins.map((adm) => (
+                                            displayAdmins.map((adm) => (
                                                 <motion.tr
                                                     key={adm._id}
                                                     variants={fadeInUp}
@@ -332,7 +379,7 @@ const AdminAccounts = () => {
                                                         <div className="space-y-0.5 py-0.5">
                                                             <p className="font-black text-slate-900 dark:text-white leading-tight text-[13px] tracking-tight">{adm.companyName}</p>
                                                             <p className="text-[9px] text-slate-400 flex items-center gap-1 font-bold">
-                                                                {adm.name} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">â€¢</span> <span className="hidden md:inline">{adm.email}</span>
+                                                                {adm.name} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">•</span> <span className="hidden md:inline">{adm.email}</span>
                                                             </p>
                                                         </div>
                                                     </TableCell>
@@ -425,14 +472,76 @@ const AdminAccounts = () => {
                             </Table>
                         </div>
 
+                        {/* Pagination UI - Matched with Inquiries.jsx */}
+                        {adminPagination.total > 0 && (
+                            <div className="flex items-center justify-center gap-2 mt-8">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(prev => prev - 1)}
+                                    className="rounded-xl border-slate-200 dark:border-slate-800"
+                                >
+                                    Previous
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                    {[...Array(adminPagination?.pages || 0)].map((_, i) => (
+                                        <Button
+                                            key={i + 1}
+                                            variant={currentPage === i + 1 ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={cn(
+                                                "w-9 h-9 p-0 rounded-xl",
+                                                currentPage === i + 1 ? "" : "border-slate-200 dark:border-slate-800"
+                                            )}
+                                        >
+                                            {i + 1}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === adminPagination?.pages}
+                                    onClick={() => setCurrentPage(prev => prev + 1)}
+                                    className="rounded-xl border-slate-200 dark:border-slate-800"
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        )}
+
                         {/* Mobile Card View */}
                         <div className="md:hidden divide-y divide-slate-50 dark:divide-slate-800">
-                            {filteredAdmins.length === 0 ? (
-                                <div className="p-12 text-center text-slate-400">
-                                    <p className="font-bold">No accounts found.</p>
+                            {displayAdmins.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center space-y-4 py-20 px-6 text-center">
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
+                                        <Building2 size={40} className="text-slate-300 dark:text-slate-700" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                                            {searchTerm ? `No results for "${searchTerm}"` : "No accounts found"}
+                                        </p>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed max-w-[180px] mx-auto">
+                                            {searchTerm
+                                                ? "Adjust your search to find client companies."
+                                                : "No administrative accounts are present."}
+                                        </p>
+                                    </div>
+                                    {searchTerm && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setSearchTerm('')}
+                                            className="rounded-xl h-8 px-4 font-black text-[9px] uppercase tracking-widest"
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
                                 </div>
                             ) : (
-                                filteredAdmins.map((adm) => (
+                                displayAdmins.map((adm) => (
                                     <div key={adm._id} className="p-3 sm:p-4 space-y-3">
                                         <div className="flex justify-between items-start">
                                             <div className="space-y-0.5">
@@ -496,7 +605,7 @@ const AdminAccounts = () => {
                         <CheckCircle2 className="text-emerald-500 h-3 w-3 md:h-5 md:w-5" />
                     </div>
                     <div className="min-w-0 overflow-hidden">
-                        <h4 className="text-sm md:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tighter leading-none">{(admins || []).filter(a => a.subscriptionStatus === 'active').length}</h4>
+                        <h4 className="text-sm md:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tighter leading-none">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'active').length}</h4>
                         <p className="text-[6px] md:text-[8px] font-black text-emerald-600 dark:text-emerald-500/70 uppercase tracking-widest mt-0.5 md:mt-1 truncate">Active</p>
                     </div>
                 </motion.div>
@@ -506,12 +615,12 @@ const AdminAccounts = () => {
                         <XOctagon className="text-red-500 h-3 w-3 md:h-5 md:w-5" />
                     </div>
                     <div className="min-w-0 overflow-hidden">
-                        <h4 className="text-sm md:text-2xl font-black text-red-700 dark:text-red-400 tracking-tighter leading-none">{(admins || []).filter(a => a.subscriptionStatus === 'suspended').length}</h4>
+                        <h4 className="text-sm md:text-2xl font-black text-red-700 dark:text-red-400 tracking-tighter leading-none">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'suspended').length}</h4>
                         <p className="text-[6px] md:text-[8px] font-black text-red-600 dark:text-red-500/70 uppercase tracking-widest mt-0.5 md:mt-1 truncate">Blocked</p>
                     </div>
                 </motion.div>
             </div>
-        </motion.div>
+        </motion.div >
     );
 };
 

@@ -54,3 +54,48 @@ exports.markAllAsRead = async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 };
+
+// @desc    Delete notification
+// @route   DELETE /api/v1/notifications/:id
+// @access  Private
+exports.deleteNotification = async (req, res) => {
+    try {
+        const notification = await Notification.findById(req.params.id);
+
+        if (!notification) {
+            return res.status(404).json({ success: false, error: 'Notification not found' });
+        }
+
+        if (notification.recipient.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, error: 'Not authorized' });
+        }
+
+        await notification.deleteOne();
+
+        res.status(200).json({ success: true, data: {} });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Bulk delete notifications
+// @route   POST /api/v1/notifications/bulk-delete
+// @access  Private
+exports.bulkDeleteNotifications = async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ success: false, error: 'Please provide an array of IDs' });
+        }
+
+        await Notification.deleteMany({
+            _id: { $in: ids },
+            recipient: req.user.id
+        });
+
+        res.status(200).json({ success: true, message: 'Notifications deleted' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
