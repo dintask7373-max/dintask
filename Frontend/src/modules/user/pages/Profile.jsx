@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Save,
     Bell,
     Moon,
     AlertCircle,
     User,
-    Shield
+    Shield,
+    LogOut
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -18,7 +20,8 @@ import { toast } from 'sonner';
 import { cn } from '@/shared/utils/cn';
 
 const EmployeeProfile = () => {
-    const { user, updateProfile, changePassword } = useAuthStore();
+    const { user, updateProfile, changePassword, logout } = useAuthStore();
+    const navigate = useNavigate();
 
     const [profileData, setProfileData] = useState({
         name: '',
@@ -85,6 +88,17 @@ const EmployeeProfile = () => {
             setIsLoading(false);
         }
     };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+            toast.success("Identity session terminated");
+        } catch (error) {
+            toast.error("Logout protocol failed");
+        }
+    };
+
 
     // Default Profile View
     return (
@@ -192,6 +206,17 @@ const EmployeeProfile = () => {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Logout Section */}
+                    <div className="pt-4 pb-10 flex justify-center">
+                        <Button
+                            variant="ghost"
+                            className="w-full h-14 rounded-3xl font-bold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all gap-3 border border-red-100 dark:border-red-950/30"
+                            onClick={handleLogout}
+                        >
+                            <LogOut size={20} /> Terminate Session (Logout)
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

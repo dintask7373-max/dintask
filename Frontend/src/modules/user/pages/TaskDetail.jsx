@@ -61,38 +61,13 @@ const TaskDetail = () => {
     const { user: currentUser } = useAuthStore();
     const addNotification = useNotificationStore(state => state.addNotification);
 
-    const [comment, setComment] = useState('');
+
 
     const task = useMemo(() => tasks.find(t => t.id === id), [tasks, id]);
 
     const sendMessage = useChatStore(state => state.sendMessage);
 
-    const handleAddComment = () => {
-        if (!comment.trim()) return;
 
-        // Add to task activity (visible to all)
-        addActivity(task.id, {
-            user: currentUser?.name || 'User',
-            avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser?.name}`,
-            content: comment,
-            time: 'Just now',
-            type: 'comment'
-        });
-
-        // Send private message to the manager who delegated the task
-        if (task.delegatedBy && currentUser?.id !== task.delegatedBy) {
-            sendMessage(currentUser.id, task.delegatedBy, `[Task Update: ${task.title}] ${comment}`, task.id);
-        }
-
-        // Also notify the primary Admin for global oversight
-        const adminId = 'admin'; // Standard admin ID in our mock system
-        if (currentUser?.id !== adminId) {
-            sendMessage(currentUser.id, adminId, `[Alert: Task ${task.title}] ${comment}`, task.id);
-        }
-
-        setComment('');
-        toast.success('Comment added & Stakeholders notified');
-    };
 
     const handleMarkComplete = () => {
         updateTask(task.id, { status: 'completed', progress: 100 });
@@ -144,25 +119,6 @@ const TaskDetail = () => {
 
     return (
         <div className="bg-white dark:bg-slate-950 min-h-screen pb-32 font-display text-text-main dark:text-gray-100">
-            {/* Top Navigation */}
-            <div className="sticky top-0 z-20 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
-                <div className="flex items-center p-4 justify-between">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
-                    </div>
-                    <h2 className="text-lg font-bold leading-tight tracking-tight">Task Details</h2>
-                    <div className="flex items-center justify-end">
-                        <button className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors">
-                            <MoreVertical size={20} />
-                        </button>
-                    </div>
-                </div>
-            </div>
 
             {/* Main Content Area */}
             <div className="max-w-[1280px] mx-auto px-4 md:px-6 pt-2">
@@ -375,23 +331,7 @@ const TaskDetail = () => {
             {/* Sticky Footer Actions */}
             <div className="fixed bottom-0 left-0 right-0 p-4 backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-t border-slate-100 dark:border-slate-800 z-30">
                 <div className="max-w-4xl mx-auto space-y-4">
-                    {/* Comment Input */}
-                    <div className="relative">
-                        <input
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(); }}
-                            className="w-full h-12 pl-4 pr-12 rounded-xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary/20 text-sm outline-none transition-all shadow-inner"
-                            placeholder="Add a comment..."
-                            type="text"
-                        />
-                        <button
-                            onClick={handleAddComment}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-primary hover:bg-primary/10 rounded-full transition-colors"
-                        >
-                            <Send size={18} />
-                        </button>
-                    </div>
+
 
                     {/* Primary Action */}
                     {task.status !== 'completed' ? (

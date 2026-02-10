@@ -26,7 +26,7 @@ import useChatStore from '@/store/chatStore';
 
 const AdminChat = () => {
     const { user: currentUser, role: userRole } = useAuthStore();
-    const { employees } = useEmployeeStore();
+    const { employees, fetchEmployees } = useEmployeeStore();
     const {
         conversations,
         activeConversation,
@@ -47,7 +47,8 @@ const AdminChat = () => {
     // Initial load
     useEffect(() => {
         fetchConversations();
-    }, [fetchConversations]);
+        fetchEmployees();
+    }, [fetchConversations, fetchEmployees]);
 
     // Map role to DB Model
     const getModelName = (role) => {

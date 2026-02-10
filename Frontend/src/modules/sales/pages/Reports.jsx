@@ -122,8 +122,8 @@ const SalesReports = () => {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 mb-2">
                 <div className="flex items-center gap-3">
-                    <div className="lg:hidden size-9 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                    <div className="lg:hidden size-9 shrink-0">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
                     </div>
                     <div>
                         <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">

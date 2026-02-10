@@ -91,8 +91,8 @@ const SalesDashboard = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-0.5 sm:space-y-1">
                     <div className="flex items-center gap-3">
-                        <div className="lg:hidden w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <div className="lg:hidden w-10 h-10 shrink-0">
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
                         </div>
                         <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                             Command <span className="text-primary-600">Center</span>

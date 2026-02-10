@@ -169,15 +169,15 @@ const EmployeeCalendar = () => {
                         </div>
                     ))}
                 </div>
-                <div className="space-y-4 max-h-[220px] overflow-y-auto no-scrollbar py-2">
+                <div className="relative space-y-4 max-h-[220px] overflow-y-auto no-scrollbar py-2">
                     {['09:00', '11:00', '13:00', '15:00', '17:00'].map(hour => (
                         <div key={hour} className="flex gap-4 items-center pl-2 group">
-                            <span className="text-[10px] font-black text-slate-300 w-10">{hour}</span>
+                            <span className="text-[10px] font-black text-slate-300 w-10 shrink-0">{hour}</span>
                             <div className="h-px flex-1 bg-slate-50 dark:bg-slate-800/50 group-hover:bg-blue-100 transition-colors" />
                         </div>
                     ))}
-                    <div className="absolute top-1/2 left-12 right-6 h-12 bg-blue-500/10 border-l-4 border-blue-500 rounded-lg p-3 flex items-center pointer-events-none">
-                        <span className="text-[10px] font-black text-[#4461F2] uppercase">Weekly Sync Placeholder</span>
+                    <div className="absolute top-[88px] left-[60px] right-6 h-12 bg-blue-500/10 border-l-4 border-blue-500 rounded-lg p-3 flex items-center pointer-events-none">
+                        <span className="text-[9px] font-black text-[#4461F2] uppercase tracking-wider">Weekly Sync Placeholder</span>
                     </div>
                 </div>
             </div>
@@ -238,65 +238,82 @@ const EmployeeCalendar = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8F9FE] dark:bg-slate-950 p-4 sm:p-8 flex flex-col items-center font-sans overflow-x-hidden">
+        <div className="min-h-screen bg-white dark:bg-slate-950 p-4 sm:p-8 flex flex-col items-center font-sans overflow-x-hidden">
 
             {/* Main Compact Container */}
             <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-white dark:border-slate-800">
 
-                {/* Header Section: Blue Gradient */}
-                <div className="bg-gradient-to-br from-[#4461F2] to-[#2845C7] p-8 pb-12 text-white relative">
-                    <div className="flex items-center justify-between mb-8">
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => navigate(-1)}
-                            className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                        >
-                            <ChevronLeft size={24} />
-                        </motion.button>
-                        <h1 className="text-xl font-bold tracking-tight">Calendar</h1>
-                        <div className="flex gap-4">
-                            <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
-                                <Search size={20} strokeWidth={2.5} />
-                            </button>
-                            <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
-                                <Plus size={22} strokeWidth={2.5} />
-                            </button>
-                        </div>
-                    </div>
+                {/* Header Section: Image Background */}
+                <div className="relative p-8 pb-12 text-white overflow-hidden">
+                    <img
+                        src="/WLCOMPAGE .png"
+                        alt="Background"
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-blue-900/40 backdrop-blur-[1px]" />
 
-                    {/* View Toggles */}
-                    <div className="flex bg-white/20 backdrop-blur-md rounded-full p-1 mb-8">
-                        {['Day', 'Week', 'Month', 'Year'].map((view) => (
-                            <button
-                                key={view}
-                                onClick={() => setActiveView(view)}
-                                className={cn(
-                                    "flex-1 py-1.5 rounded-full text-[11px] font-bold transition-all uppercase tracking-widest",
-                                    activeView === view
-                                        ? "bg-white text-[#4461F2] shadow-lg"
-                                        : "text-white/70 hover:text-white"
-                                )}
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-8">
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => navigate(-1)}
+                                className="p-1 hover:bg-white/10 rounded-full transition-colors"
                             >
-                                {view}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="flex items-center justify-between px-2">
-                        <button onClick={handlePrev} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                            <ChevronLeft size={20} strokeWidth={3} />
-                        </button>
-                        <div className="text-center">
-                            <h3 className="text-3xl font-black">
-                                {activeView === 'Year' ? format(currentDate, 'yyyy') : format(currentDate, 'MMMM')}
-                            </h3>
-                            <p className="text-sm font-bold text-white/60 tracking-widest leading-none mt-1">
-                                {activeView === 'Year' ? 'SELECT MONTH' : format(currentDate, 'yyyy')}
-                            </p>
+                                <ChevronLeft size={24} />
+                            </motion.button>
+                            <h1 className="text-xl font-bold tracking-tight">Calendar</h1>
+                            <div className="flex gap-4">
+                                <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                                    <Search size={20} strokeWidth={2.5} />
+                                </button>
+                                <button className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                                    <Plus size={22} strokeWidth={2.5} />
+                                </button>
+                            </div>
                         </div>
-                        <button onClick={handleNext} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                            <ChevronRight size={20} strokeWidth={3} />
-                        </button>
+
+                        {/* View Toggles */}
+                        <div className="flex bg-white/10 backdrop-blur-md rounded-2xl p-1 mb-10 overflow-hidden">
+                            {['Day', 'Week', 'Month', 'Year'].map((view) => {
+                                const isActive = activeView === view;
+                                return (
+                                    <button
+                                        key={view}
+                                        onClick={() => setActiveView(view)}
+                                        className={cn(
+                                            "relative flex-1 py-3 text-[10px] font-black transition-all uppercase tracking-[0.2em] outline-none",
+                                            isActive ? "text-white" : "text-white/40 hover:text-white/70"
+                                        )}
+                                    >
+                                        <span className="relative z-10">{view}</span>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="active_view_line"
+                                                className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-white rounded-full shadow-[0_0_12px_rgba(255,255,255,1)]"
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex items-center justify-between px-2">
+                            <button onClick={handlePrev} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <ChevronLeft size={20} strokeWidth={3} />
+                            </button>
+                            <div className="text-center">
+                                <h3 className="text-3xl font-black">
+                                    {activeView === 'Year' ? format(currentDate, 'yyyy') : format(currentDate, 'MMMM')}
+                                </h3>
+                                <p className="text-sm font-bold text-white/60 tracking-widest leading-none mt-1">
+                                    {activeView === 'Year' ? 'SELECT MONTH' : format(currentDate, 'yyyy')}
+                                </p>
+                            </div>
+                            <button onClick={handleNext} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <ChevronRight size={20} strokeWidth={3} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -358,11 +375,7 @@ const EmployeeCalendar = () => {
                 </div>
             </div>
 
-            {/* Bottom Signature Spacer */}
-            <div className="py-10 text-center">
-                <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">Neural Calendar Terminal v2.0</p>
-            </div>
-        </div>
+        </div >
     );
 };
 
