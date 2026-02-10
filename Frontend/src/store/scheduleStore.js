@@ -1,55 +1,93 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import api from '@/lib/api';
+import { toast } from 'sonner';
 
-const useScheduleStore = create(
-    persist(
-        (set, get) => ({
-            schedules: [],
-            loading: false,
-            error: null,
+const useScheduleStore = create((set, get) => ({
+    schedules: [],
+    participants: [], // Potential members (Managers, Employees, Sales)
+    loading: false,
+    error: null,
 
-            addScheduleEvent: (event) => {
+    fetchSchedules: async () => {
+        set({ loading: true });
+        try {
+            const res = await api('/schedules');
+            if (res.success) {
+                set({ schedules: res.data, loading: false, error: null });
+            }
+        } catch (error) {
+            set({ error: error.message, loading: false });
+            console.error("Failed to fetch schedules:", error);
+        }
+    },
+
+    fetchParticipants: async () => {
+        try {
+            const res = await api('/schedules/participants');
+            if (res.success) {
+                set({ participants: res.data });
+            }
+        } catch (error) {
+            console.error("Failed to fetch participants:", error);
+        }
+    },
+
+    addScheduleEvent: async (eventData) => {
+        set({ loading: true });
+        try {
+            const res = await api('/schedules', {
+                method: 'POST',
+                body: eventData
+            });
+            if (res.success) {
                 set((state) => ({
-                    schedules: [
-                        ...state.schedules,
-                        {
-                            ...event,
-                            id: Date.now().toString(),
-                            createdAt: new Date().toISOString()
-                        },
-                    ],
+                    schedules: [...state.schedules, res.data],
+                    loading: false
                 }));
-            },
+                toast.success('Event scheduled successfully');
+                return res.data;
+            }
+        } catch (error) {
+            set({ loading: false });
+            toast.error(error.message || 'Failed to schedule event');
+            throw error;
+        }
+    },
 
-            updateScheduleEvent: (eventId, updatedData) => {
+    updateScheduleEvent: async (eventId, updatedData) => {
+        try {
+            const res = await api(`/schedules/${eventId}`, {
+                method: 'PUT',
+                body: updatedData
+            });
+            if (res.success) {
                 set((state) => ({
                     schedules: state.schedules.map((event) =>
-                        event.id === eventId ? { ...event, ...updatedData } : event
+                        event._id === eventId ? res.data : event
                     ),
                 }));
-            },
-
-            deleteScheduleEvent: (eventId) => {
-                set((state) => ({
-                    schedules: state.schedules.filter((event) => event.id !== eventId),
-                }));
-            },
-
-            getSchedulesByUser: (userId) => {
-                return get().schedules.filter(s => s.userId === userId || s.targetUserId === userId);
-            },
-
-            getTeamSchedules: (managerId, teamMemberIds) => {
-                return get().schedules.filter(s =>
-                    s.managerId === managerId || (teamMemberIds && teamMemberIds.includes(s.targetUserId))
-                );
+                toast.success('Event updated');
             }
-        }),
-        {
-            name: 'dintask-schedules-storage',
-            storage: createJSONStorage(() => sessionStorage),
+        } catch (error) {
+            toast.error(error.message || 'Update failed');
         }
-    )
-);
+    },
+
+    deleteScheduleEvent: async (eventId) => {
+        try {
+            const res = await api(`/schedules/${eventId}`, {
+                method: 'DELETE'
+            });
+            if (res.success) {
+                set((state) => ({
+                    schedules: state.schedules.filter((event) => (event._id || event.id) !== eventId),
+                }));
+                toast.success('Event removed');
+            }
+        } catch (error) {
+            toast.error(error.message || 'Deletion failed');
+        }
+    }
+}));
 
 export default useScheduleStore;

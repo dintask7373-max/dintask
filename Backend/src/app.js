@@ -52,6 +52,7 @@ app.use('/api/v1/projects', require('./routes/projectRoutes')); // Project Route
 app.use('/api/v1/tasks', require('./routes/taskRoutes')); // Task Routes
 app.use('/api/v1/teams', require('./routes/teamRoutes')); // Team Routes
 app.use('/api/v1/notifications', require('./routes/notificationRoutes')); // Notification Routes
+app.use('/api/v1/schedules', require('./routes/scheduleRoutes')); // Schedule Routes
 
 // Serve static assets - Uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

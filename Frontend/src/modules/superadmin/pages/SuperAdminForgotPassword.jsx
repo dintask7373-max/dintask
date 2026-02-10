@@ -8,58 +8,35 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs';
+
+import useAuthStore from '@/store/authStore';
 
 const SuperAdminForgotPassword = () => {
     const [step, setStep] = useState(0);
     const [email, setEmail] = useState('');
-    const [otp, setOtp] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const { forgotPassword, loading, error, clearError } = useAuthStore();
 
     const navigate = useNavigate();
 
-    const handleSendOTP = async (e) => {
+    const handleSendResetLink = async (e, roleTab) => {
         e.preventDefault();
         if (!email) {
             toast.error('Identity required');
             return;
         }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setStep(1);
-        toast.success(`Recall cipher sent to ${email}`);
-    };
 
-    const handleVerifyOTP = async (e) => {
-        e.preventDefault();
-        if (!otp || otp.length < 4) {
-            toast.error('Invalid OTP');
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsLoading(false);
-        setStep(2);
-        toast.success('Root Identity Verified');
-    };
+        // Map tab value to backend role
+        const systemRole = roleTab === 'employee' ? 'superadmin_staff' : 'superadmin';
 
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-        if (!newPassword || !confirmPassword) {
-            toast.error('Parameters incomplete');
-            return;
+        const result = await forgotPassword(email, systemRole);
+
+        if (result.success) {
+            setStep(1);
+            toast.success(`Recall protocol initiated for ${email}`);
+        } else {
+            toast.error(result.error || 'Recall sequence failed');
         }
-        if (newPassword !== confirmPassword) {
-            toast.error('Hash mismatch');
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setStep(3);
-        toast.success('Access keys restored');
     };
 
     return (
@@ -82,74 +59,66 @@ const SuperAdminForgotPassword = () => {
                     <div className="text-center md:text-left">
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Account Recovery</h2>
                         <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
-                            {step === 0 && 'Enter your root email to initiate recall.'}
-                            {step === 1 && 'Authentication code sent to your inbox.'}
-                            {step === 2 && 'Set a new secure master password.'}
-                            {step === 3 && 'Access successfully restored.'}
+                            {step === 0 && 'Select your role and enter email to initiate recall.'}
+                            {step === 1 && 'Authentication link dispatched to secure terminal.'}
                         </p>
                     </div>
 
                     <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900">
-                        <CardContent className="pt-10 pb-10 px-6 space-y-6">
+                        <CardContent className="pt-8 pb-8 px-6 space-y-6">
                             <AnimatePresence mode="wait">
                                 {step === 0 && (
-                                    <motion.form key="s0" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} onSubmit={handleSendOTP} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">Root Email</Label>
-                                            <Input id="email" type="email" placeholder="root@dintask.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-lg" />
-                                        </div>
-                                        <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20" disabled={isLoading}>
-                                            {isLoading ? 'Processing...' : 'Send Recovery Code'}
-                                        </Button>
-                                    </motion.form>
+                                    <motion.div key="s0" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+                                        <Tabs defaultValue="admin" className="w-full">
+                                            <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-1 mb-6">
+                                                <TabsTrigger value="admin" className="rounded-md h-9 text-xs font-bold uppercase tracking-tight">Super Admin</TabsTrigger>
+                                                <TabsTrigger value="employee" className="rounded-md h-9 text-xs font-bold uppercase tracking-tight">Staff</TabsTrigger>
+                                            </TabsList>
+
+                                            <TabsContent value="admin">
+                                                <form onSubmit={(e) => handleSendResetLink(e, 'admin')} className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="admin-email">Root Email</Label>
+                                                        <Input id="admin-email" type="email" placeholder="root@dintask.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-lg" />
+                                                    </div>
+                                                    <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20" disabled={loading}>
+                                                        {loading ? 'Processing...' : 'Send Recovery Link'}
+                                                    </Button>
+                                                </form>
+                                            </TabsContent>
+
+                                            <TabsContent value="employee">
+                                                <form onSubmit={(e) => handleSendResetLink(e, 'employee')} className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="staff-email">Staff Email</Label>
+                                                        <Input id="staff-email" type="email" placeholder="staff@dintask.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-lg" />
+                                                    </div>
+                                                    <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20" disabled={loading}>
+                                                        {loading ? 'Processing...' : 'Send Recovery Link'}
+                                                    </Button>
+                                                </form>
+                                            </TabsContent>
+                                        </Tabs>
+                                    </motion.div>
                                 )}
 
                                 {step === 1 && (
-                                    <motion.form key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} onSubmit={handleVerifyOTP} className="space-y-4">
-                                        <div className="space-y-2 text-center">
-                                            <Label className="text-slate-500 font-medium">Verify 6-digit code</Label>
-                                            <Input id="otp" placeholder="• • • • • •" value={otp} onChange={(e) => setOtp(e.target.value)} className="h-14 text-center text-3xl font-black tracking-[0.5em] rounded-xl bg-slate-50 border-none" maxLength={6} />
-                                        </div>
-                                        <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white" disabled={isLoading}>
-                                            {isLoading ? 'Verifying...' : 'Authenticate'}
-                                        </Button>
-                                        <button type="button" onClick={() => setStep(0)} className="w-full text-xs font-bold text-slate-400 hover:text-primary-600 uppercase tracking-widest">Resend Cipher</button>
-                                    </motion.form>
-                                )}
-
-                                {step === 2 && (
-                                    <motion.form key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} onSubmit={handleResetPassword} className="space-y-4">
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="new-pass">New Password</Label>
-                                                <Input id="new-pass" type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-11 rounded-lg" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="confirm-pass">Confirm Hash</Label>
-                                                <Input id="confirm-pass" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-11 rounded-lg" />
-                                            </div>
-                                        </div>
-                                        <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white" disabled={isLoading}>
-                                            {isLoading ? 'Syncing Key...' : 'Commit System Over-ride'}
-                                        </Button>
-                                    </motion.form>
-                                )}
-
-                                {step === 3 && (
                                     <motion.div key="s3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-6">
                                         <div className="size-20 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 mx-auto flex items-center justify-center">
                                             <CheckCircle2 size={40} />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase italic tracking-tighter">Protocol Restored</h3>
-                                            <p className="text-slate-500 text-xs mt-1 font-medium uppercase tracking-widest">Master access key re-synchronized.</p>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase italic tracking-tighter">Cipher Dispatched</h3>
+                                            <p className="text-slate-500 text-xs mt-1 font-medium uppercase tracking-widest leading-relaxed">
+                                                A secure authentication cipher has been sent to <b>{email}</b>. Please access your terminal to continue.
+                                            </p>
                                         </div>
                                         <Button onClick={() => navigate('/superadmin/login')} className="w-full h-11 text-base font-black bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-lg">Return to Terminal</Button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {step !== 3 && (
+                            {step !== 1 && (
                                 <div className="text-center pt-2 border-t border-slate-100 flex items-center justify-center gap-2">
                                     <Link to="/superadmin/login" className="text-xs font-bold text-slate-400 hover:text-primary-600 uppercase tracking-widest flex items-center gap-2">
                                         <ArrowLeft size={14} /> Back to Sign In

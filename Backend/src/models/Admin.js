@@ -54,7 +54,12 @@ const AdminSchema = new mongoose.Schema({
     type: Date
   },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'inactive'
+  }
 }, { timestamps: true });
 
 AdminSchema.pre('save', async function () {

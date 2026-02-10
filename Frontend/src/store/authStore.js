@@ -114,13 +114,15 @@ const useAuthStore = create(
             logout: async () => {
                 const { role } = get();
 
-                // If superadmin, call the backend logout endpoint
-                if (role === 'superadmin' || role === 'superadmin_staff') {
-                    try {
+                try {
+                    // Call the appropriate backend logout endpoint
+                    if (role === 'superadmin' || role === 'superadmin_staff') {
                         await apiRequest('/superadmin/logout');
-                    } catch (err) {
-                        console.error('Logout API failed:', err);
+                    } else {
+                        await apiRequest('/auth/logout');
                     }
+                } catch (err) {
+                    console.error('Logout API failed:', err);
                 }
 
                 set({
@@ -195,6 +197,46 @@ const useAuthStore = create(
                 } catch (err) {
                     set({ loading: false, error: err.message });
                     return false;
+                }
+            },
+
+            forgotPassword: async (email, role) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest('/auth/forgotpassword', {
+                        method: 'POST',
+                        body: { email, role }
+                    });
+
+                    if (response.success) {
+                        set({ loading: false });
+                        return { success: true };
+                    } else {
+                        throw new Error(response.error || 'Failed to send reset email');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return { success: false, error: err.message };
+                }
+            },
+
+            resetPassword: async (token, role, password) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest(`/auth/resetpassword/${token}?role=${role}`, {
+                        method: 'PUT',
+                        body: { password }
+                    });
+
+                    if (response.success) {
+                        set({ loading: false });
+                        return { success: true };
+                    } else {
+                        throw new Error(response.error || 'Password reset failed');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return { success: false, error: err.message };
                 }
             },
 

@@ -80,9 +80,9 @@ exports.getAllUsers = async (req, res, next) => {
     // Fetch Admin, Managers, Sales, Employees for this workspace
     const [admin, employees, sales, managers] = await Promise.all([
       Admin.findById(adminId).select('name email avatar role companyName'),
-      Employee.find({ adminId, status: 'active' }).select('name email avatar role'),
-      SalesExecutive.find({ adminId, status: 'active' }).select('name email avatar role'),
-      Manager.find({ adminId, status: 'active' }).select('name email avatar role')
+      Employee.find({ adminId, status: { $in: ['active', 'inactive'] } }).select('name email avatar role status'),
+      SalesExecutive.find({ adminId, status: { $in: ['active', 'inactive'] } }).select('name email avatar role status'),
+      Manager.find({ adminId, status: { $in: ['active', 'inactive'] } }).select('name email avatar role status')
     ]);
 
     // Format admin to look like other users and include in list
@@ -170,9 +170,10 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/admin/resetpassword/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}?role=admin`;
 
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.`;
 
     try {
       await sendEmail({

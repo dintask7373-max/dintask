@@ -10,6 +10,7 @@ const useCRMStore = create(
       leads: [],
       salesExecutives: [],
       pendingProjects: [],
+      followUps: [], // Added followUps state
       loading: false,
       error: null,
 
@@ -28,6 +29,37 @@ const useCRMStore = create(
           set({ error: error.message, loading: false });
           toast.error("Failed to fetch leads");
         }
+      },
+
+      // Follow-up Actions (Client-side for now)
+      addFollowUp: (followUpData) => {
+        set((state) => ({
+          followUps: [
+            ...(state.followUps || []),
+            {
+              ...followUpData,
+              id: Date.now().toString(),
+              createdAt: new Date().toISOString()
+            }
+          ]
+        }));
+        toast.success("Follow-up scheduled");
+      },
+
+      updateFollowUp: (followUpId, updatedData) => {
+        set((state) => ({
+          followUps: (state.followUps || []).map(f =>
+            f.id === followUpId ? { ...f, ...updatedData } : f
+          )
+        }));
+        toast.success("Follow-up updated");
+      },
+
+      deleteFollowUp: (followUpId) => {
+        set((state) => ({
+          followUps: (state.followUps || []).filter(f => f.id !== followUpId)
+        }));
+        toast.success("Follow-up removed");
       },
 
       // Fetch Sales Executives

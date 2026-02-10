@@ -10,61 +10,41 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { cn } from '@/shared/utils/cn';
 
+import useAuthStore from '@/store/authStore';
+
 const ForgotPassword = ({ returnPath = '/employee/login' }) => {
-    // Steps: 0 = Email, 1 = OTP, 2 = New Password, 3 = Success
+    // Steps: 0 = Email, 1 = Success
     const [step, setStep] = useState(0);
     const [email, setEmail] = useState('');
-    const [otp, setOtp] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const { forgotPassword, loading, error, clearError } = useAuthStore();
 
     const navigate = useNavigate();
 
-    // Step 1: Send OTP
-    const handleSendOTP = async (e) => {
+    // Determine role based on returnPath
+    const getRoleFromPath = () => {
+        if (returnPath.includes('/admin')) return 'admin';
+        if (returnPath.includes('/manager')) return 'manager';
+        if (returnPath.includes('/sales')) return 'sales';
+        if (returnPath.includes('/superadmin')) return 'superadmin';
+        return 'employee';
+    };
+
+    const handleSendResetLink = async (e) => {
         e.preventDefault();
         if (!email) {
             toast.error('Identity required');
             return;
         }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setStep(1);
-        toast.success(`Cipher sent to ${email}`);
-    };
 
-    // Step 2: Verify OTP
-    const handleVerifyOTP = async (e) => {
-        e.preventDefault();
-        if (!otp || otp.length < 4) {
-            toast.error('Invalid OTP length');
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsLoading(false);
-        setStep(2);
-        toast.success('Access Link Verified');
-    };
+        const role = getRoleFromPath();
+        const result = await forgotPassword(email, role);
 
-    // Step 3: Reset Password
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-        if (!newPassword || !confirmPassword) {
-            toast.error('Parameters incomplete');
-            return;
+        if (result.success) {
+            setStep(1);
+            toast.success(`Encrypted reset link dispatched to ${email}`);
+        } else {
+            toast.error(result.error || 'Failed to initiate recovery');
         }
-        if (newPassword !== confirmPassword) {
-            toast.error('Hash mismatch');
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setStep(3);
-        toast.success('Security protocol updated');
     };
 
     return (
@@ -111,15 +91,11 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
 
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
                             {step === 0 && 'Identity Recovery'}
-                            {step === 1 && 'Confirm Entry'}
-                            {step === 2 && 'New Encryption Key'}
-                            {step === 3 && 'Access Restored'}
+                            {step === 1 && 'Cipher Dispatched'}
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 mt-2">
                             {step === 0 && 'Provide your linked work email to initiate reset.'}
-                            {step === 1 && 'A secure cipher has been dispatched to your email.'}
-                            {step === 2 && 'Create a strong, unique password for your account.'}
-                            {step === 3 && 'Verification protocols complete. Redirecting enabled.'}
+                            {step === 1 && 'A secure recovery link has been sent to your primary inbox.'}
                         </p>
                     </div>
 
@@ -127,7 +103,7 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
                         <CardContent className="pt-8 pb-8 px-8 space-y-6">
                             {/* Step 0: Email Input */}
                             {step === 0 && (
-                                <form onSubmit={handleSendOTP} className="space-y-4">
+                                <form onSubmit={handleSendResetLink} className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Work Email</Label>
                                         <div className="relative">
@@ -145,109 +121,38 @@ const ForgotPassword = ({ returnPath = '/employee/login' }) => {
                                     <Button
                                         type="submit"
                                         className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20"
-                                        disabled={isLoading}
+                                        disabled={loading}
                                     >
-                                        {isLoading ? 'Dispatching...' : 'Initiate Recovery'}
+                                        {loading ? 'Dispatching...' : 'Initiate Recovery'}
                                     </Button>
                                 </form>
                             )}
 
-                            {/* Step 1: OTP Input */}
+                            {/* Step 1: Success */}
                             {step === 1 && (
-                                <form onSubmit={handleVerifyOTP} className="space-y-6">
-                                    <div className="space-y-2 text-center">
-                                        <Label htmlFor="otp" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Verification Code</Label>
-                                        <Input
-                                            id="otp"
-                                            type="text"
-                                            placeholder="••••••"
-                                            value={otp}
-                                            onChange={(e) => setOtp(e.target.value)}
-                                            className="h-14 px-5 bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-2xl tracking-[0.4em] text-center"
-                                            maxLength={6}
-                                        />
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-4">
-                                            Identity ID: <span className="text-slate-600 dark:text-slate-200 italic">{email}</span>
-                                        </p>
-                                    </div>
-                                    <Button
-                                        type="submit"
-                                        className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20"
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading ? 'Decrypting...' : 'Verify Identity'}
-                                    </Button>
-                                </form>
-                            )}
-
-                            {/* Step 2: New Password Input */}
-                            {step === 2 && (
-                                <form onSubmit={handleResetPassword} className="space-y-4">
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="new-pass" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">New Password</Label>
-                                            <div className="relative">
-                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                                <Input
-                                                    id="new-pass"
-                                                    type="password"
-                                                    placeholder="••••••••"
-                                                    value={newPassword}
-                                                    onChange={(e) => setNewPassword(e.target.value)}
-                                                    className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="confirm-pass" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Confirm Identity Key</Label>
-                                            <div className="relative">
-                                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                                <Input
-                                                    id="confirm-pass"
-                                                    type="password"
-                                                    placeholder="••••••••"
-                                                    value={confirmPassword}
-                                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        type="submit"
-                                        className="w-full h-12 text-sm font-black bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-900/20"
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading ? 'Applying Security...' : 'Commit New Key'}
-                                    </Button>
-                                </form>
-                            )}
-
-                            {/* Step 3: Success */}
-                            {step === 3 && (
                                 <div className="space-y-6 text-center py-4">
                                     <div className="flex justify-center">
                                         <div className="size-20 rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center animate-bounce">
                                             <CheckCircle2 size={40} />
                                         </div>
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Deployment Success</h3>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Dispatch Success</h3>
                                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400 italic leading-relaxed">
-                                        Account security protocols updated. Identity verified. You may now proceed to the portal.
+                                        Please check your email <b>{email}</b> for instructions to reset your password. The link will expire in 10 minutes.
                                     </p>
                                     <Button
                                         onClick={() => navigate(returnPath)}
-                                        className="w-full h-12 text-sm font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-900/20"
+                                        className="w-full h-12 text-sm font-black bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg"
                                     >
                                         Return to Secure Portal
                                     </Button>
                                 </div>
                             )}
 
-                            {step < 3 && (
+                            {step < 2 && (
                                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                                     <div className="flex items-center gap-3">
-                                        <Terminal className="text-slate-400 animate-pulse" size={14} />
+                                        <Terminal className="text-primary-500 animate-pulse" size={14} />
                                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                                             L2 Identity Recovery Tunnel ACTIVE
                                         </span>
