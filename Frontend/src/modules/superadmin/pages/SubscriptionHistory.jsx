@@ -32,29 +32,57 @@ const SubscriptionHistory = () => {
         fetchSubscriptionHistory,
         loading,
         billingStats,
-        fetchBillingStats
+        fetchBillingStats,
+        historyPagination
     } = useSuperAdminStore();
+
+    // Server-side pagination state
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
     const { role } = useAuthStore();
     const navigate = useNavigate();
 
+    // Log pagination state for debugging
+    console.log('History Pagination State:', historyPagination);
+
+    // Initial fetch for stats
     React.useEffect(() => {
-        fetchSubscriptionHistory();
         fetchBillingStats();
-    }, [fetchSubscriptionHistory, fetchBillingStats]);
+    }, [fetchBillingStats]);
 
-    const filteredData = (subscriptionHistory || []).filter(item => {
-        const matchesSearch = item.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.planName.toLowerCase().includes(searchQuery.toLowerCase());
+    // Handle debouncing for search
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setCurrentPage(1); // Reset to page 1 on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
-        const matchesStatus = statusFilter === 'All' ||
-            (statusFilter === 'Expiring' && item.daysRemaining <= 7 && item.status === 'active') ||
-            item.status.toLowerCase() === statusFilter.toLowerCase();
+    // Fetch data when parameters change
+    React.useEffect(() => {
+        fetchSubscriptionHistory({
+            page: currentPage,
+            limit: limit,
+            search: debouncedSearch,
+            status: statusFilter
+        });
+    }, [fetchSubscriptionHistory, currentPage, limit, debouncedSearch, statusFilter]);
 
-        return matchesSearch && matchesStatus;
-    });
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= (historyPagination?.pages || 1)) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleLimitChange = (newLimit) => {
+        setLimit(Number(newLimit));
+        setCurrentPage(1);
+    };
 
     const getStatusStyle = (status, daysRemaining) => {
         if (status === 'active' && daysRemaining <= 7) return 'bg-amber-50 text-amber-600 border-amber-100 shadow-sm shadow-amber-500/10';
@@ -76,14 +104,13 @@ const SubscriptionHistory = () => {
     };
 
     const handleExport = () => {
-        if (!filteredData.length) {
+        if (!subscriptionHistory.length) {
             toast.error("No data available to export");
             return;
         }
 
         try {
-            // Prepare data with proper headers
-            const exportRows = filteredData.map(item => ({
+            const exportRows = subscriptionHistory.map(item => ({
                 'Company Name': item.companyName,
                 'Subscription Plan': item.planName,
                 'Deployment Start': item.startDate ? new Date(item.startDate).toLocaleDateString('en-IN') : 'N/A',
@@ -93,36 +120,27 @@ const SubscriptionHistory = () => {
                 'Total Revenue (INR)': item.revenue
             }));
 
-            // Create Worksheet
             const ws = XLSX.utils.json_to_sheet(exportRows);
-
-            // Set column widths for better readability
             const wscols = [
-                { wch: 30 }, // Company Name
-                { wch: 20 }, // Plan
-                { wch: 15 }, // Start
-                { wch: 15 }, // Expiry
-                { wch: 15 }, // Status
-                { wch: 15 }, // Days
-                { wch: 20 }  // Revenue
+                { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }
             ];
             ws['!cols'] = wscols;
 
-            // Create Workbook
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Subscription Audit");
-
-            // Generate Filename with timestamp
             const timestamp = new Date().toISOString().split('T')[0];
-            const filename = `DinTask_Subscription_Audit_${timestamp}.xlsx`;
-
-            // Write File
-            XLSX.writeFile(wb, filename);
+            XLSX.writeFile(wb, `DinTask_Subscription_Audit_${timestamp}.xlsx`);
             toast.success("Audit report exported successfully");
         } catch (error) {
             console.error('Export Error:', error);
             toast.error("Failed to generate export file");
         }
+    };
+
+    const handleResetSearch = () => {
+        setSearchQuery('');
+        setStatusFilter('All');
+        setCurrentPage(1);
     };
 
     return (
@@ -207,7 +225,10 @@ const SubscriptionHistory = () => {
                         {['All', 'Active', 'Expiring', 'Expired'].map(f => (
                             <button
                                 key={f}
-                                onClick={() => setStatusFilter(f)}
+                                onClick={() => {
+                                    setStatusFilter(f);
+                                    setCurrentPage(1);
+                                }}
                                 className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${(statusFilter === f)
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'text-slate-400 hover:text-indigo-600'
@@ -225,87 +246,157 @@ const SubscriptionHistory = () => {
                             <div className="size-12 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin" />
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Secure Audit Data...</p>
                         </div>
+                    ) : subscriptionHistory.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="size-24 rounded-full bg-slate-50 flex items-center justify-center mb-6 border border-slate-100 shadow-sm">
+                                <Search className="text-slate-300" size={40} />
+                            </div>
+                            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2">No Records Found</h3>
+                            <p className="text-xs font-medium text-slate-500 max-w-xs mx-auto mb-6">
+                                We couldn't find any subscription logs matching your criteria. Try adjusting your filters.
+                            </p>
+                            <Button
+                                onClick={handleResetSearch}
+                                variant="outline"
+                                className="h-10 px-6 font-black text-[10px] uppercase tracking-[0.2em] border-slate-200 text-slate-600 hover:bg-slate-50"
+                            >
+                                Clear Search
+                            </Button>
+                        </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50/30">
-                                    <tr className="border-b border-slate-50">
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Company & Plan</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deployment Dates</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Remaining Validity</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Revenue Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    <AnimatePresence mode="popLayout">
-                                        {filteredData.map((item) => (
-                                            <motion.tr
-                                                layout
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                key={item._id}
-                                                className="group hover:bg-slate-50/50 transition-colors"
-                                            >
-                                                <td className="px-8 py-6">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="size-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 border border-indigo-100 group-hover:bg-white group-hover:scale-110 transition-all duration-500 shadow-sm">
-                                                            <Building2 size={20} />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{item.companyName}</p>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-white border-slate-200 text-indigo-600 px-2 py-0.5 rounded-md">
-                                                                    <CreditCard size={10} className="mr-1" /> {item.planName}
-                                                                </Badge>
+                        <>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50/30">
+                                        <tr className="border-b border-slate-50">
+                                            <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Company & Plan</th>
+                                            <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deployment Dates</th>
+                                            <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Remaining Validity</th>
+                                            <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                                            <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Revenue Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        <AnimatePresence mode="popLayout">
+                                            {subscriptionHistory.map((item) => (
+                                                <motion.tr
+                                                    layout
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    key={item._id}
+                                                    className="group hover:bg-slate-50/50 transition-colors"
+                                                >
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="size-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 border border-indigo-100 group-hover:bg-white group-hover:scale-110 transition-all duration-500 shadow-sm">
+                                                                <Building2 size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{item.companyName}</p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-white border-slate-200 text-indigo-600 px-2 py-0.5 rounded-md">
+                                                                        <CreditCard size={10} className="mr-1" /> {item.planName}
+                                                                    </Badge>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="space-y-1.5">
-                                                        <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-tight">
-                                                            <span className="text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded opacity-70 w-10 text-center">START</span>
-                                                            {formatDate(item.startDate)}
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-tight">
+                                                                <span className="text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded opacity-70 w-10 text-center">START</span>
+                                                                {formatDate(item.startDate)}
+                                                            </div>
+                                                            <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-tight">
+                                                                <span className="text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded opacity-70 w-10 text-center">EXPIRY</span>
+                                                                {formatDate(item.expiryDate)}
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-tight">
-                                                            <span className="text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded opacity-70 w-10 text-center">EXPIRY</span>
-                                                            {formatDate(item.expiryDate)}
+                                                    </td>
+                                                    <td className="px-8 py-6 text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <div className={`text-sm font-black tracking-tighter ${item.daysRemaining <= 7 ? 'text-amber-600' : 'text-slate-900 underline decoration-indigo-200 decoration-2 underline-offset-4'}`}>
+                                                                {item.daysRemaining} {item.daysRemaining === 1 ? 'DAY' : 'DAYS'}
+                                                            </div>
+                                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Countdown</p>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6 text-center">
-                                                    <div className="flex flex-col items-center">
-                                                        <div className={`text-sm font-black tracking-tighter ${item.daysRemaining <= 7 ? 'text-amber-600' : 'text-slate-900 underline decoration-indigo-200 decoration-2 underline-offset-4'}`}>
-                                                            {item.daysRemaining} {item.daysRemaining === 1 ? 'DAY' : 'DAYS'}
-                                                        </div>
-                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Countdown</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6 text-center">
-                                                    <Badge className={`${getStatusStyle(item.status, item.daysRemaining)} border-2 text-[9px] font-black uppercase tracking-[0.1em] px-4 py-1.5 rounded-full`}>
-                                                        {item.status === 'active' && item.daysRemaining <= 7 ? 'EXPIRING SOON' : item.status.toUpperCase()}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-8 py-6 text-right font-black text-sm text-slate-900 tracking-tighter">
-                                                    {role === 'superadmin' ? `₹${(item.revenue || 0).toLocaleString()}` : '₹ ••••••'}
-                                                </td>
-                                            </motion.tr>
-                                        ))}
-                                    </AnimatePresence>
-                                    {filteredData.length === 0 && !loading && (
-                                        <tr>
-                                            <td colSpan={5} className="py-24 text-center">
-                                                <div className="size-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                                                    <CircleDashed className="text-slate-200 animate-pulse" size={32} />
-                                                </div>
-                                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">No subscription logs detected matching criteria</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-center">
+                                                        <Badge className={`${getStatusStyle(item.status, item.daysRemaining)} border-2 text-[9px] font-black uppercase tracking-[0.1em] px-4 py-1.5 rounded-full`}>
+                                                            {item.status === 'active' && item.daysRemaining <= 7 ? 'EXPIRING SOON' : item.status.toUpperCase()}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right font-black text-sm text-slate-900 tracking-tighter">
+                                                        {role === 'superadmin' ? `₹${(item.revenue || 0).toLocaleString()}` : '₹ ••••••'}
+                                                    </td>
+                                                </motion.tr>
+                                            ))}
+                                        </AnimatePresence>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Pagination UI */}
+                            {historyPagination?.total > 0 && (
+                                <div className="p-6 border-t border-slate-50 bg-slate-50/20 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        <span>Rows per page</span>
+                                        <select
+                                            value={limit}
+                                            onChange={(e) => handleLimitChange(e.target.value)}
+                                            className="bg-white border-none shadow-sm rounded-lg text-slate-700 py-1 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500/20 font-bold cursor-pointer"
+                                        >
+                                            {[5, 10, 20, 50].map(size => (
+                                                <option key={size} value={size}>{size}</option>
+                                            ))}
+                                        </select>
+                                        <span>
+                                            Showing {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, historyPagination.total)} of {historyPagination.total}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="h-8 w-8 p-0 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-30"
+                                        >
+                                            <ChevronRight className="rotate-180" size={16} />
+                                        </Button>
+
+                                        {[...Array(historyPagination.pages || 1)].slice(Math.max(0, currentPage - 2), Math.min(historyPagination.pages, currentPage + 1)).map((_, i, arr) => {
+                                            const pageNum = Math.max(0, currentPage - 2) + i + 1;
+                                            return (
+                                                <Button
+                                                    key={pageNum}
+                                                    variant={currentPage === pageNum ? 'default' : 'ghost'}
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(pageNum)}
+                                                    className={`h-8 w-8 p-0 rounded-lg font-black text-[10px] ${currentPage === pageNum
+                                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                                                        : 'bg-white text-slate-600 hover:bg-indigo-50 border border-slate-100'
+                                                        }`}
+                                                >
+                                                    {pageNum}
+                                                </Button>
+                                            );
+                                        })}
+
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === historyPagination.pages}
+                                            className="h-8 w-8 p-0 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-30"
+                                        >
+                                            <ChevronRight size={16} />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </CardContent>
             </Card>

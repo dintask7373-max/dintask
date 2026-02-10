@@ -128,6 +128,7 @@ import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
 import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
 import IntelManager from '@/modules/superadmin/pages/IntelManager';
+import SuperAdminNotifications from '@/modules/superadmin/pages/Notifications';
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';
@@ -243,8 +244,11 @@ const AppRouter = () => {
                 <Route path="users" element={<GlobalUsersOverview />} />
                 <Route path="inquiries" element={<Inquiries />} />
                 <Route path="support" element={<SupportCenter />} />
-                <Route path="reports" element={<div>System Reports (Coming Soon)</div>} />
-                <Route path="calendar" element={<div>System Calendar (Coming Soon)</div>} />
+                <Route path="history" element={<SubscriptionHistory />} />
+                <Route path="settings" element={<SuperAdminSettings />} />
+                <Route path="notifications" element={<SuperAdminNotifications />} />
+                <Route path="landing-page" element={<LandingPageManager />} />
+                <Route path="system-intel" element={<IntelManager />} />
 
                 {/* Restricted Routes for Root SuperAdmin Only */}
                 <Route element={<ProtectedRoute allowedRoles={['superadmin']}><Outlet /></ProtectedRoute>}>
@@ -252,9 +256,6 @@ const AppRouter = () => {
                     <Route path="plans" element={<PlansManagement />} />
                     <Route path="billing" element={<BillingPayments />} />
                     <Route path="history" element={<SubscriptionHistory />} />
-                    <Route path="settings" element={<SuperAdminSettings />} />
-                    <Route path="landing-page" element={<LandingPageManager />} />
-                    <Route path="system-intel" element={<IntelManager />} />
                 </Route>
             </Route>
 

@@ -55,6 +55,43 @@ const useNotificationStore = create((set, get) => ({
         }
     },
 
+    deleteNotification: async (id) => {
+        try {
+            // Optimistic update
+            set((state) => {
+                const updatedList = state.notifications.filter(n => n._id !== id);
+                return {
+                    notifications: updatedList,
+                    unreadCount: updatedList.filter(n => !n.isRead).length
+                };
+            });
+
+            await api(`/notifications/${id}`, { method: 'DELETE' });
+        } catch (error) {
+            console.error("Delete Notification Error", error);
+        }
+    },
+
+    bulkDeleteNotifications: async (ids) => {
+        try {
+            // Optimistic update
+            set((state) => {
+                const updatedList = state.notifications.filter(n => !ids.includes(n._id));
+                return {
+                    notifications: updatedList,
+                    unreadCount: updatedList.filter(n => !n.isRead).length
+                };
+            });
+
+            await api('/notifications/bulk-delete', {
+                method: 'POST',
+                body: { ids }
+            });
+        } catch (error) {
+            console.error("Bulk Delete Error", error);
+        }
+    },
+
     // For real-time updates (if we implement socket later)
     addNotification: (notification) => {
         set((state) => {

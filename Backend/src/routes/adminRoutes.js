@@ -2,7 +2,11 @@ const express = require('express');
 const { protect, authorize } = require('../middleware/auth');
 const {
     getAllUsers,
+    getManagers,
+    getEmployees,
+    getSalesExecutives, // Added
     deleteUser,
+
     forgotPassword,
     resetPassword,
     registerAdmin,
@@ -34,6 +38,9 @@ router.get('/subscription-limit', getSubscriptionLimitStatus);
 // Restricted Admin and Super Admin only routes
 router.use(authorize('admin', 'superadmin'));
 router.delete('/users/:id', deleteUser);
+router.get('/managers', getManagers);
+router.get('/employees', getEmployees);
+router.get('/sales-executives', getSalesExecutives);
 
 // Join Requests
 router.get('/join-requests', getJoinRequests);

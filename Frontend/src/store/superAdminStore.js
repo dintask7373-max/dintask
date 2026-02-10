@@ -6,6 +6,18 @@ const useSuperAdminStore = create(
     persist(
         (set, get) => ({
             admins: [],
+            adminPagination: {
+                page: 1,
+                pages: 1,
+                total: 0,
+                limit: 10
+            },
+            historyPagination: {
+                page: 1,
+                pages: 1,
+                total: 0,
+                limit: 10
+            },
             plans: [],
             stats: {
                 totalRevenue: 0,
@@ -27,12 +39,30 @@ const useSuperAdminStore = create(
                 sessionTimeout: 24 // hours
             },
             inquiries: [],
+            inquiryPagination: {
+                page: 1,
+                pages: 1,
+                total: 0,
+                limit: 10
+            },
             roleDistribution: [],
             growthData: [],
             staffMembers: [],
+            staffPagination: {
+                page: 1,
+                pages: 1,
+                total: 0,
+                limit: 10
+            },
 
             transactions: [],
             subscriptionHistory: [],
+            transactionPagination: {
+                page: 1,
+                pages: 1,
+                total: 0,
+                limit: 10
+            },
             billingStats: {
                 totalRevenue: 0,
                 activeSubscriptions: 0,
@@ -86,12 +116,21 @@ const useSuperAdminStore = create(
                 return false;
             },
 
-            fetchAdmins: async () => {
+            fetchAdmins: async (params = {}) => {
                 set({ loading: true });
                 try {
-                    const response = await apiRequest('/superadmin/admins');
+                    const queryParams = new URLSearchParams();
+                    if (params.page) queryParams.append('page', params.page);
+                    if (params.limit) queryParams.append('limit', params.limit);
+                    if (params.search) queryParams.append('search', params.search);
+
+                    const response = await apiRequest(`/superadmin/admins?${queryParams.toString()}`);
                     if (response.success) {
-                        set({ admins: response.data, loading: false });
+                        set({
+                            admins: response.data,
+                            adminPagination: response.pagination || get().adminPagination,
+                            loading: false
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch admins:', err);
@@ -422,12 +461,22 @@ const useSuperAdminStore = create(
                 return false;
             },
 
-            fetchInquiries: async () => {
+            fetchInquiries: async (params = {}) => {
                 set({ loading: true });
                 try {
-                    const response = await apiRequest('/support/admin/support-leads');
+                    const queryParams = new URLSearchParams();
+                    if (params.page) queryParams.append('page', params.page);
+                    if (params.limit) queryParams.append('limit', params.limit);
+                    if (params.status && params.status !== 'all') queryParams.append('status', params.status);
+                    if (params.search) queryParams.append('search', params.search);
+
+                    const response = await apiRequest(`/support/admin/support-leads?${queryParams.toString()}`);
                     if (response.success) {
-                        set({ inquiries: response.data, loading: false });
+                        set({
+                            inquiries: response.data,
+                            inquiryPagination: response.pagination,
+                            loading: false
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch inquiries:', err);
@@ -468,12 +517,29 @@ const useSuperAdminStore = create(
                 }
             },
 
-            fetchTransactions: async () => {
-                set({ loading: true });
+            fetchTransactions: async (params = {}) => {
+                // Clear old data if searching to avoid stale results
+                if (params.search || params.status) {
+                    set({ transactions: [], loading: true });
+                } else {
+                    set({ loading: true });
+                }
                 try {
-                    const response = await apiRequest('/superadmin/billing/transactions');
+                    const queryParams = new URLSearchParams();
+                    if (params.page) queryParams.append('page', params.page);
+                    if (params.limit) queryParams.append('limit', params.limit);
+                    if (params.search) queryParams.append('search', params.search);
+                    if (params.status && params.status !== 'all') queryParams.append('status', params.status);
+
+                    const url = `/superadmin/billing/transactions?${queryParams.toString()}`;
+                    console.warn('Fetching URL:', url);
+                    const response = await apiRequest(url);
                     if (response.success) {
-                        set({ transactions: response.data, loading: false });
+                        set({
+                            transactions: response.data,
+                            transactionPagination: response.pagination || { page: 1, pages: 1, total: 0, limit: 10 },
+                            loading: false
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch transactions:', err);
@@ -481,12 +547,25 @@ const useSuperAdminStore = create(
                 }
             },
 
-            fetchSubscriptionHistory: async () => {
+            fetchSubscriptionHistory: async (params = {}) => {
                 set({ loading: true });
                 try {
-                    const response = await apiRequest('/superadmin/subscription-history');
+                    const queryParams = new URLSearchParams();
+                    if (params.page) queryParams.append('page', params.page);
+                    if (params.limit) queryParams.append('limit', params.limit);
+                    if (params.search) queryParams.append('search', params.search);
+                    if (params.status && params.status !== 'All') queryParams.append('status', params.status);
+
+                    const url = `/superadmin/subscription-history?${queryParams.toString()}`;
+                    console.log('Fetching History URL:', url);
+                    const response = await apiRequest(url);
+
                     if (response.success) {
-                        set({ subscriptionHistory: response.data, loading: false });
+                        set({
+                            subscriptionHistory: response.data,
+                            historyPagination: response.pagination || { page: 1, pages: 1, total: 0, limit: 10 },
+                            loading: false
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch subscription history:', err);
@@ -495,12 +574,21 @@ const useSuperAdminStore = create(
             },
 
             // --- Super Admin Staff Management ---
-            fetchStaff: async () => {
+            fetchStaff: async (params = {}) => {
                 set({ loading: true });
                 try {
-                    const response = await apiRequest('/superadmin/staff');
+                    const queryParams = new URLSearchParams();
+                    if (params.page) queryParams.append('page', params.page);
+                    if (params.limit) queryParams.append('limit', params.limit);
+                    if (params.search) queryParams.append('search', params.search);
+
+                    const response = await apiRequest(`/superadmin/staff?${queryParams.toString()}`);
                     if (response.success) {
-                        set({ staffMembers: response.data, loading: false });
+                        set({
+                            staffMembers: response.data,
+                            staffPagination: response.pagination || { page: 1, pages: 1, total: 0, limit: 10 },
+                            loading: false
+                        });
                     }
                 } catch (err) {
                     console.error('Failed to fetch staff:', err);
@@ -516,7 +604,11 @@ const useSuperAdminStore = create(
                     });
                     if (response.success) {
                         set((state) => ({
-                            staffMembers: [response.data, ...state.staffMembers]
+                            staffMembers: [response.data, ...state.staffMembers],
+                            staffPagination: {
+                                ...state.staffPagination,
+                                total: state.staffPagination.total + 1
+                            }
                         }));
                         return true;
                     }
@@ -551,7 +643,11 @@ const useSuperAdminStore = create(
                     });
                     if (response.success) {
                         set((state) => ({
-                            staffMembers: state.staffMembers.filter(s => s._id !== id)
+                            staffMembers: state.staffMembers.filter(s => s._id !== id),
+                            staffPagination: {
+                                ...state.staffPagination,
+                                total: Math.max(0, state.staffPagination.total - 1)
+                            }
                         }));
                         return true;
                     }
@@ -562,7 +658,7 @@ const useSuperAdminStore = create(
             },
         }),
         {
-            name: 'dintask-superadmin-storage-v3', // Incremented version
+            name: 'dintask-superadmin-storage-v4', // Incremented version for history pagination
             storage: createJSONStorage(() => sessionStorage),
         }
     )

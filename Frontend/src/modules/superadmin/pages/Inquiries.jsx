@@ -34,41 +34,61 @@ import {
 import {
     Dialog,
     DialogContent,
+    DialogTitle,
+    DialogDescription,
 } from "@/shared/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/shared/components/ui/select";
 import { format } from 'date-fns';
 import { cn } from '@/shared/utils/cn';
 
 const Inquiries = () => {
-    const { inquiries, fetchInquiries, fetchInquiryDetails, updateInquiryStatus } = useSuperAdminStore();
+    const {
+        inquiries,
+        inquiryPagination,
+        fetchInquiries,
+        fetchInquiryDetails,
+        updateInquiryStatus,
+        loading
+    } = useSuperAdminStore();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [pageSize, setPageSize] = useState(10);
     const [selectedInquiry, setSelectedInquiry] = useState(null);
 
+    // Initial fetch and on filter/pagination change
     React.useEffect(() => {
-        fetchInquiries();
-    }, []);
+        const delayDebounceFn = setTimeout(() => {
+            fetchInquiries({
+                page: 1, // Reset to page 1 on search/filter change
+                status: filterStatus,
+                search: searchTerm.trim(),
+                limit: pageSize
+            });
+        }, 500);
 
-    const filteredInquiries = inquiries.filter(inq => {
-        const firstName = inq.firstName || inq.name?.split(' ')[0] || '';
-        const lastName = inq.lastName || inq.name?.split(' ').slice(1).join(' ') || '';
-        const company = inq.company || inq.companyName || '';
-        const workEmail = inq.workEmail || inq.businessEmail || '';
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm, filterStatus, pageSize]);
 
-        const matchesSearch =
-            firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            workEmail.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const matchesFilter = filterStatus === 'all' || inq.status === filterStatus;
-
-        return matchesSearch && matchesFilter;
-    });
+    const handlePageChange = (newPage) => {
+        fetchInquiries({
+            page: newPage,
+            status: filterStatus,
+            search: searchTerm,
+            limit: pageSize
+        });
+    };
 
     const getStatusBadge = (status) => {
         switch (status) {
             case 'new':
-                return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none px-2 py-0.5 rounded-full flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter"><Clock3 size={10} strokeWidth={3} /> New</Badge>;
+                return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none px-2 py-0.5 rounded-full flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter"><Clock3 size={10} strokeWidth={3} /> NEW_V2</Badge>;
             case 'replied':
                 return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none px-2 py-0.5 rounded-full flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter"><CheckCircle2 size={10} strokeWidth={3} /> Replied</Badge>;
             case 'archived':
@@ -79,7 +99,11 @@ const Inquiries = () => {
     };
 
     return (
-        <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto">
+        <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto pb-20">
+            {/* DEBUG INFO */}
+            <div className="bg-red-50 p-2 text-[10px] font-mono border border-red-100 rounded text-red-600">
+                Search: "{searchTerm}" | Status: {filterStatus} | Count: {inquiries.length} | Total: {inquiryPagination?.total}
+            </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Inquiries</h1>
@@ -87,7 +111,7 @@ const Inquiries = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
-                        {filteredInquiries.length} Leads
+                        {inquiryPagination.total} Leads Found
                     </Badge>
                 </div>
             </div>
@@ -128,14 +152,28 @@ const Inquiries = () => {
                                 ))}
                             </div>
                         </div>
+                        <div className="space-y-2 w-full lg:w-auto">
+                            <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-extrabold ml-1">Per Page</Label>
+                            <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(parseInt(val))}>
+                                <SelectTrigger className="w-full lg:w-[100px] h-11 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none font-bold text-xs ring-offset-white focus:ring-2 focus:ring-primary-500/10 transition-all">
+                                    <SelectValue placeholder="Limit" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-none shadow-xl">
+                                    <SelectItem value="2" className="text-xs font-bold rounded-xl">2 Leads</SelectItem>
+                                    <SelectItem value="5" className="text-xs font-bold rounded-xl">5 Leads</SelectItem>
+                                    <SelectItem value="10" className="text-xs font-bold rounded-xl">10 Leads</SelectItem>
+                                    <SelectItem value="20" className="text-xs font-bold rounded-xl">20 Leads</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className={`grid grid-cols-1 gap-4 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <AnimatePresence mode="popLayout">
-                    {filteredInquiries.length > 0 ? (
-                        filteredInquiries.map((inq, index) => (
+                    {inquiries.length > 0 ? (
+                        inquiries.map((inq, index) => (
                             <motion.div
                                 key={inq._id || inq.id || index}
                                 layout
@@ -242,6 +280,46 @@ const Inquiries = () => {
                 </AnimatePresence>
             </div>
 
+            {/* Pagination UI */}
+            {inquiryPagination.total > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={inquiryPagination.page === 1}
+                        onClick={() => handlePageChange(inquiryPagination.page - 1)}
+                        className="rounded-xl border-slate-200 dark:border-slate-800"
+                    >
+                        Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                        {[...Array(inquiryPagination.pages)].map((_, i) => (
+                            <Button
+                                key={i + 1}
+                                variant={inquiryPagination.page === i + 1 ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handlePageChange(i + 1)}
+                                className={cn(
+                                    "w-9 h-9 p-0 rounded-xl",
+                                    inquiryPagination.page === i + 1 ? "" : "border-slate-200 dark:border-slate-800"
+                                )}
+                            >
+                                {i + 1}
+                            </Button>
+                        ))}
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={inquiryPagination.page === inquiryPagination.pages}
+                        onClick={() => handlePageChange(inquiryPagination.page + 1)}
+                        className="rounded-xl border-slate-200 dark:border-slate-800"
+                    >
+                        Next
+                    </Button>
+                </div>
+            )}
+
             <InquiryDetailModal
                 isOpen={!!selectedInquiry}
                 onOpenChange={(open) => !open && setSelectedInquiry(null)}
@@ -336,7 +414,11 @@ const InquiryDetailModal = ({ isOpen, onOpenChange, inquiryId, initialData, upda
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl font-sans">
+            <DialogContent className="sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl font-sans text-slate-900 dark:text-white">
+                <div className="sr-only">
+                    <DialogTitle>Inquiry Details</DialogTitle>
+                    <DialogDescription>Full details concerning the selected support inquiry.</DialogDescription>
+                </div>
                 {/* Header */}
                 <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 text-white relative">
                     <div className="absolute top-4 right-4 flex gap-2">

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const SuperAdmin = require('../models/SuperAdmin');
 const Admin = require('../models/Admin');
 const Manager = require('../models/Manager');
@@ -9,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const Plan = require('../models/Plan');
+const Payment = require('../models/Payment');
 
 // @desc    Get system stats
 // @route   GET /api/v1/superadmin/stats
@@ -33,66 +35,100 @@ exports.getStats = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getAdmins = async (req, res, next) => {
   try {
-    const admins = await Admin.aggregate([
+    const { search } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Search query
+    const matchQuery = {};
+    if (search) {
+      matchQuery.$or = [
+        { companyName: { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const result = await Admin.aggregate([
+      { $match: matchQuery },
       {
-        $lookup: {
-          from: 'plans',
-          localField: 'subscriptionPlanId',
-          foreignField: '_id',
-          as: 'plan'
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            {
+              $lookup: {
+                from: 'plans',
+                localField: 'subscriptionPlanId',
+                foreignField: '_id',
+                as: 'plan'
+              }
+            },
+            { $unwind: { path: '$plan', preserveNullAndEmptyArrays: true } },
+            {
+              $lookup: {
+                from: 'managers',
+                localField: '_id',
+                foreignField: 'adminId',
+                as: 'managers'
+              }
+            },
+            {
+              $lookup: {
+                from: 'salesexecutives',
+                localField: '_id',
+                foreignField: 'adminId',
+                as: 'sales'
+              }
+            },
+            {
+              $lookup: {
+                from: 'employees',
+                localField: '_id',
+                foreignField: 'adminId',
+                as: 'employees'
+              }
+            },
+            {
+              $addFields: {
+                totalUsers: {
+                  $add: [
+                    { $size: '$managers' },
+                    { $size: '$sales' },
+                    { $size: '$employees' }
+                  ]
+                },
+                userLimit: '$plan.userLimit'
+              }
+            },
+            {
+              $project: {
+                managers: 0,
+                sales: 0,
+                employees: 0,
+                password: 0
+              }
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit }
+          ]
         }
-      },
-      { $unwind: { path: '$plan', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'managers',
-          localField: '_id',
-          foreignField: 'adminId',
-          as: 'managers'
-        }
-      },
-      {
-        $lookup: {
-          from: 'salesexecutives',
-          localField: '_id',
-          foreignField: 'adminId',
-          as: 'sales'
-        }
-      },
-      {
-        $lookup: {
-          from: 'employees',
-          localField: '_id',
-          foreignField: 'adminId',
-          as: 'employees'
-        }
-      },
-      {
-        $addFields: {
-          totalUsers: {
-            $add: [
-              { $size: '$managers' },
-              { $size: '$sales' },
-              { $size: '$employees' }
-            ]
-          },
-          userLimit: '$plan.userLimit'
-        }
-      },
-      {
-        $project: {
-          managers: 0,
-          sales: 0,
-          employees: 0,
-          password: 0
-        }
-      },
-      { $sort: { createdAt: -1 } }
+      }
     ]);
+
+    const admins = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       count: admins.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: admins
     });
   } catch (err) {
@@ -678,7 +714,7 @@ exports.getPlanDistribution = async (req, res, next) => {
   }
 };
 
-const Payment = require('../models/Payment');
+
 
 // @desc    Get Billing Stats (Total Revenue, Active Subs, etc.)
 // @route   GET /api/v1/superadmin/billing/stats
@@ -770,17 +806,105 @@ exports.getBillingStats = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getAllTransactions = async (req, res, next) => {
   try {
-    const transactions = await Payment.find()
-      .populate('adminId', 'name companyName email')
-      .populate('planId', 'name price')
-      .sort('-createdAt');
+    const { search, status } = req.query;
+    console.log('getAllTransactions Query Params:', req.query);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Base match stage
+    const matchStage = {};
+    if (status && status !== 'all') {
+      matchStage.status = status === 'success' ? 'paid' : status;
+    }
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'admins',
+          localField: 'adminId',
+          foreignField: '_id',
+          as: 'adminDetails'
+        }
+      },
+      { $unwind: { path: '$adminDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'plans',
+          localField: 'planId',
+          foreignField: '_id',
+          as: 'planDetails'
+        }
+      },
+      { $unwind: { path: '$planDetails', preserveNullAndEmptyArrays: true } }
+    ];
+
+    // Search stage
+    if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'adminDetails.companyName': { $regex: safeSearch, $options: 'i' } },
+            { razorpayOrderId: { $regex: safeSearch, $options: 'i' } }
+          ]
+        }
+      });
+    }
+
+    // Final result with pagination
+    const result = await Payment.aggregate([
+      ...pipeline,
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                adminId: {
+                  _id: '$adminDetails._id',
+                  name: '$adminDetails.name',
+                  companyName: '$adminDetails.companyName',
+                  email: '$adminDetails.email'
+                },
+                planId: {
+                  _id: '$planDetails._id',
+                  name: '$planDetails.name',
+                  price: '$planDetails.price'
+                },
+                razorpayOrderId: 1,
+                razorpayPaymentId: 1,
+                amount: 1,
+                currency: 1,
+                status: 1,
+                createdAt: 1
+              }
+            }
+          ]
+        }
+      }
+    ]);
+
+    const transactions = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       count: transactions.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: transactions
     });
   } catch (err) {
+    console.error('getAllTransactions Error:', err);
     next(err);
   }
 };
@@ -790,7 +914,13 @@ exports.getAllTransactions = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getSubscriptionHistory = async (req, res, next) => {
   try {
-    const admins = await Admin.aggregate([
+    const { search, status } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Base pipeline to get Admin data and calculate revenue
+    const pipeline = [
       {
         $lookup: {
           from: 'payments',
@@ -821,15 +951,71 @@ exports.getSubscriptionHistory = async (req, res, next) => {
           totalRevenue: { $sum: '$paidPayments.amount' },
           lastPaymentDate: { $max: '$paidPayments.createdAt' }
         }
-      },
-      { $sort: { subscriptionExpiry: -1 } }
+      }
+    ];
+
+    // Search Stage
+    if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pipeline.push({
+        $match: {
+          $or: [
+            { companyName: { $regex: safeSearch, $options: 'i' } },
+            { subscriptionPlan: { $regex: safeSearch, $options: 'i' } }
+          ]
+        }
+      });
+    }
+
+    // Status Filter Stage
+    if (status && status !== 'All') {
+      const today = new Date();
+      if (status === 'Expiring') {
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+        pipeline.push({
+          $match: {
+            subscriptionStatus: 'active',
+            subscriptionExpiry: {
+              $gt: today,
+              $lte: sevenDaysFromNow
+            }
+          }
+        });
+      } else {
+        pipeline.push({
+          $match: {
+            subscriptionStatus: { $regex: `^${status}$`, $options: 'i' }
+          }
+        });
+      }
+    }
+
+    // Sort Stage
+    pipeline.push({ $sort: { subscriptionExpiry: -1 } });
+
+    // Pagination using $facet
+    const result = await Admin.aggregate([
+      ...pipeline,
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: skip },
+            { $limit: limit }
+          ]
+        }
+      }
     ]);
 
+    const admins = result[0].data;
+    const total = result[0].metadata[0]?.total || 0;
+
+    // Map to final format
     const history = admins.map(admin => {
       let daysRemaining = 0;
       if (admin.subscriptionExpiry) {
-        const today = new Date();
-        const diff = new Date(admin.subscriptionExpiry) - today;
+        const diff = new Date(admin.subscriptionExpiry) - new Date();
         daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
       }
 
@@ -847,6 +1033,13 @@ exports.getSubscriptionHistory = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      count: history.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: history
     });
   } catch (err) {
@@ -921,10 +1114,40 @@ exports.getRecentInquiries = async (req, res, next) => {
 // @access  Private (SuperAdmin Root)
 exports.getStaff = async (req, res, next) => {
   try {
-    const staff = await SuperAdmin.find({ role: 'superadmin_staff' });
+    const { search } = req.query;
+    console.log('GET /superadmin/staff - Search Query:', search);
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Search query
+    const matchQuery = { role: 'superadmin_staff' };
+    if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      matchQuery.$or = [
+        { name: { $regex: safeSearch, $options: 'i' } },
+        { email: { $regex: safeSearch, $options: 'i' } },
+        { phoneNumber: { $regex: safeSearch, $options: 'i' } }
+      ];
+    }
+    const total = await SuperAdmin.countDocuments(matchQuery);
+
+    const staff = await SuperAdmin.find(matchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select('-password');
+
     res.status(200).json({
       success: true,
       count: staff.length,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      },
       data: staff
     });
   } catch (err) {

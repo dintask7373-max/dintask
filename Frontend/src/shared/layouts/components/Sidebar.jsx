@@ -37,6 +37,7 @@ import { Button } from '@/shared/components/ui/button';
 import useAuthStore from '@/store/authStore';
 import useSuperAdminStore from '@/store/superAdminStore';
 import useCRMStore from '@/store/crmStore'; // To show pending count
+import useNotificationStore from '@/store/notificationStore';
 
 const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const logout = useAuthStore(state => state.logout);
@@ -45,6 +46,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const authRole = useAuthStore(state => state.role);
     const inquiries = useSuperAdminStore(state => state.inquiries);
     const leads = useCRMStore(state => state.leads);
+    const unreadCount = useNotificationStore(state => state.unreadCount);
 
     // Counts
     const newInquiriesCount = inquiries.filter(inq => inq.status === 'new').length;
@@ -137,7 +139,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Inquiries', path: '/superadmin/inquiries', icon: ListChecks },
                 { name: 'Admins', path: '/superadmin/admins', icon: Users },
                 { name: 'Global Users', path: '/superadmin/users', icon: Activity },
-                // Management Modules
+                { name: 'Notifications', path: '/superadmin/notifications', icon: Bell, badge: unreadCount },
                 ...(isSuperAdminRoot ? [
                     { name: 'Staff', path: '/superadmin/staff', icon: ShieldCheck },
                     { name: 'Billing', path: '/superadmin/billing', icon: Receipt },

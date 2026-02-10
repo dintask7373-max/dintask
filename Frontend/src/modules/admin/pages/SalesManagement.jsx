@@ -16,7 +16,11 @@ import {
     MoreHorizontal,
     Calendar,
     Building2,
-    UserCircle
+    UserCircle,
+    ChevronLeft,
+    ChevronRight,
+    ChevronUp,
+    ChevronDown
 } from 'lucide-react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import useSalesStore from '@/store/salesStore';
@@ -47,12 +51,17 @@ import useManagerStore from '@/store/managerStore'; // Kept in case required by 
 
 
 const SalesManagement = () => {
-    const { salesReps, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
+    const { salesReps, salesPagination, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
     const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion, fetchLeads } = useCRMStore();
     const { employees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { managers } = useManagerStore();
     const { user } = useAuthStore();
+
+    // Server-side State
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+
     const [isAddRepModalOpen, setIsAddRepModalOpen] = useState(false);
     const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
     const [newRepData, setNewRepData] = useState({ name: '', email: '' });
@@ -71,24 +80,17 @@ const SalesManagement = () => {
 
     React.useEffect(() => {
         const loadData = async () => {
-            await fetchSalesReps();
+            await fetchSalesReps({ page: currentPage, limit: itemsPerPage, search: searchTerm });
             await fetchLeads();
             await fetchSubscriptionLimit();
         };
         loadData();
-    }, []);
+    }, [currentPage, itemsPerPage, searchTerm]); // Add dependencies
 
     // Limit tracking - use real data from backend
     const EMPLOYEE_LIMIT = limitStatus?.limit || user?.planDetails?.userLimit || 2;
     const currentCount = limitStatus?.current || employees.length;
     const isLimitReached = limitStatus?.allowed === false || currentCount >= EMPLOYEE_LIMIT;
-
-    const filteredReps = useMemo(() => {
-        return salesReps.filter(rep =>
-            rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            rep.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [salesReps, searchTerm]);
 
     const pipelineData = getPipelineData();
     const processedPipeline = useMemo(() => {
@@ -102,6 +104,19 @@ const SalesManagement = () => {
             return { ...column, leads: filteredLeads };
         });
     }, [pipelineData, pipelineSearchTerm]);
+
+    // Handle Page Change
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= (salesPagination?.pages || 1)) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // Handle Search
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); // Reset to page 1 on search
+    };
 
 
     const handleAddRep = async (e) => {
@@ -269,8 +284,23 @@ const SalesManagement = () => {
                                 placeholder="Search representatives..."
                                 className="pl-9 h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-xs font-bold"
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={handleSearch}
                             />
+                        </div>
+                        {/* Rows Per Page Selector */}
+                        <div className="flex items-center gap-2">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">Rows:</p>
+                            <Select value={itemsPerPage.toString()} onValueChange={(val) => { setItemsPerPage(Number(val)); setCurrentPage(1); }}>
+                                <SelectTrigger className="h-9 sm:h-10 w-16 sm:w-20 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-xs font-bold">
+                                    <SelectValue placeholder="10" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5</SelectItem>
+                                    <SelectItem value="10">10</SelectItem>
+                                    <SelectItem value="20">20</SelectItem>
+                                    <SelectItem value="50">50</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto">
                             <Button
@@ -306,106 +336,173 @@ const SalesManagement = () => {
                                     </tr>
                                 </thead>
                                 <tbody ref={parent}>
-                                    {filteredReps.map((rep) => (
-                                        <tr key={rep._id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors group">
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
-                                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${rep.name}`} />
-                                                        <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs">{rep.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="min-w-0">
-                                                        <p className="font-black text-slate-900 dark:text-white leading-tight text-xs truncate">{rep.name}</p>
-                                                        <p className="text-[10px] text-slate-400 font-medium truncate">{rep.email}</p>
+                                    {salesReps.length > 0 ? (
+                                        salesReps.map((rep) => (
+                                            <tr key={rep._id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors group">
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
+                                                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${rep.name}`} />
+                                                            <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs">{rep.name.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="min-w-0">
+                                                            <p className="font-black text-slate-900 dark:text-white leading-tight text-xs truncate">{rep.name}</p>
+                                                            <p className="text-[10px] text-slate-400 font-medium truncate">{rep.email}</p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <Briefcase size={12} className="text-slate-400" />
-                                                    <span className="text-xs font-black text-slate-700 dark:text-slate-300 tracking-tight">{rep.activeDeals || 0} Deals</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <IndianRupee size={12} className="text-emerald-500 stroke-[2.5px]" />
-                                                    <span className="text-xs font-black text-emerald-600 tracking-tight">₹{(rep.totalSales || 0).toLocaleString()}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <Badge className="rounded-lg font-black text-[9px] bg-slate-50 dark:bg-slate-800 text-slate-500 border-none shadow-none uppercase tracking-widest">
-                                                    {rep.conversionRate || 0}%
-                                                </Badge>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className={cn("h-1.5 w-1.5 rounded-full", rep.status === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-300")} />
-                                                    <span className={cn("text-[10px] font-black uppercase tracking-widest", rep.status === 'active' ? "text-emerald-600" : "text-slate-400")}> {rep.status || 'Pending'} </span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-1">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"> <Edit2 size={12} /> </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} /> </Button>
-                                                </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Briefcase size={12} className="text-slate-400" />
+                                                        <span className="text-xs font-black text-slate-700 dark:text-slate-300 tracking-tight">{rep.activeDeals || 0} Deals</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <IndianRupee size={12} className="text-emerald-500 stroke-[2.5px]" />
+                                                        <span className="text-xs font-black text-emerald-600 tracking-tight">₹{(rep.totalSales || 0).toLocaleString()}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <Badge className="rounded-lg font-black text-[9px] bg-slate-50 dark:bg-slate-800 text-slate-500 border-none shadow-none uppercase tracking-widest">
+                                                        {rep.conversionRate || 0}%
+                                                    </Badge>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={cn("h-1.5 w-1.5 rounded-full", rep.status === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-300")} />
+                                                        <span className={cn("text-[10px] font-black uppercase tracking-widest", rep.status === 'active' ? "text-emerald-600" : "text-slate-400")}> {rep.status || 'Pending'} </span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <div className="flex justify-end gap-1">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"> <Edit2 size={12} /> </Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} /> </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                                                No sales representatives found
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
 
+                        {/* Pagination Controls */}
+                        {salesPagination && salesPagination.pages > 1 && (
+                            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20 flex items-center justify-between">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Page {salesPagination.page} of {salesPagination.pages}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                    >
+                                        <ChevronLeft size={14} />
+                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, salesPagination.pages) }, (_, i) => {
+                                            let p = i + 1;
+                                            if (salesPagination.pages > 5) {
+                                                if (currentPage > 3) p = currentPage - 2 + i;
+                                                if (p > salesPagination.pages) p = salesPagination.pages - (4 - i);
+                                            }
+                                            return (
+                                                <Button
+                                                    key={p}
+                                                    variant={currentPage === p ? "default" : "ghost"}
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(p)}
+                                                    className={cn(
+                                                        "h-8 w-8 p-0 rounded-lg text-xs font-bold",
+                                                        currentPage === p
+                                                            ? "bg-primary-600 text-white shadow-md shadow-primary-500/20"
+                                                            : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                    )}
+                                                >
+                                                    {p}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === salesPagination.pages}
+                                        className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                    >
+                                        <ChevronRight size={14} />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                         {/* Mobile List Card View */}
                         <div className="lg:hidden p-3 space-y-3">
-                            {filteredReps.map((rep) => (
-                                <div key={rep._id} className="p-4 rounded-2xl bg-slate-50/30 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
-                                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${rep.name}`} />
-                                                <AvatarFallback className="bg-primary-50 text-primary-600 font-black">{rep.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-black text-slate-900 dark:text-white leading-tight">{rep.name}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{rep.email}</p>
+                            {salesReps.length > 0 ? (
+                                salesReps.map((rep) => (
+                                    <div key={rep._id || rep.id} className="p-4 rounded-2xl bg-slate-50/30 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
+                                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${rep.name}`} />
+                                                    <AvatarFallback className="bg-primary-50 text-primary-600 font-black">{rep.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-black text-slate-900 dark:text-white leading-tight">{rep.name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{rep.email}</p>
+                                                </div>
+                                            </div>
+                                            <Badge
+                                                className={cn(
+                                                    "text-[8px] font-black uppercase tracking-widest h-5 px-2 shadow-none border-none",
+                                                    rep.status === 'active' ? 'bg-emerald-100/50 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                                )}
+                                            >
+                                                {rep.status || 'Pending'}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900/50 rounded-xl shadow-sm border border-slate-100/50 dark:border-slate-800/50">
+                                            <div className="space-y-0.5">
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Sales</p>
+                                                <p className="text-xs font-black text-emerald-600 tracking-tight flex items-center gap-1">
+                                                    <IndianRupee size={10} className="stroke-[3.5px]" />
+                                                    {(rep.totalSales || 0).toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Efficiency</p>
+                                                <p className="text-xs font-black text-primary-600 tracking-tight">{rep.conversionRate || 0}% Conv.</p>
                                             </div>
                                         </div>
-                                        <Badge
-                                            className={cn(
-                                                "text-[8px] font-black uppercase tracking-widest h-5 px-2 shadow-none border-none",
-                                                rep.status === 'active' ? 'bg-emerald-100/50 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                                            )}
-                                        >
-                                            {rep.status || 'Pending'}
-                                        </Badge>
-                                    </div>
 
-                                    <div className="grid grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900/50 rounded-xl shadow-sm border border-slate-100/50 dark:border-slate-800/50">
-                                        <div className="space-y-0.5">
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Sales</p>
-                                            <p className="text-xs font-black text-emerald-600 tracking-tight flex items-center gap-1">
-                                                <IndianRupee size={10} className="stroke-[3.5px]" />
-                                                {(rep.totalSales || 0).toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Efficiency</p>
-                                            <p className="text-xs font-black text-primary-600 tracking-tight">{rep.conversionRate || 0}% Conv.</p>
+                                        <div className="flex items-center justify-between pt-1">
+                                            <div className="flex items-center gap-2">
+                                                <Briefcase size={12} className="text-slate-300" />
+                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{rep.activeDeals || 0} Open Deals</span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"> <Edit2 size={12} /> </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} className="text-red-400" /> </Button>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div className="flex items-center justify-between pt-1">
-                                        <div className="flex items-center gap-2">
-                                            <Briefcase size={12} className="text-slate-300" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{rep.activeDeals || 0} Open Deals</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"> <Edit2 size={12} /> </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} className="text-red-400" /> </Button>
-                                        </div>
-                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    No sales representatives
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </Card>
                 </TabsContent>
