@@ -30,6 +30,10 @@ const PlanSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please add a plan duration in days'],
     default: 30
+  },
+  color: {
+    type: String,
+    default: '#3b82f6' // Default blue
   }
 }, { timestamps: true });
 

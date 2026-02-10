@@ -266,9 +266,9 @@ const useSuperAdminStore = create(
                 }
             },
 
-            fetchUserGrowth: async () => {
+            fetchUserGrowth: async (period = 6) => {
                 try {
-                    const response = await apiRequest('/superadmin/dashboard/user-growth');
+                    const response = await apiRequest(`/superadmin/dashboard/user-growth?period=${period}`);
                     if (response.success) {
                         set({ growthData: response.data });
                     }
@@ -499,9 +499,9 @@ const useSuperAdminStore = create(
                 return null;
             },
 
-            fetchBillingStats: async () => {
+            fetchBillingStats: async (period = 6) => {
                 try {
-                    const response = await apiRequest('/superadmin/billing/stats');
+                    const response = await apiRequest(`/superadmin/billing/stats?period=${period}`);
                     if (response.success) {
                         set({
                             billingStats: response.data,

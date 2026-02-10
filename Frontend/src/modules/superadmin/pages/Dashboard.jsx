@@ -80,14 +80,19 @@ const SuperAdminDashboard = () => {
     const isSuperAdmin = role === 'superadmin' || role === 'superadmin_staff';
     const isSuperAdminRoot = role === 'superadmin';
 
+    const [revenuePeriod, setRevenuePeriod] = React.useState('6');
+
     React.useEffect(() => {
         fetchDashboardStats();
         fetchAdmins();
-        fetchBillingStats();
         fetchPlanDistribution();
         fetchPendingSupport();
         fetchRecentInquiries();
-    }, [fetchDashboardStats, fetchAdmins, fetchBillingStats, fetchPlanDistribution, fetchPendingSupport, fetchRecentInquiries]);
+    }, []);
+
+    React.useEffect(() => {
+        fetchBillingStats(revenuePeriod);
+    }, [revenuePeriod]);
 
     // Use real revenue trends from backend or fallback to empty array
     const chartData = revenueTrends && revenueTrends.length > 0 ? revenueTrends : [];
@@ -132,7 +137,7 @@ const SuperAdminDashboard = () => {
                                 </div>
                                 {isSuperAdminRoot && (
                                     <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                                        <ArrowUpRight size={8} /> 12%
+                                        <ArrowUpRight size={8} /> {stats?.monthlyGrowthPercentage || 0}%
                                     </div>
                                 )}
                             </div>
@@ -222,13 +227,13 @@ const SuperAdminDashboard = () => {
                                     <CardTitle className="text-xs md:text-base font-black uppercase tracking-widest text-slate-900 dark:text-slate-200">Revenue</CardTitle>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase">Growth trends</p>
                                 </div>
-                                <Select defaultValue="6" disabled={!isSuperAdminRoot}>
+                                <Select value={revenuePeriod} onValueChange={setRevenuePeriod} disabled={!isSuperAdminRoot}>
                                     <SelectTrigger className="w-[90px] md:w-[110px] h-7 md:h-8 text-[8px] md:text-[9px] font-black uppercase tracking-tighter bg-slate-50 border-none dark:bg-slate-800 rounded-lg">
                                         <SelectValue placeholder="Period" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
-                                        <SelectItem value="6" className="text-[10px] font-bold">6M</SelectItem>
-                                        <SelectItem value="12" className="text-[10px] font-bold">1Y</SelectItem>
+                                        <SelectItem value="6" className="text-[10px] font-bold">Last 6 Months</SelectItem>
+                                        <SelectItem value="12" className="text-[10px] font-bold">Last 1 Year</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </CardHeader>

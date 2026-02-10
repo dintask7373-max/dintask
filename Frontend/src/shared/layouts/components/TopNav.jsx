@@ -56,14 +56,17 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                         <Menu className="h-6 w-6" />
                     </Button>
 
-                    <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 w-64">
-                        <Search className="h-4 w-4 text-slate-400 mr-2" />
-                        <input
-                            type="text"
-                            placeholder="Search tasks, people..."
-                            className="bg-transparent border-none outline-none text-sm w-full dark:text-slate-200"
-                        />
-                    </div>
+                    {/* Search Bar - Hidden for Super Admin */}
+                    {!['superadmin', 'superadmin_staff'].includes(role) && (
+                        <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 w-64">
+                            <Search className="h-4 w-4 text-slate-400 mr-2" />
+                            <input
+                                type="text"
+                                placeholder="Search tasks, people..."
+                                className="bg-transparent border-none outline-none text-sm w-full dark:text-slate-200"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">

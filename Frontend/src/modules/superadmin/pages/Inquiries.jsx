@@ -100,10 +100,6 @@ const Inquiries = () => {
 
     return (
         <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto pb-20">
-            {/* DEBUG INFO */}
-            <div className="bg-red-50 p-2 text-[10px] font-mono border border-red-100 rounded text-red-600">
-                Search: "{searchTerm}" | Status: {filterStatus} | Count: {inquiries.length} | Total: {inquiryPagination?.total}
-            </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Inquiries</h1>

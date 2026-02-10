@@ -580,28 +580,41 @@ exports.getSummary = async (req, res, next) => {
       subscriptionStatus: 'active'
     });
 
-    // Active Users (Logged in within last 24 hours)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const activeUsersCount = await LoginActivity.distinct('userId', {
-      loginAt: { $gte: twentyFourHoursAgo },
-      role: { $ne: 'super_admin' }
-    }).then(ids => ids.length);
-
-    // Mocking growth data
-    const monthlyGrowthPercentage = 12.5;
-
-    // Average Session Duration
-    const avgSessionAgg = await LoginActivity.aggregate([
-      { $match: { role: { $ne: 'super_admin' }, sessionDuration: { $exists: true } } },
-      { $group: { _id: null, avgDuration: { $avg: '$sessionDuration' } } }
+    // Active Users (Status is 'active')
+    const [activeAdmins, activeManagers, activeSales, activeEmployees] = await Promise.all([
+      Admin.countDocuments({ status: 'active' }),
+      Manager.countDocuments({ status: 'active' }),
+      SalesExecutive.countDocuments({ status: 'active' }),
+      Employee.countDocuments({ status: 'active' })
     ]);
-    const averageSessionTimeInMinutes = avgSessionAgg.length > 0 ? Math.round(avgSessionAgg[0].avgDuration) : 0;
+
+    const activeUsersCount = activeAdmins + activeManagers + activeSales + activeEmployees;
+
+    // Calculate real monthly growth percentage (total users vs last month total)
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [prevAdmins, prevManagers, prevSales, prevEmployees] = await Promise.all([
+      Admin.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
+      Manager.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
+      SalesExecutive.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
+      Employee.countDocuments({ createdAt: { $lt: startOfCurrentMonth } })
+    ]);
+
+    const totalUsersLastMonth = prevAdmins + prevManagers + prevSales + prevEmployees;
+    let monthlyGrowthPercentage = 0;
+
+    if (totalUsersLastMonth > 0) {
+      monthlyGrowthPercentage = ((totalUsers - totalUsersLastMonth) / totalUsersLastMonth * 100).toFixed(1);
+    } else if (totalUsers > 0) {
+      monthlyGrowthPercentage = 100;
+    }
 
     const data = {
       totalUsers,
-      activeUsers: activeUsersCount,
+      activeUsers: activeUsersCount, // Now reflects real active status
       activeCompanies,
-      averageSessionTimeInMinutes
+      // Removed averageSessionTimeInMinutes
     };
 
     // Mask growth for staff
@@ -652,15 +665,84 @@ exports.getRoleDistribution = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getUserGrowth = async (req, res, next) => {
   try {
-    // Mock data for chart
-    const growthData = [
-      { month: 'Jan', count: 10 },
-      { month: 'Feb', count: 15 },
-      { month: 'Mar', count: 25 },
-      { month: 'Apr', count: 30 },
-      { month: 'May', count: 45 },
-      { month: 'Jun', count: 60 }
-    ];
+    // Get period from query, default to 6 months
+    const period = parseInt(req.query.period) || 6;
+    let months = period;
+
+    // Ensure valid period
+    if (![6, 12].includes(months)) {
+      months = 6;
+    }
+
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - (months - 1));
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Base count before start date
+    const [baseAdmins, baseManagers, baseSales, baseEmployees] = await Promise.all([
+      Admin.countDocuments({ createdAt: { $lt: startDate } }),
+      Manager.countDocuments({ createdAt: { $lt: startDate } }),
+      SalesExecutive.countDocuments({ createdAt: { $lt: startDate } }),
+      Employee.countDocuments({ createdAt: { $lt: startDate } })
+    ]);
+
+    let runningTotal = baseAdmins + baseManagers + baseSales + baseEmployees;
+
+    const aggregateGrowth = async (Model) => {
+      return await Model.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+    };
+
+    const [adminGrowth, managerGrowth, salesGrowth, employeeGrowth] = await Promise.all([
+      aggregateGrowth(Admin),
+      aggregateGrowth(Manager),
+      aggregateGrowth(SalesExecutive),
+      aggregateGrowth(Employee)
+    ]);
+
+    // Merge logic
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const growthData = [];
+
+    let currentDate = new Date(startDate);
+    const today = new Date();
+
+    while (currentDate <= today || (currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear())) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+
+      const getCount = (data) => {
+        const found = data.find(d => d._id.year === year && d._id.month === month);
+        return found ? found.count : 0;
+      };
+
+      const newUsersThisMonth = getCount(adminGrowth) + getCount(managerGrowth) + getCount(salesGrowth) + getCount(employeeGrowth);
+      runningTotal += newUsersThisMonth;
+
+      growthData.push({
+        month: monthNames[month - 1],
+        users: runningTotal, // Cumulative
+        newUsers: newUsersThisMonth, // Also useful
+        fullDate: `${monthNames[month - 1]} ${year}`
+      });
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
 
     res.status(200).json({
       success: true,
@@ -694,14 +776,14 @@ exports.getPlanDistribution = async (req, res, next) => {
     // Format data for pie chart
     const formattedData = planDistribution.map(item => {
       const plan = allPlans.find(p => p.name === item._id);
+
+      let color = plan && plan.color ? plan.color : '#dadce0';
+      const planName = item._id || 'No Plan';
+
       return {
-        name: item._id || 'No Plan',
+        name: planName,
         value: item.count,
-        // Assign colors based on plan names
-        color: item._id === 'Starter' ? '#94a3b8' :
-          item._id === 'Pro Team' ? '#3b82f6' :
-            item._id === 'Business' ? '#8b5cf6' :
-              item._id === 'Enterprise' ? '#7c3aed' : '#cbd5e1'
+        color: color
       };
     });
 
@@ -730,15 +812,21 @@ exports.getBillingStats = async (req, res, next) => {
       subscriptionStatus: 'active'
     });
 
-    // Get monthly revenue trends for the last 6 months
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // Get period from query, default to 6 months
+    const period = parseInt(req.query.period) || 6;
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - (period - 1));
+    startDate.setDate(1); // Start from the 1st of the starting month
+    startDate.setHours(0, 0, 0, 0);
 
     const revenueByMonth = await Payment.aggregate([
       {
         $match: {
           status: 'paid',
-          createdAt: { $gte: sixMonthsAgo }
+          createdAt: { $gte: startDate }
         }
       },
       {
@@ -754,26 +842,43 @@ exports.getBillingStats = async (req, res, next) => {
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
 
-    // Format revenue trends for frontend chart
+    // Generate all months in the range to ensure continuous data
+    const revenueTrends = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const revenueTrends = revenueByMonth.map(item => ({
-      name: monthNames[item._id.month - 1],
-      revenue: item.revenue,
-      count: item.count
-    }));
 
-    // Calculate growth percentage
+    let currentDate = new Date(startDate);
+    const today = new Date();
+
+    while (currentDate <= today || (currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear())) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1; // 1-indexed for comparison
+
+      const existingData = revenueByMonth.find(item => item._id.year === year && item._id.month === month);
+
+      revenueTrends.push({
+        name: monthNames[month - 1], // + ` '${year.toString().substr(2)}`, // Optional: Add Year
+        fullName: `${monthNames[month - 1]} ${year}`,
+        revenue: existingData ? existingData.revenue : 0,
+        count: existingData ? existingData.count : 0
+      });
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    // Calculate growth percentage (based on last 2 available months inc. current)
     let growthPercentage = 0;
     if (revenueTrends.length >= 2) {
       const currentMonth = revenueTrends[revenueTrends.length - 1].revenue;
       const previousMonth = revenueTrends[revenueTrends.length - 2].revenue;
       if (previousMonth > 0) {
         growthPercentage = ((currentMonth - previousMonth) / previousMonth * 100).toFixed(1);
+      } else if (currentMonth > 0) {
+        growthPercentage = 100; // 100% growth if prev was 0
       }
     }
 
-    const pendingRefunds = 0; // Placeholder for now
-    const churnRate = 2.4; // Placeholder for now
+    const pendingRefunds = await Payment.countDocuments({ status: 'refund_pending' }) || 0;
+    const churnRate = 2.4; // Valid calculation requires historical snapshots
 
     const data = {
       activeSubscriptions,
