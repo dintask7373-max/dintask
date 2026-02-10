@@ -57,6 +57,12 @@ exports.createPlan = async (req, res, next) => {
       }
     }
 
+    // Generate random color if not provided
+    if (!req.body.color) {
+      const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      req.body.color = randomColor;
+    }
+
     const plan = await Plan.create(req.body);
 
     res.status(201).json({
