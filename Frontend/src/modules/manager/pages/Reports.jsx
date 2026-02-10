@@ -70,7 +70,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 const ManagerReports = () => {
     const { user } = useAuthStore();
     const tasks = useTaskStore(state => state.tasks);
+    const fetchTasks = useTaskStore(state => state.fetchTasks);
     const employees = useEmployeeStore(state => state.employees);
+    const fetchEmployees = useEmployeeStore(state => state.fetchEmployees);
+
+    React.useEffect(() => {
+        fetchTasks();
+        fetchEmployees();
+    }, [fetchTasks, fetchEmployees]);
 
     const teamTasks = useMemo(() => {
         const userId = (user?._id || user?.id)?.toString();
@@ -150,23 +157,52 @@ const ManagerReports = () => {
         }).sort((a, b) => b.total - a.total);
     }, [teamMembers, teamTasks]);
 
-    const weeklyData = [
-        { name: 'M', count: 4 },
-        { name: 'T', count: 7 },
-        { name: 'W', count: 5 },
-        { name: 'T', count: 12 },
-        { name: 'F', count: 8 },
-        { name: 'S', count: 3 },
-        { name: 'S', count: 2 }
-    ];
+    const weeklyData = useMemo(() => {
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            return date;
+        });
 
-    const activityLog = [
-        { id: 1, time: '10m ago', user: 'Zaid Khan', action: 'FULFILLED', task: 'Mobile App Navigation Fix', status: 'completed' },
-        { id: 2, time: '45m ago', user: 'Sarah Doe', action: 'SYNCED', task: 'Q1 Sales Report', status: 'in-progress' },
-        { id: 3, time: '2h ago', user: 'Zaid Khan', action: 'NOTED', task: 'API Documentation', status: 'pending' },
-        { id: 4, time: 'Yesterday', user: 'John Smith', action: 'ENGAGED', task: 'UI Component Library', status: 'in-progress' },
-        { id: 5, time: 'Yesterday', user: 'Admin', action: 'DEPLOYED', task: 'Quarterly Audit', status: 'pending' }
-    ];
+        return last7Days.map(date => {
+            const count = teamTasks.filter(t => {
+                const taskDate = new Date(t.createdAt);
+                return taskDate.getDate() === date.getDate() &&
+                    taskDate.getMonth() === date.getMonth() &&
+                    taskDate.getFullYear() === date.getFullYear();
+            }).length;
+            return {
+                name: format(date, 'eee').charAt(0),
+                count
+            };
+        });
+    }, [teamTasks]);
+
+    const activityLog = useMemo(() => {
+        return [...teamTasks]
+            .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+            .slice(0, 10)
+            .map(task => {
+                const updatedTime = task.updatedAt || task.createdAt;
+                let action = 'DEPLOYED';
+                if (task.status === 'completed') action = 'FULFILLED';
+                else if (task.status === 'in_progress') action = 'ENGAGED';
+                else if (task.progress > 0) action = 'SYNCED';
+
+                // Find user name
+                const assigneeId = Array.isArray(task.assignedTo) ? task.assignedTo[0] : task.assignedTo;
+                const member = employees.find(e => (e._id || e.id)?.toString() === (assigneeId?._id || assigneeId)?.toString());
+
+                return {
+                    id: task.id || task._id,
+                    time: format(new Date(updatedTime), 'HH:mm'),
+                    user: member?.name || 'ADMIN',
+                    action,
+                    task: task.title,
+                    status: task.status
+                };
+            });
+    }, [teamTasks, employees]);
 
     const handleExportExcel = () => {
         const exportData = teamTasks.map(task => ({

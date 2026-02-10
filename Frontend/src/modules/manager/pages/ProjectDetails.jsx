@@ -16,8 +16,8 @@ const ManagerProjectDetails = () => {
 
   useEffect(() => {
     if (projects.length === 0) fetchProjects();
-    // Optimized: fetchTasks(); // Ideally fetch by project from API
-  }, [id]);
+    fetchTasks();
+  }, [id, fetchProjects, fetchTasks]);
 
   const project = projects.find(p => p._id === id || p.id === id);
   const projectTasks = tasks.filter(t => t.project === id || t.projectId === id);

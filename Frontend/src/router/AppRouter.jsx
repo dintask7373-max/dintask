@@ -125,11 +125,8 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
-<<<<<<< HEAD
 import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
-=======
 import IntelManager from '@/modules/superadmin/pages/IntelManager';
->>>>>>> 132682b6b4813c76cbb4e841ef15d9711eb8c034
 
 // Public Pages
 import LandingPage from '@/modules/public/pages/LandingPage';

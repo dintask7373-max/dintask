@@ -28,6 +28,7 @@ import { motion } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
+import useProjectStore from '@/store/projectStore';
 import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -35,14 +36,28 @@ import { Progress } from '@/shared/components/ui/progress';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
 
 const TeamProgress = () => {
     const { user } = useAuthStore();
-    const tasks = useTaskStore(state => state.tasks);
-    const employees = useEmployeeStore(state => state.employees);
+    const { tasks, fetchTasks } = useTaskStore();
+    const { employees, fetchEmployees } = useEmployeeStore();
+    const { projects, fetchProjects } = useProjectStore();
+
+    React.useEffect(() => {
+        fetchTasks();
+        fetchEmployees();
+        fetchProjects();
+    }, [fetchTasks, fetchEmployees, fetchProjects]);
 
     const teamTasks = useMemo(() => {
-        return tasks.filter(t => t.delegatedBy === user?.id);
+        const userId = (user?._id || user?.id)?.toString();
+        // Managers see tasks they assigned OR tasks assigned to them to track delegation flow
+        return tasks.filter(t => {
+            const isAssignedByMe = (t.assignedBy?._id || t.assignedBy)?.toString() === userId;
+            return isAssignedByMe;
+        });
     }, [tasks, user]);
 
     const teamMembers = useMemo(() => {
@@ -67,15 +82,15 @@ const TeamProgress = () => {
             });
 
             const completed = memberTasks.filter(t => t.status === 'completed').length;
-            const activeTasks = memberTasks.length - completed;
             const rate = memberTasks.length > 0 ? Math.round((completed / memberTasks.length) * 100) : 0;
+            const avgProgress = memberTasks.reduce((acc, t) => acc + (t.progress || 0), 0) / (memberTasks.length || 1);
 
             return {
                 name: (member.name || 'Unknown').split(' ')[0],
                 tasks: memberTasks.length,
                 completed: completed,
-                rate: rate,
-                efficiency: Math.min(100, rate + (activeTasks > 0 ? 10 : 0))
+                rate: Math.round(avgProgress), // Use average progress for the bar
+                efficiency: rate
             };
         });
     }, [tasks, teamMembers]);
@@ -86,13 +101,39 @@ const TeamProgress = () => {
         const total = teamTasks.length;
         const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
+        const completedProjects = projects.filter(p => p.status === 'completed').length;
+        const totalProjects = projects.length;
+
         return [
             { title: 'Task Volume', value: total, icon: BarChart3, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: 'Flow rate' },
             { title: 'Success Yield', value: `${rate}%`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/10', trend: 'Peak efficiency' },
             { title: 'Pending Sync', value: pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10', trend: 'Active units' },
-            { title: 'Milestones', value: '12/15', icon: Target, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/10', trend: 'Network goals' }
+            { title: 'Milestones', value: `${completedProjects}/${totalProjects}`, icon: Target, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/10', trend: 'Network goals' }
         ];
-    }, [teamTasks]);
+    }, [teamTasks, projects]);
+
+    const handleExportIntelligence = () => {
+        const exportData = teamTasks.map(task => {
+            const assigneeId = Array.isArray(task.assignedTo) ? task.assignedTo[0] : task.assignedTo;
+            const member = employees.find(e => (e._id || e.id)?.toString() === (assigneeId?._id || assigneeId)?.toString());
+
+            return {
+                'Tactical ID': task.id || task._id,
+                'Directive Title': task.title,
+                'Assignee': member?.name || 'ADMIN',
+                'Operational Priority': task.priority?.toUpperCase(),
+                'Sync Progress': `${task.progress || 0}%`,
+                'Status': task.status?.toUpperCase(),
+                'Initialization Date': format(new Date(task.createdAt), 'MMM dd, yyyy')
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tactical Intelligence");
+        XLSX.writeFile(wb, `Tactical_Intelligence_${format(new Date(), 'yyyyMMdd')}.xlsx`);
+        toast.success("Tactical data extracted successfully!");
+    };
 
     return (
         <div className="space-y-4 sm:space-y-6 pb-10">
@@ -113,7 +154,7 @@ const TeamProgress = () => {
                 </div>
                 <Button
                     className="h-9 px-5 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 font-black text-[9px] uppercase tracking-widest gap-2 shadow-lg hover:shadow-primary-500/20 transition-all border-none"
-                    onClick={() => toast.success("Tactical data extracted!")}
+                    onClick={handleExportIntelligence}
                 >
                     <Download size={14} className="text-primary-500" />
                     <span>Extract Intelligence</span>

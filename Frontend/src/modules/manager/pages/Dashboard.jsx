@@ -28,13 +28,15 @@ import { cn } from '@/shared/utils/cn';
 
 const ManagerDashboard = () => {
     const { user } = useAuthStore();
-    const tasks = useTaskStore(state => state.tasks);
-    const employees = useEmployeeStore(state => state.employees);
+    const { tasks, fetchTasks } = useTaskStore();
+    const { employees, fetchEmployees } = useEmployeeStore();
     const { projects, fetchProjects } = useProjectStore();
     const navigate = useNavigate();
 
     React.useEffect(() => {
         fetchProjects();
+        fetchTasks();
+        fetchEmployees();
     }, []);
 
     // Manager statistics

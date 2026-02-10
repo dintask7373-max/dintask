@@ -45,18 +45,7 @@ exports.registerAdmin = async (req, res, next) => {
 // @access  Private
 exports.getAllUsers = async (req, res, next) => {
   try {
-<<<<<<< HEAD
-    // For Admin, ID is the workspace ID. For Manager, adminId field is the workspace ID.
-    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
-
-    if (!adminId) {
-      return next(new ErrorResponse('Workspace ID not found for this user', 400));
-    }
-
-    console.log(`[DEBUG] getAllUsers - Role: ${req.user.role}, Workspace Admin ID: ${adminId}`);
-=======
     let adminId;
->>>>>>> 940cb77fb658d7d72391569f7f58be5ec344cac3
 
     // If seeker is admin, adminId is their own ID
     if (req.user.role === 'admin') {
