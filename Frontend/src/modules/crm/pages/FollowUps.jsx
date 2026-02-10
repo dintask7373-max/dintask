@@ -10,9 +10,10 @@ import { Label } from '@/shared/components/ui/label';
 import { Calendar } from '@/shared/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Search, Edit, Trash2, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import useCRMStore from '@/store/crmStore';
+import useAuthStore from '@/store/authStore';
 import { cn } from '@/shared/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,10 +21,17 @@ const FollowUps = () => {
   const {
     leads,
     followUps,
+    salesExecutives,
     addFollowUp,
     updateFollowUp,
     deleteFollowUp,
+    fetchLeads,
+    fetchFollowUps,
+    fetchSalesExecutives
   } = useCRMStore();
+
+  const { role } = useAuthStore();
+  const isAdmin = role === 'admin';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -33,6 +41,7 @@ const FollowUps = () => {
   const [time, setTime] = useState('12:00');
   const [formData, setFormData] = useState({
     leadId: '',
+    salesRepId: '',
     type: 'Call',
     notes: '',
     status: 'Scheduled',
@@ -43,6 +52,14 @@ const FollowUps = () => {
 
   const followUpTypes = ['Call', 'Meeting', 'Email', 'WhatsApp'];
   const followUpStatuses = ['Scheduled', 'Completed', 'Missed', 'Cancelled'];
+
+  React.useEffect(() => {
+    fetchLeads();
+    fetchFollowUps();
+    if (isAdmin) {
+      fetchSalesExecutives();
+    }
+  }, [isAdmin, fetchSalesExecutives, fetchLeads, fetchFollowUps]);
 
   const suggestedLeads = useMemo(() => {
     if (!leadSearch || !leads) return [];
@@ -56,10 +73,12 @@ const FollowUps = () => {
   const filteredFollowUps = useMemo(() => {
     if (!followUps || !leads) return [];
     return followUps.filter((followUp) => {
-      const lead = leads.find(l => l.id === followUp.leadId);
+      const leadId = followUp.leadId?._id || followUp.leadId;
+      const lead = leads.find(l => l.id === leadId || l._id === leadId) || (typeof followUp.leadId === 'object' ? followUp.leadId : null);
+
       const matchesSearch =
-        lead?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead?.company.toLowerCase().includes(searchTerm.toLowerCase());
+        lead?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead?.company?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'all' || followUp.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
@@ -82,7 +101,7 @@ const FollowUps = () => {
     };
 
     if (editingFollowUp) {
-      updateFollowUp(editingFollowUp.id, followUpData);
+      updateFollowUp(editingFollowUp.id || editingFollowUp._id, followUpData);
     } else {
       addFollowUp(followUpData);
     }
@@ -92,11 +111,22 @@ const FollowUps = () => {
 
   const handleEdit = (followUp) => {
     setEditingFollowUp(followUp);
-    setFormData(followUp);
+    setFormData({
+      leadId: followUp.leadId?._id || followUp.leadId,
+      salesRepId: followUp.salesRepId?._id || followUp.salesRepId || '',
+      type: followUp.type,
+      notes: followUp.notes,
+      status: followUp.status,
+    });
     setSelectedDate(new Date(followUp.scheduledAt));
     setTime(format(new Date(followUp.scheduledAt), 'HH:mm'));
-    const lead = leads.find(l => l.id === followUp.leadId);
+
+    // Set lead search
+    const leadId = followUp.leadId?._id || followUp.leadId;
+    const lead = leads.find(l => l.id === leadId || l._id === leadId);
     if (lead) setLeadSearch(lead.name);
+    else if (typeof followUp.leadId === 'object') setLeadSearch(followUp.leadId.name);
+
     setOpen(true);
   };
 
@@ -112,7 +142,7 @@ const FollowUps = () => {
 
   const resetForm = () => {
     setEditingFollowUp(null);
-    setFormData({ leadId: '', type: 'Call', notes: '', status: 'Scheduled' });
+    setFormData({ leadId: '', salesRepId: '', type: 'Call', notes: '', status: 'Scheduled' });
     setLeadSearch('');
     setSelectedDate(new Date());
     setTime('12:00');
@@ -147,6 +177,24 @@ const FollowUps = () => {
               <DialogDescription>Input tactical interaction details.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label>Assign To (Sales Rep)</Label>
+                  <Select
+                    value={formData.salesRepId}
+                    onValueChange={(v) => setFormData({ ...formData, salesRepId: v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select Sales Executive" /></SelectTrigger>
+                    <SelectContent>
+                      {salesExecutives?.map(s => (
+                        <SelectItem key={s.id || s._id} value={s.id || s._id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2 relative">
                 <Label>Lead Anchor</Label>
                 <Input
@@ -163,11 +211,11 @@ const FollowUps = () => {
                   <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                     {suggestedLeads.map((lead) => (
                       <div
-                        key={lead.id}
+                        key={lead.id || lead._id}
                         className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold"
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          setFormData({ ...formData, leadId: lead.id });
+                          setFormData({ ...formData, leadId: lead.id || lead._id });
                           setLeadSearch(lead.name);
                           setShowSuggestions(false);
                         }}
@@ -259,6 +307,7 @@ const FollowUps = () => {
               <TableHeader>
                 <TableRow className="bg-slate-50/50 dark:bg-slate-800/30">
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Lead Info</TableHead>
+                  {isAdmin && <TableHead className="text-[10px] font-black tracking-widest uppercase">Assigned To</TableHead>}
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Type</TableHead>
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Schedule</TableHead>
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Status</TableHead>
@@ -267,13 +316,25 @@ const FollowUps = () => {
               </TableHeader>
               <TableBody>
                 {filteredFollowUps.map((f) => {
-                  const lead = leads.find(l => l.id === f.leadId);
+                  const lead = leads.find(l => l.id === f.leadId || l._id === f.leadId) || f.leadId;
+                  const salesRepName = f.salesRepId?.name || (f.salesRepId === 'self' ? 'Me' : 'Unknown');
+
                   return (
-                    <TableRow key={f.id} className="border-slate-50 dark:border-slate-800">
+                    <TableRow key={f.id || f._id} className="border-slate-50 dark:border-slate-800">
                       <TableCell>
                         <p className="font-bold text-xs">{lead?.name}</p>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-tight">{lead?.company}</p>
                       </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <div className="size-5 rounded-full bg-slate-100 flex items-center justify-center">
+                              <Users size={10} className="text-slate-400" />
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{salesRepName}</span>
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell><Badge variant="outline" className="text-[9px] font-black">{f.type}</Badge></TableCell>
                       <TableCell>
                         <p className="font-black text-[10px] text-slate-700 dark:text-slate-300">{format(new Date(f.scheduledAt), 'MMM d, yyyy')}</p>
@@ -285,7 +346,7 @@ const FollowUps = () => {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(f)}><Edit size={12} /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(f.id)}><Trash2 size={12} /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(f.id || f._id)}><Trash2 size={12} /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -298,8 +359,9 @@ const FollowUps = () => {
           <div className="lg:hidden space-y-3">
             <AnimatePresence mode="popLayout">
               {filteredFollowUps.map((f) => {
-                const lead = leads.find(l => l.id === f.leadId);
+                const lead = leads.find(l => l.id === f.leadId || l._id === f.leadId) || f.leadId;
                 const isOverdue = new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled';
+                const salesRepName = f.salesRepId?.name;
 
                 return (
                   <motion.div
@@ -307,7 +369,7 @@ const FollowUps = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    key={f.id}
+                    key={f.id || f._id}
                     className="group relative overflow-hidden p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -339,6 +401,13 @@ const FollowUps = () => {
                       </Badge>
                     </div>
 
+                    {isAdmin && salesRepName && (
+                      <div className="mb-3 flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg w-fit">
+                        <Users size={10} className="text-slate-400" />
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Assigned: {salesRepName}</span>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800">
                       <div>
                         <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Schedule</p>
@@ -362,7 +431,7 @@ const FollowUps = () => {
 
                     <div className="flex items-center justify-between mt-4 pt-1">
                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter italic">
-                        #{f.id.toString().slice(-4)}
+                        #{(f.id || f._id || '').toString().slice(-4)}
                       </span>
                       <div className="flex gap-2">
                         <Button
@@ -377,7 +446,7 @@ const FollowUps = () => {
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                          onClick={() => handleDelete(f.id)}
+                          onClick={() => handleDelete(f.id || f._id)}
                         >
                           <Trash2 size={14} className="text-red-400" />
                         </Button>
@@ -385,7 +454,7 @@ const FollowUps = () => {
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9 text-emerald-500 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                          onClick={() => handleStatusChange(f.id, 'Completed')}
+                          onClick={() => handleStatusChange(f.id || f._id, 'Completed')}
                         >
                           <CheckCircle2 size={14} />
                         </Button>
