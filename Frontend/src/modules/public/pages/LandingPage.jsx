@@ -29,7 +29,9 @@ import {
     Search,
     Lightbulb,
     Menu,
-    X
+    X,
+    HelpCircle,
+    ChevronDown
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -57,6 +59,7 @@ const LandingPage = () => {
         heroTitle: "Your work,\nPowered by\nour life's work.",
         heroSubtitle: "An all-in-one workspace designed to break down silos and boost efficiency. Experience total control over your business operations."
     });
+    const [isAnnual, setIsAnnual] = useState(true);
 
     // Testimonial Submission States
     const [isSubmitOpen, setIsSubmitOpen] = useState(false);
@@ -133,6 +136,30 @@ const LandingPage = () => {
             { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
         ]
     });
+
+    const [openFaq, setOpenFaq] = useState(null);
+
+    const faqs = [
+        {
+            id: 1,
+            question: "Can I customize the modules to fit my business needs?",
+            answer: "Yes, our platform is highly customizable to adapt to your specific business requirements. You can tailor workflows, fields, and permissions to match your unique processes."
+        },
+        {
+            id: 2,
+            question: "How do I add team members to the platform?",
+            answer: "Adding team members is straightforward. Administrators can invite users via email from the dashboard, assign roles, and manage access levels with just a few clicks."
+        },
+        {
+            id: 3,
+            question: "What kind of support do you provide?",
+            answer: "We offer comprehensive support including 24/7 email assistance, a detailed knowledge base, and priority support for enterprise clients to ensure your success."
+        }
+    ];
+
+    const toggleFaq = (index) => {
+        setOpenFaq(prev => prev === index ? null : index);
+    };
 
     useEffect(() => {
         // Fetch hero section content from API
@@ -446,12 +473,12 @@ const LandingPage = () => {
         <main className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white overflow-x-clip">
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center">
                         <img
                             src="/dintask-logo.png"
                             alt="DinTask"
-                            className="h-20 sm:h-24 w-auto object-contain"
+                            className="h-12 sm:h-16 w-auto object-contain"
                         />
                     </div>
 
@@ -524,176 +551,67 @@ const LandingPage = () => {
             </nav>
 
             {/* Hero Section */}
-            <section className="pt-20 md:pt-40 pb-12 md:pb-24 px-4 md:px-6 overflow-x-clip bg-white dark:bg-slate-950 relative">
-                <div className="max-w-7xl mx-auto grid grid-cols-2 gap-4 sm:gap-12 md:gap-16 lg:gap-24 items-start">
-                    {/* Left Side: Strategic Ecosystem Infographic */}
+            <section className="pt-24 pb-16 md:pt-36 md:pb-24 px-6 bg-teal-50/30 dark:bg-slate-950 overflow-hidden relative">
+                {/* Background Blobs */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-200/20 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/20 rounded-full blur-[100px]" />
+                </div>
+
+                <div className="max-w-5xl mx-auto text-center relative z-10">
                     <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1 }}
-                        className="flex flex-col"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-100/50 text-teal-700 font-bold text-xs uppercase tracking-widest mb-8 border border-teal-200/50"
                     >
-
-                        <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-7xl font-black text-slate-900 dark:text-white leading-[0.9] tracking-tighter mb-4 md:mb-8 italic">
-                            {heroContent.heroTitle.split('\n').map((line, index) => (
-                                <React.Fragment key={index}>
-                                    {line.includes('Powered') ? (
-                                        <>
-                                            {line.split('Powered')[0]}
-                                            <span className="text-primary-600">Powered</span>
-                                            {line.split('Powered')[1]}
-                                        </>
-                                    ) : (
-                                        line
-                                    )}
-                                    {index < heroContent.heroTitle.split('\n').length - 1 && <br />}
-                                </React.Fragment>
-                            ))}
-                        </h1>
-                        <p className="text-[10px] sm:text-xs md:text-base lg:text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6 md:mb-12 max-w-lg">
-                            {heroContent.heroSubtitle}
-                        </p>
-                        {/* Strategic Ecosystem Infographic */}
-                        <div id="features" className="relative mt-4 md:mt-16 h-[220px] sm:h-[350px] md:h-[520px] w-[250%] md:w-full group scale-[0.4] sm:scale-[0.6] md:scale-[0.8] lg:scale-[0.85] origin-left flex scroll-mt-24">
-                            {/* Left Side: The Infographic Core */}
-                            <div className="relative w-full md:max-w-[500px]">
-                                {/* Infographic Path (Semi-circle) */}
-                                <div className="absolute left-[-40px] top-1/2 -translate-y-1/2 w-64 h-[480px] border-[3px] border-dashed border-primary-200 dark:border-primary-900/30 rounded-r-full -z-0" />
-
-                                {/* Digital Core Branding */}
-                                <div className="absolute left-[-60px] top-1/2 -translate-y-1/2 z-10">
-                                    <div className="size-32 sm:size-44 rounded-full bg-white dark:bg-slate-900 border-[8px] sm:border-[10px] border-slate-50 dark:border-slate-800 shadow-[20px_20px_60px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center p-4 sm:p-6 relative overflow-hidden group/core">
-                                        <div className="absolute inset-0 bg-primary-600/5" />
-                                        <span className="text-[8px] sm:text-[10px] font-black text-primary-600 uppercase tracking-[0.2em] mb-1 sm:mb-2">Ecosystem</span>
-                                        <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter italic">Din<span className="text-primary-600">Task</span></span>
-
-                                        <div className="mt-2 sm:mt-4 flex flex-col gap-1 sm:gap-2">
-                                            <button onClick={() => navigate('/admin/register')} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary-600 text-white text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-90 uppercase tracking-widest">FREE TRY</button>
-                                            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-2 sm:px-3 py-1 sm:py-1.5 border border-primary-600 text-primary-600 text-[7px] sm:text-[8px] font-black rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 transition-all active:scale-90 uppercase tracking-widest">BUY NOW</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Tactical Modules - Nodes & Capsules */}
-                                <div className="ml-24 h-full flex flex-col justify-between py-10 relative z-10">
-                                    {modules.map((module, idx) => (
-                                        <div
-                                            key={module.id}
-                                            className="relative flex items-center"
-                                            onMouseEnter={() => setActiveModule(idx)}
-                                        >
-                                            <motion.button
-                                                className={`relative flex items-center gap-8 group/item transition-all duration-500 ${activeModule === idx ? 'translate-x-6' : 'opacity-60 hover:opacity-100 hover:translate-x-2'
-                                                    }`}
-                                            >
-                                                <div className={`absolute left-[-24px] top-1/2 w-20 h-[2px] bg-gradient-to-r ${activeModule === idx ? 'from-primary-600 to-transparent' : 'from-slate-200 dark:from-slate-800 to-transparent'
-                                                    } -z-10`} />
-
-                                                <div className={`size-10 sm:size-12 rounded-full flex items-center justify-center text-xs sm:text-sm font-black transition-all duration-700 border-2 relative ${activeModule === idx
-                                                    ? 'bg-primary-600 text-white border-primary-400 shadow-[0_0_30px_rgba(99,116,242,0.3)] ring-8 ring-primary-500/5'
-                                                    : 'bg-white dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
-                                                    }`}>
-                                                    0{idx + 1}
-                                                </div>
-
-                                                <div className={`flex items-center gap-4 sm:gap-6 px-6 sm:px-10 py-3 sm:py-5 rounded-[2.5rem] transition-all duration-500 w-[240px] sm:w-[320px] md:w-[380px] border-2 relative overflow-hidden ${activeModule === idx
-                                                    ? 'bg-primary-600 border-primary-400 shadow-2xl translate-x-1'
-                                                    : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-800'
-                                                    }`}>
-                                                    <div className={`size-10 flex items-center justify-center transition-all ${activeModule === idx ? 'text-white' : `text-slate-400`
-                                                        }`}>
-                                                        {React.createElement(getIconComponent(module.icon), { size: 24 })}
-                                                    </div>
-                                                    <div className="text-left flex-1">
-                                                        <h3 className={`text-xs font-black uppercase tracking-[0.15em] ${activeModule === idx ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{module.title}</h3>
-                                                        <AnimatePresence>
-                                                            {activeModule === idx && (
-                                                                <motion.p
-                                                                    initial={{ opacity: 0, height: 0 }}
-                                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                                    className="text-[10px] font-bold text-primary-50 line-clamp-1 mt-1 opacity-80"
-                                                                >
-                                                                    {module.description}
-                                                                </motion.p>
-                                                            )}
-                                                        </AnimatePresence>
-                                                    </div>
-                                                    {activeModule === idx && <ChevronRight className="text-white/50" size={18} />}
-                                                </div>
-                                            </motion.button>
-
-                                            {/* Parallel Information - Background Style */}
-                                            <AnimatePresence>
-                                                {activeModule === idx && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, x: 20 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, x: 10 }}
-                                                        className="absolute left-[400px] sm:left-[380px] md:left-[480px] lg:left-[580px] w-[480px] sm:w-[350px] md:w-[450px] lg:w-[450px] block"
-                                                    >
-                                                        <div className="relative">
-                                                            {/* Ghostly Watermark Title */}
-                                                            <div className="absolute -top-10 sm:-top-20 -left-6 lg:-left-10 text-[3rem] sm:text-[6rem] lg:text-[10rem] font-black text-slate-100 dark:text-slate-800/20 uppercase tracking-tighter opacity-50 -z-10 pointer-events-none select-none">
-                                                                {module.title.split(' ')[0]}
-                                                            </div>
-
-                                                            <div className="space-y-3 sm:space-y-6 lg:space-y-8">
-                                                                <div className="space-y-1 sm:space-y-3">
-                                                                    <div className="flex items-center gap-2 sm:gap-4 mb-1 sm:mb-3">
-                                                                        <div className="h-[1px] sm:h-[3px] w-6 lg:w-12 bg-primary-600" />
-                                                                        <span className="text-[6px] sm:text-[10px] lg:text-[13px] font-black text-primary-600 uppercase tracking-[0.2em]">TACTICAL SPECS</span>
-                                                                    </div>
-                                                                    <p className="text-[8px] sm:text-lg lg:text-xl font-bold text-slate-500 dark:text-slate-400 leading-tight uppercase tracking-tight">
-                                                                        {module.description}
-                                                                    </p>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-2 gap-y-2 sm:gap-y-4 gap-x-3 sm:gap-x-8">
-                                                                    {module.features.map((feat, fIdx) => (
-                                                                        <div key={fIdx} className="flex flex-col border-l-2 border-slate-100 dark:border-slate-800 pl-2 lg:pl-4 hover:border-primary-500 transition-colors">
-                                                                            <span className="text-[5px] sm:text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 sm:mb-1.5">0{fIdx + 1}</span>
-                                                                            <span className="text-[6px] sm:text-[11px] lg:text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight line-clamp-1">{feat}</span>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        <Star className="size-3 fill-teal-700" />
+                        YOUR COMPLETE CRM PLATFORM
                     </motion.div>
 
-                    {/* Right Side: Video Content - Restored */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1 }}
-                        className="relative pt-0 sm:pt-6 md:pt-12"
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-8"
                     >
-                        <div className="relative z-10">
-                            <video
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
-                                className="w-full h-auto object-contain rounded-2xl sm:rounded-[3rem]"
-                            >
-                                <source src="/meeting-animation.mp4" type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
+                        <span className="text-teal-600 block sm:inline">Five powerful</span> <span className="text-blue-600">CRM</span> modules to run your entire <span className="relative inline-block mt-2 sm:mt-0">
+                            <span className="relative z-10">business.</span>
+                            <motion.span
+                                initial={{ width: 0 }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: 0.8, delay: 0.8, ease: "circOut" }}
+                                className="absolute bottom-1 sm:bottom-3 left-0 h-3 sm:h-6 bg-teal-300/60 -z-0 -rotate-1 rounded-sm"
+                            />
+                        </span>
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                        className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed mb-10"
+                    >
+                        Access our Sales, Project Management, HR, Finance, and Client Portal modules—all integrated in one platform. Manage your entire business operations without switching between multiple tools. Get started today and transform how you work.
+                    </motion.p>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.6 }}
+                        className="flex flex-col sm:flex-row items-center justify-center gap-4"
+                    >
+                        <Button onClick={() => navigate('/admin/register')} className="h-14 px-12 rounded-lg bg-teal-50 border border-teal-300 hover:bg-teal-100 text-teal-700 font-bold text-lg shadow-sm transition-all hover:scale-105">
+                            Get Started
+                        </Button>
+                        <Button variant="outline" onClick={() => document.getElementById('tactical').scrollIntoView({ behavior: 'smooth' })} className="h-14 px-8 rounded-full border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-bold text-base hover:bg-transparent transition-all">
+                            View Modules
+                        </Button>
                     </motion.div>
                 </div>
             </section>
 
-            {/* Testimonial inspired by Image 1 */}
+
             <section id="about" className="py-20 relative overflow-x-clip border-t border-b border-white/10" style={{ backgroundColor: testimonialSection.testimonialBgColor }}>
                 <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
                     <motion.div
@@ -747,188 +665,12 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Testimonials Section */}
-            <section className="py-12 bg-slate-50 dark:bg-slate-900 border-t border-b border-slate-200 dark:border-slate-800">
-                <div className="max-w-7xl mx-auto px-6">
-                    {/* Section Title */}
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                            User <span className="text-primary-600">Testimonials</span>
-                        </h2>
-
-                        <div className="mt-4">
-                            <Dialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" className="rounded-full border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20">Share Your Story</Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-slate-900 dark:text-white">Share Your Experience</DialogTitle>
-                                        <DialogDescription className="text-slate-500 dark:text-slate-400">
-                                            Tell us how DinTask has helped your team.
-                                        </DialogDescription>
-                                    </DialogHeader>
-
-                                    {submitStatus === 'success' ? (
-                                        <div className="py-8 text-center text-green-600">
-                                            <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
-                                            <p className="font-medium">Thank you! Your testimonial has been submitted for review.</p>
-                                        </div>
-                                    ) : submitStatus === 'error' ? (
-                                        <div className="py-8 text-center text-red-600">
-                                            <p className="font-medium">Something went wrong. Please try again.</p>
-                                            <Button variant="link" onClick={() => setSubmitStatus(null)}>Try Again</Button>
-                                        </div>
-                                    ) : (
-                                        <form onSubmit={handleSubmitTestimonial} className="grid gap-4 py-4">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">Name</Label>
-                                                <Input id="name" name="name" value={formData.name} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700" />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="role" className="text-slate-700 dark:text-slate-300">Role / Company</Label>
-                                                <Input id="role" name="role" value={formData.role} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700" />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label className="text-slate-700 dark:text-slate-300">Rating</Label>
-                                                <div className="flex gap-1">
-                                                    {[1, 2, 3, 4, 5].map((star) => (
-                                                        <Star
-                                                            key={star}
-                                                            size={24}
-                                                            className={`cursor-pointer transition-colors ${star <= formData.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300 dark:text-slate-600'}`}
-                                                            onClick={() => handleRatingChange(star)}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="testimonial" className="text-slate-700 dark:text-slate-300">Message</Label>
-                                                <Textarea id="testimonial" name="testimonial" value={formData.testimonial} onChange={handleChange} required className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 resize-none h-24" />
-                                            </div>
-                                            <Button type="submit" disabled={isSubmitting} className="bg-primary-600 hover:bg-primary-700 text-white">
-                                                {isSubmitting ? 'Submitting...' : 'Submit Testimonial'}
-                                            </Button>
-                                        </form>
-                                    )}
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    </div>
-
-                    {/* Testimonials with Scroll Buttons */}
-                    <div className="relative">
-                        {/* Left Scroll Button */}
-                        <button
-                            onClick={() => {
-                                const container = document.getElementById('testimonials-container');
-                                container.scrollBy({ left: -350, behavior: 'smooth' });
-                            }}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-3 shadow-lg transition-all hidden md:block"
-                        >
-                            <ChevronLeft size={24} />
-                        </button>
-
-                        {/* Right Scroll Button */}
-                        <button
-                            onClick={() => {
-                                const container = document.getElementById('testimonials-container');
-                                container.scrollBy({ left: 350, behavior: 'smooth' });
-                            }}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-3 shadow-lg transition-all hidden md:block"
-                        >
-                            <ChevronRight size={24} />
-                        </button>
-
-                        {/* Scrollable Testimonials */}
-                        <div id="testimonials-container" className="overflow-x-auto pb-4 scroll-smooth">
-                            <div className="flex gap-6 justify-center px-12 md:px-20">
-                                {testimonials.map((testimonial, index) => (
-                                    <motion.div
-                                        key={testimonial.id}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        whileInView={{ opacity: 1, scale: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: index * 0.1 }}
-                                        className="flex-shrink-0 w-80"
-                                    >
-                                        <Card className={`p-6 text-center h-full transition-transform duration-300 ${testimonial.highlighted
-                                            ? 'bg-primary-600 border-primary-500 shadow-xl scale-105'
-                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg'
-                                            }`}>
-                                            {/* Profile Image */}
-                                            <div className="relative inline-block mb-3">
-                                                <div className={`w-20 h-20 rounded-full overflow-hidden border-3 ${testimonial.highlighted
-                                                    ? 'border-white'
-                                                    : 'border-primary-600'
-                                                    } mx-auto`}>
-                                                    <img
-                                                        src={testimonial.image}
-                                                        alt={testimonial.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            e.target.src = 'https://ui-avatars.com/api/?name=' + testimonial.name + '&size=80&background=random';
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* Rating Stars */}
-                                            <div className="flex justify-center gap-0.5 mb-2">
-                                                {[...Array(testimonial.rating)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        size={12}
-                                                        className={testimonial.highlighted ? 'fill-white text-white' : 'fill-primary-600 text-primary-600'}
-                                                    />
-                                                ))}
-                                            </div>
-
-                                            {/* Name & Role */}
-                                            <h3 className={`text-base font-black mb-0.5 ${testimonial.highlighted
-                                                ? 'text-white'
-                                                : 'text-slate-900 dark:text-white'
-                                                }`}>
-                                                {testimonial.name}
-                                            </h3>
-                                            <p className={`text-xs font-medium mb-4 ${testimonial.highlighted
-                                                ? 'text-primary-100'
-                                                : 'text-slate-500 dark:text-slate-400'
-                                                }`}>
-                                                {testimonial.role}
-                                            </p>
-
-                                            {/* Quote Icon */}
-                                            <div className="mb-2">
-                                                <span className={`text-4xl font-black ${testimonial.highlighted
-                                                    ? 'text-white/20'
-                                                    : 'text-primary-600/20'
-                                                    }`}>
-                                                    &ldquo;
-                                                </span>
-                                            </div>
-
-                                            {/* Testimonial Text */}
-                                            <p className={`text-xs leading-relaxed line-clamp-3 ${testimonial.highlighted
-                                                ? 'text-white/90'
-                                                : 'text-slate-600 dark:text-slate-300'
-                                                }`}>
-                                                {testimonial.testimonial}
-                                            </p>
-                                        </Card>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             {/* Strategic Options Section - Based on Reference Image */}
             <section className="py-12 sm:py-24 bg-white dark:bg-slate-950 overflow-x-clip">
                 <div className="max-w-7xl mx-auto px-2 sm:px-6">
                     <div className="grid grid-cols-3 gap-2 sm:gap-16 lg:gap-24">
-                        {strategicOptions.map((opt, i) => {
+                        {strategicOptions.slice(0, 3).map((opt, i) => {
                             // Static color and icon mapping - NOT from database
                             const staticConfig = [
                                 {
@@ -956,7 +698,7 @@ const LandingPage = () => {
 
                             return (
                                 <motion.div
-                                    key={opt.id}
+                                    key={opt.id || i}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
@@ -988,83 +730,164 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* Product Slider Section - Refined Tactical Interface */}
-            <section id="tactical" className="py-24 bg-white dark:bg-slate-950 overflow-x-clip scroll-mt-20">
+            {/* Five Powerful Modules Section */}
+            <section id="tactical" className="py-24 bg-teal-50/20 dark:bg-slate-950/50 overflow-hidden scroll-mt-20">
                 <div className="max-w-7xl mx-auto px-6">
-                    {/* Centered Header */}
-                    <div className="text-center mb-20">
-                        <Badge className="bg-primary-600/10 text-primary-600 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest mb-4">
-                            {tacticalContent.tacticalSubtitle}
-                        </Badge>
-                        <h2 className="text-5xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter mb-8 leading-[1.1]">
-                            {tacticalContent.tacticalTitle}
+                    <div className="mb-16 max-w-3xl">
+                        <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
+                            Five <span className="bg-teal-500 text-white px-2 py-1 transform -rotate-1 inline-block rounded-md">powerful</span> modules for your business.
                         </h2>
-                        <div className="flex justify-center gap-2">
-                            {tacticalContent.showcaseImages.map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`h-1.5 rounded-full transition-all duration-500 ${currentImage === i ? 'w-10 bg-primary-600' : 'w-3 bg-slate-200 dark:bg-slate-800'}`}
-                                />
-                            ))}
-                        </div>
+                        <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Manage sales, projects, HR, finance, and client relationships from one unified platform. All modules work together seamlessly to power your organization.
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 sm:gap-8 md:gap-16 items-center">
-                        {/* Left Side: Video (No background/card) */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -30 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            className="relative overflow-hidden w-full mx-auto"
-                        >
-                            <video
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
-                                className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal"
+                    <div className="relative">
+                        {/* Module Content */}
+                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                            {/* Left: Content Card */}
+                            <motion.div
+                                key={`content-${activeModule}`}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.5 }}
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 lg:p-12 shadow-2xl shadow-slate-200/50 dark:shadow-none h-full flex flex-col justify-between"
                             >
-                                <source src={tacticalContent.tacticalVideoUrl || "/team-meeting-animation.mp4"} type="video/mp4" />
-                            </video>
-                        </motion.div>
+                                <div>
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className={`p-3 rounded-xl ${[
+                                            'bg-teal-100 text-teal-600',
+                                            'bg-blue-100 text-blue-600',
+                                            'bg-purple-100 text-purple-600',
+                                            'bg-amber-100 text-amber-600',
+                                            'bg-emerald-100 text-emerald-600'
+                                        ][activeModule]
+                                            }`}>
+                                            {React.createElement([Layers, Target, Users, Briefcase, Globe][activeModule], { size: 28 })}
+                                        </div>
+                                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${[
+                                            'bg-teal-50 text-teal-700',
+                                            'bg-blue-50 text-blue-700',
+                                            'bg-purple-50 text-purple-700',
+                                            'bg-amber-50 text-amber-700',
+                                            'bg-emerald-50 text-emerald-700'
+                                        ][activeModule]
+                                            }`}>
+                                            {[
+                                                'PM Cloud',
+                                                'Sales Cloud',
+                                                'HR Cloud',
+                                                'Finance Cloud',
+                                                'Client Cloud'
+                                            ][activeModule]}
+                                        </span>
+                                    </div>
 
-                        <div className="space-y-6">
+                                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                                        {[
+                                            'Project Delivery Control Tower',
+                                            'Sales Pipeline & CRM Engine',
+                                            'Human Resource Management',
+                                            'Financial Command Center',
+                                            'Client Interaction Portal'
+                                        ][activeModule]}
+                                    </h3>
 
-                            <div className="relative h-[300px] lg:h-[450px] w-full">
+                                    <p className="text-slate-600 dark:text-slate-400 text-lg mb-8 leading-relaxed">
+                                        {[
+                                            'Manage projects efficiently with milestone tracking, QA workflows, urgent task escalation, testing readiness, and resource planning from a single delivery dashboard.',
+                                            'Track leads, manage deals, and automate follow-ups. Visualize your sales funnel and forecast revenue with precision tools designed for high-performing sales teams.',
+                                            'Streamline recruitment, onboarding, and employee management. Handle leave requests, performance reviews, and payroll integration in one secure system.',
+                                            'Gain total visibility into your financial health. Manage invoices, expenses, and automated billing while generating real-time financial reports.',
+                                            'Give your clients a professional gateway to interact with your business. Share updates, files, and get approvals seamlessly.'
+                                        ][activeModule]}
+                                    </p>
+
+                                    <div className="inline-block bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 text-sm font-semibold mb-8">
+                                        {[
+                                            'For Program & Project Managers',
+                                            'For Sales Teams & Leaders',
+                                            'For HR Managers & Admin',
+                                            'For Finance Teams & Accountants',
+                                            'For Client Success Managers'
+                                        ][activeModule]}
+                                    </div>
+
+                                    <ul className="space-y-3">
+                                        {[
+                                            ['Milestone & sprint intelligence', 'Escalation routing across squads', 'Testing readiness heatmaps', 'Resource allocation & planning', 'Real-time progress monitoring'],
+                                            ['Lead scoring & qualification', 'Visual pipeline management', 'Automated email sequences', 'Deal forecasting & analytics', 'Contact activity tracking'],
+                                            ['Employee self-service portal', 'Automated onboarding workflows', 'Leave & agile attendance', 'Performance OKRs & KPIs', 'Document management vault'],
+                                            ['Automated invoice generation', 'Expense tracking & approval', 'P&L analysis dashboard', 'Multi-currency support', 'Tax automation hooks'],
+                                            ['Secure file sharing', 'Project status timeline', 'Ticket & support system', 'Contract digital signing', 'Integrated feedback loops']
+                                        ][activeModule].map((feature, i) => (
+                                            <li key={i} className="flex items-start gap-3">
+                                                <div className="mt-1 size-5 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 shrink-0">
+                                                    <CheckCircle2 size={12} strokeWidth={3} />
+                                                </div>
+                                                <span className="text-slate-700 dark:text-slate-300 font-medium">{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </motion.div>
+
+                            {/* Right: Image */}
+                            <div className="relative h-full min-h-[400px] lg:min-h-[600px]">
                                 <AnimatePresence mode='wait'>
                                     <motion.div
-                                        key={currentImage}
-                                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.98, y: -10 }}
-                                        transition={{ duration: 0.6, ease: "easeOut" }}
-                                        className="absolute inset-0 h-full w-full"
+                                        key={`image-${activeModule}`}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.05 }}
+                                        transition={{ duration: 0.5 }}
+                                        className="absolute inset-0 rounded-[2rem] overflow-hidden shadow-2xl"
                                     >
-                                        {/* Browser Frame Style */}
-                                        <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col">
-                                            {/* Handlebar/Header */}
-                                            <div className="h-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center px-3 gap-1">
-                                                <div className="size-1.5 rounded-full bg-red-400/50" />
-                                                <div className="size-1.5 rounded-full bg-amber-400/50" />
-                                                <div className="size-1.5 rounded-full bg-emerald-400/50" />
-                                            </div>
-                                            <div className="relative flex-1 overflow-hidden">
-                                                <img
-                                                    src={tacticalContent.showcaseImages[currentImage]}
-                                                    alt="Dashboard Preview"
-                                                    className="w-full h-full object-cover object-top"
-                                                />
-                                                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-6">
-                                                    <div>
-                                                        <p className="text-[8px] font-black text-primary-400 uppercase tracking-widest mb-0.5">Module 0{currentImage + 1}</p>
-                                                        <h3 className="text-sm font-black text-white italic tracking-tighter">Live System Analytics</h3>
-                                                    </div>
-                                                </div>
+                                        <img
+                                            src={[
+                                                '/src/assets/dashboard_1.png',
+                                                '/src/assets/dashboard_2.png',
+                                                '/src/assets/dashboard_3.png',
+                                                '/src/assets/dashboard_1.png',
+                                                '/src/assets/dashboard_2.png'
+                                            ][activeModule]}
+                                            alt="Module Preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+
+                                        {/* Optional badges on image like reference if needed */}
+                                        <div className="absolute bottom-8 left-8 right-8 text-white">
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    ['Engineering', 'Product', 'Sales', 'Marketing'],
+                                                    ['Leads', 'Deals', 'Revenue', 'Growth'],
+                                                    ['People', 'Culture', 'Growth', 'Talent'],
+                                                    ['Assets', 'Liabilities', 'Equity', 'Cashflow'],
+                                                    ['Support', 'Success', 'Feedback', 'Retention']
+                                                ][activeModule].map((tag, i) => (
+                                                    <span key={i} className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-xs font-bold">{tag}</span>
+                                                ))}
                                             </div>
                                         </div>
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
+                        </div>
+
+                        {/* Pagination Dots */}
+                        <div className="flex justify-start gap-3 mt-12">
+                            {[0, 1, 2, 3, 4].map((index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setActiveModule(index)}
+                                    className={`h-3 rounded-full transition-all duration-300 ${activeModule === index
+                                        ? 'w-12 bg-teal-500'
+                                        : 'w-3 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
+                                        }`}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -1076,87 +899,232 @@ const LandingPage = () => {
 
 
 
-            {/* Pricing Section */}
-            <section id="pricing" className="relative py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden scroll-mt-20">
-                {/* Background Two-Tone */}
-                < div className="absolute top-0 left-0 w-full h-[50%]" style={{ backgroundColor: pricingContent.pricingBgColor }} />
-
-                <div className="max-w-6xl mx-auto px-6 relative z-10 text-center mb-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight mb-4">
-                            {pricingContent.pricingTitle}
+            {/* Platform Access Section */}
+            <section className="py-24 bg-white dark:bg-slate-950">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6">
+                            Access your CRM anywhere, anytime.
                         </h2>
-                        <p className="text-white/80 text-sm max-w-xl mx-auto font-medium opacity-70 leading-relaxed">
-                            {pricingContent.pricingDescription}
+                        <p className="text-lg text-slate-600 dark:text-slate-400">
+                            We provide a comprehensive platform with one powerful admin panel and four dedicated mobile apps, all available for direct download from the Play Store. Manage your business from desktop or on-the-go.
                         </p>
-                    </motion.div>
-                </div>
+                    </div>
 
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                    {(pricingContent.plans || []).map((plan, i) => (
-                        <motion.div
-                            key={plan.name}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.1, duration: 0.5 }}
-                        >
-                            <Card className={`h-full border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl`}>
-                                <CardContent className="px-3 sm:px-6 py-6 sm:py-8 flex flex-col h-full items-center text-center">
-                                    {/* Header */}
-                                    <h3 className="text-[7px] sm:text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-2 sm:mb-4">{plan.name}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {[
+                            {
+                                title: "Admin Panel",
+                                description: "Complete web-based control center",
+                                icon: Monitor,
+                                color: "bg-teal-500",
+                                iconColor: "text-white"
+                            },
+                            {
+                                title: "Sales App",
+                                description: "Mobile app for sales app",
+                                icon: Target,
+                                color: "bg-blue-500",
+                                iconColor: "text-white"
+                            },
+                            {
+                                title: "Project Manager",
+                                description: "Mobile app for project manager",
+                                icon: Layers,
+                                color: "bg-purple-500",
+                                iconColor: "text-white"
+                            },
+                            {
+                                title: "Employee App",
+                                description: "Mobile app for employee app",
+                                icon: Users,
+                                color: "bg-emerald-500",
+                                iconColor: "text-white"
+                            }
+                        ].map((item, index) => {
+                            const Icon = item.icon;
+                            return (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                                    viewport={{ once: true }}
+                                    className="group"
+                                >
+                                    <div className="bg-white dark:bg-slate-900 border border-teal-100 dark:border-slate-800 rounded-[2.5rem] p-8 flex flex-col items-center text-center h-full hover:shadow-xl transition-all duration-300 hover:border-teal-200">
+                                        <div className={`w-24 h-24 rounded-3xl ${item.color} flex items-center justify-center mb-8 shadow-lg shadow-teal-100/50 dark:shadow-none transition-transform duration-300 group-hover:scale-105 group-hover:-translate-y-2`}>
+                                            <Icon className={`w-10 h-10 ${item.iconColor}`} strokeWidth={1.5} />
+                                        </div>
 
-                                    {/* Enhanced Icon - No Background */}
-                                    <div className="mb-3 sm:mb-6 flex items-center justify-center text-primary-600">
-                                        {i === 0 && <Users className="size-6 sm:size-10" strokeWidth={1.5} />}
-                                        {i === 1 && <Target className="size-6 sm:size-10" strokeWidth={1.5} />}
-                                        {i === 2 && <Zap className="size-6 sm:size-10" strokeWidth={1.5} />}
-                                        {i === 3 && <Briefcase className="size-6 sm:size-10" strokeWidth={1.5} />}
-                                    </div>
+                                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">{item.title}</h3>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-8 max-w-[200px]">
+                                            {item.description}
+                                        </p>
 
-                                    {/* Price */}
-                                    <div className="mb-3 sm:mb-6">
-                                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
-                                            <span className="text-sm sm:text-3xl font-bold text-slate-800 dark:text-white">
-                                                {plan.name === 'Enterprise' ? 'Custom' : `${plan.price}`}
-                                            </span>
-                                            {plan.name !== 'Enterprise' && (
-                                                <span className="text-[7px] sm:text-xs font-medium text-slate-400 uppercase tracking-tighter">/ {plan.duration || 'month'}</span>
-                                            )}
+                                        <div className="mt-auto">
+                                            <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-bold text-sm">
+                                                {index === 0 ? <Monitor size={16} /> : <Smartphone size={16} />}
+                                                {index === 0 ? "Web Access" : "App Access"}
+                                            </div>
                                         </div>
                                     </div>
+                                </motion.div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </section>
 
-                                    {/* Features List */}
-                                    <div className="space-y-1.5 sm:space-y-3 mb-4 sm:mb-8 flex-1 w-full text-left border-t border-slate-100 dark:border-slate-800 pt-3 sm:pt-6">
-                                        {(plan.features || []).map(f => (
-                                            <div key={f} className="flex items-start gap-1.5 sm:gap-3">
-                                                <div className="size-3 sm:size-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
-                                                    <CheckCircle2 className="size-2 sm:size-[10px]" />
-                                                </div>
-                                                <span className="text-[8px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">{f}</span>
-                                            </div>
-                                        ))}
+            {/* Pricing Section */}
+            <section id="pricing" className="py-24 bg-white dark:bg-slate-950">
+                <div className="max-w-7xl mx-auto px-6">
+                    {/* Header + Toggle */}
+                    <div className="flex flex-col items-center mb-16">
+                        <div className="flex items-center gap-4 text-lg font-medium mb-8">
+                            <span className={`${!isAnnual ? 'text-teal-600 font-bold' : 'text-slate-500'} cursor-pointer`} onClick={() => setIsAnnual(false)}>Monthly</span>
+                            <button
+                                onClick={() => setIsAnnual(!isAnnual)}
+                                className={`w-14 h-8 flex items-center bg-slate-200 dark:bg-slate-700 rounded-full p-1 transition-colors duration-300 ${isAnnual ? 'bg-teal-500' : ''}`}
+                            >
+                                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isAnnual ? 'translate-x-6' : ''}`} />
+                            </button>
+                            <span className={`${isAnnual ? 'text-teal-600 font-bold' : 'text-slate-500'} cursor-pointer`} onClick={() => setIsAnnual(true)}>Yearly</span>
+                        </div>
+                    </div>
+
+                    {/* Pricing Cards Grid */}
+                    <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        {/* Starter Plan */}
+                        <div className="border border-teal-100 dark:border-slate-800 rounded-2xl p-8 bg-white dark:bg-slate-900 shadow-xl shadow-teal-50/50 dark:shadow-none hover:border-teal-300 transition-all duration-300 relative flex flex-col">
+                            <div className="absolute top-8 left-8">
+                                <span className="bg-teal-50 text-teal-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Starter – CRM + HRMS + TMS</span>
+                            </div>
+
+                            <div className="mt-12 mb-6">
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-4">
+                                    CRM, HRMS & Task Management for <span className="text-teal-600">small teams</span>.
+                                </h3>
+                                <div className="flex items-baseline gap-1 mb-2">
+                                    <span className="text-4xl font-bold text-teal-600">₹{isAnnual ? '1,699' : '1,999'}</span>
+                                    <span className="text-slate-500 text-sm">/month</span>
+                                </div>
+                                {isAnnual && (
+                                    <div className="text-xs text-slate-400 font-medium">
+                                        <span className="line-through mr-2">₹23,988/year</span>
+                                        <span className="text-emerald-500">Save ₹3,600 with yearly</span>
                                     </div>
+                                )}
+                            </div>
 
-                                    {/* Action Button */}
-                                    <Button
-                                        onClick={() => plan.cta === 'Contact Sales' ? navigate('/contact', { state: { plan: 'Enterprise', source: 'pricing_page' } }) : navigate('/welcome')}
-                                        variant={plan.variant}
-                                        className={`w-full h-8 sm:h-11 rounded-md font-bold text-[7px] sm:text-[10px] uppercase tracking-widest transition-all duration-300 ${plan.popular || i === 0
-                                            ? 'bg-[#6374f2] hover:bg-[#4f5ed9] text-white shadow-md'
-                                            : 'border border-[#6374f2] sm:border-2 text-[#6374f2] bg-transparent hover:bg-[#6374f2] hover:text-white'
-                                            }`}
-                                    >
-                                        {plan.cta}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
+                            <div className="flex items-center gap-2 mb-8 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                <CheckCircle2 className="text-emerald-500" size={16} /> Best for small teams
+                            </div>
+
+                            <div className="space-y-4 mb-8 flex-1">
+                                {['CRM Lead & Client Management', 'Sales Pipeline & Follow-ups', 'HRMS – Employee Management', 'Attendance & Leave Management', 'Basic Payroll Setup', 'Task & Project Management (TMS)', 'Role & Permission Management', 'Reports & Dashboard'].map((feature, i) => (
+                                    <div key={i} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <div className="flex-shrink-0 w-5 h-5 rounded-full border border-teal-200 flex items-center justify-center text-teal-500">
+                                            <CheckCircle2 size={12} />
+                                        </div>
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <Button onClick={() => navigate('/register')} variant="outline" className="w-full border-teal-200 text-teal-600 hover:bg-teal-50 hover:text-teal-700 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-900/20 font-bold py-6">
+                                Get Started
+                            </Button>
+                        </div>
+
+                        {/* Growth Plan - Featured */}
+                        <div className="border-2 border-teal-100 dark:border-teal-900/50 rounded-2xl p-8 bg-teal-50/30 dark:bg-slate-900 shadow-2xl shadow-teal-100/50 dark:shadow-none relative flex flex-col transform lg:-translate-y-4 transition-all duration-300">
+                            <div className="absolute top-8 left-8">
+                                <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Growth – CRM + HRMS + TMS</span>
+                            </div>
+
+                            <div className="mt-12 mb-6">
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-4">
+                                    CRM, HRMS & Task Management for <span className="text-teal-600">growing businesses</span>.
+                                </h3>
+                                <div className="flex items-baseline gap-1 mb-2">
+                                    <span className="text-5xl font-bold text-teal-600">₹{isAnnual ? '5,999' : '6,999'}</span>
+                                    <span className="text-slate-500 text-sm">/month</span>
+                                </div>
+                                {isAnnual && (
+                                    <div className="text-xs text-slate-400 font-medium">
+                                        <span className="line-through mr-2">₹83,988/year</span>
+                                        <span className="text-emerald-500">Save ₹11,999 with yearly</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2 mb-8 text-xs font-bold text-amber-500 uppercase tracking-widest">
+                                <Zap className="fill-current" size={16} /> Most Popular
+                            </div>
+
+                            <div className="space-y-4 mb-8 flex-1">
+                                {['Full CRM with Leads, Deals & Clients', 'Sales Automation & Follow-ups', 'HRMS – Employee, Attendance & Leave', 'Payroll Management', 'Task, Project & Team Tracking', 'Performance & Productivity Reports', 'Multi-role Access Control', 'Centralized Dashboard'].map((feature, i) => (
+                                    <div key={i} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 font-medium">
+                                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center text-white">
+                                            <CheckCircle2 size={12} />
+                                        </div>
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <Button onClick={() => navigate('/register')} className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-6 shadow-lg shadow-teal-200 dark:shadow-none border-0">
+                                Get Started
+                            </Button>
+                        </div>
+
+                        {/* Enterprise Plan */}
+                        <div className="border border-teal-100 dark:border-slate-800 rounded-2xl p-8 bg-white dark:bg-slate-900 shadow-xl shadow-teal-50/50 dark:shadow-none hover:border-teal-300 transition-all duration-300 relative flex flex-col">
+                            <div className="absolute top-8 left-8">
+                                <span className="bg-teal-50 text-teal-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Enterprise – CRM + HRMS + TMS</span>
+                            </div>
+
+                            <div className="mt-12 mb-6">
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-4">
+                                    CRM, HRMS & Task Management platform for <span className="text-teal-600">large organizations</span>.
+                                </h3>
+                                <div className="flex items-baseline gap-1 mb-2">
+                                    <span className="text-4xl font-bold text-teal-600">₹{isAnnual ? '9,999' : '11,999'}</span>
+                                    <span className="text-slate-500 text-sm">/month</span>
+                                </div>
+                                {isAnnual && (
+                                    <div className="text-xs text-slate-400 font-medium">
+                                        <span className="line-through mr-2">₹143,988/year</span>
+                                        <span className="text-emerald-500">Save ₹24,000 with yearly</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2 mb-8 text-xs font-bold text-purple-500 uppercase tracking-widest">
+                                <Star className="fill-current" size={16} /> Best Value
+                            </div>
+
+                            <div className="space-y-4 mb-8 flex-1">
+                                {['Advanced CRM & Sales Management', 'Lead, Deal & Client Automation', 'Complete HRMS Suite', 'Attendance, Leave & Payroll', 'Task, Project & Team Management', 'Advanced Reports & Analytics', 'Role-based Permissions', 'Secure & Scalable Architecture'].map((feature, i) => (
+                                    <div key={i} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <div className="flex-shrink-0 w-5 h-5 rounded-full border border-teal-200 flex items-center justify-center text-teal-500">
+                                            <CheckCircle2 size={12} />
+                                        </div>
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <Button onClick={() => navigate('/contact')} variant="outline" className="w-full border-teal-200 text-teal-600 hover:bg-teal-50 hover:text-teal-700 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-900/20 font-bold py-6">
+                                Get Started
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="mt-16 text-center text-slate-400 text-sm">
+                        Need custom features or enterprise support? Contact us for tailored solutions and dedicated assistance.
+                    </div>
                 </div>
             </section>
 
@@ -1307,7 +1275,7 @@ const LandingPage = () => {
                             <div className="flex gap-6 justify-center px-12 md:px-20">
                                 {testimonials.map((testimonial, index) => (
                                     <motion.div
-                                        key={testimonial.id}
+                                        key={testimonial.id || index}
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         whileInView={{ opacity: 1, scale: 1 }}
                                         viewport={{ once: true }}
@@ -1386,6 +1354,180 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* FAQ Section */}
+            <section className="py-20 bg-white dark:bg-slate-950 overflow-hidden">
+                <div className="max-w-4xl mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <div className="flex items-center justify-center gap-3 mb-4">
+                            <div className="p-2 rounded-full bg-teal-50 text-teal-500">
+                                <HelpCircle size={24} />
+                            </div>
+                            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                Frequently asked questions.
+                            </h2>
+                        </div>
+                        <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
+                            Everything you need to know about getting started with our CRM platform.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        {faqs.map((faq, index) => (
+                            <div
+                                key={faq.id}
+                                className={`border rounded-2xl transition-all duration-300 overflow-hidden ${openFaq === index
+                                    ? 'border-teal-200 bg-teal-50/10 dark:bg-teal-900/10'
+                                    : 'border-teal-100 dark:border-slate-800 hover:border-teal-200 bg-white dark:bg-slate-900'
+                                    }`}
+                            >
+                                <button
+                                    onClick={() => toggleFaq(index)}
+                                    className="w-full flex items-center p-4 sm:p-6 text-left gap-4 sm:gap-6"
+                                >
+                                    <div className={`flex-shrink-0 size-8 sm:size-10 rounded-lg flex items-center justify-center font-bold text-sm sm:text-base transition-colors ${openFaq === index ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-700'
+                                        }`}>
+                                        {faq.id}
+                                    </div>
+                                    <span className="flex-1 font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-lg">
+                                        {faq.question}
+                                    </span>
+                                    <div className={`flex-shrink-0 size-8 sm:size-10 rounded-full flex items-center justify-center transition-all duration-300 ${openFaq === index ? 'bg-teal-500 text-white rotate-180' : 'bg-teal-100 text-teal-700'
+                                        }`}>
+                                        <ChevronDown size={20} />
+                                    </div>
+                                </button>
+                                <AnimatePresence>
+                                    {openFaq === index && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <div className="px-6 pb-6 pt-0 ml-[3.5rem] sm:ml-[4.5rem]">
+                                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm sm:text-base">
+                                                    {faq.answer}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Contact Support Section */}
+            <section className="bg-white dark:bg-slate-950 py-12 border-t border-slate-100 dark:border-slate-800">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="flex flex-wrap justify-center gap-4 sm:gap-12">
+                        <a
+                            href={`tel:${socialContact.contactInfo.phone}`}
+                            className="flex items-center gap-4 group"
+                        >
+                            <div className="p-4 bg-blue-600 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all duration-300">
+                                <Phone size={24} />
+                            </div>
+                            <div className="hidden sm:block">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Call Us</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">{socialContact.contactInfo.phone}</p>
+                            </div>
+                        </a>
+
+                        <a
+                            href={`mailto:${socialContact.contactInfo.email}`}
+                            className="flex items-center gap-4 group"
+                        >
+                            <div className="p-4 bg-red-500 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all duration-300">
+                                <Mail size={24} />
+                            </div>
+                            <div className="hidden sm:block">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Us</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">{socialContact.contactInfo.email}</p>
+                            </div>
+                        </a>
+
+                        <a
+                            href={`https://wa.me/${socialContact.contactInfo.whatsapp}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-4 group"
+                        >
+                            <div className="p-4 bg-green-500 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300">
+                                <MessageCircle size={24} />
+                            </div>
+                            <div className="hidden sm:block">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">WhatsApp</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">Chat with us</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section className="py-20 overflow-hidden relative border-t border-slate-200 dark:border-slate-800">
+
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
+                    <div className="flex flex-col items-center gap-12">
+                        {/* Main Featured Image - Mac/Device Mockup Style */}
+                        <motion.div
+                            key={currentImage}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="relative w-full max-w-5xl mx-auto"
+                        >
+                            {/* Device Frame */}
+                            <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-2xl">
+                                {/* Screen Header */}
+                                <div className="h-8 bg-slate-900 border-b border-slate-800 flex items-center px-4 gap-2">
+                                    <div className="size-2.5 rounded-full bg-red-500/20" />
+                                    <div className="size-2.5 rounded-full bg-yellow-500/20" />
+                                    <div className="size-2.5 rounded-full bg-green-500/20" />
+                                </div>
+                                {/* Screen Content */}
+                                <div className="aspect-video relative bg-slate-950">
+                                    <img
+                                        src={tacticalContent.showcaseImages[currentImage]}
+                                        alt="Dashboard Preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    {/* Overlay Gradient for depth */}
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/10 to-transparent pointer-events-none" />
+                                </div>
+                            </div>
+
+
+                        </motion.div>
+
+                        {/* Thumbnail Strip */}
+                        <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 max-w-full w-full justify-start md:justify-center px-4 no-scrollbar">
+                            {[
+                                '/src/assets/dashboard_1.png',
+                                '/src/assets/dashboard_2.png',
+                                '/src/assets/dashboard_3.png',
+                                '/src/assets/dashboard_1.png', // Duplicates for demo length
+                                '/src/assets/dashboard_2.png'
+                            ].map((img, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setCurrentImage(idx % tacticalContent.showcaseImages.length)}
+                                    className={`relative flex-shrink-0 w-32 sm:w-48 aspect-video rounded-lg overflow-hidden border-2 transition-all duration-300 group ${currentImage === (idx % tacticalContent.showcaseImages.length)
+                                        ? 'border-teal-400 ring-4 ring-teal-400/20 scale-105'
+                                        : 'border-slate-700 opacity-60 hover:opacity-100 hover:border-slate-500'
+                                        }`}
+                                >
+                                    <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className={`absolute inset-0 bg-teal-500/20 transition-opacity duration-300 ${currentImage === (idx % tacticalContent.showcaseImages.length) ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'
+                                        }`} />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Social Icons Section */}
             <section className="bg-black border-t border-slate-800 py-12 px-6">
                 <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
@@ -1430,12 +1572,12 @@ const LandingPage = () => {
                         </div>
 
                         {/* Link Columns */}
-                        {(footerContent.footerLinks || []).map(col => (
-                            <div key={col.title} className="flex flex-col items-center sm:items-start">
+                        {(footerContent.footerLinks || []).map((col, i) => (
+                            <div key={col.title || i} className="flex flex-col items-center sm:items-start">
                                 <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white mb-6 sm:mb-8">{col.title}</h4>
                                 <ul className="space-y-4">
-                                    {col.links.map(link => (
-                                        <li key={link}>
+                                    {(col.links || []).map((link, j) => (
+                                        <li key={link || j}>
                                             <button
                                                 onClick={() => {
                                                     const pathMap = {
@@ -1475,41 +1617,7 @@ const LandingPage = () => {
                 </div>
             </footer>
 
-            {/* Fixed Contact Widget */}
-            <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3 p-3 bg-slate-900/90 backdrop-blur-xl rounded-l-2xl border-l border-t border-b border-slate-700/50 shadow-2xl animate-in slide-in-from-right duration-700">
-                <a
-                    href={`tel:${socialContact.contactInfo.phone}`}
-                    className="p-3 bg-blue-600 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all duration-300 group relative"
-                    title="Call Us"
-                >
-                    <Phone size={20} className="relative z-10" />
-                    <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        Call Us
-                    </span>
-                </a>
-                <a
-                    href={`mailto:${socialContact.contactInfo.email}`}
-                    className="p-3 bg-red-500 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] transition-all duration-300 group relative"
-                    title="Email Us"
-                >
-                    <Mail size={20} className="relative z-10" />
-                    <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        Email Us
-                    </span>
-                </a>
-                <a
-                    href={`https://wa.me/${socialContact.contactInfo.whatsapp}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 bg-green-500 rounded-full text-white hover:scale-110 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] transition-all duration-300 group relative"
-                    title="WhatsApp"
-                >
-                    <MessageCircle size={20} className="relative z-10" />
-                    <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        WhatsApp
-                    </span>
-                </a>
-            </div>
+
         </main >
     );
 };

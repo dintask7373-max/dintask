@@ -184,16 +184,15 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
             <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 mb-4 border-b border-slate-100 dark:border-slate-900 h-16 shrink-0">
                     {!isCollapsed && (
-                        <div className="flex items-center gap-3 font-black text-xl text-slate-900 dark:text-white tracking-tighter">
-                            <div className="h-9 w-9 rounded-xl overflow-hidden shadow-sm border border-slate-100">
-                                <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <div className="flex items-center justify-center w-full">
+                            <div className="h-16 w-40 flex items-center justify-center overflow-hidden">
+                                <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-150" />
                             </div>
-                            <span>DinTask</span>
                         </div>
                     )}
                     {isCollapsed && (
-                        <div className="h-10 w-10 rounded-xl overflow-hidden mx-auto shadow-sm border border-slate-100">
-                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                        <div className="h-24 w-24 -my-4 mx-auto flex items-center justify-center">
+                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-125" />
                         </div>
                     )}
 

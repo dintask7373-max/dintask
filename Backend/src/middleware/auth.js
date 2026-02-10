@@ -24,39 +24,61 @@ exports.protect = async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    token = req.headers.authorization.split(' ')[1];
-  }
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
-  }
+      // Find user based on ID first, assuming we know the role from the token or can infer it
+      // However, our models are separate. We must rely on the role in the token to pick the right model.
+      // If the token has 'superadmin' but the user is 'superadmin_staff', we need to check SuperAdmin model.
 
-  try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let role = decoded.role;
 
-    if (!decoded.role || !models[decoded.role]) {
-      throw new Error('Invalid token payload: role missing or invalid');
+      // Handle legacy/normalized roles from token if necessary
+      if (role === 'superadmin' || role === 'super_admin') role = 'superadmin';
+      if (role === 'sales') role = 'sales_executive';
+
+      let UserModel = models[role];
+
+      // If role is superadmin_staff, it uses SuperAdmin model too
+      if (role === 'superadmin_staff') UserModel = SuperAdmin;
+
+      if (!UserModel) {
+        // If we can't determine model from token role, try all (fallback)
+        // But for now, let's assume token role is correct enough to pick a model
+        // If 'superadmin' in token, we check SuperAdmin model.
+        // If the user is actually 'superadmin_staff' in DB, SuperAdmin model will still find them by ID.
+        // So this is fine.
+        if (role === 'superadmin') UserModel = SuperAdmin;
+      }
+
+      if (!UserModel) {
+        return res.status(401).json({ success: false, message: 'Invalid role in token' });
+      }
+
+      req.user = await UserModel.findById(decoded.id);
+
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'User not found' });
+      }
+
+      // Normalize role on req.user for downstream consistency
+      // But keep original DB role if needed?
+      // For authorize(), we need it to match what we expect.
+      // If DB has 'sales_executive', we map to 'sales'.
+      // If DB has 'super_admin', we map to 'superadmin'.
+      // If DB has 'superadmin_staff', we keep it 'superadmin_staff'.
+
+      let userRole = req.user.role;
+      if (userRole === 'super_admin') req.user.role = 'superadmin';
+      if (userRole === 'sales_executive') req.user.role = 'sales';
+
+      next();
+    } catch (err) {
+      console.error('Auth Middleware Error:', err);
+      return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
     }
-
-    const UserModel = models[decoded.role];
-    req.user = await UserModel.findById(decoded.id);
-
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
-    }
-
-    // NORMALIZE ROLES: Ensure downstream middleware sees normalized roles
-    // This allows both frontend (normalized) and backend (db) roles to work
-    if (req.user.role === 'super_admin') {
-      req.user.role = 'superadmin';
-    }
-    if (req.user.role === 'sales_executive') {
-      req.user.role = 'sales';
-    }
-
-    next();
-  } catch (err) {
+  } else {
     return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
   }
 };

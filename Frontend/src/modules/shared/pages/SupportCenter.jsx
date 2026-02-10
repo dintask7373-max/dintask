@@ -256,9 +256,9 @@ const SupportCenter = () => {
                 <img
                     src="/WLCOMPAGE .png"
                     alt="Background"
-                    className="w-full h-full object-cover object-center opacity-70 dark:opacity-30 translate-y-[-10%]"
+                    className="w-full h-full object-cover object-center opacity-70 dark:opacity-30"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-white dark:from-slate-950/40 dark:via-slate-950/80 dark:to-slate-950" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
             </div>
 
             {/* Support Content */}

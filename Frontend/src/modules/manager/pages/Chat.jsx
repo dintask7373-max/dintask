@@ -11,16 +11,11 @@ import {
     Video,
     Info,
     CheckCheck,
-    Clock,
-    Shield,
-    Terminal,
-    Zap,
-    Cpu
+    Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { cn } from '@/shared/utils/cn';
-import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
@@ -32,7 +27,7 @@ import useChatStore from '@/store/chatStore';
 
 const ManagerChat = () => {
     const { user: currentUser, role: userRole } = useAuthStore();
-    const { employees } = useEmployeeStore();
+    const { employees, fetchEmployees } = useEmployeeStore();
     const {
         conversations,
         activeConversation,
@@ -46,13 +41,15 @@ const ManagerChat = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [newMessage, setNewMessage] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
     const [showAllUsers, setShowAllUsers] = useState(false);
     const scrollRef = useRef(null);
 
     // Initial load
     useEffect(() => {
         fetchConversations();
-    }, [fetchConversations]);
+        fetchEmployees();
+    }, [fetchConversations, fetchEmployees]);
 
     // Map role to DB Model
     const getModelName = (role) => {
@@ -66,8 +63,8 @@ const ManagerChat = () => {
         return maps[role] || 'Employee';
     };
 
-    // Filter team members and others for search
-    const filteredResults = useMemo(() => {
+    // Filter employees for search
+    const filteredEmployees = useMemo(() => {
         if (!searchTerm) return [];
         return employees.filter(e =>
             e._id !== currentUser?._id &&
@@ -112,16 +109,21 @@ const ManagerChat = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-140px)] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all duration-500">
-            {/* Neural Links Sidebar */}
-            <div className={cn(
-                "w-full md:w-80 flex-shrink-0 border-r border-slate-50 dark:border-slate-800 flex flex-col transition-all",
-                activeConversation ? "hidden md:flex" : "flex"
-            )}>
-                <div className="p-5 border-b border-slate-50 dark:border-slate-800">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Neural <span className="text-primary-600">Links</span></h1>
-                        <div className="flex items-center gap-2">
+        <div className="flex flex-col h-[calc(100vh-100px)] lg:h-[calc(100vh-120px)] bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar */}
+                <div className={cn(
+                    "w-full lg:w-72 xl:w-80 flex-shrink-0 border-r border-slate-100 dark:border-slate-800 flex flex-col transition-all",
+                    activeConversation ? "hidden lg:flex" : "flex"
+                )}>
+                    <div className="p-4 lg:p-6 border-b border-slate-50 dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="lg:hidden w-8 h-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+                                    <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
+                                </div>
+                                <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight">Manager Messenger</h1>
+                            </div>
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -133,208 +135,185 @@ const ManagerChat = () => {
                             >
                                 <Plus size={16} />
                             </Button>
-                            <Badge variant="ghost" className="bg-primary-50 text-primary-600 text-[8px] font-black tracking-widest px-2 h-5">ENCRYPTED</Badge>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <Input
+                                placeholder="Search employees..."
+                                className="h-9 pl-9 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl text-xs font-bold"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    if (e.target.value) setShowAllUsers(false);
+                                }}
+                            />
                         </div>
                     </div>
-                    <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
-                        <Input
-                            placeholder="SEARCH NODE ID..."
-                            className="h-11 pl-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl font-black text-[10px] uppercase tracking-widest placeholder:text-slate-300"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                if (e.target.value) setShowAllUsers(false);
-                            }}
-                        />
-                    </div>
-                </div>
 
-                <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
-                    <div className="p-2.5 space-y-1">
-                        {/* Full Connection List */}
-                        {showAllUsers && !searchTerm && (
-                            <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <p className="px-3 text-[8px] font-black text-primary-600 uppercase tracking-[0.3em] mb-3">Available Neural Nodes</p>
-                                {employees.filter(e => e._id !== currentUser?._id).map(emp => (
-                                    <button
-                                        key={emp._id}
-                                        onClick={() => handleStartChat(emp)}
-                                        className="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/30 text-left transition-all"
-                                    >
-                                        <div className="relative">
-                                            <Avatar className="h-11 w-11 rounded-xl">
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-2 space-y-1">
+                            {/* Full Connection List */}
+                            {showAllUsers && !searchTerm && (
+                                <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <p className="px-3 text-[9px] font-black text-primary-600 uppercase tracking-widest mb-2">Internal Directory</p>
+                                    {employees.filter(u => u._id !== currentUser?._id).map(emp => (
+                                        <button
+                                            key={emp._id}
+                                            onClick={() => handleStartChat(emp)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/20 text-left transition-all"
+                                        >
+                                            <div className="relative">
+                                                <Avatar className="h-9 w-9">
+                                                    <AvatarImage src={emp.avatar} />
+                                                    <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
+                                                        {emp.name.charAt(0)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                                    {emp.name}
+                                                    <Badge className="bg-slate-100 text-slate-500 text-[7px] h-3 px-1 border-none">
+                                                        {emp.role?.toUpperCase() || 'MEMBER'}
+                                                    </Badge>
+                                                </h3>
+                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
+                                </div>
+                            )}
+                            {/* Search Results */}
+                            {searchTerm && filteredEmployees.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">New Chat</p>
+                                    {filteredEmployees.map(emp => (
+                                        <button
+                                            key={emp._id}
+                                            onClick={() => handleStartChat(emp)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/20 text-left transition-all"
+                                        >
+                                            <Avatar className="h-9 w-9">
                                                 <AvatarImage src={emp.avatar} />
-                                                <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs">
+                                                <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
                                                     {emp.name.charAt(0)}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-[3px] border-white dark:border-slate-900 rounded-lg shadow-sm" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                                                {emp.name}
-                                                <Badge className="bg-slate-100 text-slate-500 text-[8px] h-4 px-1.5 border-none">
-                                                    {emp.role?.toUpperCase() || 'MEMBER'}
-                                                </Badge>
-                                            </h3>
-                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
-                                        </div>
-                                    </button>
-                                ))}
-                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-4 mx-2" />
-                            </div>
-                        )}
-                        {/* Search Results */}
-                        {searchTerm && filteredResults.length > 0 && (
-                            <div className="mb-4">
-                                <p className="px-3 text-[8px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Initialize New Uplink</p>
-                                {filteredResults.map(emp => (
+                                            <div>
+                                                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{emp.name}</h3>
+                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-4" />
+                                </div>
+                            )}
+
+                            {/* Active Conversations */}
+                            {conversations.length > 0 ? conversations.map((chat) => {
+                                const partner = getChatPartner(chat);
+                                const isActive = activeConversation?._id === chat._id;
+
+                                return (
                                     <button
-                                        key={emp._id}
-                                        onClick={() => handleStartChat(emp)}
-                                        className="w-full flex items-center gap-4 p-3.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/30 text-left transition-all"
+                                        key={chat._id}
+                                        onClick={() => setActiveConversation(chat)}
+                                        className={cn(
+                                            "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
+                                            isActive
+                                                ? "bg-primary-50 dark:bg-primary-900/10"
+                                                : "hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                        )}
                                     >
-                                        <Avatar className="h-11 w-11 rounded-xl">
-                                            <AvatarImage src={emp.avatar} />
-                                            <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs">
-                                                {emp.name.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">{emp.name}</h3>
-                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">{emp.email}</p>
+                                        <div className="relative">
+                                            <Avatar className="h-9 w-9 ring-2 ring-white dark:ring-slate-900 shadow-sm shrink-0">
+                                                <AvatarImage src={partner.avatar} />
+                                                <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs">
+                                                    {partner.name?.charAt(0)}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-0.5">
+                                                <h3 className={cn(
+                                                    "text-xs font-black truncate uppercase tracking-tight",
+                                                    isActive ? "text-primary-700 dark:text-primary-400" : "text-slate-900 dark:text-white"
+                                                )}>
+                                                    {partner.name}
+                                                </h3>
+                                                {chat.updatedAt && (
+                                                    <span className="text-[9px] text-slate-400 font-black">
+                                                        {format(new Date(chat.updatedAt), 'HH:mm')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 truncate font-bold uppercase tracking-widest">
+                                                {chat.lastMessage?.text || 'No messages yet'}
+                                            </p>
                                         </div>
                                     </button>
-                                ))}
-                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-4 mx-2" />
-                            </div>
-                        )}
-
-                        {/* Active Conversations */}
-                        {conversations.length > 0 ? conversations.map((chat) => {
-                            const partner = getChatPartner(chat);
-                            const isActive = activeConversation?._id === chat._id;
-
-                            return (
-                                <button
-                                    key={chat._id}
-                                    onClick={() => setActiveConversation(chat)}
-                                    className={cn(
-                                        "w-full flex items-center gap-4 p-3.5 rounded-2xl transition-all text-left group relative",
-                                        isActive
-                                            ? "bg-slate-900 dark:bg-slate-800 shadow-xl shadow-slate-900/10"
-                                            : "hover:bg-slate-50 dark:hover:bg-slate-800/30"
-                                    )}
-                                >
-                                    <div className="relative shrink-0">
-                                        <Avatar className="h-11 w-11 rounded-xl ring-2 ring-white dark:ring-slate-900 shadow-sm transition-transform group-hover:scale-105">
-                                            <AvatarImage src={partner.avatar} className="object-cover" />
-                                            <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs uppercase">
-                                                {partner.name?.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-[3px] border-white dark:border-slate-900 rounded-lg shadow-sm animate-pulse" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <h3 className={cn(
-                                                "text-[11px] font-black uppercase tracking-tight truncate",
-                                                isActive ? "text-white" : "text-slate-900 dark:text-white"
-                                            )}>
-                                                {partner.name}
-                                            </h3>
-                                            {chat.updatedAt && (
-                                                <span className={cn(
-                                                    "text-[8px] font-black uppercase tracking-widest",
-                                                    isActive ? "text-primary-400" : "text-slate-400"
-                                                )}>
-                                                    {format(new Date(chat.updatedAt), 'HH:mm')}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className={cn(
-                                            "text-[9px] font-bold uppercase tracking-tighter truncate opacity-60",
-                                            isActive ? "text-slate-300" : "text-slate-400 font-medium"
-                                        )}>
-                                            {chat.lastMessage?.text || 'IDLE_CONNECTION'}
-                                        </p>
-                                    </div>
-                                    {isActive && (
-                                        <motion.div layoutId="active-indicator" className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-600 rounded-full" />
-                                    )}
-                                </button>
-                            );
-                        }) : (
-                            <div className="p-8 text-center">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">No neural links established</p>
-                            </div>
-                        )}
+                                );
+                            }) : (
+                                <div className="p-8 text-center">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">No active conversations</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Tactical Comms Area */}
-            <div className={cn(
-                "flex-1 flex flex-col bg-slate-50/20 dark:bg-slate-900/40",
-                !activeConversation ? "hidden md:flex items-center justify-center p-12" : "flex"
-            )}>
-                {activeConversation ? (
-                    <>
-                        {/* Deployment Header */}
-                        <div className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm z-10">
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="md:hidden size-8 rounded-xl bg-slate-50 dark:bg-slate-800"
-                                    onClick={() => setActiveConversation(null)}
-                                >
-                                    <ArrowLeft size={14} className="text-slate-400" />
-                                </Button>
-                                <Avatar className="h-10 w-10 rounded-xl ring-2 ring-primary-50 dark:ring-primary-900/10">
-                                    <AvatarImage src={getChatPartner(activeConversation).avatar} className="object-cover" />
-                                    <AvatarFallback className="bg-primary-50 text-primary-600 font-black text-xs uppercase">
-                                        {getChatPartner(activeConversation)?.name?.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="text-left">
-                                    <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-1.5 flex items-center gap-2">
-                                        {getChatPartner(activeConversation).name}
-                                        <Shield size={12} className="text-primary-500 fill-current opacity-20" />
-                                    </h2>
-                                    <div className="flex items-center gap-2">
-                                        <div className="size-1.5 rounded-full bg-emerald-500" />
-                                        <p className="text-[8px] text-emerald-600 font-black uppercase tracking-[0.2em] leading-none">
-                                            SECURE_NODE_ACTIVE
+                {/* Chat Area */}
+                <div className={cn(
+                    "flex-1 flex flex-col bg-slate-50/30 dark:bg-slate-900/10",
+                    !activeConversation ? "hidden md:flex items-center justify-center" : "flex"
+                )}>
+                    {activeConversation ? (
+                        <>
+                            {/* Chat Header */}
+                            <div className="px-4 py-3 sm:px-6 sm:py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="lg:hidden h-8 w-8 rounded-lg"
+                                        onClick={() => setActiveConversation(null)}
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </Button>
+                                    <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                                        <AvatarImage src={getChatPartner(activeConversation).avatar} />
+                                        <AvatarFallback className="bg-primary-100 text-primary-700 font-black text-xs uppercase">
+                                            {getChatPartner(activeConversation)?.name?.charAt(0)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-none mb-1 uppercase tracking-tight">
+                                            {getChatPartner(activeConversation).name}
+                                        </h2>
+                                        <p className="text-[9px] text-emerald-500 font-black uppercase tracking-[0.2em]">
+                                            Online
                                         </p>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                                    <Phone size={16} />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                                    <Video size={16} />
-                                </Button>
-                                <div className="w-px h-4 bg-slate-100 dark:bg-slate-800 mx-1" />
-                                <Button variant="ghost" size="icon" className="size-9 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                                    <MoreVertical size={16} />
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Tactical Message Repository */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-8 no-scrollbar scroll-smooth" ref={scrollRef}>
-                            <div className="space-y-8">
-                                <div className="flex justify-center">
-                                    <span className="px-4 py-1.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-xl text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 shadow-xl shadow-slate-200/20 dark:shadow-none border border-slate-50 dark:border-slate-700">
-                                        LOG_INITIALIZED: {format(new Date(), 'dd_MMM_yyyy').toUpperCase()}
-                                    </span>
+                                <div className="flex items-center gap-1 sm:gap-2">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600">
+                                        <Phone size={16} />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600">
+                                        <Video size={16} />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600">
+                                        <MoreVertical size={16} />
+                                    </Button>
                                 </div>
+                            </div>
 
-                                <AnimatePresence mode="popLayout">
+                            {/* Messages Area */}
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar" ref={scrollRef}>
+                                <div className="space-y-4 sm:space-y-6">
                                     {messages.map((msg) => {
                                         const senderId = msg.senderId?._id || msg.senderId;
                                         const currentId = currentUser?._id || currentUser?.id;
@@ -342,18 +321,18 @@ const ManagerChat = () => {
                                         return (
                                             <motion.div
                                                 key={msg._id}
-                                                initial={{ opacity: 0, x: isMe ? 20 : -20, scale: 0.95 }}
-                                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 className={cn(
-                                                    "flex w-full group",
+                                                    "flex w-full",
                                                     isMe ? "justify-end" : "justify-start"
                                                 )}
                                             >
                                                 <div className={cn(
-                                                    "max-w-[85%] sm:max-w-[70%] space-y-1.5 flex flex-col",
+                                                    "max-w-[85%] sm:max-w-[70%] space-y-1",
                                                     isMe ? "items-end" : "items-start"
                                                 )}>
-                                                    <div className="flex items-center gap-1.5 px-1">
+                                                    <div className="flex items-center gap-1.5 px-1 mb-1">
                                                         <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
                                                             {isMe ? `YOU (${currentUser?.name})` : (msg.senderId?.name || "Partner")}
                                                         </span>
@@ -361,96 +340,68 @@ const ManagerChat = () => {
                                                             "text-[7px] font-bold text-white uppercase tracking-widest px-1.5 py-0.5 rounded",
                                                             isMe ? "bg-slate-500" : "bg-primary-600"
                                                         )}>
-                                                            {isMe ? 'OPERATOR' : (msg.senderId?.role || 'EMPLOYEE').toUpperCase()}
+                                                            {isMe ? 'MANAGER' : (msg.senderId?.role || 'MEMBER').toUpperCase()}
                                                         </span>
                                                     </div>
                                                     <div className={cn(
-                                                        "px-4 py-3 rounded-2xl text-[13px] font-bold shadow-xl transition-all duration-300 relative",
+                                                        "px-4 py-2 sm:px-5 sm:py-3 rounded-2xl group relative",
                                                         isMe
-                                                            ? "bg-primary-600 text-white rounded-tr-none shadow-primary-500/10 hover:shadow-primary-500/20"
-                                                            : "bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-none border border-slate-50 dark:border-slate-700 shadow-slate-200/30 dark:shadow-none"
+                                                            ? "bg-primary-600 text-white rounded-tr-none shadow-md shadow-primary-500/10"
+                                                            : "bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-none border border-slate-100 dark:border-slate-800"
                                                     )}>
-                                                        {msg.text}
-                                                        <div className={cn(
-                                                            "absolute -bottom-1 h-3 w-4 transition-colors",
-                                                            isMe ? "right-0 bg-primary-600 rounded-bl-full" : "left-0 bg-white dark:bg-slate-800 border-l border-slate-50 dark:border-slate-700 rounded-br-full"
-                                                        )} />
+                                                        <p className="text-[13px] sm:text-sm font-bold leading-relaxed">{msg.text}</p>
                                                     </div>
-                                                    <div className={cn("flex items-center gap-2 px-1", isMe ? "justify-end" : "justify-start")}>
-                                                        {isMe && <CheckCheck size={12} className="text-primary-500 group-hover:scale-110 transition-transform" />}
-                                                        <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest opacity-60">
-                                                            T: {format(new Date(msg.createdAt), 'HH:mm:ss')}
+                                                    <div className={cn("flex items-center gap-1.5 px-1", isMe ? "justify-end" : "justify-start")}>
+                                                        <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest">
+                                                            {format(new Date(msg.createdAt), 'HH:mm')}
                                                         </span>
+                                                        {isMe && <CheckCheck size={10} className="text-primary-500" />}
                                                     </div>
                                                 </div>
                                             </motion.div>
                                         );
                                     })}
-                                </AnimatePresence>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Command Interface Input */}
-                        <div className="p-4 sm:p-6 bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800 z-10">
-                            <form
-                                onSubmit={handleSendMessage}
-                                className="relative flex items-center gap-3"
-                            >
-                                <div className="flex-1 relative group bg-slate-50 dark:bg-slate-800/30 rounded-[1.5rem] transition-all focus-within:ring-2 focus-within:ring-primary-500/20">
-                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-3">
-                                        <Terminal size={16} className="text-slate-300 group-focus-within:text-primary-500 transition-colors" />
-                                        <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
-                                    </div>
-                                    <Input
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder="INPUT SECURE COMMAND..."
-                                        className="h-14 pl-16 pr-14 bg-transparent border-none font-black text-[11px] uppercase tracking-[0.1em] placeholder:text-slate-300 placeholder:italic transition-all shadow-none"
-                                    />
+                            {/* Chat Input */}
+                            <div className="p-4 sm:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                                <div className="flex flex-col gap-2">
+                                    <form
+                                        onSubmit={handleSendMessage}
+                                        className="relative flex items-center gap-2 sm:gap-3"
+                                    >
+                                        <Input
+                                            value={newMessage}
+                                            onChange={(e) => {
+                                                setNewMessage(e.target.value);
+                                            }}
+                                            placeholder="Type message..."
+                                            className="h-11 sm:h-14 pl-5 sm:pl-6 pr-12 sm:pr-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl sm:rounded-3xl focus:ring-2 focus:ring-primary/10 text-xs sm:text-sm font-bold placeholder:text-slate-300 transition-all shadow-inner"
+                                        />
+                                        <Button
+                                            type="submit"
+                                            disabled={!newMessage.trim()}
+                                            className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl sm:rounded-3xl bg-primary-600 text-white shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-95 transition-all flex items-center justify-center p-0 shrink-0"
+                                        >
+                                            <Send size={18} className="sm:size-[22px] ml-0.5" />
+                                        </Button>
+                                    </form>
                                 </div>
-                                <Button
-                                    type="submit"
-                                    disabled={!newMessage.trim()}
-                                    className="h-14 w-14 rounded-[1.5rem] bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-2xl hover:bg-primary-600 hover:text-white transition-all flex items-center justify-center p-0 flex-shrink-0 active:scale-90"
-                                >
-                                    <Send size={20} className="ml-0.5 mt-0.5" />
-                                </Button>
-                            </form>
-                            <div className="mt-3 px-2 flex items-center justify-between text-[7px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                                <div className="flex items-center gap-1">
-                                    <Cpu size={10} /> CRYPTO_ENGINE_V4.2_ONLINE
-                                </div>
-                                <div>SIGNAL_STRENGTH: 98%</div>
                             </div>
-                        </div>
-                    </>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center space-y-8 max-w-sm"
-                    >
-                        <div className="relative mx-auto">
-                            <div className="absolute inset-0 bg-primary-500/20 blur-[60px] rounded-full animate-pulse" />
-                            <div className="w-28 h-28 bg-white dark:bg-slate-800 rounded-[2.5rem] flex items-center justify-center text-primary-600 mx-auto relative shadow-2xl border border-slate-50 dark:border-slate-700">
-                                <MessageSquare size={48} strokeWidth={2.5} className="fill-primary-500/10" />
+                        </>
+                    ) : (
+                        <div className="text-center space-y-4 max-w-sm px-10">
+                            <div className="w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center text-primary mx-auto mb-6 shadow-inner">
+                                <MessageSquare size={44} strokeWidth={2.5} />
                             </div>
-                            <div className="absolute -bottom-2 -right-2 size-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl ring-4 ring-white dark:ring-slate-900">
-                                <Zap size={18} className="fill-current" />
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Neural <span className="text-primary-600">Sync_Node</span></h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-relaxed max-w-[280px] mx-auto italic">
-                                Initialize high-priority encrypted uplink to begin tactical command coordination.
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Manager Messenger</h2>
+                            <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                                Connect directly with any employee in your organization. Send updates, queries or feedback instantly.
                             </p>
                         </div>
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                            <div className="size-2 rounded-full bg-slate-300 animate-ping" />
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Awaiting Link Initialization...</span>
-                        </div>
-                    </motion.div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

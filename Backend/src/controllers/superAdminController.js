@@ -489,7 +489,7 @@ exports.getMe = async (req, res, next) => {
       success: true,
       data: {
         ...user.toObject(),
-        role: 'superadmin' // Normalize for frontend
+        role: user.role || 'superadmin'
       }
     });
   } catch (err) {
