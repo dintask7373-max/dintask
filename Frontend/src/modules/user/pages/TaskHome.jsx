@@ -186,16 +186,6 @@ const TaskHome = () => {
                 </AnimatePresence>
             </div>
 
-            {/* -- Floating Action Button -- */}
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="fixed bottom-24 right-6 size-14 rounded-full bg-primary-600 text-white shadow-xl shadow-primary-500/40 flex items-center justify-center z-30 transition-transform"
-                onClick={() => navigate('/employee/tasks/new')}
-            >
-                <Plus size={28} />
-            </motion.button>
-
 
         </div>
     );

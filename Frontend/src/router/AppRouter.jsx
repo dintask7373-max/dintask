@@ -53,6 +53,7 @@ import JoinRequests from '@/modules/admin/pages/JoinRequests';
 import SalesManagement from '@/modules/admin/pages/SalesManagement';
 import ProjectApprovals from '@/modules/admin/pages/ProjectApprovals';
 import AdminProjects from '@/modules/admin/pages/Projects';
+import AdminNotifications from '@/modules/admin/pages/Notifications';
 
 import ManagerLogin from '@/modules/manager/pages/ManagerLogin';
 import ManagerRegister from '@/modules/manager/pages/ManagerRegister';
@@ -63,7 +64,7 @@ import ManagerProjectDetails from '@/modules/manager/pages/ProjectDetails';
 import AssignTask from '@/modules/manager/pages/AssignTask';
 
 import MyTasks from '@/modules/manager/pages/MyTasks';
-import TaskDelegation from '@/modules/manager/pages/TaskDelegation';
+
 import TeamManagement from '@/modules/manager/pages/TeamManagement';
 import TeamProgress from '@/modules/manager/pages/TeamProgress';
 import ManagerSchedule from '@/modules/manager/pages/Schedule';
@@ -102,7 +103,6 @@ import Notifications from '@/modules/user/pages/Notifications';
 import Security from '@/modules/user/pages/Security';
 import Preferences from '@/modules/user/pages/Preferences';
 import HelpLegal from '@/modules/user/pages/HelpLegal';
-import AddTask from '@/modules/user/pages/AddTask';
 import NotificationsList from '@/modules/user/pages/NotificationsList';
 import HelpCenter from '@/modules/user/pages/HelpCenter';
 import ChatSupport from '@/modules/user/pages/ChatSupport';
@@ -112,6 +112,7 @@ import TermsOfService from '@/modules/user/pages/TermsOfService';
 import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
 import Checkout from '@/modules/user/pages/Checkout';
+import AddNote from '@/modules/user/pages/AddNote';
 import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
 // Super Admin Pages
@@ -191,6 +192,7 @@ const AppRouter = () => {
                 <Route path="subscription" element={<AdminSubscription />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="requests" element={<JoinRequests />} />
+                <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="support" element={<SupportCenter />} />
             </Route>
 
@@ -207,9 +209,10 @@ const AppRouter = () => {
             <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
                 <Route index element={<EmployeeDashboard />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />
-                <Route path="tasks/new" element={<AddTask />} />
                 <Route path="calendar" element={<EmployeeCalendar />} />
                 <Route path="notes" element={<EmployeeNotes />} />
+                <Route path="notes/new" element={<AddNote />} />
+                <Route path="notes/edit/:id" element={<AddNote />} />
                 <Route path="notifications" element={<NotificationsList />} />
                 <Route path="chat" element={<EmployeeChat />} />
                 <Route path="profile" element={<EmployeeProfile />} />
@@ -271,7 +274,7 @@ const AppRouter = () => {
                 <Route path="projects/:id" element={<ManagerProjectDetails />} />
                 <Route path="assign-task" element={<AssignTask />} />
                 <Route path="my-tasks" element={<MyTasks />} />
-                <Route path="delegation" element={<TaskDelegation />} />
+
                 <Route path="team" element={<TeamManagement />} />
                 <Route path="progress" element={<TeamProgress />} />
                 <Route path="chat" element={<ManagerChat />} />

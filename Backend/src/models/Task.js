@@ -10,15 +10,22 @@ const TaskSchema = new mongoose.Schema({
   },
   project: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Project'
+    ref: 'Project',
+    required: [true, 'Tasks must be linked to a Mission Project']
   },
   assignedTo: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee' // Or User, if you have a base User model. Using Employee for now based on context.
+    ref: 'Employee'
   }],
+  subTasks: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+    status: { type: String, enum: ['pending', 'in_progress', 'completed'], default: 'pending' },
+    progress: { type: Number, default: 0 }
+  }],
+  statusNotes: { type: String },
   assignedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Manager' // Or Admin.
+    ref: 'Manager'
   },
   team: {
     type: mongoose.Schema.Types.ObjectId,
@@ -31,7 +38,7 @@ const TaskSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'in_progress', 'completed', 'review'],
+    enum: ['pending', 'in_progress', 'completed', 'review', 'overdue'],
     default: 'pending'
   },
   priority: {
@@ -47,6 +54,20 @@ const TaskSchema = new mongoose.Schema({
     default: 0
   },
   labels: [String],
+  attachments: [{
+    name: String,
+    url: String,
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+  submissionNote: {
+    type: String
+  },
+  activityLog: [{
+    user: { type: mongoose.Schema.Types.ObjectId, refPath: 'activityLog.userModel' },
+    userModel: { type: String, enum: ['Admin', 'Manager', 'Employee', 'SalesExecutive'] },
+    action: String,
+    timestamp: { type: Date, default: Date.now }
+  }],
   createdAt: {
     type: Date,
     default: Date.now

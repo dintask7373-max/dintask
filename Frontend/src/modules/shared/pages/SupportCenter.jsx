@@ -15,7 +15,10 @@ import {
     AlertTriangle,
     Filter,
     ArrowUpRight,
-    Loader2
+    Loader2,
+    Paperclip,
+    X,
+    Star
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -31,18 +34,15 @@ import {
 import { Sheet, SheetContent } from '@/shared/components/ui/sheet';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/utils/cn';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/shared/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { toast } from 'sonner';
 import useAuthStore from '@/store/authStore';
 import useTicketStore from '@/store/ticketStore';
+import socketService from '@/services/socket';
 
 const SupportCenter = () => {
     const { user, role } = useAuthStore();
+<<<<<<< HEAD
     const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket } = useTicketStore();
     const location = useLocation();
     const isSalesSupport = location.pathname === '/sales/support';
@@ -51,6 +51,10 @@ const SupportCenter = () => {
         fetchTickets();
         fetchTicketStats();
     }, [fetchTickets, fetchTicketStats]);
+=======
+    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket, initializeSocket, uploadFiles, giveFeedback } = useTicketStore();
+    const fileInputRef = React.useRef(null);
+>>>>>>> 6dfc12997f3e2414b641995ff74b7061e283e305
 
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState(role === 'admin' ? 'received' : 'sent');
@@ -67,6 +71,68 @@ const SupportCenter = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [replyMessage, setReplyMessage] = useState('');
     const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [userRating, setUserRating] = useState(0);
+    const [userFeedback, setUserFeedback] = useState('');
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+    const [typingUser, setTypingUser] = useState(null);
+    const typingTimeoutRef = React.useRef(null);
+
+    React.useEffect(() => {
+        fetchTickets();
+        fetchTicketStats();
+        if (user?._id) initializeSocket(user._id);
+    }, [fetchTickets, fetchTicketStats, initializeSocket, user?._id]);
+
+    // Sync selectedTicket with store data for real-time updates
+    React.useEffect(() => {
+        if (selectedTicket) {
+            const updated = tickets.find(t => t._id === selectedTicket._id);
+            if (updated) {
+                if (updated.responses?.length !== selectedTicket.responses?.length || updated.status !== selectedTicket.status) {
+                    setSelectedTicket(updated);
+                }
+            }
+        }
+    }, [tickets, selectedTicket]);
+
+    // Room Management & Listeners
+    React.useEffect(() => {
+        if (selectedTicket) {
+            socketService.joinTicket(selectedTicket._id);
+
+            // Instant message reception for the active ticket
+            socketService.onSupportResponse(({ ticketId, updatedTicket }) => {
+                if (ticketId === selectedTicket._id) {
+                    setSelectedTicket(updatedTicket);
+                }
+            });
+
+            socketService.onSupportTyping(({ ticketId, userName }) => {
+                if (ticketId === selectedTicket._id) {
+                    setTypingUser(userName);
+                }
+            });
+
+            const stopTypingListener = (ticketId) => {
+                if (ticketId === selectedTicket._id) {
+                    setTypingUser(null);
+                }
+            };
+
+            if (socketService.socket) {
+                socketService.socket.on('support_stop_typing', stopTypingListener);
+            }
+
+            return () => {
+                socketService.leaveTicket(selectedTicket._id);
+                if (socketService.socket) {
+                    socketService.socket.off('support_stop_typing', stopTypingListener);
+                }
+            };
+        }
+    }, [selectedTicket]);
 
     const handleTicketSelect = (ticket) => {
         setSelectedTicket(ticket);
@@ -77,12 +143,30 @@ const SupportCenter = () => {
     const handleReply = async () => {
         if (!replyMessage.trim() || !selectedTicket) return;
         setIsSubmittingReply(true);
-        // Assuming replyToTicket exists in store and handles API
+
+        // Stop typing immediately on send
+        socketService.socket?.emit('support_stop_typing', selectedTicket._id);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
         const success = await replyToTicket(selectedTicket._id, replyMessage);
         if (success) {
             setReplyMessage('');
         }
         setIsSubmittingReply(false);
+    };
+
+    const handleTextareaChange = (e) => {
+        setReplyMessage(e.target.value);
+        if (!selectedTicket) return;
+
+        // Emit typing
+        socketService.emitSupportTyping(selectedTicket._id, user?.name || 'Someone');
+
+        // Debounce stop typing
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            socketService.socket?.emit('support_stop_typing', selectedTicket._id);
+        }, 3000);
     };
 
     const handleStatusChange = async (value) => {
@@ -93,109 +177,231 @@ const SupportCenter = () => {
         }
     };
 
-    const renderDetailContent = () => (
-        <div className="h-full flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 rounded-[2.5rem] overflow-hidden shadow-2xl">
-            {/* Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
-                <div className="flex justify-between items-start mb-4">
-                    {role?.startsWith('superadmin') ? (
-                        <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
-                            <SelectTrigger className={cn("h-7 w-auto min-w-[100px] text-[10px] font-black uppercase tracking-widest border-none px-3", getStatusStyle(selectedTicket.status))}>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Open">Open</SelectItem>
-                                <SelectItem value="Pending">Pending</SelectItem>
-                                <SelectItem value="Resolved">Resolved</SelectItem>
-                                <SelectItem value="Closed">Closed</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    ) : (
-                        <Badge className={cn("px-3 py-1 text-[10px] font-black uppercase tracking-widest", getStatusStyle(selectedTicket.status))}>
-                            {selectedTicket.status}
-                        </Badge>
-                    )}
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {new Date(selectedTicket.createdAt).toLocaleDateString()}
-                    </span>
-                </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight leading-snug mb-2">
-                    {selectedTicket.subject}
-                </h3>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <User size={12} /> {selectedTicket.creator?.name || 'Unknown User'}
-                </div>
-            </div>
-
-            {/* Content Scroll */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
-                        {selectedTicket.description}
-                    </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <MessageSquare size={12} /> Discussion
-                    </label>
-                    <div className="space-y-4">
-                        {selectedTicket.responses?.length > 0 ? selectedTicket.responses.map((msg, i) => {
-                            const userModel = role?.startsWith('superadmin') ? 'SuperAdmin' :
-                                role === 'admin' ? 'Admin' :
-                                    role === 'sales' ? 'SalesExecutive' :
-                                        role.charAt(0).toUpperCase() + role.slice(1);
-                            const isMe = msg.responderModel === userModel;
-                            return (
-                                <div key={i} className={cn("flex gap-3", isMe ? "flex-row-reverse" : "")}>
-                                    <div className={cn("size-8 rounded-full flex items-center justify-center shrink-0", isMe ? "bg-[#4461f2] text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
-                                        <User size={14} />
-                                    </div>
-                                    <div className={cn("flex-1 space-y-1", isMe ? "text-right" : "")}>
-                                        <div className={cn("p-3 rounded-2xl text-xs inline-block text-left max-w-[85%]", isMe ? "bg-[#4461f2] text-white rounded-tr-sm" : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-tl-sm")}>
-                                            {msg.message}
-                                        </div>
-                                        <p className="text-[9px] text-slate-400 font-bold">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                    </div>
-                                </div>
-                            );
-                        }) : (
-                            <div className="text-center py-10 text-slate-300 dark:text-slate-700">
-                                <p className="text-[10px] uppercase tracking-widest font-bold">No messages yet</p>
-                            </div>
+    const renderDetailContent = () => {
+        return (
+            <div className="h-full flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/40 dark:border-slate-800/40 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                {/* Header */}
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                    <div className="flex justify-between items-start mb-4">
+                        {role?.startsWith('superadmin') ? (
+                            <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
+                                <SelectTrigger className={cn("h-7 w-auto min-w-[100px] text-[10px] font-black uppercase tracking-widest border-none px-3", getStatusStyle(selectedTicket.status))}>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Open">Open</SelectItem>
+                                    <SelectItem value="Pending">Pending</SelectItem>
+                                    <SelectItem value="Resolved">Resolved</SelectItem>
+                                    <SelectItem value="Closed">Closed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <Badge className={cn("px-3 py-1 text-[10px] font-black uppercase tracking-widest", getStatusStyle(selectedTicket.status))}>
+                                {selectedTicket.status}
+                            </Badge>
                         )}
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {selectedTicket.createdAt && new Date(selectedTicket.createdAt).toLocaleDateString()}
+                        </span>
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight leading-snug mb-2">
+                        {selectedTicket.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        <User size={12} /> {selectedTicket.creator?.name || 'Unknown User'}
+                    </div>
+                </div>
+
+                {/* Content Scroll */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {selectedTicket.description}
+                        </div>
+                    </div>
+
+                    {selectedTicket.attachments?.length > 0 && (
+                        <div className="space-y-3">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Attachments</label>
+                            <div className="flex flex-wrap gap-3">
+                                {selectedTicket.attachments.map((url, i) => (
+                                    <a
+                                        key={i}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block transition-transform hover:scale-105"
+                                    >
+                                        {url.match(/\.(jpg|jpeg|png|webp)$/i) ? (
+                                            <div className="relative group size-20 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
+                                                <img src={url} alt={`Attachment ${i}`} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <ArrowUpRight size={16} className="text-white" />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                                <FileText size={14} className="text-[#4461f2]" />
+                                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest">View File</span>
+                                            </div>
+                                        )}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedTicket.status === 'Resolved' && selectedTicket.creator?._id === user?.id && !selectedTicket.rating && (
+                        <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-[2rem] border border-blue-100 dark:border-blue-800/20 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-[10px] font-black text-[#4461f2] uppercase tracking-widest">Ticket Resolved</h4>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => updateTicketStatus(selectedTicket._id, 'Open')}
+                                    className="h-7 text-[9px] font-black uppercase tracking-widest border-blue-200 dark:border-blue-800 text-blue-600 bg-white dark:bg-slate-900 rounded-lg"
+                                >
+                                    Re-open Issue
+                                </Button>
+                            </div>
+                            <div className="space-y-3">
+                                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">How would you rate our support?</p>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => setUserRating(star)}
+                                            className="transition-transform active:scale-95"
+                                        >
+                                            <Star
+                                                size={20}
+                                                className={cn(
+                                                    "transition-colors",
+                                                    star <= userRating ? "fill-yellow-400 text-yellow-400" : "text-slate-300"
+                                                )}
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                                <Textarea
+                                    placeholder="Any feedback for us?"
+                                    className="min-h-[60px] text-[10px] bg-white dark:bg-slate-950 border-none rounded-xl"
+                                    value={userFeedback}
+                                    onChange={(e) => setUserFeedback(e.target.value)}
+                                />
+                                <Button
+                                    onClick={async () => {
+                                        if (userRating === 0) return toast.error("Please provide a rating");
+                                        setIsSubmittingFeedback(true);
+                                        await giveFeedback(selectedTicket._id, userRating, userFeedback);
+                                        setIsSubmittingFeedback(false);
+                                    }}
+                                    disabled={isSubmittingFeedback || userRating === 0}
+                                    className="w-full h-8 bg-[#4461f2] text-white text-[9px] font-black uppercase tracking-widest rounded-xl"
+                                >
+                                    {isSubmittingFeedback ? <Loader2 size={12} className="animate-spin" /> : 'Submit & Close Ticket'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedTicket.rating > 0 && (
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">User Rating:</span>
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                            key={star}
+                                            size={10}
+                                            className={cn(star <= selectedTicket.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300")}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            {selectedTicket.feedback && (
+                                <p className="text-[10px] font-medium text-slate-500 italic">"{selectedTicket.feedback}"</p>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <MessageSquare size={12} /> Discussion
+                        </label>
+                        <div className="space-y-4">
+                            {selectedTicket.responses?.length > 0 ? selectedTicket.responses.map((msg, i) => {
+                                const isMe = msg.responder === (user?.id || user?._id);
+                                return (
+                                    <div key={i} className={cn("flex gap-3", isMe ? "flex-row-reverse" : "")}>
+                                        <div className={cn("size-8 rounded-full flex items-center justify-center shrink-0", isMe ? "bg-[#4461f2] text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
+                                            <User size={14} />
+                                        </div>
+                                        <div className={cn("flex-1 space-y-1", isMe ? "text-right" : "")}>
+                                            <div className={cn("p-3 rounded-2xl text-xs inline-block text-left max-w-[85%]", isMe ? "bg-[#4461f2] text-white rounded-tr-sm" : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-tl-sm")}>
+                                                {msg.message}
+                                            </div>
+                                            <p className="text-[9px] text-slate-400 font-bold">
+                                                {msg.createdAt && new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            }) : (
+                                <div className="text-center py-10 text-slate-300 dark:text-slate-700">
+                                    <p className="text-[10px] uppercase tracking-widest font-bold">No messages yet</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Input Area */}
+                <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                    <AnimatePresence>
+                        {typingUser && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                className="flex items-center gap-2 mb-2 ml-2"
+                            >
+                                <div className="flex gap-1">
+                                    <span className="size-1 bg-[#4461f2] rounded-full animate-bounce" />
+                                    <span className="size-1 bg-[#4461f2] rounded-full animate-bounce [animation-delay:0.2s]" />
+                                    <span className="size-1 bg-[#4461f2] rounded-full animate-bounce [animation-delay:0.4s]" />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-400 italic uppercase tracking-widest">{typingUser} is typing...</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    <div className="relative">
+                        <Textarea
+                            placeholder="Type your reply..."
+                            className="min-h-[80px] w-full resize-none pr-12 text-xs bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-[#4461f2]/20"
+                            value={replyMessage}
+                            onChange={handleTextareaChange}
+                        />
+                        <Button
+                            size="icon"
+                            onClick={handleReply}
+                            disabled={isSubmittingReply || !replyMessage.trim()}
+                            className="absolute bottom-2 right-2 size-8 bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20"
+                        >
+                            {isSubmittingReply ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={16} />}
+                        </Button>
                     </div>
                 </div>
             </div>
-
-            {/* Input Area */}
-            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                <div className="relative">
-                    <Textarea
-                        placeholder="Type your reply..."
-                        className="min-h-[80px] w-full resize-none pr-12 text-xs bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-[#4461f2]/20"
-                        value={replyMessage}
-                        onChange={(e) => setReplyMessage(e.target.value)}
-                    />
-                    <Button
-                        size="icon"
-                        onClick={handleReply}
-                        disabled={isSubmittingReply || !replyMessage.trim()}
-                        className="absolute bottom-2 right-2 size-8 bg-[#4461f2] hover:bg-[#3451e2] text-white rounded-xl shadow-lg shadow-[#4461f2]/20"
-                    >
-                        {isSubmittingReply ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={16} />}
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
+        );
+    };
 
     const categories = ['Technical', 'Billing', 'Account', 'Feature Request', 'Other'];
     const priorities = ['Low', 'Medium', 'High', 'Urgent'];
 
     // Filter Logic
-    const filteredTickets = tickets.filter(t => {
+    const filteredTickets = (tickets || []).filter(t => {
         const matchesSearch = t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             t.ticketId?.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -205,31 +411,30 @@ const SupportCenter = () => {
 
         if (role === 'admin') {
             if (activeTab === 'received') {
-                // Team tickets: NOT escalated and NOT created by me (although creator check is redundant if valid logic)
-                // Filter out tickets I created myself just in case
                 return !t.isEscalatedToSuperAdmin && t.creator?._id !== user?.id && matchesSearch;
             } else {
-                // My tickets: Created by me (and implicitly escalated if I am admin)
                 return t.creator?._id === user?.id && matchesSearch;
             }
         }
 
-        // Employee, Manager, Sales - They only see their own tickets
         return t.creator?._id === user?.id && matchesSearch;
     });
 
     const handleCreateTicket = async () => {
         if (!newTicket.subject || !newTicket.description) return;
 
-        const ticketData = {
-            ...newTicket,
-            // Backend handles the rest
-        };
+        let attachmentUrls = [];
+        if (selectedFiles.length > 0) {
+            setIsUploading(true);
+            attachmentUrls = await uploadFiles(selectedFiles);
+            setIsUploading(false);
+        }
 
-        const success = await addTicket(ticketData);
+        const success = await addTicket({ ...newTicket, attachments: attachmentUrls });
         if (success) {
             setIsCreateModalOpen(false);
             setNewTicket({ subject: '', description: '', category: 'Technical', priority: 'Medium' });
+            setSelectedFiles([]);
         }
     };
 
@@ -254,6 +459,7 @@ const SupportCenter = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden pb-12">
+<<<<<<< HEAD
             {/* Enhanced Background Visibility - Removed for Sales Support as per request */}
             {!isSalesSupport && (
                 <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
@@ -265,10 +471,18 @@ const SupportCenter = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
                 </div>
             )}
+=======
+            <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
+                <img
+                    src="/WLCOMPAGE .png"
+                    alt="Background"
+                    className="w-full h-full object-cover object-center opacity-70 dark:opacity-30"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
+            </div>
+>>>>>>> 6dfc12997f3e2414b641995ff74b7061e283e305
 
-            {/* Support Content */}
             <div className="w-full max-w-[1100px] mt-12 px-6 relative z-10 space-y-8">
-                {/* Header Row */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
@@ -336,12 +550,51 @@ const SupportCenter = () => {
                                                 onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
                                             />
                                         </div>
+
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Attachments</p>
+                                                <button
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="text-[10px] font-black text-[#4461f2] uppercase tracking-widest hover:underline"
+                                                >
+                                                    Add Files
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                className="hidden"
+                                                multiple
+                                                onChange={(e) => {
+                                                    const files = Array.from(e.target.files);
+                                                    setSelectedFiles(prev => [...prev, ...files].slice(0, 5));
+                                                }}
+                                            />
+                                            {selectedFiles.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedFiles.map((file, i) => (
+                                                        <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <Paperclip size={10} className="text-slate-400" />
+                                                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[100px]">{file.name}</span>
+                                                            <button
+                                                                onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                                                                className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
+                                                            >
+                                                                <X size={10} className="text-slate-400" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
                                         <Button
                                             onClick={handleCreateTicket}
-                                            disabled={loading}
+                                            disabled={loading || isUploading}
                                             className="w-full h-12 bg-[#4461f2] hover:bg-[#3451e2] text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-[#4461f2]/20 border-none transition-all"
                                         >
-                                            {loading ? 'SENDING...' : `SEND TO ${role === 'admin' ? 'SUPER ADMIN' : 'ADMIN'}`}
+                                            {loading || isUploading ? (isUploading ? 'UPLOADING FILES...' : 'SENDING...') : `SEND TO ${role === 'admin' ? 'SUPER ADMIN' : 'ADMIN'}`}
                                         </Button>
                                     </div>
                                 </DialogContent>
@@ -350,7 +603,6 @@ const SupportCenter = () => {
                     </div>
                 </header>
 
-                {/* Role Specific Tabs */}
                 {role === 'admin' && (
                     <div className="flex gap-2 p-1.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl w-fit shadow-sm border border-white/20 dark:border-slate-800/40">
                         <button
@@ -369,7 +621,6 @@ const SupportCenter = () => {
                 )}
 
                 <div className="grid lg:grid-cols-12 gap-8">
-                    {/* Tickets List */}
                     <div className="lg:col-span-8 space-y-6">
                         <div className="relative group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#4461f2] transition-colors" size={18} />
@@ -423,7 +674,7 @@ const SupportCenter = () => {
                                                                 <AlertCircle size={10} /> {ticket.priority}
                                                             </span>
                                                         </div>
-                                                        <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-[#4461f2] transition-colors uppercase tracking-tight text-[15px]">{ticket.subject}</h3>
+                                                        <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-[#4461f2] transition-colors uppercase tracking-tight text-[15px]">{ticket.title}</h3>
                                                         <div className="flex items-center gap-5 mt-2">
                                                             <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                                                                 <User size={12} className="text-[#4461f2]/50" />
@@ -473,7 +724,6 @@ const SupportCenter = () => {
                         </div>
                     </div>
 
-                    {/* Detail Panel Desktop */}
                     <div className="hidden lg:block lg:col-span-4 h-[calc(100vh-140px)] sticky top-24">
                         <AnimatePresence mode="wait">
                             {selectedTicket ? (

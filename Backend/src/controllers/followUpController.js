@@ -6,10 +6,17 @@ const Lead = require('../models/Lead');
 // @access  Private
 exports.getFollowUps = async (req, res) => {
     try {
-        let query = { adminId: req.user.adminId };
+        let query = {};
+
+        // Determine adminId based on role
+        if (req.user.role === 'admin') {
+            query.adminId = req.user.id;
+        } else {
+            query.adminId = req.user.adminId;
+        }
 
         // If sales rep, only show their follow-ups
-        if (req.user.role === 'sales') {
+        if (req.user.role === 'sales' || req.user.role === 'sales_executive') {
             query.salesRepId = req.user.id;
         }
 
@@ -20,6 +27,7 @@ exports.getFollowUps = async (req, res) => {
 
         const followUps = await FollowUp.find(query)
             .populate('leadId', 'name company email')
+            .populate('salesRepId', 'name email')
             .sort({ scheduledAt: 1 });
 
         res.status(200).json({ success: true, count: followUps.length, data: followUps });
@@ -33,8 +41,35 @@ exports.getFollowUps = async (req, res) => {
 // @access  Private
 exports.createFollowUp = async (req, res) => {
     try {
-        req.body.adminId = req.user.adminId;
-        req.body.salesRepId = req.user.id; // Automatically assign to creator
+        // Determine adminId based on role
+        if (req.user.role === 'admin') {
+            req.body.adminId = req.user.id;
+        } else {
+            req.body.adminId = req.user.adminId;
+        }
+
+        // If Sales Executive, verify the lead belongs to them
+        if (req.user.role === 'sales' || req.user.role === 'sales_executive') {
+            const lead = await Lead.findById(req.body.leadId);
+            if (!lead) {
+                return res.status(404).json({ success: false, error: 'Lead not found' });
+            }
+            if (lead.owner.toString() !== req.user.id) {
+                return res.status(403).json({ success: false, error: 'Not authorized to create follow-up for this lead' });
+            }
+            req.body.salesRepId = req.user.id;
+        }
+        // If Admin, allow assigning to specific sales rep, else default to self
+        else if (req.user.role === 'admin') {
+            if (req.body.salesRepId) {
+                // Optional: Validate salesRepId exists and is part of the workspace
+            } else {
+                req.body.salesRepId = req.user.id;
+            }
+        } else {
+            // Fallback for other roles if any
+            req.body.salesRepId = req.user.id;
+        }
 
         const followUp = await FollowUp.create(req.body);
 

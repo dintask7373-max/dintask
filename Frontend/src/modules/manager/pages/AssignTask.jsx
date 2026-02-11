@@ -130,7 +130,7 @@ const AssignTask = () => {
             });
 
             toast.success("Task created and assigned successfully");
-            navigate('/manager/delegation');
+            navigate('/manager/my-tasks');
         } catch (error) {
             console.error(error);
             toast.error("Failed to create task");
@@ -175,7 +175,7 @@ const AssignTask = () => {
                         </CardHeader>
                         <CardContent className="p-5 sm:p-8 space-y-5">
                             <div className="space-y-1.5">
-                                <Label htmlFor="title" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Objective Title</Label>
+                                <Label htmlFor="title" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Task Title</Label>
                                 <Input
                                     id="title"
                                     name="title"
@@ -187,7 +187,7 @@ const AssignTask = () => {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="description" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Operational Brief</Label>
+                                <Label htmlFor="description" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Description</Label>
                                 <Textarea
                                     id="description"
                                     name="description"
@@ -200,7 +200,7 @@ const AssignTask = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Priority Class</Label>
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Priority</Label>
                                     <Select
                                         value={formData.priority}
                                         onValueChange={(val) => handleSelectChange('priority', val)}
@@ -218,7 +218,7 @@ const AssignTask = () => {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="labels" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Tactical Tags</Label>
+                                    <Label htmlFor="labels" className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Tags</Label>
                                     <Input
                                         id="labels"
                                         name="labels"
@@ -264,7 +264,7 @@ const AssignTask = () => {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Tactical Team (Optional)</Label>
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Team (Optional)</Label>
                                 <Select
                                     value={formData.teamId}
                                     onValueChange={(val) => handleSelectChange('teamId', val)}
@@ -284,7 +284,7 @@ const AssignTask = () => {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset ID</Label>
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Assign To</Label>
                                 <Select
                                     value={formData.assignedTo}
                                     onValueChange={(val) => handleSelectChange('assignedTo', val)}
@@ -314,7 +314,7 @@ const AssignTask = () => {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Time Horizon</Label>
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Deadline</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button

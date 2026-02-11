@@ -20,6 +20,10 @@ const getAuthToken = () => {
 
 const useAdminStore = create((set) => ({
     dashboardStats: null,
+    revenueChartData: null,
+    pipelineChartData: null,
+    projectHealthChartData: null,
+    actionableLists: null,
     loading: false,
     error: null,
 
@@ -47,8 +51,87 @@ const useAdminStore = create((set) => ({
         }
     },
 
+    // Fetch Revenue Chart Data
+    fetchRevenueChart: async (period = 6) => {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await axios.get(`${API_URL}/admin/dashboard-charts/revenue?period=${period}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ revenueChartData: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch revenue chart:', error);
+        }
+    },
+
+    // Fetch Sales Pipeline Chart Data
+    fetchPipelineChart: async () => {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await axios.get(`${API_URL}/admin/dashboard-charts/pipeline`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ pipelineChartData: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch pipeline chart:', error);
+        }
+    },
+
+    // Fetch Project Health Chart Data
+    fetchProjectHealthChart: async () => {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await axios.get(`${API_URL}/admin/dashboard-charts/projects`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ projectHealthChartData: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch project health chart:', error);
+        }
+    },
+
+    // Fetch Actionable Lists
+    fetchActionableLists: async () => {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await axios.get(`${API_URL}/admin/dashboard-actionable-lists`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ actionableLists: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch actionable lists:', error);
+        }
+    },
+
     // Clear dashboard stats
-    clearDashboardStats: () => set({ dashboardStats: null, error: null })
+    clearDashboardStats: () => set({
+        dashboardStats: null,
+        revenueChartData: null,
+        pipelineChartData: null,
+        projectHealthChartData: null,
+        actionableLists: null,
+        error: null
+    })
 }));
 
 export default useAdminStore;

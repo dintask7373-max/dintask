@@ -2,7 +2,8 @@ const express = require('express');
 const {
   getProjects,
   getProject,
-  updateProject
+  updateProject,
+  deleteProject
 } = require('../controllers/projectController');
 
 const { protect, authorize } = require('../middleware/auth');
@@ -19,5 +20,8 @@ router.get('/:id', getProject);
 
 // Update project (Managers update their own)
 router.put('/:id', authorize('admin', 'manager'), updateProject);
+
+// Delete project (Cascade delete tasks)
+router.delete('/:id', authorize('admin', 'manager'), deleteProject);
 
 module.exports = router;

@@ -1,26 +1,69 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
     DollarSign,
     FolderKanban,
     Users,
     Bell,
     TrendingUp,
-    Loader2
+    Loader2,
+    ArrowRight,
+    Building2,
+    Calendar,
+    Phone,
+    AlertCircle
 } from 'lucide-react';
+import {
+    LineChart,
+    Line,
+    BarChart,
+    Bar,
+    PieChart,
+    Pie,
+    Cell,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Legend
+} from 'recharts';
 import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
 import useAuthStore from '@/store/authStore';
 import useAdminStore from '@/store/adminStore';
-import { Card, CardContent } from '@/shared/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/utils/cn';
+import { formatDistanceToNow } from 'date-fns';
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { dashboardStats, loading, fetchDashboardStats } = useAdminStore();
+    const {
+        dashboardStats,
+        revenueChartData,
+        pipelineChartData,
+        projectHealthChartData,
+        actionableLists,
+        loading,
+        fetchDashboardStats,
+        fetchRevenueChart,
+        fetchPipelineChart,
+        fetchProjectHealthChart,
+        fetchActionableLists
+    } = useAdminStore();
+
+    const [revenuePeriod, setRevenuePeriod] = useState(6);
 
     useEffect(() => {
         fetchDashboardStats();
-    }, [fetchDashboardStats]);
+        fetchRevenueChart(revenuePeriod);
+        fetchPipelineChart();
+        fetchProjectHealthChart();
+        fetchActionableLists();
+    }, [fetchDashboardStats, fetchRevenueChart, fetchPipelineChart, fetchProjectHealthChart, fetchActionableLists, revenuePeriod]);
 
     const stats = [
         {
@@ -69,6 +112,24 @@ const AdminDashboard = () => {
         }
     ];
 
+    const getStatusColor = (status) => {
+        const colors = {
+            'New': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            'Contacted': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+            'Meeting Done': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+            'Proposal Sent': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            'Won': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+            'Lost': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'Open': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            'Pending': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            'Escalated': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'High': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'Medium': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            'Low': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+        };
+        return colors[status] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
+    };
+
     return (
         <motion.div
             initial="initial"
@@ -100,54 +161,347 @@ const AdminDashboard = () => {
 
             {/* High-Level Metrics Cards */}
             {!loading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {stats.map((stat, i) => (
-                        <motion.div key={i} variants={fadeInUp}>
-                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 rounded-2xl sm:rounded-3xl">
-                                <CardContent className="p-4 sm:p-6">
-                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                        <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 duration-300`}>
-                                            <stat.icon size={20} className="sm:w-6 sm:h-6" />
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        {stats.map((stat, i) => (
+                            <motion.div key={i} variants={fadeInUp}>
+                                <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 rounded-2xl sm:rounded-3xl">
+                                    <CardContent className="p-4 sm:p-6">
+                                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                            <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 duration-300`}>
+                                                <stat.icon size={20} className="sm:w-6 sm:h-6" />
+                                            </div>
+                                            {stat.trend && (
+                                                <Badge variant="secondary" className="bg-slate-50 dark:bg-slate-800 text-[8px] sm:text-[10px] font-black uppercase tracking-tighter px-2 h-5 flex items-center gap-1">
+                                                    <TrendingUp size={10} />
+                                                    {stat.trend}
+                                                </Badge>
+                                            )}
                                         </div>
-                                        {stat.trend && (
-                                            <Badge variant="secondary" className="bg-slate-50 dark:bg-slate-800 text-[8px] sm:text-[10px] font-black uppercase tracking-tighter px-2 h-5 flex items-center gap-1">
-                                                <TrendingUp size={10} />
-                                                {stat.trend}
-                                            </Badge>
-                                        )}
-                                    </div>
+                                        <div>
+                                            <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">{stat.title}</p>
+                                            <h4 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tighter">{stat.value}</h4>
+                                            <p className="text-[9px] sm:text-xs text-slate-500 font-medium mt-1">{stat.description}</p>
+                                            {stat.breakdown && (
+                                                <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">{stat.breakdown}</p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Business Performance Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Revenue Trend Chart */}
+                        <motion.div variants={fadeInUp} className="lg:col-span-2">
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
                                     <div>
-                                        <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">{stat.title}</p>
-                                        <h4 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tighter">{stat.value}</h4>
-                                        <p className="text-[9px] sm:text-xs text-slate-500 font-medium mt-1">{stat.description}</p>
-                                        {stat.breakdown && (
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">{stat.breakdown}</p>
-                                        )}
+                                        <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest">Revenue Trend</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Monthly Performance</CardDescription>
                                     </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant={revenuePeriod === 6 ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setRevenuePeriod(6)}
+                                            className={cn(
+                                                "h-8 px-3 text-[10px] font-black uppercase",
+                                                revenuePeriod === 6 && "bg-primary-600 text-white"
+                                            )}
+                                        >
+                                            6M
+                                        </Button>
+                                        <Button
+                                            variant={revenuePeriod === 12 ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setRevenuePeriod(12)}
+                                            className={cn(
+                                                "h-8 px-3 text-[10px] font-black uppercase",
+                                                revenuePeriod === 12 && "bg-primary-600 text-white"
+                                            )}
+                                        >
+                                            12M
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0">
+                                    <ResponsiveContainer width="100%" height={250}>
+                                        <LineChart data={revenueChartData || []}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                            <XAxis
+                                                dataKey="name"
+                                                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <YAxis
+                                                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: '#1e293b',
+                                                    border: 'none',
+                                                    borderRadius: '12px',
+                                                    color: '#fff',
+                                                    fontSize: '12px'
+                                                }}
+                                                formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="revenue"
+                                                stroke="#10b981"
+                                                strokeWidth={3}
+                                                dot={{ fill: '#10b981', r: 4 }}
+                                                activeDot={{ r: 6 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </CardContent>
                             </Card>
                         </motion.div>
-                    ))}
-                </div>
-            )}
 
-            {/* Placeholder for future sections */}
-            {!loading && (
-                <motion.div variants={fadeInUp} className="mt-8">
-                    <Card className="border-none shadow-sm bg-slate-50/50 dark:bg-slate-900/50">
-                        <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-3">
-                            <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-xl text-primary-600">
-                                <TrendingUp size={32} strokeWidth={1.5} />
-                            </div>
-                            <div>
-                                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">More Insights Coming Soon</h3>
-                                <p className="text-sm text-slate-500 font-medium mt-1">
-                                    Charts, performance trends, and detailed analytics will be added here.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                        {/* Project Health Chart */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6">
+                                    <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest">Project Health</CardTitle>
+                                    <CardDescription className="text-[10px] sm:text-xs font-bold">Status Distribution</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0">
+                                    <ResponsiveContainer width="100%" height={250}>
+                                        <PieChart>
+                                            <Pie
+                                                data={projectHealthChartData || []}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percentage }) => `${name}: ${percentage}%`}
+                                                outerRadius={80}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {(projectHealthChartData || []).map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: '#1e293b',
+                                                    border: 'none',
+                                                    borderRadius: '12px',
+                                                    color: '#fff',
+                                                    fontSize: '12px'
+                                                }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </div>
+
+                    {/* Sales Pipeline Chart */}
+                    <motion.div variants={fadeInUp}>
+                        <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                            <CardHeader className="p-4 sm:p-6">
+                                <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest">Sales Pipeline</CardTitle>
+                                <CardDescription className="text-[10px] sm:text-xs font-bold">Deal Distribution by Stage</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4 sm:p-6 pt-0">
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={pipelineChartData || []}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                        <XAxis
+                                            dataKey="name"
+                                            tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: '#1e293b',
+                                                border: 'none',
+                                                borderRadius: '12px',
+                                                color: '#fff',
+                                                fontSize: '12px'
+                                            }}
+                                            formatter={(value, name) => [
+                                                name === 'count' ? value : `₹${value.toLocaleString()}`,
+                                                name === 'count' ? 'Deals' : 'Value'
+                                            ]}
+                                        />
+                                        <Legend />
+                                        <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                                        <Bar dataKey="value" fill="#10b981" radius={[8, 8, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+
+                    {/* Actionable Lists Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Recent Leads */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest">Recent Leads</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Latest opportunities</CardDescription>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate('/admin/sales')}
+                                        className="text-primary-600 hover:text-primary-700 text-[10px] font-black uppercase"
+                                    >
+                                        View All <ArrowRight size={14} className="ml-1" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                                    {actionableLists?.recentLeads?.length > 0 ? (
+                                        actionableLists.recentLeads.map((lead) => (
+                                            <div key={lead._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600">
+                                                    <Building2 size={16} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">{lead.name}</h5>
+                                                    <p className="text-[10px] text-slate-500 font-medium truncate">{lead.company || 'No company'}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(lead.status))}>
+                                                            {lead.status}
+                                                        </Badge>
+                                                        <span className="text-[9px] text-slate-400 font-bold">
+                                                            {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <Building2 size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs font-bold">No recent leads</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+
+                        {/* Upcoming Follow-ups */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest">Upcoming Follow-ups</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Scheduled activities</CardDescription>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate('/admin/sales')}
+                                        className="text-primary-600 hover:text-primary-700 text-[10px] font-black uppercase"
+                                    >
+                                        View All <ArrowRight size={14} className="ml-1" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                                    {actionableLists?.upcomingFollowUps?.length > 0 ? (
+                                        actionableLists.upcomingFollowUps.map((followUp) => (
+                                            <div key={followUp._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600">
+                                                    {followUp.type === 'Call' ? <Phone size={16} /> : <Calendar size={16} />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">
+                                                        {followUp.leadId?.name || 'Unknown Lead'}
+                                                    </h5>
+                                                    <p className="text-[10px] text-slate-500 font-medium truncate">
+                                                        {followUp.leadId?.company || 'No company'}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge className="text-[8px] font-black uppercase px-2 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                                            {followUp.type}
+                                                        </Badge>
+                                                        <span className="text-[9px] text-slate-400 font-bold">
+                                                            {formatDistanceToNow(new Date(followUp.scheduledAt), { addSuffix: true })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <Calendar size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs font-bold">No upcoming follow-ups</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+
+                        {/* Open Support Tickets */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest">Open Tickets</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Support requests</CardDescription>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate('/admin/support')}
+                                        className="text-primary-600 hover:text-primary-700 text-[10px] font-black uppercase"
+                                    >
+                                        View All <ArrowRight size={14} className="ml-1" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                                    {actionableLists?.openTickets?.length > 0 ? (
+                                        actionableLists.openTickets.map((ticket) => (
+                                            <div key={ticket._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                                                    <AlertCircle size={16} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">{ticket.title}</h5>
+                                                    <p className="text-[10px] text-slate-500 font-medium truncate">#{ticket.ticketId}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(ticket.priority))}>
+                                                            {ticket.priority}
+                                                        </Badge>
+                                                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(ticket.status))}>
+                                                            {ticket.status}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <AlertCircle size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs font-bold">No open tickets</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </div>
+                </>
             )}
         </motion.div>
     );

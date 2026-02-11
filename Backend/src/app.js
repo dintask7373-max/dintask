@@ -64,6 +64,7 @@ app.use('/api/v1/invite', require('./routes/inviteRoutes'));
 app.use('/api/v1/system-intel', require('./routes/systemIntelRoutes'));
 app.use('/api/v1/follow-ups', require('./routes/followUpRoutes'));
 app.use('/api/v1/chat', require('./routes/chatRoutes'));
+app.use('/api/v1/notes', require('./routes/noteRoutes'));
 
 app.use(errorHandler);
 
