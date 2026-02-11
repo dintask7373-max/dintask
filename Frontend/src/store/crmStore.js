@@ -11,6 +11,7 @@ const useCRMStore = create(
       salesExecutives: [],
       pendingProjects: [],
       followUps: [], // Added followUps state
+      crmStats: null, // Global CRM statistics
       loading: false,
       error: null,
 
@@ -31,6 +32,17 @@ const useCRMStore = create(
         }
       },
 
+      // Fetch Global CRM Stats
+      fetchCRMStats: async () => {
+        try {
+          const res = await api('/admin/crm/stats');
+          if (res.success) {
+            set({ crmStats: res.data });
+          }
+        } catch (error) {
+          console.error("Failed to fetch global CRM stats", error);
+        }
+      },
 
       // Fetch Sales Executives
       fetchSalesExecutives: async () => {

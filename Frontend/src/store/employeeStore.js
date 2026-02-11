@@ -42,12 +42,24 @@ const useEmployeeStore = create((set, get) => ({
     fetchEmployees: async (params = {}) => {
         set({ loading: true });
         try {
+            // Get user role from authStore
+            const { user } = await import('./authStore').then(m => m.default.getState());
+            const userRole = user?.role;
+
+            // Determine endpoint based on role
+            let endpoint = '/admin/employees'; // Default for admin
+            if (userRole === 'manager') {
+                endpoint = '/manager/employees';
+            } else if (userRole === 'superadmin') {
+                endpoint = '/superadmin/staff'; // If superadmin needs different endpoint
+            }
+
             const queryParams = new URLSearchParams();
             if (params.page) queryParams.append('page', params.page);
             if (params.limit) queryParams.append('limit', params.limit);
             if (params.search) queryParams.append('search', params.search);
 
-            const res = await api(`/admin/employees?${queryParams.toString()}`);
+            const res = await api(`${endpoint}?${queryParams.toString()}`);
             if (res.success) {
                 set({
                     employees: res.data,

@@ -128,10 +128,12 @@ exports.getManagers = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized to view managers', 403));
     }
 
+    console.log(`[DEBUG] getManagers - Admin ID from token: ${adminId}`);
     const matchQuery = {
       adminId: new mongoose.Types.ObjectId(adminId),
       role: 'manager'
     };
+    console.log(`[DEBUG] getManagers - matchQuery:`, JSON.stringify(matchQuery));
 
     if (search) {
       matchQuery.$or = [
@@ -301,21 +303,165 @@ exports.getSalesExecutives = async (req, res, next) => {
     const salesExecutives = result[0].data;
     const total = result[0].metadata[0]?.total || 0;
 
+    // Calculate performance metrics for each sales executive
+    const Lead = require('../models/Lead');
+    const executivesWithMetrics = await Promise.all(salesExecutives.map(async (exec) => {
+      const execId = exec._id.toString();
+
+      // Get all leads assigned to this executive AND belonging to this admin
+      const allLeads = await Lead.find({
+        owner: execId, // Correct field is 'owner'
+        adminId: adminId // Ensure we only count leads from THIS admin workspace
+      });
+
+      // Calculate metrics
+      const totalDeals = allLeads.length;
+      const activeDeals = allLeads.filter(lead =>
+        lead.status && !['Won', 'Lost', 'Closed'].includes(lead.status)
+      ).length;
+
+      const wonDeals = allLeads.filter(lead => lead.status === 'Won');
+      const totalSales = wonDeals.reduce((sum, lead) => sum + (lead.amount || 0), 0);
+
+      const conversionRate = totalDeals > 0
+        ? Math.round((wonDeals.length / totalDeals) * 100)
+        : 0;
+
+      return {
+        ...exec,
+        totalSales,
+        activeDeals,
+        conversionRate,
+        totalDeals
+      };
+    }));
+
     res.status(200).json({
       success: true,
-      count: salesExecutives.length,
+      count: executivesWithMetrics.length,
       pagination: {
         total,
         page,
         limit,
         pages: Math.ceil(total / limit)
       },
-      data: salesExecutives
+      data: executivesWithMetrics
     });
   } catch (err) {
     next(err);
   }
 };
+
+// @desc    Get CRM Global Stats
+// @route   GET /api/v1/admin/crm/stats
+// @access  Private (Admin)
+exports.getCRMStats = async (req, res, next) => {
+  try {
+    console.log('[CRM STATS] Request received from user:', req.user.id); // Debug Log
+    let adminId = req.user.role === 'admin' ? req.user.id : null;
+    if (!adminId) return next(new ErrorResponse('Not authorized', 403));
+
+    const SalesExecutive = require('../models/SalesExecutive');
+    const Lead = require('../models/Lead');
+    const FollowUp = require('../models/FollowUp');
+    const Project = require('../models/Project');
+
+    // Get total reps
+    const totalReps = await SalesExecutive.countDocuments({ adminId });
+
+    // Get all leads for stats
+    const allLeads = await Lead.find({ adminId });
+
+    // Get all follow-ups for stats and schedule
+    const allFollowUps = await FollowUp.find({ adminId })
+      .populate('salesRepId', 'name email')
+      .populate('leadId', 'name company')
+      .sort({ scheduledAt: -1 });
+
+    // Get completed projects for revenue
+    const completedProjects = await Project.find({ adminId, status: 'completed' });
+
+    const totalLeads = allLeads.length;
+    const wonLeads = allLeads.filter(l => l.status === 'Won');
+    const wonDealsCount = wonLeads.length;
+    const lostDealsCount = allLeads.filter(l => l.status === 'Lost').length;
+
+    // Active deals: leads not Won/Lost/Closed
+    const activeDeals = allLeads.filter(l =>
+      l.status && !['Won', 'Lost', 'Closed'].includes(l.status)
+    ).length;
+
+    // Total Revenue from Completed Projects
+    const totalRevenue = completedProjects.reduce((acc, curr) => acc + (curr.budget || 0), 0);
+
+    // Global Conversion Rate
+    const conversionRate = totalLeads > 0
+      ? Math.round((wonLeads.length / totalLeads) * 100)
+      : 0;
+
+    // Lead Distribution for Chart
+    const distMap = {};
+    allLeads.forEach(l => {
+      const s = l.status || 'New';
+      distMap[s] = (distMap[s] || 0) + 1;
+    });
+    const leadDistribution = Object.keys(distMap).map(key => ({ name: key, value: distMap[key] }));
+
+    // Source Distribution for Chart
+    const sourceMap = {};
+    allLeads.forEach(l => {
+      const sou = l.source || 'Manual';
+      sourceMap[sou] = (sourceMap[sou] || 0) + 1;
+    });
+    const sourceDistribution = Object.keys(sourceMap).map(key => ({ source: key, count: sourceMap[key] }));
+
+    // Representative Performance
+    const performance = await Promise.all(
+      (await SalesExecutive.find({ adminId })).map(async (exec) => {
+        const execLeads = allLeads.filter(l => l.owner?.toString() === exec._id.toString());
+        const execFollowUps = allFollowUps.filter(f => f.salesRepId?._id?.toString() === exec._id.toString());
+
+        const won = execLeads.filter(l => l.status === 'Won').length;
+        const lost = execLeads.filter(l => l.status === 'Lost').length;
+        const total = execLeads.length;
+        const conversion = total > 0 ? Math.round((won / total) * 100) : 0;
+
+        return {
+          id: exec._id,
+          name: exec.name,
+          leads: total,
+          won,
+          lost,
+          conversion,
+          followUps: execFollowUps.length
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalReps,
+        activeDeals,
+        totalRevenue,
+        conversionRate,
+        totalLeads,
+        wonDealsCount,
+        lostDealsCount,
+        leadDistribution,
+        performance,
+        sourceDistribution,
+        recentFollowUps: allFollowUps.slice(0, 10) // Return last 10 follow-ups
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+
 
 // @route   DELETE /api/v1/admin/users/:id
 // @access  Private (Admin)

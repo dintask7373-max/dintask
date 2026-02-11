@@ -4,7 +4,8 @@ const {
     getAllUsers,
     getManagers,
     getEmployees,
-    getSalesExecutives, // Added
+    getSalesExecutives,
+    getCRMStats, // Added
     deleteUser,
 
     forgotPassword,
@@ -51,6 +52,7 @@ router.delete('/users/:id', deleteUser);
 router.get('/managers', getManagers);
 router.get('/employees', getEmployees);
 router.get('/sales-executives', getSalesExecutives);
+router.get('/crm/stats', getCRMStats); // Added CRM Stats route
 
 // Join Requests
 router.get('/join-requests', getJoinRequests);

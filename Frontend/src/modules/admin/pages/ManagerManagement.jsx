@@ -181,14 +181,7 @@ const ManagerManagement = () => {
                         <Download size={14} className="sm:w-[18px] sm:h-[18px]" />
                         <span>Export</span>
                     </Button>
-                    <Button
-                        onClick={() => setIsAddModalOpen(true)}
-                        disabled={isLimitReached}
-                        className="flex-1 md:flex-none h-9 sm:h-11 px-3 sm:px-4 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest whitespace-nowrap"
-                    >
-                        <Plus size={14} className="sm:w-[18px] sm:h-[18px]" />
-                        <span>Add New</span>
-                    </Button>
+
                 </div>
             </div>
 

@@ -13,6 +13,7 @@ const useSalesStore = create(
                 total: 0,
                 pages: 1
             },
+            crmStats: null, // New state for global stats
             loading: false,
             error: null,
 

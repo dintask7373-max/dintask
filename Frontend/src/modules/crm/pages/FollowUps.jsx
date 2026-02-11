@@ -164,99 +164,84 @@ const FollowUps = () => {
             </p>
           </div>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
-              <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span>Initialize Sync</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>{editingFollowUp ? 'Edit Sync' : 'Schedule Sync'}</DialogTitle>
-              <DialogDescription>Input tactical interaction details.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        {!isAdmin && (
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="h-9 px-4 sm:px-6 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto">
+                <Plus className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Initialize Sync</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>{editingFollowUp ? 'Edit Sync' : 'Schedule Sync'}</DialogTitle>
+                <DialogDescription>Input tactical interaction details.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
 
-              {isAdmin && (
-                <div className="space-y-2">
-                  <Label>Assign To (Sales Rep)</Label>
-                  <Select
-                    value={formData.salesRepId}
-                    onValueChange={(v) => setFormData({ ...formData, salesRepId: v })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Select Sales Executive" /></SelectTrigger>
-                    <SelectContent>
-                      {salesExecutives?.map(s => (
-                        <SelectItem key={s.id || s._id} value={s.id || s._id}>{s.name}</SelectItem>
+                <div className="space-y-2 relative">
+                  <Label>Lead Anchor</Label>
+                  <Input
+                    placeholder="Search lead..."
+                    value={leadSearch}
+                    onChange={(e) => {
+                      setLeadSearch(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  />
+                  {showSuggestions && leadSearch && (
+                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {suggestedLeads.map((lead) => (
+                        <div
+                          key={lead.id || lead._id}
+                          className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setFormData({ ...formData, leadId: lead.id || lead._id });
+                            setLeadSearch(lead.name);
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {lead.name} ({lead.company})
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              <div className="space-y-2 relative">
-                <Label>Lead Anchor</Label>
-                <Input
-                  placeholder="Search lead..."
-                  value={leadSearch}
-                  onChange={(e) => {
-                    setLeadSearch(e.target.value);
-                    setShowSuggestions(true);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                />
-                {showSuggestions && leadSearch && (
-                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                    {suggestedLeads.map((lead) => (
-                      <div
-                        key={lead.id || lead._id}
-                        className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setFormData({ ...formData, leadId: lead.id || lead._id });
-                          setLeadSearch(lead.name);
-                          setShowSuggestions(false);
-                        }}
-                      >
-                        {lead.name} ({lead.company})
-                      </div>
-                    ))}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {followUpTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {followUpTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label>Time</Label>
+                    <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Time</Label>
-                  <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                  <Label>Date</Label>
+                  <div className="border rounded-lg p-2 flex justify-center">
+                    <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <div className="border rounded-lg p-2 flex justify-center">
-                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Notes</Label>
-                <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
-              </div>
-              <DialogFooter>
-                <Button type="submit" className="w-full sm:w-auto">Confirm Schedule</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter>
+                  <Button type="submit" className="w-full sm:w-auto">Confirm Schedule</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -311,7 +296,7 @@ const FollowUps = () => {
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Type</TableHead>
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Schedule</TableHead>
                   <TableHead className="text-[10px] font-black tracking-widest uppercase">Status</TableHead>
-                  <TableHead className="text-right text-[10px] font-black tracking-widest uppercase">Actions</TableHead>
+                  {!isAdmin && <TableHead className="text-right text-[10px] font-black tracking-widest uppercase">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -343,12 +328,14 @@ const FollowUps = () => {
                       <TableCell>
                         <Badge className={cn("text-[9px] font-black h-5", f.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary-50 text-primary-600')}>{f.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(f)}><Edit size={12} /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(f.id || f._id)}><Trash2 size={12} /></Button>
-                        </div>
-                      </TableCell>
+                      {!isAdmin && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(f)}><Edit size={12} /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(f.id || f._id)}><Trash2 size={12} /></Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}
@@ -429,37 +416,39 @@ const FollowUps = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-4 pt-1">
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter italic">
-                        #{(f.id || f._id || '').toString().slice(-4)}
-                      </span>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                          onClick={() => handleEdit(f)}
-                        >
-                          <Edit size={14} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                          onClick={() => handleDelete(f.id || f._id)}
-                        >
-                          <Trash2 size={14} className="text-red-400" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-emerald-500 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
-                          onClick={() => handleStatusChange(f.id || f._id, 'Completed')}
-                        >
-                          <CheckCircle2 size={14} />
-                        </Button>
+                    {!isAdmin && (
+                      <div className="flex items-center justify-between mt-4 pt-1">
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter italic">
+                          #{(f.id || f._id || '').toString().slice(-4)}
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                            onClick={() => handleEdit(f)}
+                          >
+                            <Edit size={14} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                            onClick={() => handleDelete(f.id || f._id)}
+                          >
+                            <Trash2 size={14} className="text-red-400" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-emerald-500 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                            onClick={() => handleStatusChange(f.id || f._id, 'Completed')}
+                          >
+                            <CheckCircle2 size={14} />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </motion.div>
                 );
               })}

@@ -14,8 +14,12 @@ import { cn } from '@/shared/utils/cn';
 import { Badge } from '@/shared/components/ui/badge';
 
 const AdminDashboard = () => {
-  const { leads, getPipelineData } = useCRMStore();
+  const { leads, getPipelineData, crmStats, fetchCRMStats } = useCRMStore();
   const { schedules } = useScheduleStore();
+
+  React.useEffect(() => {
+    fetchCRMStats();
+  }, [fetchCRMStats]);
 
   const adminMeetings = (schedules || []).filter(s =>
     s.assignedTo?.toLowerCase().includes('admin')
@@ -23,23 +27,23 @@ const AdminDashboard = () => {
 
   // Sample data for charts
   const pipelineData = getPipelineData();
-  const employeePerformance = [
-    { name: 'John Doe', leads: 15, won: 8, lost: 2 },
-    { name: 'Jane Smith', leads: 20, won: 12, lost: 3 },
-    { name: 'Mike Johnson', leads: 10, won: 5, lost: 1 },
+  // Performance metrics for table
+  const employeePerformance = crmStats?.performance || [
+    { name: 'Loading...', leads: 0, won: 0, lost: 0, conversion: 0 },
   ];
 
-  const leadDistribution = pipelineData.map(stage => ({
+  // Distribution chart data
+  const leadDistribution = crmStats?.leadDistribution || pipelineData.map(stage => ({
     name: stage.stage,
     value: stage.leads.length,
   }));
 
-  const totalLeads = leads.length;
-  const activeDeals = leads.filter(lead =>
+  const totalLeads = crmStats?.totalLeads || leads.length;
+  const activeDeals = crmStats?.activeDeals || leads.filter(lead =>
     ['Contacted', 'Follow-Up', 'Interested', 'Meeting Done', 'Proposal Sent'].includes(lead.status)
   ).length;
-  const wonDeals = leads.filter(lead => lead.status === 'Won').length;
-  const lostDeals = leads.filter(lead => lead.status === 'Lost').length;
+  const wonDeals = crmStats?.wonDealsCount || leads.filter(lead => lead.status === 'Won').length;
+  const lostDeals = crmStats?.lostDealsCount || leads.filter(lead => lead.status === 'Lost').length;
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -206,6 +210,7 @@ const AdminDashboard = () => {
                         <TableHead className="text-center whitespace-nowrap h-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Leads</TableHead>
                         <TableHead className="text-center whitespace-nowrap h-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Wins</TableHead>
                         <TableHead className="text-center whitespace-nowrap h-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Loss</TableHead>
+                        <TableHead className="text-center whitespace-nowrap h-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Follow-ups</TableHead>
                         <TableHead className="text-right whitespace-nowrap px-4 sm:px-6 h-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Conversion</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -223,14 +228,15 @@ const AdminDashboard = () => {
                           <TableCell className="text-center text-[11px] font-bold">{employee.leads}</TableCell>
                           <TableCell className="text-center text-[11px] font-bold text-emerald-600">{employee.won}</TableCell>
                           <TableCell className="text-center text-[11px] font-bold text-red-500">{employee.lost}</TableCell>
+                          <TableCell className="text-center text-[11px] font-bold text-primary-600">{employee.followUps || 0}</TableCell>
                           <TableCell className="text-right px-4 sm:px-6">
                             <span className={cn(
                               "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest",
-                              (employee.won / (employee.won + employee.lost)) > 0.7 ? "bg-emerald-50 text-emerald-600" :
-                                (employee.won / (employee.won + employee.lost)) > 0.4 ? "bg-blue-50 text-blue-600" :
+                              employee.conversion > 70 ? "bg-emerald-50 text-emerald-600" :
+                                employee.conversion > 40 ? "bg-blue-50 text-blue-600" :
                                   "bg-orange-50 text-orange-600"
                             )}>
-                              {((employee.won / (employee.won + employee.lost)) * 100).toFixed(0)}%
+                              {employee.conversion}%
                             </span>
                           </TableCell>
                         </TableRow>
@@ -250,20 +256,14 @@ const AdminDashboard = () => {
               <CardContent className="p-2 sm:p-6">
                 <div className="h-[250px] sm:h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[
-                      { source: 'Web', count: 45 },
-                      { source: 'Call', count: 30 },
-                      { source: 'WA', count: 25 },
-                      { source: 'Ref', count: 15 },
-                      { source: 'Man', count: 10 },
-                    ]}>
+                    <BarChart data={crmStats?.sourceDistribution || []}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                       <XAxis dataKey="source" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} />
                       <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
                       <Bar dataKey="count" fill="#8884d8" radius={[6, 6, 0, 0]} barSize={35}>
                         {
-                          [0, 1, 2, 3, 4].map((entry, index) => (
+                          (crmStats?.sourceDistribution || []).map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))
                         }
@@ -278,29 +278,37 @@ const AdminDashboard = () => {
             <Card className="border-none shadow-sm rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
               <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-4 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Events Schedule</CardTitle>
-                  <Badge className="bg-primary-600 text-[10px] font-black h-5">{adminMeetings.length}</Badge>
+                  <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Recent Follow-ups</CardTitle>
+                  <Badge className="bg-primary-600 text-[10px] font-black h-5">{crmStats?.recentFollowUps?.length || 0}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-3 sm:p-6">
                 <div className="space-y-2 sm:space-y-3">
-                  {adminMeetings.length > 0 ? (
-                    adminMeetings.map(meeting => (
-                      <div key={meeting.id} className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-all">
+                  {crmStats?.recentFollowUps?.length > 0 ? (
+                    crmStats.recentFollowUps.map(followup => (
+                      <div key={followup._id} className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-all">
                         <div className="flex items-center gap-3 sm:gap-4">
                           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex flex-col items-center justify-center text-primary-600 shrink-0">
-                            <span className="text-[8px] sm:text-[10px] font-black uppercase">{format(new Date(meeting.date), 'MMM')}</span>
-                            <span className="text-xs sm:text-sm font-black leading-none">{format(new Date(meeting.date), 'dd')}</span>
+                            <span className="text-[8px] sm:text-[10px] font-black uppercase">{format(new Date(followup.scheduledAt), 'MMM')}</span>
+                            <span className="text-xs sm:text-sm font-black leading-none">{format(new Date(followup.scheduledAt), 'dd')}</span>
                           </div>
                           <div className="min-w-0">
-                            <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">{meeting.title}</h4>
+                            <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                              {followup.leadId?.name || 'Unknown Lead'}
+                            </h4>
                             <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                              <span className="flex items-center gap-1 font-bold whitespace-nowrap"><Clock size={10} /> {meeting.time}</span>
-                              <span className="hidden sm:flex items-center gap-1 font-bold truncate"><MapPin size={10} /> {meeting.location || 'Remote'}</span>
+                              <span className="flex items-center gap-1 font-bold whitespace-nowrap">
+                                <Users size={10} /> {followup.salesRepId?.name}
+                              </span>
+                              <span className="hidden sm:flex items-center gap-1 font-bold truncate">
+                                <Clock size={10} /> {format(new Date(followup.scheduledAt), 'hh:mm a')}
+                              </span>
                             </div>
                           </div>
                         </div>
-                        <Badge variant="outline" className="capitalize text-[8px] font-black h-5 shrink-0 px-2">{meeting.type}</Badge>
+                        <Badge variant="outline" className="capitalize text-[8px] font-black h-5 shrink-0 px-2">
+                          {followup.type}
+                        </Badge>
                       </div>
                     ))
                   ) : (

@@ -194,8 +194,22 @@ const TeamProgress = () => {
                                     {/* Employee Header */}
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="size-12 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
-                                                <img src={employee.profileImage} alt={employee.name} className="w-full h-full object-cover" />
+                                            <div className="size-12 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                                {employee.profileImage ? (
+                                                    <img
+                                                        src={employee.profileImage}
+                                                        alt={employee.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center bg-primary-100 dark:bg-primary-900/20 text-primary-600 font-black text-lg">${employee.name?.charAt(0) || 'E'}</div>`;
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-primary-100 dark:bg-primary-900/20 text-primary-600 font-black text-lg">
+                                                        {employee.name?.charAt(0) || 'E'}
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none">{employee.name}</h3>

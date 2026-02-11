@@ -3,15 +3,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+import useSalesStore from '@/store/salesStore';
+
 const CRMHome = () => {
-  // Sample data for dashboard
-  const leadData = [
-    { name: 'New', value: 45 },
-    { name: 'Contacted', value: 30 },
-    { name: 'Follow-Up', value: 25 },
-    { name: 'Interested', value: 15 },
-    { name: 'Closed', value: 10 },
-    { name: 'Lost', value: 5 },
+  const { crmStats, fetchCRMStats } = useSalesStore();
+
+  React.useEffect(() => {
+    fetchCRMStats();
+  }, [fetchCRMStats]);
+
+  // Use live data or fallbacks
+  const leadData = crmStats?.leadDistribution || [
+    { name: 'New', value: 0 },
+    { name: 'Contacted', value: 0 },
+    { name: 'Meeting Done', value: 0 },
+    { name: 'Proposal Sent', value: 0 },
+    { name: 'Won', value: 0 },
+    { name: 'Lost', value: 0 },
   ];
 
   return (
@@ -29,8 +37,8 @@ const CRMHome = () => {
             <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">130</div>
-            <p className="text-xs text-muted-foreground">+10% from last month</p>
+            <div className="text-2xl font-bold">{crmStats?.totalLeads || 0}</div>
+            <p className="text-xs text-muted-foreground">Global Count</p>
           </CardContent>
         </Card>
         <Card>
@@ -38,8 +46,8 @@ const CRMHome = () => {
             <CardTitle className="text-sm font-medium">Active Deals</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">80</div>
-            <p className="text-xs text-muted-foreground">+5% from last month</p>
+            <div className="text-2xl font-bold">{crmStats?.activeDeals || 0}</div>
+            <p className="text-xs text-muted-foreground">Currently in progress</p>
           </CardContent>
         </Card>
         <Card>
@@ -47,8 +55,8 @@ const CRMHome = () => {
             <CardTitle className="text-sm font-medium">Won Deals</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">10</div>
-            <p className="text-xs text-muted-foreground">+20% from last month</p>
+            <div className="text-2xl font-bold">{crmStats?.wonDealsCount || 0}</div>
+            <p className="text-xs text-muted-foreground text-green-600">Successfully closed</p>
           </CardContent>
         </Card>
         <Card>
@@ -56,8 +64,8 @@ const CRMHome = () => {
             <CardTitle className="text-sm font-medium">Lost Deals</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">-15% from last month</p>
+            <div className="text-2xl font-bold">{crmStats?.lostDealsCount || 0}</div>
+            <p className="text-xs text-muted-foreground text-red-500">Oppurtunities lost</p>
           </CardContent>
         </Card>
       </div>

@@ -426,14 +426,14 @@ const TeamManagement = () => {
                                     const userAdminId = user?.adminId?._id || user?.adminId;
                                     const empAdminId = e.adminId?._id || e.adminId;
                                     const empManagerId = e.managerId?._id || e.managerId;
-                                    return e.role === 'employee' && (empManagerId === userId || empAdminId === userAdminId);
+                                    return e.role === 'employee' && e.status === 'active' && (empManagerId === userId || empAdminId === userAdminId);
                                 }).length > 0 ?
                                     employees.filter(e => {
                                         const userId = user?._id || user?.id;
                                         const userAdminId = user?.adminId?._id || user?.adminId;
                                         const empAdminId = e.adminId?._id || e.adminId;
                                         const empManagerId = e.managerId?._id || e.managerId;
-                                        return e.role === 'employee' && (empManagerId === userId || empAdminId === userAdminId);
+                                        return e.role === 'employee' && e.status === 'active' && (empManagerId === userId || empAdminId === userAdminId);
                                     }).map((member) => (
                                         <div
                                             key={member._id || member.id}

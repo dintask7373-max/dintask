@@ -51,7 +51,7 @@ import useManagerStore from '@/store/managerStore'; // Kept in case required by 
 
 
 const SalesManagement = () => {
-    const { salesReps, salesPagination, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep } = useSalesStore();
+    const { salesReps, salesPagination, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep, crmStats, fetchCRMStats } = useSalesStore();
     const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion, fetchLeads } = useCRMStore();
     const { employees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { managers } = useManagerStore();
@@ -82,6 +82,7 @@ const SalesManagement = () => {
         const loadData = async () => {
             await fetchSalesReps({ page: currentPage, limit: itemsPerPage, search: searchTerm });
             await fetchLeads();
+            await fetchCRMStats(); // Fetch global stats
             await fetchSubscriptionLimit();
         };
         loadData();
@@ -258,10 +259,10 @@ const SalesManagement = () => {
                 <TabsContent value="team" className="space-y-4 sm:space-y-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
                         {[
-                            { label: 'Total Reps', value: salesReps.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-                            { label: 'Active Deals', value: salesReps.reduce((acc, curr) => acc + (curr.activeDeals || 0), 0), icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                            { label: 'Revenue', value: `₹${(salesReps.reduce((acc, curr) => acc + (curr.totalSales || 0), 0) / 1000).toFixed(0)}K`, icon: IndianRupee, color: 'text-purple-600', bg: 'bg-purple-50' },
-                            { label: 'Conversion', value: `${salesReps.length > 0 ? (salesReps.reduce((acc, curr) => acc + (curr.conversionRate || 0), 0) / salesReps.length).toFixed(0) : 0}%`, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' }
+                            { label: 'Total Reps', value: crmStats?.totalReps || 0, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+                            { label: 'Active Deals', value: crmStats?.activeDeals || 0, icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                            { label: 'Revenue', value: `₹${((crmStats?.totalRevenue || 0) / 1000).toFixed(0)}K`, icon: IndianRupee, color: 'text-purple-600', bg: 'bg-purple-50' },
+                            { label: 'Conversion', value: `${crmStats?.conversionRate || 0}%`, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' }
                         ].map((stat, i) => (
                             <Card key={i} className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
                                 <CardContent className="p-3 sm:p-4 flex items-center gap-2.5 sm:gap-4">
@@ -276,6 +277,75 @@ const SalesManagement = () => {
                             </Card>
                         ))}
                     </div>
+
+                    {/* Performance Matrix Table */}
+                    <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                        <CardHeader className="border-b border-slate-100 dark:border-slate-800 py-4 px-6">
+                            <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Performance Matrix</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                            <th className="text-left p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Employee</th>
+                                            <th className="text-center p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Leads</th>
+                                            <th className="text-center p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Wins</th>
+                                            <th className="text-center p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Loss</th>
+                                            <th className="text-right p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Conversion</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {salesReps.length > 0 ? (
+                                            salesReps.map((rep) => {
+                                                const totalLeads = rep.totalDeals || 0;
+                                                const wonLeads = Math.round((totalLeads * (rep.conversionRate || 0)) / 100);
+                                                const lostLeads = totalLeads - wonLeads - (rep.activeDeals || 0);
+
+                                                return (
+                                                    <tr key={rep._id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors">
+                                                        <td className="p-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="size-8 rounded-lg bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center shrink-0">
+                                                                    <span className="text-xs font-black text-primary-600">{rep.name?.charAt(0) || 'S'}</span>
+                                                                </div>
+                                                                <span className="font-black text-slate-900 dark:text-white text-xs">{rep.name}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className="text-sm font-black text-slate-900 dark:text-white">{totalLeads}</span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className="text-sm font-black text-emerald-600">{wonLeads}</span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className="text-sm font-black text-red-600">{lostLeads > 0 ? lostLeads : 0}</span>
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <Badge className={cn(
+                                                                "font-black text-xs px-3 py-1",
+                                                                rep.conversionRate >= 70 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
+                                                                    rep.conversionRate >= 50 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" :
+                                                                        "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                                                            )}>
+                                                                {rep.conversionRate}%
+                                                            </Badge>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" className="p-8 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                    No sales representatives found
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div className="relative w-full sm:w-[250px] lg:w-[300px]">
