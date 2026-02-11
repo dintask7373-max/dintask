@@ -14,25 +14,6 @@ const useCRMStore = create(
       loading: false,
       error: null,
 
-      // Follow-up Actions
-      addFollowUp: (followUp) => {
-        set((state) => ({
-          followUps: [...state.followUps, { ...followUp, id: Date.now().toString() }]
-        }));
-      },
-
-      updateFollowUp: (id, updatedData) => {
-        set((state) => ({
-          followUps: state.followUps.map((f) => f.id === id ? { ...f, ...updatedData } : f)
-        }));
-      },
-
-      deleteFollowUp: (id) => {
-        set((state) => ({
-          followUps: state.followUps.filter((f) => f.id !== id)
-        }));
-      },
-
       // Sales Pipeline Stages (Configurable)
       pipelineStages: ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'],
 
@@ -50,36 +31,6 @@ const useCRMStore = create(
         }
       },
 
-      // Follow-up Actions (Client-side for now)
-      addFollowUp: (followUpData) => {
-        set((state) => ({
-          followUps: [
-            ...(state.followUps || []),
-            {
-              ...followUpData,
-              id: Date.now().toString(),
-              createdAt: new Date().toISOString()
-            }
-          ]
-        }));
-        toast.success("Follow-up scheduled");
-      },
-
-      updateFollowUp: (followUpId, updatedData) => {
-        set((state) => ({
-          followUps: (state.followUps || []).map(f =>
-            f.id === followUpId ? { ...f, ...updatedData } : f
-          )
-        }));
-        toast.success("Follow-up updated");
-      },
-
-      deleteFollowUp: (followUpId) => {
-        set((state) => ({
-          followUps: (state.followUps || []).filter(f => f.id !== followUpId)
-        }));
-        toast.success("Follow-up removed");
-      },
 
       // Fetch Sales Executives
       fetchSalesExecutives: async () => {
