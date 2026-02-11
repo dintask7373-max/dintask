@@ -64,6 +64,8 @@ const SupportCenter = () => {
     const [userRating, setUserRating] = useState(0);
     const [userFeedback, setUserFeedback] = useState('');
     const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+    const [typingUser, setTypingUser] = useState(null);
+    const typingTimeoutRef = React.useRef(null);
 
     React.useEffect(() => {
         fetchTickets();
@@ -83,11 +85,40 @@ const SupportCenter = () => {
         }
     }, [tickets, selectedTicket]);
 
-    // Room Management
+    // Room Management & Listeners
     React.useEffect(() => {
         if (selectedTicket) {
             socketService.joinTicket(selectedTicket._id);
-            return () => socketService.leaveTicket(selectedTicket._id);
+
+            // Instant message reception for the active ticket
+            socketService.onSupportResponse(({ ticketId, updatedTicket }) => {
+                if (ticketId === selectedTicket._id) {
+                    setSelectedTicket(updatedTicket);
+                }
+            });
+
+            socketService.onSupportTyping(({ ticketId, userName }) => {
+                if (ticketId === selectedTicket._id) {
+                    setTypingUser(userName);
+                }
+            });
+
+            const stopTypingListener = (ticketId) => {
+                if (ticketId === selectedTicket._id) {
+                    setTypingUser(null);
+                }
+            };
+
+            if (socketService.socket) {
+                socketService.socket.on('support_stop_typing', stopTypingListener);
+            }
+
+            return () => {
+                socketService.leaveTicket(selectedTicket._id);
+                if (socketService.socket) {
+                    socketService.socket.off('support_stop_typing', stopTypingListener);
+                }
+            };
         }
     }, [selectedTicket]);
 
@@ -100,12 +131,30 @@ const SupportCenter = () => {
     const handleReply = async () => {
         if (!replyMessage.trim() || !selectedTicket) return;
         setIsSubmittingReply(true);
-        // Assuming replyToTicket exists in store and handles API
+
+        // Stop typing immediately on send
+        socketService.socket?.emit('support_stop_typing', selectedTicket._id);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
         const success = await replyToTicket(selectedTicket._id, replyMessage);
         if (success) {
             setReplyMessage('');
         }
         setIsSubmittingReply(false);
+    };
+
+    const handleTextareaChange = (e) => {
+        setReplyMessage(e.target.value);
+        if (!selectedTicket) return;
+
+        // Emit typing
+        socketService.emitSupportTyping(selectedTicket._id, user?.name || 'Someone');
+
+        // Debounce stop typing
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            socketService.socket?.emit('support_stop_typing', selectedTicket._id);
+        }, 3000);
     };
 
     const handleStatusChange = async (value) => {
@@ -271,11 +320,7 @@ const SupportCenter = () => {
                         </label>
                         <div className="space-y-4">
                             {selectedTicket.responses?.length > 0 ? selectedTicket.responses.map((msg, i) => {
-                                const userModel = role?.startsWith('superadmin') ? 'SuperAdmin' :
-                                    role === 'admin' ? 'Admin' :
-                                        role === 'sales' ? 'SalesExecutive' :
-                                            role.charAt(0).toUpperCase() + role.slice(1);
-                                const isMe = msg.responderModel === userModel;
+                                const isMe = msg.responder === (user?.id || user?._id);
                                 return (
                                     <div key={i} className={cn("flex gap-3", isMe ? "flex-row-reverse" : "")}>
                                         <div className={cn("size-8 rounded-full flex items-center justify-center shrink-0", isMe ? "bg-[#4461f2] text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
@@ -302,12 +347,29 @@ const SupportCenter = () => {
 
                 {/* Input Area */}
                 <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                    <AnimatePresence>
+                        {typingUser && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                className="flex items-center gap-2 mb-2 ml-2"
+                            >
+                                <div className="flex gap-1">
+                                    <span className="size-1 bg-[#4461f2] rounded-full animate-bounce" />
+                                    <span className="size-1 bg-[#4461f2] rounded-full animate-bounce [animation-delay:0.2s]" />
+                                    <span className="size-1 bg-[#4461f2] rounded-full animate-bounce [animation-delay:0.4s]" />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-400 italic uppercase tracking-widest">{typingUser} is typing...</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                     <div className="relative">
                         <Textarea
                             placeholder="Type your reply..."
                             className="min-h-[80px] w-full resize-none pr-12 text-xs bg-slate-50 dark:bg-slate-950 border-none rounded-2xl focus:ring-2 focus:ring-[#4461f2]/20"
                             value={replyMessage}
-                            onChange={(e) => setReplyMessage(e.target.value)}
+                            onChange={handleTextareaChange}
                         />
                         <Button
                             size="icon"

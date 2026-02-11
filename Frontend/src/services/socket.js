@@ -44,7 +44,10 @@ class SocketService {
     }
 
     onMessageReceived(callback) {
-        if (this.socket) this.socket.on('message_received', callback);
+        if (this.socket) {
+            this.socket.off('message_received');
+            this.socket.on('message_received', callback);
+        }
     }
 
     emitTyping(room) {
@@ -56,16 +59,25 @@ class SocketService {
     }
 
     onTyping(callback) {
-        if (this.socket) this.socket.on('typing', callback);
+        if (this.socket) {
+            this.socket.off('typing');
+            this.socket.on('typing', callback);
+        }
     }
 
     onStopTyping(callback) {
-        if (this.socket) this.socket.on('stop_typing', callback);
+        if (this.socket) {
+            this.socket.off('stop_typing');
+            this.socket.on('stop_typing', callback);
+        }
     }
 
     // Support Ticket Real-time
     joinTicket(ticketId) {
-        if (this.socket) this.socket.emit('join_ticket', ticketId);
+        if (this.socket) {
+            console.log('Emitting join_ticket:', ticketId);
+            this.socket.emit('join_ticket', ticketId);
+        }
     }
 
     leaveTicket(ticketId) {
@@ -73,11 +85,17 @@ class SocketService {
     }
 
     onSupportResponse(callback) {
-        if (this.socket) this.socket.on('new_support_response', callback);
+        if (this.socket) {
+            this.socket.off('new_support_response');
+            this.socket.on('new_support_response', callback);
+        }
     }
 
     onSupportTicket(callback) {
-        if (this.socket) this.socket.on('new_support_ticket', callback);
+        if (this.socket) {
+            this.socket.off('new_support_ticket');
+            this.socket.on('new_support_ticket', callback);
+        }
     }
 
     emitSupportTyping(ticketId, userName) {
@@ -85,7 +103,10 @@ class SocketService {
     }
 
     onSupportTyping(callback) {
-        if (this.socket) this.socket.on('support_typing', callback);
+        if (this.socket) {
+            this.socket.off('support_typing');
+            this.socket.on('support_typing', callback);
+        }
     }
 }
 

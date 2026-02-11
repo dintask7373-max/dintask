@@ -113,6 +113,7 @@ import TermsOfService from '@/modules/user/pages/TermsOfService';
 import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
 import Checkout from '@/modules/user/pages/Checkout';
+import AddNote from '@/modules/user/pages/AddNote';
 import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
 // Super Admin Pages
@@ -211,6 +212,8 @@ const AppRouter = () => {
                 <Route path="tasks/new" element={<AddTask />} />
                 <Route path="calendar" element={<EmployeeCalendar />} />
                 <Route path="notes" element={<EmployeeNotes />} />
+                <Route path="notes/new" element={<AddNote />} />
+                <Route path="notes/edit/:id" element={<AddNote />} />
                 <Route path="notifications" element={<NotificationsList />} />
                 <Route path="chat" element={<EmployeeChat />} />
                 <Route path="profile" element={<EmployeeProfile />} />

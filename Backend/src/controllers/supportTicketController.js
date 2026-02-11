@@ -51,12 +51,15 @@ exports.createTicket = async (req, res, next) => {
         // Emit socket event for real-time update
         const io = req.app.get('io');
         if (io) {
+            // Room for the specific ticket
+            io.to(ticket._id.toString()).emit('new_support_ticket', ticket);
+
+            // Personal rooms for participants
             if (ticket.isEscalatedToSuperAdmin) {
-                // To all superadmins (global notification for now)
-                io.emit('new_support_ticket', ticket);
+                io.emit('new_support_ticket', ticket); // Broadcast to all for now
             } else {
-                // To the company admin room
                 io.to(companyId.toString()).emit('new_support_ticket', ticket);
+                io.to(ticket.creator.toString()).emit('new_support_ticket', ticket);
             }
         }
 
@@ -211,9 +214,14 @@ exports.updateTicket = async (req, res, next) => {
 
         // Add Response Logic
         if (req.body.response) {
+            const responderModel = req.user.role === 'superadmin' || req.user.role === 'superadmin_staff' ? 'SuperAdmin' :
+                req.user.role === 'admin' ? 'Admin' :
+                    req.user.role === 'sales' ? 'SalesExecutive' :
+                        req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1);
+
             ticket.responses.push({
                 responder: req.user.id,
-                responderModel: (req.user.role === 'superadmin' || req.user.role === 'superadmin_staff') ? 'SuperAdmin' : 'Admin',
+                responderModel: responderModel,
                 message: req.body.response
             });
         }
@@ -243,10 +251,17 @@ exports.updateTicket = async (req, res, next) => {
         // Emit socket event for real-time update
         const io = req.app.get('io');
         if (io) {
-            io.to(req.params.id).emit('new_support_response', {
+            const eventData = {
                 ticketId: req.params.id,
                 updatedTicket: updatedTicket
-            });
+            };
+
+            // To the ticket room
+            io.to(req.params.id).emit('new_support_response', eventData);
+
+            // To the creator and the company admin specifically
+            io.to(updatedTicket.creator._id.toString()).emit('new_support_response', eventData);
+            io.to(updatedTicket.companyId._id.toString()).emit('new_support_response', eventData);
         }
 
         // Create Persistent Notification for Response
