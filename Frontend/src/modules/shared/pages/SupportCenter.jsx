@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
 import {
     LifeBuoy,
     Plus,
@@ -42,20 +41,8 @@ import socketService from '@/services/socket';
 
 const SupportCenter = () => {
     const { user, role } = useAuthStore();
-<<<<<<< HEAD
-    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket } = useTicketStore();
-    const location = useLocation();
-    const isSalesSupport = location.pathname === '/sales/support';
-
-    React.useEffect(() => {
-        fetchTickets();
-        fetchTicketStats();
-    }, [fetchTickets, fetchTicketStats]);
-=======
     const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket, initializeSocket, uploadFiles, giveFeedback } = useTicketStore();
     const fileInputRef = React.useRef(null);
->>>>>>> 6dfc12997f3e2414b641995ff74b7061e283e305
-
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState(role === 'admin' ? 'received' : 'sent');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -459,19 +446,6 @@ const SupportCenter = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden pb-12">
-<<<<<<< HEAD
-            {/* Enhanced Background Visibility - Removed for Sales Support as per request */}
-            {!isSalesSupport && (
-                <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
-                    <img
-                        src="/WLCOMPAGE .png"
-                        alt="Background"
-                        className="w-full h-full object-cover object-center opacity-70 dark:opacity-30"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
-                </div>
-            )}
-=======
             <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
                 <img
                     src="/WLCOMPAGE .png"
@@ -480,7 +454,6 @@ const SupportCenter = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
             </div>
->>>>>>> 6dfc12997f3e2414b641995ff74b7061e283e305
 
             <div className="w-full max-w-[1100px] mt-12 px-6 relative z-10 space-y-8">
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
