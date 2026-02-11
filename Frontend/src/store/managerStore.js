@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 const useManagerStore = create((set, get) => ({
     managers: [],
     allManagers: [], // Full list for dropdowns
+    employeePerformance: [], // Performance metrics data
     loading: false,
     error: null,
     managerPagination: {
@@ -96,6 +97,22 @@ const useManagerStore = create((set, get) => ({
         } catch (error) {
             console.error("Delete Manager Error", error);
             toast.error(error.message || 'Failed to delete manager');
+        }
+    },
+
+    fetchEmployeePerformance: async () => {
+        set({ loading: true });
+        try {
+            const res = await api('/manager/performance/employees');
+            if (res.success) {
+                set({
+                    employeePerformance: res.data,
+                    loading: false
+                });
+            }
+        } catch (error) {
+            console.error("Fetch Employee Performance Error", error);
+            set({ loading: false, error: error.message });
         }
     },
 

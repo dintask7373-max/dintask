@@ -85,7 +85,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'My Projects', path: '/manager/projects', icon: ClipboardCheck }, // New Projects Link
                 { name: 'Assign Task', path: '/manager/assign-task', icon: CheckSquare },
                 { name: 'My Tasks', path: '/manager/my-tasks', icon: ListChecks },
-                { name: 'Delegation', path: '/manager/delegation', icon: Users },
+
                 { name: 'Team', path: '/manager/team', icon: Users },
                 { name: 'Progress', path: '/manager/progress', icon: BarChart3 },
                 { name: 'Chat', path: '/manager/chat', icon: MessageSquare },
@@ -125,6 +125,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                     badge: pendingProjectsCount
                 },
                 { name: 'Join Requests', path: '/admin/requests', icon: UserPlus },
+                { name: 'Notifications', path: '/admin/notifications', icon: Bell, badge: unreadCount },
                 { name: 'Reports', path: `/${role}/reports`, icon: BarChart3 },
                 { name: 'Chat', path: '/admin/chat', icon: MessageSquare },
                 { name: 'Calendar', path: `/${role}/calendar`, icon: CalendarIcon },

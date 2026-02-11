@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
     DollarSign,
     FolderKanban,
     Users,
     Bell,
     TrendingUp,
-    Loader2
+    Loader2,
+    ArrowRight,
+    Building2,
+    Calendar,
+    Phone,
+    AlertCircle
 } from 'lucide-react';
 import {
     LineChart,
@@ -30,19 +36,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/sha
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
+import { formatDistanceToNow } from 'date-fns';
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const { user } = useAuthStore();
     const {
         dashboardStats,
         revenueChartData,
         pipelineChartData,
         projectHealthChartData,
+        actionableLists,
         loading,
         fetchDashboardStats,
         fetchRevenueChart,
         fetchPipelineChart,
-        fetchProjectHealthChart
+        fetchProjectHealthChart,
+        fetchActionableLists
     } = useAdminStore();
 
     const [revenuePeriod, setRevenuePeriod] = useState(6);
@@ -52,7 +62,8 @@ const AdminDashboard = () => {
         fetchRevenueChart(revenuePeriod);
         fetchPipelineChart();
         fetchProjectHealthChart();
-    }, [fetchDashboardStats, fetchRevenueChart, fetchPipelineChart, fetchProjectHealthChart, revenuePeriod]);
+        fetchActionableLists();
+    }, [fetchDashboardStats, fetchRevenueChart, fetchPipelineChart, fetchProjectHealthChart, fetchActionableLists, revenuePeriod]);
 
     const stats = [
         {
@@ -100,6 +111,24 @@ const AdminDashboard = () => {
                 : ""
         }
     ];
+
+    const getStatusColor = (status) => {
+        const colors = {
+            'New': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            'Contacted': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+            'Meeting Done': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+            'Proposal Sent': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            'Won': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+            'Lost': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'Open': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            'Pending': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            'Escalated': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'High': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'Medium': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            'Low': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+        };
+        return colors[status] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
+    };
 
     return (
         <motion.div
@@ -321,6 +350,157 @@ const AdminDashboard = () => {
                             </CardContent>
                         </Card>
                     </motion.div>
+
+                    {/* Actionable Lists Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Recent Leads */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest">Recent Leads</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Latest opportunities</CardDescription>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate('/admin/sales')}
+                                        className="text-primary-600 hover:text-primary-700 text-[10px] font-black uppercase"
+                                    >
+                                        View All <ArrowRight size={14} className="ml-1" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                                    {actionableLists?.recentLeads?.length > 0 ? (
+                                        actionableLists.recentLeads.map((lead) => (
+                                            <div key={lead._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600">
+                                                    <Building2 size={16} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">{lead.name}</h5>
+                                                    <p className="text-[10px] text-slate-500 font-medium truncate">{lead.company || 'No company'}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(lead.status))}>
+                                                            {lead.status}
+                                                        </Badge>
+                                                        <span className="text-[9px] text-slate-400 font-bold">
+                                                            {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <Building2 size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs font-bold">No recent leads</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+
+                        {/* Upcoming Follow-ups */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest">Upcoming Follow-ups</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Scheduled activities</CardDescription>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate('/admin/sales')}
+                                        className="text-primary-600 hover:text-primary-700 text-[10px] font-black uppercase"
+                                    >
+                                        View All <ArrowRight size={14} className="ml-1" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                                    {actionableLists?.upcomingFollowUps?.length > 0 ? (
+                                        actionableLists.upcomingFollowUps.map((followUp) => (
+                                            <div key={followUp._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600">
+                                                    {followUp.type === 'Call' ? <Phone size={16} /> : <Calendar size={16} />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">
+                                                        {followUp.leadId?.name || 'Unknown Lead'}
+                                                    </h5>
+                                                    <p className="text-[10px] text-slate-500 font-medium truncate">
+                                                        {followUp.leadId?.company || 'No company'}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge className="text-[8px] font-black uppercase px-2 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                                            {followUp.type}
+                                                        </Badge>
+                                                        <span className="text-[9px] text-slate-400 font-bold">
+                                                            {formatDistanceToNow(new Date(followUp.scheduledAt), { addSuffix: true })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <Calendar size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs font-bold">No upcoming follow-ups</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+
+                        {/* Open Support Tickets */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm sm:text-base font-black uppercase tracking-widest">Open Tickets</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Support requests</CardDescription>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate('/admin/support')}
+                                        className="text-primary-600 hover:text-primary-700 text-[10px] font-black uppercase"
+                                    >
+                                        View All <ArrowRight size={14} className="ml-1" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                                    {actionableLists?.openTickets?.length > 0 ? (
+                                        actionableLists.openTickets.map((ticket) => (
+                                            <div key={ticket._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                                                    <AlertCircle size={16} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">{ticket.title}</h5>
+                                                    <p className="text-[10px] text-slate-500 font-medium truncate">#{ticket.ticketId}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(ticket.priority))}>
+                                                            {ticket.priority}
+                                                        </Badge>
+                                                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(ticket.status))}>
+                                                            {ticket.status}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <AlertCircle size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs font-bold">No open tickets</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </div>
                 </>
             )}
         </motion.div>

@@ -23,6 +23,7 @@ const useAdminStore = create((set) => ({
     revenueChartData: null,
     pipelineChartData: null,
     projectHealthChartData: null,
+    actionableLists: null,
     loading: false,
     error: null,
 
@@ -104,12 +105,31 @@ const useAdminStore = create((set) => ({
         }
     },
 
+    // Fetch Actionable Lists
+    fetchActionableLists: async () => {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await axios.get(`${API_URL}/admin/dashboard-actionable-lists`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ actionableLists: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch actionable lists:', error);
+        }
+    },
+
     // Clear dashboard stats
     clearDashboardStats: () => set({
         dashboardStats: null,
         revenueChartData: null,
         pipelineChartData: null,
         projectHealthChartData: null,
+        actionableLists: null,
         error: null
     })
 }));
