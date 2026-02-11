@@ -4,19 +4,38 @@ const upload = require('../middleware/fileUpload');
 const { protect, authorize } = require('../middleware/auth');
 
 // POST /api/v1/upload
-router.post('/', protect, authorize('superadmin', 'superadmin_staff'), upload.single('image'), (req, res) => {
+router.post('/', protect, upload.single('image'), (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ success: false, message: 'Please upload an image file' });
+            return res.status(400).json({ success: false, message: 'Please upload a file' });
         }
 
-        // Construct file URL
         const fileUrl = req.file.path || req.file.secure_url;
 
         res.status(200).json({
             success: true,
-            message: 'Image uploaded successfully',
-            imageUrl: fileUrl // This URL is now accessible publicly
+            message: 'File uploaded successfully',
+            imageUrl: fileUrl
+        });
+    } catch (error) {
+        console.error('Upload Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error during upload' });
+    }
+});
+
+// POST /api/v1/upload/multiple
+router.post('/multiple', protect, upload.array('files', 5), (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ success: false, message: 'Please upload at least one file' });
+        }
+
+        const urls = req.files.map(file => file.path || file.secure_url);
+
+        res.status(200).json({
+            success: true,
+            message: 'Files uploaded successfully',
+            urls
         });
     } catch (error) {
         console.error('Upload Error:', error);

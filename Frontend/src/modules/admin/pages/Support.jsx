@@ -17,7 +17,6 @@ import {
     Plus,
     Loader2,
     Send,
-    User,
     X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
@@ -45,8 +44,11 @@ import {
 } from "@/shared/components/ui/select";
 import { motion, AnimatePresence } from 'framer-motion';
 import useTicketStore from '@/store/ticketStore'; // Import Store
+import socketService from '@/services/socket';
+import useAuthStore from '@/store/authStore';
 
 const SupportManagement = () => {
+    const { user: currentUser } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState('All');
     const [selectedTicket, setSelectedTicket] = useState(null);
@@ -55,7 +57,38 @@ const SupportManagement = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Store Data
-    const { tickets, loading, fetchTickets, addTicket, fetchTicketStats, stats } = useTicketStore();
+    const { tickets, loading, fetchTickets, addTicket, fetchTicketStats, stats, initializeSocket } = useTicketStore();
+
+    // Sync selectedTicket with store data for real-time updates
+    useEffect(() => {
+        if (selectedTicket) {
+            const updated = tickets.find(t => t._id === selectedTicket._id);
+            if (updated) {
+                // Compare something to avoid infinite loop or unnecessary re-renders
+                // If responses length changed or status changed
+                if (updated.responses?.length !== selectedTicket.responses?.length || updated.status !== selectedTicket.status) {
+                    setSelectedTicket(updated);
+                }
+            }
+        }
+    }, [tickets, selectedTicket]);
+
+    // Socket Initialization
+    useEffect(() => {
+        initializeSocket(currentUser?._id);
+    }, [initializeSocket, currentUser]);
+
+    // Room Management
+    useEffect(() => {
+        if (selectedTicket) {
+            socketService.joinTicket(selectedTicket._id);
+
+            // Cleanup when ticket changes or unmounts
+            return () => {
+                socketService.leaveTicket(selectedTicket._id);
+            };
+        }
+    }, [selectedTicket]);
 
     // Form State
     const [formData, setFormData] = useState({

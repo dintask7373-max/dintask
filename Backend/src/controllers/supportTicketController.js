@@ -1,6 +1,8 @@
 const SupportTicket = require('../models/SupportTicket');
 const ErrorResponse = require('../utils/errorResponse');
 const Admin = require('../models/Admin');
+const Notification = require('../models/Notification');
+const SuperAdmin = require('../models/SuperAdmin');
 
 // Helper to generate Ticket ID
 const generateTicketId = () => {
@@ -45,6 +47,48 @@ exports.createTicket = async (req, res, next) => {
             companyId,
             isEscalatedToSuperAdmin
         });
+
+        // Emit socket event for real-time update
+        const io = req.app.get('io');
+        if (io) {
+            if (ticket.isEscalatedToSuperAdmin) {
+                // To all superadmins (global notification for now)
+                io.emit('new_support_ticket', ticket);
+            } else {
+                // To the company admin room
+                io.to(companyId.toString()).emit('new_support_ticket', ticket);
+            }
+        }
+
+        // Create Persistent Notification
+        try {
+            if (ticket.isEscalatedToSuperAdmin) {
+                // For Super Admins
+                const superAdmins = await SuperAdmin.find({ role: 'superadmin' });
+                for (const sa of superAdmins) {
+                    await Notification.create({
+                        recipient: sa._id,
+                        sender: req.user.id,
+                        type: 'support_ticket',
+                        title: 'New Support Escalation',
+                        message: `Admin ${req.user.name} has raised a new escalation: ${ticket.title}`,
+                        link: `/support`
+                    });
+                }
+            } else {
+                // For Company Admin
+                await Notification.create({
+                    recipient: ticket.companyId,
+                    sender: req.user.id,
+                    type: 'support_ticket',
+                    title: 'New Support Ticket',
+                    message: `${req.user.name} raised a ticket: ${ticket.title}`,
+                    link: `/support`
+                });
+            }
+        } catch (err) {
+            console.error('Notification Error:', err);
+        }
 
         res.status(201).json({
             success: true,
@@ -192,10 +236,47 @@ exports.updateTicket = async (req, res, next) => {
 
         await ticket.save();
 
-        // Re-populate for frontend update
         const updatedTicket = await SupportTicket.findById(req.params.id)
             .populate('creator', 'name email role')
             .populate('companyId', 'companyName');
+
+        // Emit socket event for real-time update
+        const io = req.app.get('io');
+        if (io) {
+            io.to(req.params.id).emit('new_support_response', {
+                ticketId: req.params.id,
+                updatedTicket: updatedTicket
+            });
+        }
+
+        // Create Persistent Notification for Response
+        try {
+            if (req.body.response) {
+                const isResponderAdmin = ['admin', 'superadmin', 'superadmin_staff'].includes(req.user.role);
+                const recipientId = isResponderAdmin ? ticket.creator : ticket.companyId;
+
+                await Notification.create({
+                    recipient: recipientId,
+                    sender: req.user.id,
+                    type: 'support_ticket',
+                    title: 'New Response on Ticket',
+                    message: `${req.user.name} replied to: ${ticket.title}`,
+                    link: `/support`
+                });
+            } else if (req.body.status) {
+                // Notify creator of status change
+                await Notification.create({
+                    recipient: ticket.creator,
+                    sender: req.user.id,
+                    type: 'support_ticket',
+                    title: 'Ticket Status Updated',
+                    message: `Your ticket "${ticket.title}" is now ${req.body.status}`,
+                    link: `/support`
+                });
+            }
+        } catch (err) {
+            console.error('Notification Error:', err);
+        }
 
         res.status(200).json({
             success: true,

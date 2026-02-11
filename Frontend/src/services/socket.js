@@ -62,6 +62,31 @@ class SocketService {
     onStopTyping(callback) {
         if (this.socket) this.socket.on('stop_typing', callback);
     }
+
+    // Support Ticket Real-time
+    joinTicket(ticketId) {
+        if (this.socket) this.socket.emit('join_ticket', ticketId);
+    }
+
+    leaveTicket(ticketId) {
+        if (this.socket) this.socket.emit('leave_ticket', ticketId);
+    }
+
+    onSupportResponse(callback) {
+        if (this.socket) this.socket.on('new_support_response', callback);
+    }
+
+    onSupportTicket(callback) {
+        if (this.socket) this.socket.on('new_support_ticket', callback);
+    }
+
+    emitSupportTyping(ticketId, userName) {
+        if (this.socket) this.socket.emit('support_typing', { ticketId, userName });
+    }
+
+    onSupportTyping(callback) {
+        if (this.socket) this.socket.on('support_typing', callback);
+    }
 }
 
 const socketService = new SocketService();

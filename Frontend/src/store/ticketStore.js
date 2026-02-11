@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import socketService from '@/services/socket';
 
 const useTicketStore = create((set, get) => ({
     tickets: [],
@@ -46,7 +47,7 @@ const useTicketStore = create((set, get) => ({
                 description: ticketData.description,
                 type: ticketData.category,
                 priority: ticketData.priority,
-                // attachments: ticketData.attachments 
+                attachments: ticketData.attachments
             };
 
             const res = await api('/support-tickets', {
@@ -133,6 +134,82 @@ const useTicketStore = create((set, get) => ({
             console.error("Escalation Error:", err);
             toast.error(err.message || 'Failed to escalate ticket');
             return false;
+        }
+    },
+
+    giveFeedback: async (id, rating, feedback) => {
+        try {
+            const res = await api(`/support-tickets/${id}`, {
+                method: 'PUT',
+                body: { rating, feedback, status: 'Closed' }
+            });
+
+            set((state) => ({
+                tickets: state.tickets.map((t) =>
+                    t._id === id ? res.data : t
+                )
+            }));
+
+            toast.success('Thank you for your feedback!');
+            return true;
+        } catch (err) {
+            console.error("Feedback Error:", err);
+            toast.error(err.message || 'Failed to submit feedback');
+            return false;
+        }
+    },
+
+    initializeSocket: (userId) => {
+        socketService.onSupportResponse(({ ticketId, updatedTicket }) => {
+            set((state) => ({
+                tickets: state.tickets.map((t) =>
+                    t._id === ticketId ? updatedTicket : t
+                )
+            }));
+
+            // Optional: If we want to show a toast if the user is not looking at the ticket
+            // But usually, real-time update in the view is enough.
+        });
+
+        socketService.onSupportTicket((newTicket) => {
+            // Check if it belongs to current admin/company
+            // Actually the backend already emits to the correct room if not escalated.
+            // If escalated, it might be for SuperAdmin.
+            set((state) => ({
+                tickets: [newTicket, ...state.tickets]
+            }));
+            toast.info(`New support ticket: ${newTicket.title}`);
+        });
+    },
+
+    uploadFiles: async (files) => {
+        const formData = new FormData();
+        if (files.length === 1) {
+            formData.append('image', files[0]);
+            try {
+                const res = await api('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                return [res.imageUrl];
+            } catch (err) {
+                console.error("Upload Error:", err);
+                toast.error("Failed to upload file");
+                return [];
+            }
+        } else {
+            files.forEach(file => formData.append('files', file));
+            try {
+                const res = await api('/upload/multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                return res.urls;
+            } catch (err) {
+                console.error("Upload Error:", err);
+                toast.error("Failed to upload files");
+                return [];
+            }
         }
     }
 }));

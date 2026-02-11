@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import apiRequest from '../lib/api';
+import socketService from '@/services/socket';
+import { toast } from 'sonner';
 
 const useSuperAdminStore = create(
     persist(
@@ -655,6 +657,26 @@ const useSuperAdminStore = create(
                     console.error('Failed to delete staff:', err);
                 }
                 return false;
+            },
+
+            initializeSupportSocket: () => {
+                socketService.onSupportResponse(({ ticketId, updatedTicket }) => {
+                    set((state) => ({
+                        supportTickets: state.supportTickets.map((t) =>
+                            t._id === ticketId ? updatedTicket : t
+                        )
+                    }));
+                });
+
+                socketService.onSupportTicket((newTicket) => {
+                    // SuperAdmin only cares if it's escalated
+                    if (newTicket.isEscalatedToSuperAdmin) {
+                        set((state) => ({
+                            supportTickets: [newTicket, ...state.supportTickets]
+                        }));
+                        toast.info(`New escalated ticket: ${newTicket.title}`);
+                    }
+                });
             },
         }),
         {

@@ -12,6 +12,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { format } from 'date-fns';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -98,11 +100,14 @@ const Notes = () => {
 
     // Helper to highlight search matches
     const HighlightText = ({ text, highlight }) => {
+        // Strip HTML if it's there (since we now use Rich Text)
+        const plainText = text.replace(/<[^>]*>/g, '');
+
         if (!highlight.trim()) {
-            return <span>{text}</span>;
+            return <span>{plainText}</span>;
         }
         const regex = new RegExp(`(${highlight})`, 'gi');
-        const parts = text.split(regex);
+        const parts = plainText.split(regex);
 
         return (
             <span>
@@ -117,6 +122,14 @@ const Notes = () => {
                 )}
             </span>
         );
+    };
+
+    const quillModules = {
+        toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['clean']
+        ],
     };
 
     return (
@@ -302,12 +315,49 @@ const Notes = () => {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Content</label>
-                            <textarea
-                                className="w-full min-h-[140px] p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-sm font-bold focus:bg-white outline-none transition-all placeholder:text-slate-300 placeholder:font-medium leading-relaxed"
-                                placeholder="Type your sequence here..."
-                                value={newNote.content}
-                                onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-                            />
+                            <div className="quill-premium-wrapper">
+                                <ReactQuill
+                                    theme="snow"
+                                    value={newNote.content}
+                                    onChange={(content) => setNewNote({ ...newNote, content })}
+                                    modules={quillModules}
+                                    className="bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 text-sm font-bold transition-all focus-within:bg-white dark:focus-within:bg-slate-800"
+                                    placeholder="Type your sequence here..."
+                                />
+                            </div>
+                            <style jsx global>{`
+                                .quill-premium-wrapper .ql-toolbar {
+                                    border: none !important;
+                                    background: transparent !important;
+                                    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+                                    padding: 8px 12px !important;
+                                }
+                                .dark .quill-premium-wrapper .ql-toolbar {
+                                    border-bottom-color: rgba(255,255,255,0.05) !important;
+                                }
+                                .quill-premium-wrapper .ql-container {
+                                    border: none !important;
+                                    min-height: 140px;
+                                    font-family: inherit !important;
+                                }
+                                .quill-premium-wrapper .ql-editor {
+                                    min-height: 140px;
+                                    padding: 16px !important;
+                                    font-size: 14px !important;
+                                    line-height: 1.6 !important;
+                                }
+                                .quill-premium-wrapper .ql-editor.ql-blank::before {
+                                    color: #cbd5e1 !important;
+                                    font-style: normal !important;
+                                    left: 16px !important;
+                                }
+                                .dark .quill-premium-wrapper .ql-picker {
+                                    color: #94a3b8 !important;
+                                }
+                                .dark .ql-stroke {
+                                    stroke: #94a3b8 !important;
+                                }
+                            `}</style>
                         </div>
                     </div>
                     <DialogFooter className="mt-8">

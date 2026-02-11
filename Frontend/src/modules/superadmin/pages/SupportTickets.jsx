@@ -35,6 +35,7 @@ import {
 } from "@/shared/components/ui/select";
 import { motion, AnimatePresence } from 'framer-motion';
 import useSuperAdminStore from '@/store/superAdminStore';
+import socketService from '@/services/socket';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -47,11 +48,32 @@ const SuperAdminSupport = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Store fetch
-    const { supportTickets, loading, fetchSupportTickets, replyToSupportTicket, updateSupportTicketStatus } = useSuperAdminStore();
+    const { supportTickets, loading, fetchSupportTickets, replyToSupportTicket, updateSupportTicketStatus, initializeSupportSocket } = useSuperAdminStore();
 
     useEffect(() => {
         fetchSupportTickets();
-    }, [fetchSupportTickets]);
+        initializeSupportSocket();
+    }, [fetchSupportTickets, initializeSupportSocket]);
+
+    // Sync selectedTicket with store data for real-time updates
+    useEffect(() => {
+        if (selectedTicket) {
+            const updated = supportTickets.find(t => t._id === selectedTicket._id);
+            if (updated) {
+                if (updated.responses?.length !== selectedTicket.responses?.length || updated.status !== selectedTicket.status) {
+                    setSelectedTicket(updated);
+                }
+            }
+        }
+    }, [supportTickets, selectedTicket]);
+
+    // Room Management
+    useEffect(() => {
+        if (selectedTicket) {
+            socketService.joinTicket(selectedTicket._id);
+            return () => socketService.leaveTicket(selectedTicket._id);
+        }
+    }, [selectedTicket]);
 
     const filters = ['All', 'Open', 'Pending', 'Escalated', 'Resolved', 'Closed'];
 
