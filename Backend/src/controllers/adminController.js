@@ -714,6 +714,190 @@ exports.getDashboardStats = async (req, res, next) => {
   }
 };
 
+// @desc    Get Revenue Chart Data
+// @route   GET /api/v1/admin/dashboard-charts/revenue
+// @access  Private (Admin only)
+exports.getRevenueChart = async (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access revenue chart', 403));
+    }
+
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    // Get period from query, default to 6 months
+    const period = parseInt(req.query.period) || 6;
+    const months = [6, 12].includes(period) ? period : 6;
+
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - (months - 1));
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Aggregate revenue from won deals by month
+    const Lead = require('../models/Lead');
+    const revenueByMonth = await Lead.aggregate([
+      {
+        $match: {
+          adminId: adminObjectId,
+          status: 'Won',
+          updatedAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$updatedAt' },
+            month: { $month: '$updatedAt' }
+          },
+          revenue: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // Generate all months in the range to ensure continuous data
+    const revenueTrends = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let currentDate = new Date(startDate);
+    const today = new Date();
+
+    while (currentDate <= today || (currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear())) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+
+      const existingData = revenueByMonth.find(item => item._id.year === year && item._id.month === month);
+
+      revenueTrends.push({
+        name: monthNames[month - 1],
+        fullName: `${monthNames[month - 1]} ${year}`,
+        revenue: existingData ? existingData.revenue : 0,
+        count: existingData ? existingData.count : 0
+      });
+
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: revenueTrends
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Sales Pipeline Chart Data
+// @route   GET /api/v1/admin/dashboard-charts/pipeline
+// @access  Private (Admin only)
+exports.getSalesPipelineChart = async (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access pipeline chart', 403));
+    }
+
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    const Lead = require('../models/Lead');
+
+    // Get count and total value for each pipeline stage
+    const pipelineData = await Lead.aggregate([
+      {
+        $match: {
+          adminId: adminObjectId
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalValue: { $sum: '$amount' }
+        }
+      }
+    ]);
+
+    // Define stage order for funnel visualization
+    const stageOrder = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
+
+    const formattedData = stageOrder.map(stage => {
+      const stageData = pipelineData.find(item => item._id === stage);
+      return {
+        name: stage,
+        count: stageData ? stageData.count : 0,
+        value: stageData ? stageData.totalValue : 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedData
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Project Health Chart Data
+// @route   GET /api/v1/admin/dashboard-charts/projects
+// @access  Private (Admin only)
+exports.getProjectHealthChart = async (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access project chart', 403));
+    }
+
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    const Project = require('../models/Project');
+
+    // Get count for each project status
+    const projectData = await Project.aggregate([
+      {
+        $match: {
+          adminId: adminObjectId
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Calculate total for percentages
+    const total = projectData.reduce((sum, item) => sum + item.count, 0);
+
+    // Format data for pie chart with colors
+    const statusColors = {
+      'active': '#3b82f6',      // blue
+      'completed': '#10b981',   // green
+      'on_hold': '#f59e0b',     // amber
+      'cancelled': '#ef4444'    // red
+    };
+
+    const formattedData = projectData.map(item => ({
+      name: item._id.charAt(0).toUpperCase() + item._id.slice(1).replace('_', ' '),
+      value: item.count,
+      percentage: total > 0 ? ((item.count / total) * 100).toFixed(1) : 0,
+      color: statusColors[item._id] || '#94a3b8'
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedData,
+      total
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token

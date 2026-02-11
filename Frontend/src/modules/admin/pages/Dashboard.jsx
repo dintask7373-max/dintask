@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     DollarSign,
@@ -8,19 +8,51 @@ import {
     TrendingUp,
     Loader2
 } from 'lucide-react';
+import {
+    LineChart,
+    Line,
+    BarChart,
+    Bar,
+    PieChart,
+    Pie,
+    Cell,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Legend
+} from 'recharts';
 import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
 import useAuthStore from '@/store/authStore';
 import useAdminStore from '@/store/adminStore';
-import { Card, CardContent } from '@/shared/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/utils/cn';
 
 const AdminDashboard = () => {
     const { user } = useAuthStore();
-    const { dashboardStats, loading, fetchDashboardStats } = useAdminStore();
+    const {
+        dashboardStats,
+        revenueChartData,
+        pipelineChartData,
+        projectHealthChartData,
+        loading,
+        fetchDashboardStats,
+        fetchRevenueChart,
+        fetchPipelineChart,
+        fetchProjectHealthChart
+    } = useAdminStore();
+
+    const [revenuePeriod, setRevenuePeriod] = useState(6);
 
     useEffect(() => {
         fetchDashboardStats();
-    }, [fetchDashboardStats]);
+        fetchRevenueChart(revenuePeriod);
+        fetchPipelineChart();
+        fetchProjectHealthChart();
+    }, [fetchDashboardStats, fetchRevenueChart, fetchPipelineChart, fetchProjectHealthChart, revenuePeriod]);
 
     const stats = [
         {
@@ -100,54 +132,196 @@ const AdminDashboard = () => {
 
             {/* High-Level Metrics Cards */}
             {!loading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {stats.map((stat, i) => (
-                        <motion.div key={i} variants={fadeInUp}>
-                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 rounded-2xl sm:rounded-3xl">
-                                <CardContent className="p-4 sm:p-6">
-                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                        <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 duration-300`}>
-                                            <stat.icon size={20} className="sm:w-6 sm:h-6" />
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        {stats.map((stat, i) => (
+                            <motion.div key={i} variants={fadeInUp}>
+                                <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300 rounded-2xl sm:rounded-3xl">
+                                    <CardContent className="p-4 sm:p-6">
+                                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                            <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 duration-300`}>
+                                                <stat.icon size={20} className="sm:w-6 sm:h-6" />
+                                            </div>
+                                            {stat.trend && (
+                                                <Badge variant="secondary" className="bg-slate-50 dark:bg-slate-800 text-[8px] sm:text-[10px] font-black uppercase tracking-tighter px-2 h-5 flex items-center gap-1">
+                                                    <TrendingUp size={10} />
+                                                    {stat.trend}
+                                                </Badge>
+                                            )}
                                         </div>
-                                        {stat.trend && (
-                                            <Badge variant="secondary" className="bg-slate-50 dark:bg-slate-800 text-[8px] sm:text-[10px] font-black uppercase tracking-tighter px-2 h-5 flex items-center gap-1">
-                                                <TrendingUp size={10} />
-                                                {stat.trend}
-                                            </Badge>
-                                        )}
-                                    </div>
+                                        <div>
+                                            <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">{stat.title}</p>
+                                            <h4 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tighter">{stat.value}</h4>
+                                            <p className="text-[9px] sm:text-xs text-slate-500 font-medium mt-1">{stat.description}</p>
+                                            {stat.breakdown && (
+                                                <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">{stat.breakdown}</p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Business Performance Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Revenue Trend Chart */}
+                        <motion.div variants={fadeInUp} className="lg:col-span-2">
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
                                     <div>
-                                        <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">{stat.title}</p>
-                                        <h4 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tighter">{stat.value}</h4>
-                                        <p className="text-[9px] sm:text-xs text-slate-500 font-medium mt-1">{stat.description}</p>
-                                        {stat.breakdown && (
-                                            <p className="text-[8px] sm:text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">{stat.breakdown}</p>
-                                        )}
+                                        <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest">Revenue Trend</CardTitle>
+                                        <CardDescription className="text-[10px] sm:text-xs font-bold">Monthly Performance</CardDescription>
                                     </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant={revenuePeriod === 6 ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setRevenuePeriod(6)}
+                                            className={cn(
+                                                "h-8 px-3 text-[10px] font-black uppercase",
+                                                revenuePeriod === 6 && "bg-primary-600 text-white"
+                                            )}
+                                        >
+                                            6M
+                                        </Button>
+                                        <Button
+                                            variant={revenuePeriod === 12 ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setRevenuePeriod(12)}
+                                            className={cn(
+                                                "h-8 px-3 text-[10px] font-black uppercase",
+                                                revenuePeriod === 12 && "bg-primary-600 text-white"
+                                            )}
+                                        >
+                                            12M
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0">
+                                    <ResponsiveContainer width="100%" height={250}>
+                                        <LineChart data={revenueChartData || []}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                            <XAxis
+                                                dataKey="name"
+                                                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <YAxis
+                                                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: '#1e293b',
+                                                    border: 'none',
+                                                    borderRadius: '12px',
+                                                    color: '#fff',
+                                                    fontSize: '12px'
+                                                }}
+                                                formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="revenue"
+                                                stroke="#10b981"
+                                                strokeWidth={3}
+                                                dot={{ fill: '#10b981', r: 4 }}
+                                                activeDot={{ r: 6 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </CardContent>
                             </Card>
                         </motion.div>
-                    ))}
-                </div>
-            )}
 
-            {/* Placeholder for future sections */}
-            {!loading && (
-                <motion.div variants={fadeInUp} className="mt-8">
-                    <Card className="border-none shadow-sm bg-slate-50/50 dark:bg-slate-900/50">
-                        <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-3">
-                            <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-xl text-primary-600">
-                                <TrendingUp size={32} strokeWidth={1.5} />
-                            </div>
-                            <div>
-                                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">More Insights Coming Soon</h3>
-                                <p className="text-sm text-slate-500 font-medium mt-1">
-                                    Charts, performance trends, and detailed analytics will be added here.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                        {/* Project Health Chart */}
+                        <motion.div variants={fadeInUp}>
+                            <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                                <CardHeader className="p-4 sm:p-6">
+                                    <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest">Project Health</CardTitle>
+                                    <CardDescription className="text-[10px] sm:text-xs font-bold">Status Distribution</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-4 sm:p-6 pt-0">
+                                    <ResponsiveContainer width="100%" height={250}>
+                                        <PieChart>
+                                            <Pie
+                                                data={projectHealthChartData || []}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percentage }) => `${name}: ${percentage}%`}
+                                                outerRadius={80}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {(projectHealthChartData || []).map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: '#1e293b',
+                                                    border: 'none',
+                                                    borderRadius: '12px',
+                                                    color: '#fff',
+                                                    fontSize: '12px'
+                                                }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </div>
+
+                    {/* Sales Pipeline Chart */}
+                    <motion.div variants={fadeInUp}>
+                        <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden">
+                            <CardHeader className="p-4 sm:p-6">
+                                <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest">Sales Pipeline</CardTitle>
+                                <CardDescription className="text-[10px] sm:text-xs font-bold">Deal Distribution by Stage</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4 sm:p-6 pt-0">
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={pipelineChartData || []}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                        <XAxis
+                                            dataKey="name"
+                                            tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: '#1e293b',
+                                                border: 'none',
+                                                borderRadius: '12px',
+                                                color: '#fff',
+                                                fontSize: '12px'
+                                            }}
+                                            formatter={(value, name) => [
+                                                name === 'count' ? value : `₹${value.toLocaleString()}`,
+                                                name === 'count' ? 'Deals' : 'Value'
+                                            ]}
+                                        />
+                                        <Legend />
+                                        <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                                        <Bar dataKey="value" fill="#10b981" radius={[8, 8, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                </>
             )}
         </motion.div>
     );
