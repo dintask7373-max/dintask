@@ -205,7 +205,7 @@ const ManagerManagement = () => {
                 {[
                     { label: 'Total Managers', value: managerPagination.total, icon: Shield, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10' },
                     { label: 'Active', value: managerPagination.total, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20' }, // Approximation
-                    { label: 'Total Staff', value: employees.length, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/10' },
+                    { label: 'Total Staff', value: allEmployees.length, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/10' },
                     { label: 'Page', value: `${page}/${managerPagination.pages}`, icon: CheckCircle2, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10' }
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">

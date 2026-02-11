@@ -52,36 +52,36 @@ const ManagerDashboard = () => {
 
         return [
             {
-                title: 'Personal Backlog',
+                title: 'My Tasks',
                 value: myTasksToComplete.length,
                 icon: CheckSquare,
                 color: 'text-primary-600',
                 bg: 'bg-primary-50 dark:bg-primary-900/10',
-                trend: 'Direct Assignments'
+                trend: 'Assigned to me'
             },
             {
-                title: 'Queue Depth',
+                title: 'Pending Tasks',
                 value: managerTasks.filter(t => !t.delegatedBy && t.status !== 'completed').length,
                 icon: Zap,
                 color: 'text-amber-600',
                 bg: 'bg-amber-50 dark:bg-amber-900/10',
-                trend: 'Priority Sync'
+                trend: 'In progress'
             },
             {
-                title: 'Team Velocity',
+                title: 'Completion Rate',
                 value: `${completionRate}%`,
                 icon: TrendingUp,
                 color: 'text-emerald-600',
                 bg: 'bg-emerald-50 dark:bg-emerald-900/10',
-                trend: 'Yield Rate'
+                trend: 'Team performance'
             },
             {
-                title: 'Active Force',
+                title: 'Team Members',
                 value: employees.filter(e => e.managerId === user?.id && e.status === 'active').length,
                 icon: Users,
                 color: 'text-indigo-600',
                 bg: 'bg-indigo-50 dark:bg-indigo-900/10',
-                trend: `Units Online`
+                trend: `Active employees`
             }
         ];
     }, [tasks, employees, user]);
@@ -96,31 +96,12 @@ const ManagerDashboard = () => {
                     </div>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                            Manager <span className="text-primary-600">Sync</span>
+                            Manager <span className="text-primary-600">Dashboard</span>
                         </h1>
                         <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
-                            Team operation status: Nominal
+                            Your team overview
                         </p>
                     </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 sm:flex-none h-9 rounded-xl border-slate-200 dark:border-slate-800 font-black text-[9px] uppercase tracking-widest"
-                        onClick={() => navigate('/manager/schedule')}
-                    >
-                        <CalendarIcon size={14} className="mr-2" />
-                        Timeline
-                    </Button>
-                    <Button
-                        size="sm"
-                        className="flex-1 sm:flex-none h-9 rounded-xl bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/20 font-black text-[9px] uppercase tracking-widest text-white"
-                        onClick={() => navigate('/manager/delegation')}
-                    >
-                        <CheckSquare size={14} className="mr-2" />
-                        Delegate
-                    </Button>
                 </div>
             </div>
 

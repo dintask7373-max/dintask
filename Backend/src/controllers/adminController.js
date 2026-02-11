@@ -634,22 +634,41 @@ exports.getDashboardStats = async (req, res, next) => {
     const adminId = req.user.id;
     const adminObjectId = new mongoose.Types.ObjectId(adminId);
 
-    // Get Total Revenue from all Sales (Won deals)
-    const revenueResult = await require('../models/Lead').aggregate([
-      {
-        $match: {
-          adminId: adminObjectId,
-          status: 'Won'
+    // Get Total Revenue from all Sales (Won deals) + Completed Projects
+    const [revenueResult, completedProjectsRevenue] = await Promise.all([
+      require('../models/Lead').aggregate([
+        {
+          $match: {
+            adminId: adminObjectId,
+            status: 'Won'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$amount' }
+          }
         }
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: '$amount' }
+      ]),
+      require('../models/Project').aggregate([
+        {
+          $match: {
+            adminId: adminObjectId,
+            status: 'completed'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$budget' }
+          }
         }
-      }
+      ])
     ]);
-    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+
+    const wonDealsRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+    const completedProjectsBudget = completedProjectsRevenue.length > 0 ? completedProjectsRevenue[0].totalRevenue : 0;
+    const totalRevenue = wonDealsRevenue + completedProjectsBudget;
 
     // Get Active Projects count
     const activeProjects = await require('../models/Project').countDocuments({
@@ -735,27 +754,51 @@ exports.getRevenueChart = async (req, res, next) => {
     startDate.setDate(1);
     startDate.setHours(0, 0, 0, 0);
 
-    // Aggregate revenue from won deals by month
+    // Aggregate revenue from won deals and completed projects by month
     const Lead = require('../models/Lead');
-    const revenueByMonth = await Lead.aggregate([
-      {
-        $match: {
-          adminId: adminObjectId,
-          status: 'Won',
-          updatedAt: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$updatedAt' },
-            month: { $month: '$updatedAt' }
-          },
-          revenue: { $sum: '$amount' },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    const Project = require('../models/Project');
+
+    const [wonDealsRevenue, completedProjectsRevenue] = await Promise.all([
+      Lead.aggregate([
+        {
+          $match: {
+            adminId: adminObjectId,
+            status: 'Won',
+            updatedAt: { $gte: startDate }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$updatedAt' },
+              month: { $month: '$updatedAt' }
+            },
+            revenue: { $sum: '$amount' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } }
+      ]),
+      Project.aggregate([
+        {
+          $match: {
+            adminId: adminObjectId,
+            status: 'completed',
+            updatedAt: { $gte: startDate }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$updatedAt' },
+              month: { $month: '$updatedAt' }
+            },
+            revenue: { $sum: '$budget' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } }
+      ])
     ]);
 
     // Generate all months in the range to ensure continuous data
@@ -769,13 +812,20 @@ exports.getRevenueChart = async (req, res, next) => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      const existingData = revenueByMonth.find(item => item._id.year === year && item._id.month === month);
+      // Find data for this month from both sources
+      const wonDealsData = wonDealsRevenue.find(item => item._id.year === year && item._id.month === month);
+      const projectsData = completedProjectsRevenue.find(item => item._id.year === year && item._id.month === month);
+
+      const wonRevenue = wonDealsData ? wonDealsData.revenue : 0;
+      const projectRevenue = projectsData ? projectsData.revenue : 0;
+      const wonCount = wonDealsData ? wonDealsData.count : 0;
+      const projectCount = projectsData ? projectsData.count : 0;
 
       revenueTrends.push({
         name: monthNames[month - 1],
         fullName: `${monthNames[month - 1]} ${year}`,
-        revenue: existingData ? existingData.revenue : 0,
-        count: existingData ? existingData.count : 0
+        revenue: wonRevenue + projectRevenue,
+        count: wonCount + projectCount
       });
 
       currentDate.setMonth(currentDate.getMonth() + 1);
@@ -892,6 +942,68 @@ exports.getProjectHealthChart = async (req, res, next) => {
       success: true,
       data: formattedData,
       total
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Actionable Lists for Dashboard
+// @route   GET /api/v1/admin/dashboard-actionable-lists
+// @access  Private (Admin only)
+exports.getActionableLists = async (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access actionable lists', 403));
+    }
+
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    const Lead = require('../models/Lead');
+    const FollowUp = require('../models/FollowUp');
+    const SupportTicket = require('../models/SupportTicket');
+
+    // Fetch data in parallel
+    const [recentLeads, upcomingFollowUps, openTickets] = await Promise.all([
+      // Recent Leads (last 5)
+      Lead.find({ adminId: adminObjectId })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('name company email mobile status amount createdAt')
+        .lean(),
+
+      // Upcoming Follow-ups (next 5 scheduled)
+      FollowUp.find({
+        adminId: adminObjectId,
+        status: 'Scheduled',
+        scheduledAt: { $gte: new Date() }
+      })
+        .sort({ scheduledAt: 1 })
+        .limit(5)
+        .populate('leadId', 'name company')
+        .populate('salesRepId', 'name')
+        .select('type scheduledAt notes status')
+        .lean(),
+
+      // Open Support Tickets (latest 5)
+      SupportTicket.find({
+        companyId: adminObjectId,
+        status: { $in: ['Open', 'Pending', 'Escalated'] }
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('ticketId title type priority status createdAt')
+        .lean()
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        recentLeads,
+        upcomingFollowUps,
+        openTickets
+      }
     });
   } catch (err) {
     next(err);
