@@ -221,7 +221,12 @@ const Contacts = () => {
           { label: 'Converted Core', value: contacts.length, color: 'emerald' },
           { label: 'Active Leads', value: leads.length, color: 'indigo' }
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <Card key={i} className={cn(
+            "border-2 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1",
+            stat.color === 'primary' ? 'border-primary-100 shadow-primary-200/50' :
+              stat.color === 'emerald' ? 'border-emerald-100 shadow-emerald-200/50' :
+                'border-indigo-100 shadow-indigo-200/50'
+          )}>
             <CardContent className="p-3 sm:p-4">
               <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
               <p className={cn("text-lg sm:text-xl font-black leading-none",
@@ -234,7 +239,7 @@ const Contacts = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Available Leads for Conversion - Tactical View */}
-        <Card className="lg:col-span-5 border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden h-fit border border-slate-50 dark:border-slate-800/50">
+        <Card className="lg:col-span-5 border-2 border-indigo-100 shadow-xl shadow-indigo-100/30 bg-gradient-to-br from-white to-indigo-50/20 dark:from-slate-900 dark:to-indigo-900/10 rounded-3xl overflow-hidden h-fit">
           <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
             <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Conversion Queue</CardTitle>
           </CardHeader>
@@ -280,7 +285,7 @@ const Contacts = () => {
         </Card>
 
         {/* Contacts List - High Density */}
-        <Card className="lg:col-span-7 border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-50 dark:border-slate-800/50">
+        <Card className="lg:col-span-7 border-2 border-primary-100 shadow-2xl shadow-primary-200/30 bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 rounded-3xl overflow-hidden">
           <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Repository</CardTitle>
             <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest rounded-lg h-6">Live Link</Badge>

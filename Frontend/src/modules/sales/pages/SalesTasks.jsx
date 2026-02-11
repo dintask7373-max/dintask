@@ -177,9 +177,6 @@ const SalesTasks = () => {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
                 <div className="flex items-center gap-3">
-                    <div className="lg:hidden w-10 h-10 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
-                    </div>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
                             Sales <span className="text-primary-600">Operations</span>
@@ -202,17 +199,20 @@ const SalesTasks = () => {
             {/* Compact High-Density Stats Bar */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
                 {[
-                    { label: 'Total Ops', value: taskStats.totalTasks, color: 'text-slate-600' },
-                    { label: 'Pending', value: taskStats.pendingTasks, color: 'text-amber-600' },
-                    { label: 'In Force', value: taskStats.inProgressTasks, color: 'text-blue-600' },
-                    { label: 'Resolved', value: taskStats.completedTasks, color: 'text-emerald-600' },
-                    { label: 'Urgent', value: taskStats.highPriorityTasks, color: 'text-red-600' }
+                    { label: 'Total Ops', value: taskStats.totalTasks, color: 'text-slate-600', border: 'border-slate-200', bg: 'bg-slate-50', shadow: 'shadow-slate-200/50' },
+                    { label: 'Pending', value: taskStats.pendingTasks, color: 'text-amber-600', border: 'border-amber-200', bg: 'bg-amber-50', shadow: 'shadow-amber-200/50' },
+                    { label: 'In Force', value: taskStats.inProgressTasks, color: 'text-blue-600', border: 'border-blue-200', bg: 'bg-blue-50', shadow: 'shadow-blue-200/50' },
+                    { label: 'Resolved', value: taskStats.completedTasks, color: 'text-emerald-600', border: 'border-emerald-200', bg: 'bg-emerald-50', shadow: 'shadow-emerald-200/50' },
+                    { label: 'Urgent', value: taskStats.highPriorityTasks, color: 'text-red-600', border: 'border-red-200', bg: 'bg-red-50', shadow: 'shadow-red-200/50' }
                 ].map((stat, i) => (
                     <Card key={i} className={cn(
-                        "border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group",
+                        "border-2 shadow-lg rounded-2xl overflow-hidden group transition-all hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        "bg-white dark:bg-slate-900", // Keep white bg but border provides color
                         i === 4 ? "col-span-2 sm:col-span-1" : ""
                     )}>
-                        <CardContent className="p-3.5 sm:p-4 transition-transform group-hover:scale-[1.02]">
+                        <CardContent className={cn("p-3.5 sm:p-4 bg-gradient-to-br from-white to-transparent dark:from-slate-900", stat.bg.replace('bg-', 'to-') + '/20')}>
                             <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5 sm:mb-2">{stat.label}</p>
                             <p className={cn("text-lg sm:text-xl font-black leading-none", stat.color)}>{stat.value}</p>
                         </CardContent>
@@ -246,7 +246,7 @@ const SalesTasks = () => {
                 </div>
 
                 <TabsContent value="tasks" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                    <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                    <Card className="border-2 border-primary-100 shadow-xl shadow-primary-100/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden">
                         <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Action Matrix</CardTitle>
                         </CardHeader>
@@ -329,7 +329,7 @@ const SalesTasks = () => {
                 </TabsContent>
 
                 <TabsContent value="activities" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                    <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden p-3 sm:p-5">
+                    <Card className="border-2 border-purple-100 shadow-xl shadow-purple-100/50 dark:border-purple-900 dark:shadow-none bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-900 dark:to-purple-900/10 rounded-2xl overflow-hidden p-3 sm:p-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {recentActivities.map((activity) => (
                                 <div key={activity.id} className="group p-4 rounded-xl border border-slate-50 dark:border-slate-800 hover:border-primary-100 dark:hover:border-primary-900/30 bg-slate-50/30 dark:bg-slate-800/20 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300">

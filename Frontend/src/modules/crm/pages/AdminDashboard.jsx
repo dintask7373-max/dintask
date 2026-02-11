@@ -73,8 +73,12 @@ const AdminDashboard = () => {
         ].map((item, index) => (
           <motion.div key={index} variants={fadeInUp}>
             <Card className={cn(
-              "border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 relative overflow-hidden h-full rounded-2xl",
-              `hover:shadow-lg hover:shadow-${item.color}-500/10 transition-all duration-300`
+              "border-2 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/20 relative overflow-hidden h-full rounded-2xl transition-all duration-300",
+              item.color === 'blue' ? "border-blue-100 shadow-blue-200/50" :
+                item.color === 'indigo' ? "border-indigo-100 shadow-indigo-200/50" :
+                  item.color === 'emerald' ? "border-emerald-100 shadow-emerald-200/50" :
+                    "border-red-100 shadow-red-200/50",
+              `hover:-translate-y-1`
             )}>
               <div className={`absolute -right-4 -top-4 p-4 opacity-[0.03] text-${item.color}-600 dark:text-${item.color}-400 rotate-12`}>
                 <item.icon size={100} />
@@ -127,7 +131,7 @@ const AdminDashboard = () => {
 
           <TabsContent value="pipeline" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <Card className="border-none shadow-sm rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
+              <Card className="border-2 border-blue-100 shadow-xl shadow-blue-100/50 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-white to-blue-50/20 dark:from-slate-900 dark:to-blue-900/10 overflow-hidden">
                 <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-4 sm:p-6">
                   <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Pipeline Overview</CardTitle>
                 </CardHeader>
@@ -153,7 +157,7 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-none shadow-sm rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
+              <Card className="border-2 border-primary-100 shadow-xl shadow-primary-100/50 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 overflow-hidden">
                 <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-4 sm:p-6">
                   <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Status Distribution</CardTitle>
                 </CardHeader>
@@ -193,7 +197,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="employee" className="mt-0">
-            <Card className="border-none shadow-sm rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
+            <Card className="border-2 border-indigo-100 shadow-xl shadow-indigo-100/50 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-white to-indigo-50/20 dark:from-slate-900 dark:to-indigo-900/10 overflow-hidden">
               <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-4 sm:p-6">
                 <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Performance Matrix</CardTitle>
               </CardHeader>
@@ -243,7 +247,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="leads" className="mt-0">
-            <Card className="border-none shadow-sm rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
+            <Card className="border-2 border-primary-100 shadow-xl shadow-primary-100/50 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 overflow-hidden">
               <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-4 sm:p-6">
                 <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Lead Sources</CardTitle>
               </CardHeader>
@@ -275,7 +279,7 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
           <TabsContent value="schedule" className="mt-0">
-            <Card className="border-none shadow-sm rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
+            <Card className="border-2 border-blue-100 shadow-xl shadow-blue-100/50 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-white to-blue-50/20 dark:from-slate-900 dark:to-blue-900/10 overflow-hidden">
               <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-400">Events Schedule</CardTitle>

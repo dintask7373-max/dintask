@@ -55,9 +55,13 @@ const LandingPage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeModule, setActiveModule] = useState(0);
     const [currentImage, setCurrentImage] = useState(0);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [heroContent, setHeroContent] = useState({
-        heroTitle: "Your work,\nPowered by\nour life's work.",
-        heroSubtitle: "An all-in-one workspace designed to break down silos and boost efficiency. Experience total control over your business operations."
+        heroBadge: "YOUR COMPLETE CRM PLATFORM",
+        heroTitle: "Five powerful CRM modules to run your entire business.",
+        heroSubtitle: "Access our Sales, Project Management, HR, Finance, and Client Portal modules—all integrated in one platform.",
+        heroCtaPrimary: "Get Started",
+        heroCtaSecondary: "View Modules"
     });
     const [isAnnual, setIsAnnual] = useState(true);
 
@@ -162,151 +166,33 @@ const LandingPage = () => {
     };
 
     useEffect(() => {
-        // Fetch hero section content from API
-        const fetchHeroContent = async () => {
+        const fetchContent = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/hero');
-                if (response.data.success && response.data.data) {
-                    setHeroContent({
-                        heroTitle: response.data.data.heroTitle || heroContent.heroTitle,
-                        heroSubtitle: response.data.data.heroSubtitle || heroContent.heroSubtitle
-                    });
+                const res = await axios.get('http://localhost:5000/api/v1/landing-page/content');
+                if (res.data.success) {
+                    const data = res.data.data;
+                    // Update states with fetched data
+                    if (data.hero) setHeroContent(prev => ({ ...prev, ...data.hero }));
+                    if (data.features?.modules) setModules(data.features.modules);
+                    if (data.strategic_options?.options) setStrategicOptions(data.strategic_options.options);
+                    if (data.tactical_preview) setTacticalContent(prev => ({ ...prev, ...data.tactical_preview }));
                 }
             } catch (error) {
-                console.error('Error fetching hero content:', error);
-                // Keep default content if API fails
+                console.error('Failed to fetch landing page content:', error);
             }
         };
 
-        // Fetch features/modules content from API
-        const fetchModulesContent = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/features');
-                if (response.data.success && response.data.data && response.data.data.modules) {
-                    setModules(response.data.data.modules);
-                }
-            } catch (error) {
-                console.error('Error fetching modules content:', error);
-                // Keep default modules if API fails
-            }
-        };
-
-        // Fetch strategic options content from API
-        const fetchStrategicOptions = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/strategic_options');
-                if (response.data.success && response.data.data && response.data.data.strategicOptions) {
-                    setStrategicOptions(response.data.data.strategicOptions);
-                }
-            } catch (error) {
-                console.error('Error fetching strategic options:', error);
-                // Keep default strategic options if API fails
-            }
-        };
-
-        // Fetch testimonials content from API
-        const fetchTestimonials = async () => {
-            try {
-                // Try to fetch approved user testimonials first
-                const response = await axios.get('http://localhost:5000/api/v1/testimonials/approved');
-                if (response.data.success && response.data.data && response.data.data.length > 0) {
-                    setTestimonials(response.data.data);
-                } else {
-                    // Fallback to landing page config if no user testimonials approved yet
-                    const fallback = await axios.get('http://localhost:5000/api/v1/landing-page/testimonial');
-                    if (fallback.data.success && fallback.data.data && fallback.data.data.testimonials) {
-                        setTestimonials(fallback.data.data.testimonials);
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching testimonials:', error);
-                // Keep default if everything fails
-            }
-        };
-
-        const fetchTacticalContent = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/tactical_preview');
-                if (response.data.success && response.data.data) {
-                    setTacticalContent(prev => ({ ...prev, ...response.data.data }));
-                }
-            } catch (error) {
-                console.error('Error fetching tactical content:', error);
-            }
-        };
-
-        const fetchDemoCtaContent = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/demo_cta');
-                if (response.data.success && response.data.data) {
-                    setDemoCta(prev => ({ ...prev, ...response.data.data }));
-                }
-            } catch (error) {
-                console.error('Error fetching demo cta:', error);
-            }
-        };
-
-        const fetchSocialContact = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/social_contact');
-                if (response.data.success && response.data.data) {
-                    setSocialContact(prev => ({ ...prev, ...response.data.data }));
-                }
-            } catch (error) {
-                console.error('Error fetching social/contact:', error);
-            }
-        };
-
-        const fetchPricingContent = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/pricing');
-                if (response.data.success && response.data.data) {
-                    setPricingContent(prev => ({ ...prev, ...response.data.data }));
-                }
-            } catch (error) {
-                console.error('Error fetching pricing content:', error);
-            }
-        };
-
-        const fetchTestimonialSection = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/testimonial');
-                if (response.data.success && response.data.data) {
-                    setTestimonialSection(prev => ({ ...prev, ...response.data.data }));
-                }
-            } catch (error) {
-                console.error('Error fetching testimonial section:', error);
-            }
-        };
-
-        const fetchFooterContent = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/v1/landing-page/footer');
-                if (response.data.success && response.data.data) {
-                    setFooterContent(prev => ({ ...prev, ...response.data.data }));
-                }
-            } catch (error) {
-                console.error('Error fetching footer content:', error);
-            }
-        };
-
-        fetchHeroContent();
-        fetchModulesContent();
-        fetchStrategicOptions();
-        fetchTestimonials();
-        fetchTacticalContent();
-        fetchDemoCtaContent();
-        fetchSocialContact();
-        fetchPricingContent();
-        fetchTestimonialSection();
-        fetchFooterContent();
+        fetchContent();
 
         // Ensure body is scrollable when landing page mounts
         document.body.style.overflow = 'auto';
         document.body.style.overflowX = 'hidden';
-
-
     }, []);
+
+
+
+
+
 
     useEffect(() => {
         if (!tacticalContent.showcaseImages || tacticalContent.showcaseImages.length === 0) return;
@@ -565,7 +451,7 @@ const LandingPage = () => {
                         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFEE8C] text-slate-900 font-bold text-xs uppercase tracking-widest mb-8 border border-yellow-200/50"
                     >
                         <Star className="size-3 fill-slate-900" />
-                        YOUR COMPLETE CRM PLATFORM
+                        {heroContent.heroBadge}
                     </motion.div>
 
                     <motion.h1
@@ -601,10 +487,10 @@ const LandingPage = () => {
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
                         <Button onClick={() => navigate('/admin/register')} className="h-14 px-12 rounded-lg bg-yellow-400 border border-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-lg shadow-sm transition-all hover:scale-105">
-                            Get Started
+                            {heroContent.heroCtaPrimary}
                         </Button>
                         <Button variant="outline" onClick={() => document.getElementById('tactical').scrollIntoView({ behavior: 'smooth' })} className="h-14 px-8 rounded-full border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-bold text-base hover:bg-transparent transition-all">
-                            View Modules
+                            {heroContent.heroCtaSecondary}
                         </Button>
                     </motion.div>
                 </div>
@@ -1405,6 +1291,17 @@ const LandingPage = () => {
 
                     <div className="max-w-7xl mx-auto px-6 relative z-10">
                         <div className="flex flex-col items-center gap-12">
+
+                            {/* Dynamic Title & Subtitle */}
+                            <div className="text-center max-w-3xl mx-auto">
+                                <Badge className="bg-[#FFEE8C] text-slate-900 border-none px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-widest mb-6">
+                                    {tacticalContent.tacticalSubtitle}
+                                </Badge>
+                                <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
+                                    {tacticalContent.tacticalTitle}
+                                </h2>
+                            </div>
+
                             {/* Main Featured Image - Mac/Device Mockup Style */}
                             <motion.div
                                 key={currentImage}
@@ -1422,12 +1319,17 @@ const LandingPage = () => {
                                         <div className="size-2.5 rounded-full bg-green-500/20" />
                                     </div>
                                     {/* Screen Content */}
-                                    <div className="aspect-video relative bg-slate-950">
+                                    <div className="aspect-video relative bg-slate-950 cursor-pointer group" onClick={() => setIsLightboxOpen(true)}>
                                         <img
-                                            src={tacticalContent.showcaseImages[currentImage]}
+                                            src={tacticalContent.showcaseImages[currentImage] || '/src/assets/dashboard_1.png'}
                                             alt="Dashboard Preview"
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                                            <div className="bg-black/50 text-white p-3 rounded-full backdrop-blur-sm">
+                                                <Search size={24} />
+                                            </div>
+                                        </div>
                                         {/* Overlay Gradient for depth */}
                                         <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/10 to-transparent pointer-events-none" />
                                     </div>
@@ -1438,13 +1340,7 @@ const LandingPage = () => {
 
                             {/* Thumbnail Strip */}
                             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 max-w-full w-full justify-start md:justify-center px-4 no-scrollbar">
-                                {[
-                                    '/src/assets/dashboard_1.png',
-                                    '/src/assets/dashboard_2.png',
-                                    '/src/assets/dashboard_3.png',
-                                    '/src/assets/dashboard_1.png', // Duplicates for demo length
-                                    '/src/assets/dashboard_2.png'
-                                ].map((img, idx) => (
+                                {(tacticalContent.showcaseImages || []).map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentImage(idx % tacticalContent.showcaseImages.length)}
@@ -1552,6 +1448,70 @@ const LandingPage = () => {
                     </div>
                 </footer>
 
+                {/* Lightbox Modal */}
+                <AnimatePresence>
+                    {isLightboxOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-10"
+                            onClick={() => setIsLightboxOpen(false)}
+                        >
+                            <button
+                                onClick={() => setIsLightboxOpen(false)}
+                                className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+                            >
+                                <X size={40} />
+                            </button>
+
+                            <div className="relative w-full max-w-7xl max-h-screen flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                                <motion.img
+                                    key={currentImage}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    src={tacticalContent.showcaseImages[currentImage]}
+                                    alt="Fullview"
+                                    className="max-w-full max-h-[90vh] object-contain rounded-md shadow-2xl"
+                                />
+
+                                <button
+                                    className="absolute left-2 sm:-left-12 top-1/2 -translate-y-1/2 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentImage((prev) => (prev - 1 + tacticalContent.showcaseImages.length) % tacticalContent.showcaseImages.length);
+                                    }}
+                                >
+                                    <ChevronLeft size={32} />
+                                </button>
+
+                                <button
+                                    className="absolute right-2 sm:-right-12 top-1/2 -translate-y-1/2 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentImage((prev) => (prev + 1) % tacticalContent.showcaseImages.length);
+                                    }}
+                                >
+                                    <ChevronRight size={32} />
+                                </button>
+                            </div>
+
+                            {/* Thumbnail strip in lightbox */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 overflow-x-auto max-w-full px-4 no-scrollbar" onClick={(e) => e.stopPropagation()}>
+                                {tacticalContent.showcaseImages.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setCurrentImage(idx)}
+                                        className={`w-16 h-10 rounded-md overflow-hidden border-2 transition-all ${currentImage === idx ? 'border-yellow-400 scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                                    >
+                                        <img src={img} alt="" className="w-full h-full object-cover" />
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
             </div >
         </main >

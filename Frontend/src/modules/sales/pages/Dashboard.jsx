@@ -79,10 +79,54 @@ const SalesDashboard = () => {
     }, [selectedPeriod, individualTargets, teamTargets, actualPerformance, calculateIndividualProgress, calculateTeamProgress]);
 
     const stats = useMemo(() => [
-        { title: 'Total Revenue', value: `₹${realStats.totalSales.toLocaleString()}`, icon: IndianRupee, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: '+12.4%', label: 'Velocity' },
-        { title: 'Active Pipeline', value: realStats.activeDeals.toString(), icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10', trend: '3 Critical', label: 'Priority' },
-        { title: 'Won Deals', value: realStats.conversionRate + '%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20', trend: '+5.2%', label: 'Conversion' },
-        { title: 'Total Clients', value: realStats.clientsCount.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', trend: 'Portfolio', label: 'Network' }
+        {
+            title: 'Total Revenue',
+            value: `₹${realStats.totalSales.toLocaleString()}`,
+            icon: IndianRupee,
+            color: 'text-blue-600',
+            bg: 'bg-blue-100',
+            border: 'border-blue-100 dark:border-blue-900',
+            shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none',
+            gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20',
+            trend: '+12.4%',
+            label: 'Velocity'
+        },
+        {
+            title: 'Active Pipeline',
+            value: realStats.activeDeals.toString(),
+            icon: AlertCircle,
+            color: 'text-amber-600',
+            bg: 'bg-amber-100',
+            border: 'border-amber-100 dark:border-amber-900',
+            shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none',
+            gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20',
+            trend: '3 Critical',
+            label: 'Priority'
+        },
+        {
+            title: 'Won Deals',
+            value: realStats.conversionRate + '%',
+            icon: TrendingUp,
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-100',
+            border: 'border-emerald-100 dark:border-emerald-900',
+            shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none',
+            gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20',
+            trend: '+5.2%',
+            label: 'Conversion'
+        },
+        {
+            title: 'Total Clients',
+            value: realStats.clientsCount.toString(),
+            icon: Users,
+            color: 'text-indigo-600',
+            bg: 'bg-indigo-100',
+            border: 'border-indigo-100 dark:border-indigo-900',
+            shadow: 'shadow-lg shadow-indigo-200/50 dark:shadow-none',
+            gradient: 'bg-gradient-to-br from-white to-indigo-50 dark:from-slate-900 dark:to-indigo-900/20',
+            trend: 'Portfolio',
+            label: 'Network'
+        }
     ], [realStats]);
 
     return (
@@ -91,9 +135,6 @@ const SalesDashboard = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-0.5 sm:space-y-1">
                     <div className="flex items-center gap-3">
-                        <div className="lg:hidden w-10 h-10 shrink-0">
-                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
-                        </div>
                         <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                             Command <span className="text-primary-600">Center</span>
                         </h1>
@@ -119,27 +160,32 @@ const SalesDashboard = () => {
             <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {stats.map((stat, index) => (
                     <motion.div key={index} variants={fadeInUp}>
-                        <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
+                        <Card className={cn(
+                            "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                            stat.border,
+                            stat.shadow,
+                            stat.gradient
+                        )}>
                             <CardContent className="p-4 sm:p-5 flex items-center justify-between">
                                 <div className="space-y-3 sm:space-y-4">
                                     <div className={cn(
-                                        "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500",
+                                        "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
                                         stat.bg
                                     )}>
                                         <stat.icon className={cn("size-4.5 sm:size-5", stat.color)} />
                                     </div>
                                     <div className="space-y-0.5 sm:space-y-1">
                                         <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
-                                        <p className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{stat.value}</p>
+                                        <p className={cn("text-lg sm:text-2xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
                                         <div className="flex items-center gap-1 pt-1">
-                                            <div className="flex items-center justify-center size-3.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
-                                                <TrendingUp size={10} />
+                                            <div className={cn("flex items-center justify-center size-3.5 rounded-full", stat.bg)}>
+                                                <TrendingUp size={10} className={stat.color} />
                                             </div>
-                                            <span className="text-[8px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-tighter">{stat.trend}</span>
+                                            <span className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="hidden sm:block size-16 -mr-2 opacity-[0.03] dark:opacity-[0.07] transform rotate-12 transition-transform group-hover:rotate-0 duration-700">
+                                <div className={cn("hidden sm:block size-16 -mr-2 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
                                     <stat.icon size={64} />
                                 </div>
                             </CardContent>

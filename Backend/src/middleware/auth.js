@@ -34,31 +34,31 @@ exports.protect = async (req, res, next) => {
 
       let role = decoded.role;
 
-      // Handle legacy/normalized roles from token if necessary
-      if (role === 'superadmin' || role === 'super_admin') role = 'superadmin';
-      if (role === 'sales') role = 'sales_executive';
+      // Normalize role
+      if (role) {
+        role = role.toLowerCase();
+        if (role === 'super_admin') role = 'superadmin';
+        if (role === 'sales') role = 'sales_executive';
+      }
 
       let UserModel = models[role];
 
-      // If role is superadmin_staff, it uses SuperAdmin model too
-      if (role === 'superadmin_staff') UserModel = SuperAdmin;
-
+      // Special handling for superadmin variants if not found in map directly (which they should be now)
       if (!UserModel) {
-        // If we can't determine model from token role, try all (fallback)
-        // But for now, let's assume token role is correct enough to pick a model
-        // If 'superadmin' in token, we check SuperAdmin model.
-        // If the user is actually 'superadmin_staff' in DB, SuperAdmin model will still find them by ID.
-        // So this is fine.
-        if (role === 'superadmin') UserModel = SuperAdmin;
+        if (role === 'superadmin' || role === 'super_admin' || role === 'superadmin_staff') {
+          UserModel = SuperAdmin;
+        }
       }
 
       if (!UserModel) {
+        console.error(`[Auth] Invalid role in token: ${decoded.role}`);
         return res.status(401).json({ success: false, message: 'Invalid role in token' });
       }
 
       req.user = await UserModel.findById(decoded.id);
 
       if (!req.user) {
+        console.error(`[Auth] User not found for ID: ${decoded.id} with role: ${decoded.role}`);
         return res.status(401).json({ success: false, message: 'User not found' });
       }
 

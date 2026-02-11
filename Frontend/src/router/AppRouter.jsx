@@ -126,6 +126,7 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
+
 import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
 import IntelManager from '@/modules/superadmin/pages/IntelManager';
 import SuperAdminNotifications from '@/modules/superadmin/pages/Notifications';
@@ -248,6 +249,7 @@ const AppRouter = () => {
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="notifications" element={<SuperAdminNotifications />} />
                 <Route path="landing-page" element={<LandingPageManager />} />
+
                 <Route path="system-intel" element={<IntelManager />} />
 
                 {/* Restricted Routes for Root SuperAdmin Only */}

@@ -224,11 +224,8 @@ const SalesPipeline = () => {
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col space-y-3">
       {/* Header Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 sm:p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 p-2.5 sm:p-4 rounded-3xl shadow-xl shadow-primary-200/30 border-2 border-primary-100 dark:border-primary-900/30 shrink-0">
         <div className="flex items-center gap-3 px-1">
-          <div className="lg:hidden size-8 rounded-lg overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
-            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-cover" />
-          </div>
           <div>
             <h1 className="text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">Sales <span className="text-primary-600">Pipeline</span></h1>
             <p className="text-slate-500 dark:text-slate-400 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] leading-none mt-1">Acquisition Velocity</p>
@@ -248,7 +245,7 @@ const SalesPipeline = () => {
             <SelectTrigger className="w-[90px] h-8 sm:h-9 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-[9px] font-black uppercase">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800">
+            <SelectContent className="border-slate-100 dark:border-slate-800">
               <SelectItem value="all" className="text-[9px] font-black uppercase">All</SelectItem>
               <SelectItem value="high" className="text-[9px] font-black uppercase">High</SelectItem>
               <SelectItem value="medium" className="text-[9px] font-black uppercase">Medium</SelectItem>
@@ -268,7 +265,7 @@ const SalesPipeline = () => {
           {processedPipeline.map(({ stage, leads: stageLeads, totalValue }) => (
             <div
               key={stage}
-              className="flex flex-col w-[220px] sm:w-[240px] bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100/50 dark:border-slate-800 h-full max-h-full transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30"
+              className="flex flex-col w-[220px] sm:w-[240px] bg-gradient-to-b from-slate-50/80 to-slate-100/30 dark:from-slate-800/20 dark:to-slate-900/20 rounded-[2rem] border-2 border-slate-100/50 dark:border-slate-800 h-full max-h-full transition-colors hover:border-primary-100/50 dark:hover:border-primary-900/30"
               onDragOver={handleDragOver}
               onDrop={() => handleDrop(stage)}
             >

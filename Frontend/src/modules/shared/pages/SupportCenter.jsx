@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import {
     LifeBuoy,
     Plus,
@@ -43,6 +44,8 @@ import useTicketStore from '@/store/ticketStore';
 const SupportCenter = () => {
     const { user, role } = useAuthStore();
     const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket } = useTicketStore();
+    const location = useLocation();
+    const isSalesSupport = location.pathname === '/sales/support';
 
     React.useEffect(() => {
         fetchTickets();
@@ -251,15 +254,17 @@ const SupportCenter = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden pb-12">
-            {/* Enhanced Background Visibility */}
-            <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
-                <img
-                    src="/WLCOMPAGE .png"
-                    alt="Background"
-                    className="w-full h-full object-cover object-center opacity-70 dark:opacity-30"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
-            </div>
+            {/* Enhanced Background Visibility - Removed for Sales Support as per request */}
+            {!isSalesSupport && (
+                <div className="absolute inset-0 h-[320px] z-0 overflow-hidden">
+                    <img
+                        src="/WLCOMPAGE .png"
+                        alt="Background"
+                        className="w-full h-full object-cover object-center opacity-70 dark:opacity-30"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-white/40 to-white dark:from-slate-950/20 dark:via-slate-950/40 dark:to-slate-950" />
+                </div>
+            )}
 
             {/* Support Content */}
             <div className="w-full max-w-[1100px] mt-12 px-6 relative z-10 space-y-8">

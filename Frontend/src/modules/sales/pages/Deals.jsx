@@ -239,9 +239,6 @@ const Deals = () => {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
                 <div className="flex items-center gap-3">
-                    <div className="lg:hidden w-10 h-10 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
-                    </div>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
                             Sales <span className="text-primary-600">Pipeline</span>
@@ -259,24 +256,31 @@ const Deals = () => {
             {/* Quick Stats Grid - Compact */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {[
-                    { label: 'Active Pipeline', value: dealStats.activeDeals, icon: IndianRupee, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/10', trend: 'Force Strength' },
-                    { label: 'Strategic Wins', value: dealStats.wonDeals, icon: CheckSquare, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20', trend: 'Conversion' },
-                    { label: 'Total Value', value: `₹${(dealStats.totalValue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', trend: 'Portfolio' },
-                    { label: 'Efficiency', value: `${dealStats.winRate}%`, icon: ArrowUpRight, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10', trend: 'Success Rate' }
+                    { label: 'Active Pipeline', value: dealStats.activeDeals, icon: IndianRupee, color: 'text-primary-600', border: 'border-primary-100', shadow: 'shadow-primary-100/50', gradient: 'from-white to-primary-50/30', trend: 'Force Strength' },
+                    { label: 'Strategic Wins', value: dealStats.wonDeals, icon: CheckSquare, color: 'text-emerald-600', border: 'border-emerald-100', shadow: 'shadow-emerald-100/50', gradient: 'from-white to-emerald-50/30', trend: 'Conversion' },
+                    { label: 'Total Value', value: `₹${(dealStats.totalValue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'text-blue-600', border: 'border-blue-100', shadow: 'shadow-blue-100/50', gradient: 'from-white to-blue-50/30', trend: 'Portfolio' },
+                    { label: 'Efficiency', value: `${dealStats.winRate}%`, icon: ArrowUpRight, color: 'text-amber-600', border: 'border-amber-100', shadow: 'shadow-amber-100/50', gradient: 'from-white to-amber-50/30', trend: 'Success Rate' }
                 ].map((stat, i) => (
-                    <Card key={i} className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
+                    <Card key={i} className={cn(
+                        "border-2 shadow-lg rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        "bg-gradient-to-br",
+                        stat.gradient,
+                        "dark:from-slate-900 dark:to-slate-800"
+                    )}>
                         <CardContent className="p-3.5 sm:p-4 flex items-center justify-between">
                             <div className="space-y-3">
-                                <div className={cn("size-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500", stat.bg)}>
+                                <div className={cn("size-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-sm", stat.color.replace('text-', 'bg-').replace('600', '100'))}>
                                     <stat.icon size={16} className={stat.color} />
                                 </div>
                                 <div className="space-y-0.5">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
-                                    <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{stat.value}</p>
+                                    <p className={cn("text-lg sm:text-xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
                                     <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter italic leading-none">{stat.trend}</p>
                                 </div>
                             </div>
-                            <div className="size-14 -mr-3 opacity-[0.03] transform rotate-12 transition-transform group-hover:rotate-0 duration-700">
+                            <div className={cn("size-14 -mr-3 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
                                 <stat.icon size={56} />
                             </div>
                         </CardContent>
@@ -285,7 +289,7 @@ const Deals = () => {
             </div>
 
             {/* Filters Bar - Ultra Compact */}
-            <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden">
                 <CardContent className="p-2 sm:p-3">
                     <div className="flex flex-col lg:flex-row items-center gap-3">
                         <div className="relative flex-1 w-full group">
@@ -305,7 +309,7 @@ const Deals = () => {
                                         <SelectValue placeholder="All Sectors" />
                                     </div>
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                <SelectContent className="border-none shadow-2xl">
                                     <SelectItem value="all" className="text-[10px] font-black uppercase">All Sectors</SelectItem>
                                     {pipelineStages?.map(stage => (
                                         <SelectItem key={stage} value={stage} className="text-[10px] font-black uppercase">{stage}</SelectItem>
@@ -316,7 +320,7 @@ const Deals = () => {
                                 <SelectTrigger className="h-10 min-w-[140px] rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-[9px] uppercase tracking-widest">
                                     <SelectValue placeholder="Priority Level" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                <SelectContent className="border-none shadow-2xl">
                                     <SelectItem value="all" className="text-[10px] font-black uppercase">All Priority</SelectItem>
                                     <SelectItem value="high" className="text-[10px] font-black uppercase text-red-600">High Alert</SelectItem>
                                     <SelectItem value="medium" className="text-[10px] font-black uppercase text-amber-600">Standard</SelectItem>
@@ -329,7 +333,7 @@ const Deals = () => {
             </Card>
 
             {/* Data Grid - Refined Density */}
-            <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden min-h-[400px]">
+            <Card className="border-2 border-primary-100 shadow-xl shadow-primary-100/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden min-h-[400px]">
                 <CardHeader className="py-3 px-6 border-b border-slate-50 dark:border-slate-800">
                     <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tactical Pipeline core</CardTitle>
                 </CardHeader>

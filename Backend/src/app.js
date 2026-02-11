@@ -32,8 +32,9 @@ const superAdmin = require('./routes/superAdminRoutes');
 const support = require('./routes/supportLeadRoutes');
 const supportTickets = require('./routes/supportTicketRoutes');
 const payment = require('./routes/paymentRoutes');
-const landingPage = require('./routes/landingPageRoutes');
+
 const testimonials = require('./routes/testimonialRoutes');
+const landingPage = require('./routes/landingPageRoutes');
 const uploadRoutes = require('./routes/uploadRoutes'); // Import upload routes
 
 // Mount routers
@@ -46,8 +47,9 @@ app.use('/api/v1/superadmin', superAdmin);
 app.use('/api/v1/support', support);
 app.use('/api/v1/support-tickets', supportTickets);
 app.use('/api/v1/payments', payment);
-app.use('/api/v1/landing-page', landingPage);
+
 app.use('/api/v1/testimonials', testimonials);
+app.use('/api/v1/landing-page', landingPage);
 app.use('/api/v1/upload', uploadRoutes); // Mount upload routes
 app.use('/api/v1/crm', require('./routes/crmRoutes')); // New CRM Routes
 app.use('/api/v1/projects', require('./routes/projectRoutes')); // Project Routes

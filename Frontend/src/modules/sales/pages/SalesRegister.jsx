@@ -116,7 +116,7 @@ const SalesRegister = () => {
 
             {/* Premium Register Card */}
             <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
-                <div className="bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] p-10 md:p-12 border border-white/40">
+                <div className="bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-[2.5rem] shadow-xl shadow-primary-500/20 p-10 md:p-12 border-2 border-primary-100 dark:border-primary-900">
                     <div className="text-center mb-10">
                         <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2 uppercase">
                             {referralCode ? 'Force Link' : adminId ? 'Invite Sync' : 'Operator Sync'}

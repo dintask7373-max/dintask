@@ -50,6 +50,8 @@ const LeadsManagement = () => {
   const [isAssigning, setIsAssigning] = useState(false);
 
   const [editingLead, setEditingLead] = useState(null);
+  const [selectedMobileLead, setSelectedMobileLead] = useState(null);
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -514,7 +516,13 @@ const LeadsManagement = () => {
           { label: 'Strategic', value: leads.filter(l => l.status === 'Closed').length, color: 'emerald' },
           { label: 'Lost Flow', value: leads.filter(l => l.status === 'Lost').length, color: 'slate' }
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <Card key={i} className={cn(
+            "border-2 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1",
+            stat.color === 'primary' ? 'border-primary-100 shadow-primary-200/50' :
+              stat.color === 'amber' ? 'border-amber-100 shadow-amber-200/50' :
+                stat.color === 'emerald' ? 'border-emerald-100 shadow-emerald-200/50' :
+                  'border-slate-200 shadow-slate-200/50'
+          )}>
             <CardContent className="p-3 sm:p-4">
               <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
               <p className={cn("text-lg sm:text-xl font-black leading-none", stat.color === 'primary' ? 'text-primary-600' : stat.color === 'amber' ? 'text-amber-600' : stat.color === 'emerald' ? 'text-emerald-600' : 'text-slate-600')}>{stat.value}</p>
@@ -523,7 +531,7 @@ const LeadsManagement = () => {
         ))}
       </div>
 
-      <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+      <Card className="border-2 border-primary-100 shadow-2xl shadow-primary-200/30 dark:shadow-none bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 rounded-3xl overflow-hidden">
         <CardContent className="p-3 sm:p-5">
           <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-5">
             <div className="relative flex-1">
@@ -540,7 +548,7 @@ const LeadsManagement = () => {
                 <SelectTrigger className="w-full sm:w-[140px] h-9 sm:h-10 bg-slate-50 border-none dark:bg-slate-800 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800">
+                <SelectContent className="border-slate-100 dark:border-slate-800">
                   <SelectItem value="all" className="text-[10px] font-black uppercase">All</SelectItem>
                   {leadStatuses.map((status) => (
                     <SelectItem key={status} value={status} className="text-[10px] font-black uppercase">
@@ -653,21 +661,30 @@ const LeadsManagement = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   key={lead._id || lead.id}
-                  className="group relative overflow-hidden p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all"
+                  onClick={() => {
+                    setSelectedMobileLead(lead);
+                    setIsMobileDetailOpen(true);
+                  }}
+                  className="group relative overflow-hidden p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-11 rounded-2xl bg-primary-50 dark:bg-primary-900/20 text-primary-600 flex items-center justify-center text-sm font-black uppercase shadow-inner shadow-primary-500/10">
+                      <div className="size-11 rounded-2xl bg-primary-50 dark:bg-primary-900/20 text-primary-600 flex items-center justify-center text-sm font-black uppercase shadow-inner shadow-primary-500/10 shrink-0">
                         {lead.name.charAt(0)}
                       </div>
-                      <div>
-                        <p className="text-[14px] font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tight">{lead.name}</p>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{lead.company}</p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[8px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded-md tracking-tighter uppercase">
+                            #{(lead._id || lead.id).substr(-6)}
+                          </span>
+                          <p className="text-[14px] font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tight truncate">{lead.name}</p>
+                        </div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 truncate">{lead.company}</p>
                       </div>
                     </div>
                     <Badge
                       className={cn(
-                        "text-[8px] font-black uppercase tracking-widest h-5 px-2",
+                        "text-[8px] font-black uppercase tracking-widest h-5 px-2 shrink-0",
                         lead.status === 'Won' ? 'bg-emerald-50 text-emerald-600 shadow-none border-none' :
                           lead.status === 'Lost' ? 'bg-red-50 text-red-600 shadow-none border-none' :
                             lead.status === 'Interested' ? 'bg-amber-50 text-amber-600 shadow-none border-none' :
@@ -677,11 +694,99 @@ const LeadsManagement = () => {
                       {lead.status}
                     </Badge>
                   </div>
-                  {/* ... Rest of mobile view ... */}
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100/50 dark:border-slate-800/50">
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Contact Details</p>
+                      <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate">{lead.mobile}</p>
+                      <p className="text-[9px] text-slate-400 truncate lowercase">{lead.email}</p>
+                    </div>
+                    <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100/50 dark:border-slate-800/50">
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Management</p>
+                      <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate">{lead.owner?.name || 'Unassigned'}</p>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase border-none p-0 h-auto opacity-70 mt-0.5">{lead.source}</Badge>
+                    </div>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
+
+          {/* Lead Details Dialog for Mobile */}
+          <Dialog open={isMobileDetailOpen} onOpenChange={setIsMobileDetailOpen}>
+            <DialogContent className="max-w-[90vw] rounded-3xl border-none">
+              <DialogHeader>
+                <div className="flex items-center gap-4">
+                  <div className="size-14 rounded-3xl bg-primary-600 text-white flex items-center justify-center text-xl font-black shadow-lg shadow-primary-500/20">
+                    {selectedMobileLead?.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                      {selectedMobileLead?.name}
+                    </DialogTitle>
+                    <DialogDescription className="text-[10px] font-black text-primary-600 uppercase tracking-widest">
+                      {selectedMobileLead?.company || 'Individual Client'}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 gap-4 py-4 uppercase">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[8px] font-black text-slate-400 tracking-widest mb-1">Mobile Contact</p>
+                    <p className="text-xs font-black text-slate-900 dark:text-white">{selectedMobileLead?.mobile}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[8px] font-black text-slate-400 tracking-widest mb-1">Lead Status</p>
+                    <Badge className="bg-primary-600 text-white border-none text-[8px] font-black">{selectedMobileLead?.status}</Badge>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                  <p className="text-[8px] font-black text-slate-400 tracking-widest mb-1">Email Address</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white lowercase">{selectedMobileLead?.email || 'N/A'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[8px] font-black text-slate-400 tracking-widest mb-1">Origin Source</p>
+                    <p className="text-xs font-black text-slate-900 dark:text-white">{selectedMobileLead?.source}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[8px] font-black text-slate-400 tracking-widest mb-1">Lead Owner</p>
+                    <p className="text-xs font-black text-slate-900 dark:text-white">{selectedMobileLead?.owner?.name || 'Unassigned'}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                  <p className="text-[8px] font-black text-slate-400 tracking-widest mb-1">Strategic Notes</p>
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 normal-case leading-relaxed italic">
+                    {selectedMobileLead?.notes || 'No active notes documented for this asset.'}
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex-row gap-2 mt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest border-slate-200"
+                  onClick={() => {
+                    setIsMobileDetailOpen(false);
+                    handleEdit(selectedMobileLead);
+                  }}
+                >
+                  Edit Asset
+                </Button>
+                <Button
+                  className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-primary-600"
+                  onClick={() => setIsMobileDetailOpen(false)}
+                >
+                  Close View
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           {filteredLeads.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               No leads found. Try adjusting your search or filters.

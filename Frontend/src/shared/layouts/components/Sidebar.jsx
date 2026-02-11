@@ -177,26 +177,54 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 h-full bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-900 transition-all duration-300 z-50 overflow-hidden",
+                "fixed left-0 top-0 h-full border-r transition-all duration-300 z-50 overflow-hidden",
+                role === 'sales' ? "bg-[#3063a0] border-[#3063a0]/20 shadow-xl" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-900",
                 isCollapsed ? "w-20" : "w-64",
                 isOpen ? "translate-x-0" : "-translate-x-full",
                 "lg:translate-x-0"
             )}
         >
             <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 mb-4 border-b border-slate-100 dark:border-slate-900 h-16 shrink-0">
-                    {!isCollapsed && (
-                        <div className="flex items-center justify-center w-full">
-                            <div className="h-16 w-40 flex items-center justify-center overflow-hidden">
-                                <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-150" />
+                <div className={cn(
+                    "flex items-center justify-between p-4 mb-4 border-b h-16 shrink-0",
+                    role === 'sales' ? "border-white/10" : "border-slate-100 dark:border-slate-900"
+                )}>
+                    {role === 'sales' ? (
+                        /* Sales Role: Left Aligned Text Logo */
+                        !isCollapsed ? (
+                            <div className="flex items-center justify-start w-full gap-2 -ml-3 -my-2">
+                                <div className="h-16 w-16 flex-shrink-0">
+                                    <img src="/dintask-logo.png" alt="" className="h-full w-full object-contain" />
+                                </div>
+                                <h1 className="text-4xl font-black text-white tracking-tighter">DinTask</h1>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex items-center justify-center w-full">
+                                <div className="h-14 w-14">
+                                    <img src="/dintask-logo.png" alt="DT" className="h-full w-full object-contain" />
+                                </div>
+                            </div>
+                        )
+                    ) : (
+                        /* Default Role: Centered Image Logo */
+                        <>
+                            {!isCollapsed && (
+                                <div className="flex items-center justify-center w-full">
+                                    <div className="h-16 w-40 flex items-center justify-center overflow-hidden">
+                                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-150" />
+                                    </div>
+                                </div>
+                            )}
+                            {isCollapsed && (
+                                <div className="h-24 w-24 -my-4 mx-auto flex items-center justify-center">
+                                    <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-125" />
+                                </div>
+                            )}
+                        </>
                     )}
-                    {isCollapsed && (
-                        <div className="h-24 w-24 -my-4 mx-auto flex items-center justify-center">
-                            <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-125" />
-                        </div>
-                    )}
+
+
+
 
                     {!isCollapsed && (
                         <Button
@@ -297,9 +325,13 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                                 onClick={() => setIsOpen(false)}
                                 className={({ isActive }) => cn(
                                     "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold group border border-transparent",
-                                    isActive
-                                        ? "bg-primary-600 text-white shadow-lg shadow-primary-900/30"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-slate-900"
+                                    role === 'sales'
+                                        ? isActive
+                                            ? "bg-white/20 text-white shadow-lg backdrop-blur-md border-white/20"
+                                            : "text-blue-50 hover:text-white hover:bg-white/10 transition-all duration-300"
+                                        : isActive
+                                            ? "bg-primary-600 text-white shadow-lg shadow-primary-900/30"
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-slate-900"
                                 )}
                             >
                                 <item.icon size={20} className={cn(
@@ -320,12 +352,18 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                     })}
                 </nav>
 
-                <div className="p-3 border-t border-slate-100 dark:border-slate-800">
+                <div className={cn(
+                    "p-3 border-t",
+                    role === 'sales' ? "border-white/10" : "border-slate-100 dark:border-slate-800"
+                )}>
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full justify-start text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 font-bold",
-                            isCollapsed && "justify-center"
+                            "w-full justify-start font-bold",
+                            isCollapsed && "justify-center",
+                            role === 'sales'
+                                ? "text-blue-50 hover:text-white hover:bg-white/10"
+                                : "text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
                         )}
                         onClick={handleLogout}
                     >

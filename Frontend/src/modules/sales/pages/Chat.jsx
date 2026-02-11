@@ -109,7 +109,7 @@ const SalesChat = () => {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-100px)] lg:h-[calc(100vh-120px)] bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="flex flex-col h-[calc(100vh-100px)] lg:h-[calc(100vh-120px)] bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl lg:rounded-3xl shadow-xl shadow-primary-200/50 border-2 border-primary-100 dark:border-primary-900 overflow-hidden">
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar */}
                 <div className={cn(
@@ -119,9 +119,6 @@ const SalesChat = () => {
                     <div className="p-4 lg:p-6 border-b border-slate-50 dark:border-slate-800">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                                <div className="lg:hidden w-8 h-8 shrink-0">
-                                    <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
-                                </div>
                                 <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight">Sales Messenger</h1>
                             </div>
                             <Button
