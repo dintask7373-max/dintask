@@ -103,7 +103,6 @@ import Notifications from '@/modules/user/pages/Notifications';
 import Security from '@/modules/user/pages/Security';
 import Preferences from '@/modules/user/pages/Preferences';
 import HelpLegal from '@/modules/user/pages/HelpLegal';
-import AddTask from '@/modules/user/pages/AddTask';
 import NotificationsList from '@/modules/user/pages/NotificationsList';
 import HelpCenter from '@/modules/user/pages/HelpCenter';
 import ChatSupport from '@/modules/user/pages/ChatSupport';
@@ -209,7 +208,6 @@ const AppRouter = () => {
             <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
                 <Route index element={<EmployeeDashboard />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />
-                <Route path="tasks/new" element={<AddTask />} />
                 <Route path="calendar" element={<EmployeeCalendar />} />
                 <Route path="notes" element={<EmployeeNotes />} />
                 <Route path="notes/new" element={<AddNote />} />

@@ -13,6 +13,10 @@ exports.getTasks = async (req, res) => {
     let query = {};
     let adminId;
 
+    // Find teams the user is part of
+    const userTeams = await Team.find({ members: req.user.id }).select('_id');
+    const teamIds = userTeams.map(t => t._id);
+
     if (req.user.role === 'admin') {
       // Admin sees tasks in their workspace
       adminId = req.user.id;
@@ -26,11 +30,18 @@ exports.getTasks = async (req, res) => {
       if (!manager) return res.status(404).json({ success: false, error: 'Manager not found' });
       adminId = manager.adminId;
 
-      // Manager sees tasks assigned BY them OR assigned TO them (within their workspace)
+      // Find teams this user manages
+      const managedTeams = await Team.find({ managerId: req.user.id }).select('_id');
+      const managedTeamIds = managedTeams.map(t => t._id);
+
+      const allRelevantTeamIds = [...new Set([...teamIds, ...managedTeamIds])];
+
+      // Manager sees tasks assigned BY them OR assigned TO them OR associated with their managed/member teams
       query = {
         $or: [
           { assignedBy: req.user.id },
-          { assignedTo: { $in: [req.user.id] } }
+          { assignedTo: { $in: [req.user.id] } },
+          { team: { $in: allRelevantTeamIds } }
         ],
         adminId: adminId
       };
@@ -40,9 +51,12 @@ exports.getTasks = async (req, res) => {
       if (!employee) return res.status(404).json({ success: false, error: 'Employee not found' });
       adminId = employee.adminId;
 
-      // Employee sees tasks assigned TO them (within their workspace)
+      // Employee sees tasks assigned TO them directly OR via team
       query = {
-        assignedTo: { $in: [req.user.id] },
+        $or: [
+          { assignedTo: { $in: [req.user.id] } },
+          { team: { $in: teamIds } }
+        ],
         adminId: adminId
       };
     } else if (req.user.role === 'sales_executive') {
@@ -51,16 +65,62 @@ exports.getTasks = async (req, res) => {
       if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Executive not found' });
       adminId = salesExec.adminId;
 
-      // Sales sees tasks assigned TO them (within their workspace)
+      // Sales sees tasks assigned TO them directly OR via team
       query = {
-        assignedTo: { $in: [req.user.id] },
+        $or: [
+          { assignedTo: { $in: [req.user.id] } },
+          { team: { $in: teamIds } }
+        ],
         adminId: adminId
       };
     }
 
+    // -- OVERDUE AUTO-CHECK & ESCALATION --
+    // Automatically flag active missions that missed their tactical deadline
+    if (adminId) {
+      await Task.updateMany(
+        {
+          adminId: adminId,
+          status: { $in: ['pending', 'in_progress'] },
+          deadline: { $lt: new Date() }
+        },
+        {
+          $set: { status: 'overdue' },
+          $push: {
+            activityLog: {
+              action: 'Tactical Deadline Surpassed: Mission Escalated',
+              timestamp: new Date()
+            }
+          }
+        }
+      );
+    }
+
+    // -- PROJECT STATUS SYNC: Tactical Visibility Filtering --
+    // If user is Employee/Sales, hide tasks from inactive projects to reduce noise
+    if (['employee', 'sales_executive'].includes(req.user.role)) {
+      const activeProjects = await Project.find({
+        adminId: adminId,
+        status: { $in: ['active', 'completed'] }
+      }).select('_id');
+      const activeProjectIds = activeProjects.map(p => p._id);
+
+      // Update query to only include tasks from active projects (or tasks with no project)
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { project: { $in: activeProjectIds } },
+          { project: { $exists: false } },
+          { project: null }
+        ]
+      });
+    }
+
     const tasks = await Task.find(query)
-      .populate('project', 'name')
+      .populate('project', 'name status')
       .populate('assignedTo', 'name')
+      .populate('subTasks.user', 'name profileImage') // Populate user details in subTasks
+      .populate('team', 'name')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
@@ -88,37 +148,38 @@ exports.createTask = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized to create tasks' });
     }
 
-    // Prepare final assignment list
+    // Prepare assignment list (individuals only)
     let finalAssignedTo = Array.isArray(assignedTo) ? [...assignedTo] : (assignedTo ? [assignedTo] : []);
 
-    // If team specified, add team members to finalAssignedTo
-    if (team) {
-      const foundTeam = await Team.findById(team);
-      if (foundTeam) {
-        // Add all team members, ensuring uniqueness
-        foundTeam.members.forEach(memberId => {
-          if (!finalAssignedTo.includes(memberId.toString())) {
-            finalAssignedTo.push(memberId.toString());
-          }
-        });
-      }
+    // If project specified, verify ownership and same workspace (NOW MANDATORY)
+    if (!project) return res.status(400).json({ success: false, error: 'Tactical deployment requires a valid Project Mission ID' });
+
+    const proj = await Project.findById(project);
+    if (!proj) return res.status(404).json({ success: false, error: 'Project not found' });
+    if (proj.adminId.toString() !== adminId.toString()) {
+      return res.status(403).json({ success: false, error: 'Project belongs to different workspace' });
     }
 
-    // If project specified, verify ownership and same workspace
-    if (project) {
-      const proj = await Project.findById(project);
-      if (!proj) return res.status(404).json({ success: false, error: 'Project not found' });
-      if (proj.adminId.toString() !== adminId.toString()) {
-        return res.status(403).json({ success: false, error: 'Project belongs to different workspace' });
-      }
-    }
+    // Initialize subTasks for per-employee tracking
+    const subTasksInit = finalAssignedTo.map(userId => ({
+      user: userId,
+      status: 'pending',
+      progress: 0
+    }));
 
     const task = await Task.create({
       ...req.body,
+      project: project, // Ensure explicitly passed
       assignedBy: req.user.id,
       assignedTo: finalAssignedTo,
+      subTasks: subTasksInit,
       team: team || undefined,
-      adminId: adminId
+      adminId: adminId,
+      activityLog: [{
+        user: req.user.id,
+        userModel: req.user.role === 'admin' ? 'Admin' : 'Manager',
+        action: 'Deployed Task'
+      }]
     });
 
     // If project, link task to project
@@ -160,10 +221,97 @@ exports.updateTask = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized to update this task' });
     }
 
-    task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+    // --- GATEKEEPER PROTOCOL: Status Transition Security ---
+    const updates = { ...req.body };
+    const activityEntries = [];
+
+    // Handle Sub-Task Updates for Individual Employees in Group Missions
+    if (req.user.role === 'employee' || req.user.role === 'sales_executive') {
+      const isAssigned = task.assignedTo.map(id => id.toString()).includes(req.user.id);
+
+      // If updating progress/status, update their specific sub-task entry
+      if (isAssigned && (req.body.status || req.body.progress)) {
+        // Find or create subtask entry
+        const subTaskIndex = task.subTasks.findIndex(st => st.user.toString() === req.user.id);
+
+        if (subTaskIndex > -1) {
+          // Update existing subtask
+          if (req.body.status) task.subTasks[subTaskIndex].status = req.body.status;
+          if (req.body.progress) task.subTasks[subTaskIndex].progress = req.body.progress;
+        } else {
+          // Initialize if missing (migration safety)
+          task.subTasks.push({
+            user: req.user.id,
+            status: req.body.status || 'pending',
+            progress: req.body.progress || 0
+          });
+        }
+
+        // Check if ALL subtasks are complete/review to potentially update main status
+        const allComplete = task.subTasks.length > 0 && task.subTasks.every(st => st.status === 'completed' || st.status === 'review');
+        if (allComplete && task.status !== 'completed' && task.status !== 'review') {
+          updates.status = 'review'; // Auto-escalate to review if everyone is done
+        }
+
+        // Recalculate main task progress based on subtasks (Average)
+        if (task.subTasks.length > 0) {
+          const totalProgress = task.subTasks.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+          const avgProgress = Math.round(totalProgress / task.subTasks.length);
+          updates.progress = avgProgress;
+        }
+
+        // Persist subTasks changes
+        updates.subTasks = task.subTasks;
+      }
+
+      // Restrict main task status direct manipulation by employees if it's a shared task
+      if (task.assignedTo.length > 1 && req.body.status === 'completed') {
+        return res.status(403).json({ success: false, error: 'Group Directive: Update your individual progress. Main completion requires full squad sync.' });
+      }
+    }
+
+    if (req.body.statusNotes) {
+      updates.statusNotes = req.body.statusNotes;
+    }
+
+    // Check for activity log entries
+    // const updates = { ...req.body }; // REMOVED DUPLICATE
+    // const activityEntries = []; // REMOVED DUPLICATE
+
+    const roleToModel = {
+      'admin': 'Admin',
+      'manager': 'Manager',
+      'employee': 'Employee',
+      'sales_executive': 'SalesExecutive'
+    };
+    const userModel = roleToModel[req.user.role] || 'Admin';
+
+    if (req.body.status && req.body.status !== task.status) {
+      activityEntries.push({
+        user: req.user.id,
+        userModel: userModel,
+        action: `Status changed from ${task.status} to ${req.body.status}`
+      });
+    }
+
+    if (req.body.progress !== undefined && req.body.progress !== task.progress) {
+      activityEntries.push({
+        user: req.user.id,
+        userModel: userModel,
+        action: `Progress updated to ${req.body.progress}%`
+      });
+    }
+
+    if (activityEntries.length > 0) {
+      updates.$push = { activityLog: { $each: activityEntries } };
+      delete updates.activityLog; // Avoid overwriting
+    }
+
+    task = await Task.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true
-    });
+    }).populate('activityLog.user', 'name')
+      .populate('subTasks.user', 'name profileImage');
 
     res.status(200).json({ success: true, data: task });
   } catch (err) {

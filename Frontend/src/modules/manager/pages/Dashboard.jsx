@@ -143,8 +143,86 @@ const ManagerDashboard = () => {
 
             {/* Content Grid */}
             <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+                {/* COMMAND OVERSIGHT: Tasks Deployed BY Manager */}
+                <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="border sm:border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+                        <CardHeader className="py-4 px-6 border-b border-r-0 border-slate-50 dark:border-slate-800 bg-amber-50/30 dark:bg-amber-900/10">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 flex items-center gap-2">
+                                <Zap size={14} className="fill-current" />
+                                Active Directives (In Progress)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 h-80 overflow-y-auto scrollbar-hide">
+                            <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                                {tasks.filter(t => t.delegatedBy === user?.id && (t.status === 'in_progress' || t.status === 'pending')).map(task => (
+                                    <div key={task._id || task.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer" onClick={() => navigate(`/manager/my-tasks?filter=delegated`)}>
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className="text-xs font-black text-slate-700 dark:text-gray-200 uppercase tracking-tight line-clamp-1">{task.title}</h4>
+                                            <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-amber-200 text-amber-600 bg-amber-50 h-4 px-1.5">
+                                                {task.status.replace('_', ' ')}
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <div className="flex -space-x-1.5">
+                                                {task.assignedTo?.map((userId, i) => {
+                                                    const assignee = employees.find(e => e.id === userId || e._id === userId);
+                                                    return (
+                                                        <div key={i} className="size-5 rounded-full ring-2 ring-white dark:ring-slate-900 dark:bg-slate-700 bg-slate-200 overflow-hidden" title={assignee?.name}>
+                                                            {assignee?.avatar ? <img src={assignee.avatar} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center h-full text-[8px] font-bold text-slate-500">{assignee?.name?.[0]}</span>}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                Due: {task.deadline ? format(new Date(task.deadline), 'MMM dd') : 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {tasks.filter(t => t.delegatedBy === user?.id && (t.status === 'in_progress' || t.status === 'pending')).length === 0 && (
+                                    <div className="p-8 text-center text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
+                                        No active directives deployed
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border sm:border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+                        <CardHeader className="py-4 px-6 border-b border-l-0 border-slate-50 dark:border-slate-800 bg-red-50/30 dark:bg-red-900/10">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600 flex items-center gap-2">
+                                <AlertCircle size={14} className="fill-current" />
+                                Critical Attention (Overdue)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 h-80 overflow-y-auto scrollbar-hide">
+                            <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                                {tasks.filter(t => t.delegatedBy === user?.id && t.status === 'overdue').map(task => (
+                                    <div key={task._id || task.id} className="p-4 bg-red-50/10 hover:bg-red-50/30 transition-colors group cursor-pointer" onClick={() => navigate(`/manager/my-tasks?filter=overdue`)}>
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className="text-xs font-black text-slate-700 dark:text-gray-200 uppercase tracking-tight line-clamp-1">{task.title}</h4>
+                                            <Badge variant="destructive" className="text-[8px] font-black uppercase tracking-widest h-4 px-1.5">
+                                                OVERDUE
+                                            </Badge>
+                                        </div>
+                                        <p className="text-[9px] font-bold text-red-400 uppercase tracking-widest mt-1">
+                                            Delayed by {Math.ceil((new Date() - new Date(task.deadline)) / (1000 * 60 * 60 * 24))} days
+                                        </p>
+                                    </div>
+                                ))}
+                                {tasks.filter(t => t.delegatedBy === user?.id && t.status === 'overdue').length === 0 && (
+                                    <div className="p-8 text-center text-[9px] font-black text-slate-300 uppercase tracking-widest italic flex flex-col items-center gap-2">
+                                        <CheckSquare className="text-emerald-300" />
+                                        All directives on schedule
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 {/* Recent Tasks Activity */}
-                <Card className="lg:col-span-2 border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                <Card className="lg:col-span-2 border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
                     <CardHeader className="py-4 px-5 sm:px-6 flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800">
                         <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                             <Clock className="text-primary-500" size={14} />

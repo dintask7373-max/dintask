@@ -128,8 +128,50 @@ exports.updateProject = async (req, res) => {
       runValidators: true
     });
 
+    // CASCADE STATUS SYNC: If project is on_hold or cancelled, pause all associated tasks
+    if (['on_hold', 'cancelled'].includes(req.body.status)) {
+      await Task.updateMany(
+        { project: project._id, status: { $ne: 'completed' } },
+        { $set: { status: req.body.status === 'on_hold' ? 'pending' : 'cancelled' } }
+      );
+    }
+
     res.status(200).json({ success: true, data: project });
 
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}
+
+// @desc    Delete project
+// @route   DELETE /api/projects/:id
+// @access  Private (Admin, Manager)
+exports.deleteProject = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ success: false, error: 'Project not found' });
+
+    // Get user's adminId
+    let userAdminId;
+    if (req.user.role === 'admin') {
+      userAdminId = req.user.id;
+    } else if (req.user.role === 'manager') {
+      const manager = await Manager.findById(req.user.id);
+      userAdminId = manager?.adminId;
+    }
+
+    // Check workspace
+    if (project.adminId.toString() !== userAdminId?.toString()) {
+      return res.status(403).json({ success: false, error: 'Authorization denied' });
+    }
+
+    // CASCADE DELETION: Purge all tasks associated with this project
+    await Task.deleteMany({ project: project._id });
+
+    // Delete the project
+    await project.deleteOne();
+
+    res.status(200).json({ success: true, data: {}, message: 'Project and all associated tasks purged successfully' });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
