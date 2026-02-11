@@ -22,6 +22,12 @@ const io = require('socket.io')(server, {
 const setupChatSocket = require('./chatSocket');
 setupChatSocket(io);
 
+const setupSupportSocket = require('./supportSocket');
+setupSupportSocket(io);
+
+// Make io accessible in controllers
+app.set('io', io);
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
   console.log(`Error: ${err.message}`);

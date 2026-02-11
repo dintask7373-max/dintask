@@ -7,9 +7,10 @@ const setupChatSocket = (io) => {
 
         // Join personal room for notifications and setup
         socket.on('setup', (userData) => {
-            if (userData && userData.id) {
-                socket.join(userData.id);
-                console.log(`User joined personal room: ${userData.id}`);
+            const userId = userData?.id || userData?._id;
+            if (userId) {
+                socket.join(userId);
+                console.log(`User joined personal room: ${userId}`);
                 socket.emit('connected');
             }
         });

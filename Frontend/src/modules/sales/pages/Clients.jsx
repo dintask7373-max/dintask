@@ -63,59 +63,69 @@ const Clients = () => {
 
     return (
         <div className="space-y-4 sm:space-y-6 pb-10">
-            {/* Header section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 mb-2">
-                <div className="flex items-center gap-3">
-                    <div className="lg:hidden size-9 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
+            {/* Sticky Header & Stats Section */}
+            <div className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md pt-4 -mt-4 pb-2 space-y-4 sm:space-y-6">
+                {/* Header section */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+                    <div className="flex items-center gap-3">
+                        <div>
+                            <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                                Client <span className="text-primary-600">Infrastructure</span>
+                            </h1>
+                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                                Accelerating high-value partnerships
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                            Client <span className="text-primary-600">Infrastructure</span>
-                        </h1>
-                        <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
-                            Accelerating high-value partnerships
-                        </p>
-                    </div>
+                    <Button
+                        className="h-9 px-4 sm:px-6 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto"
+                        onClick={() => setIsAddClientOpen(true)}
+                    >
+                        <Plus size={14} className="sm:size-4" />
+                        <span>Onboard Client</span>
+                    </Button>
                 </div>
-                <Button
-                    className="h-9 px-4 sm:px-6 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest w-full sm:w-auto"
-                    onClick={() => setIsAddClientOpen(true)}
-                >
-                    <Plus size={14} className="sm:size-4" />
-                    <span>Onboard Client</span>
-                </Button>
+
+                {/* High-Density Stats Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pb-2">
+                    {[
+                        { label: 'Total Base', value: stats.total, icon: <Users size={16} />, color: 'primary', border: 'border-primary-100', shadow: 'shadow-primary-200/50', gradient: 'bg-gradient-to-br from-white to-primary-50/30' },
+                        { label: 'Active Links', value: stats.active, icon: <TrendingUp size={16} />, color: 'emerald', border: 'border-emerald-100', shadow: 'shadow-emerald-200/50', gradient: 'bg-gradient-to-br from-white to-emerald-50/30' },
+                        { label: 'Potential', value: stats.potential, icon: <Users size={16} />, color: 'indigo', border: 'border-indigo-100', shadow: 'shadow-indigo-200/50', gradient: 'bg-gradient-to-br from-white to-indigo-50/30' },
+                        { label: 'Growth rate', value: stats.growth, icon: <TrendingUp size={16} />, color: 'blue', border: 'border-blue-100', shadow: 'shadow-blue-200/50', gradient: 'bg-gradient-to-br from-white to-blue-50/30' }
+                    ].map((stat, i) => (
+                        <Card key={i} className={cn(
+                            "border-2 shadow-lg rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                            stat.border,
+                            stat.shadow,
+                            stat.gradient,
+                            "dark:from-slate-900 dark:to-slate-800"
+                        )}>
+                            <CardContent className="p-4 sm:p-5 space-y-3">
+                                <div className={cn(
+                                    "size-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-inner",
+                                    stat.color === 'primary' ? "bg-primary-100 text-primary-600 dark:bg-primary-900/40" :
+                                        stat.color === 'emerald' ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40" :
+                                            stat.color === 'indigo' ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40" :
+                                                "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
+                                )}>
+                                    {React.cloneElement(stat.icon, { size: 16 })}
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 sm:mb-1.5">{stat.label}</p>
+                                    <p className={cn("text-lg sm:text-2xl font-black leading-none uppercase tracking-tight",
+                                        stat.color === 'primary' ? 'text-primary-600' :
+                                            stat.color === 'emerald' ? 'text-emerald-600' :
+                                                stat.color === 'indigo' ? 'text-indigo-600' : 'text-blue-600'
+                                    )}>{stat.value}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
 
-            {/* High-Density Stats Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                {[
-                    { label: 'Total Base', value: stats.total, icon: <Users size={16} />, color: 'primary' },
-                    { label: 'Active Links', value: stats.active, icon: <TrendingUp size={16} />, color: 'emerald' },
-                    { label: 'Potential', value: stats.potential, icon: <Users size={16} />, color: 'amber' },
-                    { label: 'Growth rate', value: stats.growth, icon: <TrendingUp size={16} />, color: 'blue' }
-                ].map((stat, i) => (
-                    <Card key={i} className="border-none shadow-sm sm:shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
-                        <CardContent className="p-4 sm:p-5 flex items-center gap-3">
-                            <div className={cn(
-                                "size-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
-                                stat.color === 'primary' ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20" :
-                                    stat.color === 'emerald' ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" :
-                                        stat.color === 'amber' ? "bg-amber-50 text-amber-600 dark:bg-amber-900/20" :
-                                            "bg-blue-50 text-blue-600 dark:bg-blue-900/20"
-                            )}>
-                                {React.cloneElement(stat.icon, { size: 16 })}
-                            </div>
-                            <div>
-                                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 sm:mb-1">{stat.label}</p>
-                                <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-tight uppercase">{stat.value}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <Card className="border-2 border-primary-100 shadow-xl shadow-primary-200/30 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden">
                 <CardHeader className="py-2.5 sm:py-3 px-4 sm:px-6 border-b border-slate-50 dark:border-slate-800">
                     <CardTitle className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Database core</CardTitle>
                 </CardHeader>

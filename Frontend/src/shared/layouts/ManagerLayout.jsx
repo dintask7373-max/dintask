@@ -1,18 +1,31 @@
-import React, { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants } from '@/shared/utils/animations';
 import { cn } from '@/shared/utils/cn';
+import { LayoutDashboard, MessageSquare, Settings, Users } from 'lucide-react';
 
 const ManagerLayout = ({ role = 'manager' }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const location = useLocation();
 
+    const salesNavItems = [
+        { name: 'Dashboard', path: '/sales', icon: LayoutDashboard },
+        { name: 'Clients', path: '/sales/clients', icon: Users },
+        { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
+        { name: 'Setting', path: '/sales/settings', icon: Settings },
+    ];
+
+    const showMobileFooter = role === 'sales';
+
     return (
-        <div className="fixed inset-0 h-[100dvh] w-full bg-slate-50 dark:bg-slate-950 flex font-sans transition-colors duration-300 overflow-hidden">
+        <div className={cn(
+            "fixed inset-0 h-[100dvh] w-full flex font-sans transition-colors duration-300 overflow-hidden",
+            role === 'sales' ? "bg-white dark:bg-slate-950" : "bg-slate-50 dark:bg-slate-950"
+        )}>
             {/* Sidebar with mobile responsiveness */}
             <Sidebar
                 isOpen={isSidebarOpen}
@@ -34,8 +47,11 @@ const ManagerLayout = ({ role = 'manager' }) => {
                 />
 
                 {/* Scrollable Page Content */}
-                <div className="flex-1 overflow-y-auto scroll-smooth w-full">
-                    <main className="w-full min-h-full px-4 md:px-8 pt-20 pb-8">
+                <div className="flex-1 overflow-y-auto scroll-smooth w-full no-scrollbar">
+                    <main className={cn(
+                        "w-full min-h-full px-4 md:px-8 pt-20",
+                        showMobileFooter ? "pb-20 md:pb-8" : "pb-8"
+                    )}>
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={location.pathname}
@@ -73,6 +89,65 @@ const ManagerLayout = ({ role = 'manager' }) => {
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
+
+            {/* Mobile Bottom Navigation for Sales Functionality */}
+            <AnimatePresence>
+                {showMobileFooter && !isSidebarOpen && (
+                    <motion.nav
+                        initial={{ y: 100 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: 100 }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                        className="fixed bottom-0 left-0 w-full h-[56px] bg-white dark:bg-slate-900 z-50 px-4 flex items-center justify-around lg:hidden border-t border-slate-200 dark:border-slate-800 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]"
+                    >
+                        {salesNavItems.map((item) => {
+                            const isActive = location.pathname === item.path || (item.path === '/sales' && location.pathname === '/sales/');
+
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    className="relative h-full flex flex-col items-center justify-center outline-none flex-1 group"
+                                >
+                                    <motion.div
+                                        whileTap={{ scale: 0.9 }}
+                                        className="flex flex-col items-center justify-center relative z-10"
+                                    >
+                                        <div className={cn(
+                                            "relative flex items-center justify-center transition-all duration-500",
+                                            isActive ? "text-[#4461f2]" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                                        )}>
+                                            <item.icon
+                                                size={20}
+                                                strokeWidth={isActive ? 2.5 : 2}
+                                                className={cn(
+                                                    "transition-all duration-300 relative z-10",
+                                                    isActive ? "-translate-y-0.5" : ""
+                                                )}
+                                            />
+                                        </div>
+                                        <span className={cn(
+                                            "text-[8.5px] font-black mt-0.5 tracking-tight uppercase transition-all duration-300",
+                                            isActive ? "text-[#4461f2] opacity-100 translate-y-0" : "text-slate-400 opacity-60 translate-y-0.5"
+                                        )}>
+                                            {item.name}
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Small Active Dot */}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="sales_active_dot"
+                                            className="absolute bottom-1 size-1 bg-[#4461f2] rounded-full shadow-[0_0_10px_#4461f2]"
+                                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                </NavLink>
+                            );
+                        })}
+                    </motion.nav>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

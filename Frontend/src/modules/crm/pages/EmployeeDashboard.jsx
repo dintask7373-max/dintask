@@ -128,31 +128,38 @@ const EmployeeDashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
-          { label: 'Follow-ups', value: todayFollowUps.length, icon: CalendarIcon, color: 'amber', trend: 'Today' },
-          { label: 'Pending Tasks', value: pendingTasks.length, icon: ListTodo, color: 'emerald', trend: 'Active' },
-          { label: 'Completion Rate', value: completionRate, icon: TrendingUp, color: 'primary', trend: 'Won/Closed' }
+          { label: 'Follow-ups', value: todayFollowUps.length, icon: CalendarIcon, color: 'indigo', border: 'border-indigo-100', shadow: 'shadow-indigo-200/50', gradient: 'bg-gradient-to-br from-white to-indigo-50/30' },
+          { label: 'Pending Tasks', value: pendingTasks.length, icon: ListTodo, color: 'emerald', border: 'border-emerald-100', shadow: 'shadow-emerald-200/50', gradient: 'bg-gradient-to-br from-white to-emerald-50/30' },
+          { label: 'Completion Rate', value: completionRate, icon: TrendingUp, color: 'primary', border: 'border-primary-100', shadow: 'shadow-primary-200/50', gradient: 'bg-gradient-to-br from-white to-primary-50/30' }
         ].map((stat, i) => (
-          <motion.div key={i} variants={fadeInUp}>
-            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden group border border-slate-50 dark:border-slate-800/50 hover:shadow-xl hover:shadow-primary-500/5 transition-all">
-              <CardContent className="p-4 flex flex-col gap-3">
+          <motion.div key={i} variants={fadeInUp} className={cn(i === 2 ? "col-span-2 sm:col-span-1" : "")}>
+            <Card className={cn(
+              "border-2 shadow-lg rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 h-full",
+              stat.border,
+              stat.shadow,
+              stat.gradient,
+              "dark:from-slate-900 dark:to-slate-800"
+            )}>
+              <CardContent className={cn(
+                "p-5 flex gap-4",
+                i === 2 ? "flex-row sm:flex-col items-center sm:items-start" : "flex-col items-start"
+              )}>
                 <div className={cn(
-                  "size-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110",
-                  stat.color === 'indigo' ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20" :
-                    stat.color === 'amber' ? "bg-amber-50 text-amber-600 dark:bg-amber-900/20" :
-                      stat.color === 'emerald' ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" :
-                        "bg-primary-50 text-primary-600 dark:bg-primary-900/20"
+                  "size-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-inner",
+                  stat.color === 'indigo' ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40" :
+                    stat.color === 'emerald' ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40" :
+                      "bg-primary-100 text-primary-600 dark:bg-primary-900/40"
                 )}>
                   <stat.icon size={20} />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
-                  <p className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{stat.value}</p>
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <div className="h-0.5 w-4 bg-slate-100 dark:bg-slate-800 rounded-full" />
-                    <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic">{stat.trend}</p>
-                  </div>
+                  <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
+                  <p className={cn("text-xl sm:text-2xl font-black leading-none uppercase tracking-tight",
+                    stat.color === 'indigo' ? 'text-indigo-600' :
+                      stat.color === 'emerald' ? 'text-emerald-600' : 'text-primary-600'
+                  )}>{stat.value}</p>
                 </div>
               </CardContent>
             </Card>

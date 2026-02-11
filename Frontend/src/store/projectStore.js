@@ -53,6 +53,22 @@ const useProjectStore = create((set, get) => ({
     } catch (error) {
       toast.error("Failed to update status");
     }
+  },
+
+  deleteProject: async (id) => {
+    try {
+      const res = await api(`/projects/${id}`, { method: 'DELETE' });
+      if (res.success) {
+        set(state => ({
+          projects: state.projects.filter(p => (p._id || p.id) !== id)
+        }));
+        toast.success("Project and associated tasks purged successfully");
+        return true;
+      }
+    } catch (error) {
+      toast.error("Failed to delete project");
+      return false;
+    }
   }
 
 }));

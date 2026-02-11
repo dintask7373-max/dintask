@@ -15,6 +15,7 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
 
     const config = priorityConfig[task.priority] || priorityConfig.low;
     const isCompleted = task.status === 'completed';
+    const isOverdue = task.status === 'overdue';
 
     // Get Assigner Info
     const assigner = task.assignedBy === 'self'
@@ -26,13 +27,26 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
     return (
         <div
             onClick={onClick}
-            className="group relative flex flex-col gap-3 rounded-xl bg-white dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            className={cn(
+                "group relative flex flex-col gap-3 rounded-xl bg-white dark:bg-slate-800 p-4 border shadow-sm hover:shadow-md transition-shadow cursor-pointer",
+                isOverdue ? "border-red-200 dark:border-red-900/50" : "border-slate-100 dark:border-slate-700"
+            )}
         >
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
                     <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide", config.color)}>
                         {config.label}
                     </span>
+                    {isOverdue && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-600 text-white shadow-lg shadow-red-500/20 animate-pulse">
+                            Overdue
+                        </span>
+                    )}
+                    {task.team && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-600 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800">
+                            Team: {task.team.name}
+                        </span>
+                    )}
                     {task.labels && task.labels.map((label, index) => (
                         <span
                             key={index}
@@ -78,7 +92,11 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
             <div className={cn("flex items-center justify-between pt-2 mt-1 border-t border-slate-50 dark:border-slate-700", isCompleted ? "opacity-50" : "")}>
                 <div className="flex items-center gap-2">
                     <div className="flex -space-x-2">
-                        {task.assignedTo && task.assignedTo.length > 0 ? (
+                        {task.team ? (
+                            <div className="size-7 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-100 flex items-center justify-center">
+                                <span className="text-[9px] font-black text-indigo-600">T</span>
+                            </div>
+                        ) : task.assignedTo && task.assignedTo.length > 0 ? (
                             task.assignedTo.slice(0, 3).map((u, i) => (
                                 <Avatar key={i} className="h-7 w-7 border-2 border-white dark:border-slate-800">
                                     <AvatarFallback className="text-[9px] bg-slate-100 text-slate-500">U</AvatarFallback>
@@ -86,7 +104,7 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
                             ))
                         ) : (
                             <div className="size-7 rounded-full border-2 border-white dark:border-slate-800 bg-slate-100 flex items-center justify-center">
-                                <span className="text-[9px] font-bold text-gray-500">A</span>
+                                <span className="text-[10px] font-bold text-gray-500">A</span>
                             </div>
                         )}
                     </div>
@@ -105,6 +123,12 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {task.attachments?.length > 0 && (
+                        <div className="flex items-center gap-1 text-slate-400 group-hover:text-emerald-500 transition-colors">
+                            <Paperclip size={16} />
+                            <span className="text-[10px] font-bold">{task.attachments.length}</span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-1 text-primary">
                         <MessageSquare size={16} />
                         <span className="text-[10px] font-bold">2</span>

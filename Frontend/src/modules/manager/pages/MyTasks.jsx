@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     CheckSquare,
     Search,
@@ -13,7 +14,8 @@ import {
     Zap,
     Target,
     Layers,
-    Shield
+    Shield,
+    Paperclip
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -28,8 +30,9 @@ import { cn } from '@/shared/utils/cn';
 import { toast } from 'sonner';
 
 const MyTasks = () => {
+    const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { tasks, fetchTasks, completeTask } = useTaskStore();
+    const { tasks, fetchTasks, completeTask, updateTask } = useTaskStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
 
@@ -61,11 +64,15 @@ const MyTasks = () => {
     }, [tasks, user, searchTerm, statusFilter]);
 
     const stats = useMemo(() => {
-        const active = myTasks.filter(t => t.status !== 'completed').length;
+        const active = myTasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+        const overdue = myTasks.filter(t => t.status === 'overdue').length;
+        const inReview = myTasks.filter(t => t.status === 'review').length;
+        const fulfilled = myTasks.filter(t => t.status === 'completed').length;
         return [
-            { label: 'Pending OPS', value: active, color: 'primary' },
-            { label: 'Completed', value: myTasks.length - active, color: 'emerald' },
-            { label: 'Priority High', value: myTasks.filter(t => t.priority === 'urgent' || t.priority === 'high').length, color: 'rose' }
+            { label: 'Pending', value: active, color: 'primary' },
+            { label: 'Overdue', value: overdue, color: 'rose' },
+            { label: 'Review', value: inReview, color: 'amber' },
+            { label: 'Fulfilled', value: fulfilled, color: 'emerald' }
         ];
     }, [myTasks]);
 
@@ -89,14 +96,15 @@ const MyTasks = () => {
             </div>
 
             {/* Status Overview Matrix */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {stats.map((stat, i) => (
                     <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
                         <CardContent className="p-3 sm:p-4 text-left">
                             <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
                             <p className={cn("text-lg sm:text-xl font-black leading-none",
                                 stat.color === 'primary' ? 'text-primary-600' :
-                                    stat.color === 'emerald' ? 'text-emerald-600' : 'text-rose-500'
+                                    stat.color === 'rose' ? 'text-rose-600' :
+                                        stat.color === 'amber' ? 'text-amber-500' : 'text-emerald-600'
                             )}>{stat.value}</p>
                         </CardContent>
                     </Card>
@@ -115,7 +123,7 @@ const MyTasks = () => {
                     />
                 </div>
                 <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-none overflow-x-auto no-scrollbar">
-                    {['all', 'pending', 'completed'].map((status) => (
+                    {['all', 'pending', 'overdue', 'review', 'completed'].map((status) => (
                         <Button
                             key={status}
                             variant="ghost"
@@ -160,6 +168,11 @@ const MyTasks = () => {
                                                         <Badge variant="ghost" className="bg-slate-50 text-slate-400 dark:bg-slate-800 text-[8px] font-black uppercase tracking-widest px-2 h-4">
                                                             P: {task.priority}
                                                         </Badge>
+                                                        {task.team && (
+                                                            <Badge className="bg-indigo-50 text-indigo-600 border-none text-[8px] font-black uppercase tracking-widest px-2 h-4">
+                                                                TEAM: {task.team.name}
+                                                            </Badge>
+                                                        )}
                                                         {task.status === 'completed' && (
                                                             <Badge className="bg-emerald-50 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest px-2 h-4">
                                                                 FULFILLED
@@ -173,6 +186,14 @@ const MyTasks = () => {
                                                         <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 line-clamp-1 italic">
                                                             {task.description}
                                                         </p>
+                                                        {task.status === 'review' && task.submissionNote && (
+                                                            <div className="mt-2 p-2 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100/50 dark:border-emerald-800/30">
+                                                                <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 opacity-70">Evidence Statement:</p>
+                                                                <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 line-clamp-2">
+                                                                    "{task.submissionNote}"
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
                                                         <div className="flex items-center gap-1.5">
@@ -187,17 +208,55 @@ const MyTasks = () => {
                                                             <Clock size={12} className="text-amber-500" />
                                                             INIT: {format(new Date(task.createdAt), "MMM dd").toUpperCase()}
                                                         </div>
+                                                        {task.attachments?.length > 0 && (
+                                                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[8px] font-black uppercase tracking-widest">
+                                                                <Paperclip size={10} />
+                                                                {task.attachments.length} ASSETS
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-3 shrink-0">
-                                                    <Button variant="ghost" size="icon" className="size-8 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary-600">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="size-8 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary-600"
+                                                        onClick={() => navigate(`/manager/projects/${task.project}`)}
+                                                    >
                                                         <ChevronRight size={18} />
                                                     </Button>
-                                                    {task.status !== 'completed' && (
+                                                    {task.status === 'review' && (
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                                                                onClick={() => {
+                                                                    updateTask(task.id, { status: 'completed', progress: 100 });
+                                                                    toast.success("Directive Approved");
+                                                                }}
+                                                            >
+                                                                APPROVE
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-8 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-rose-500/20"
+                                                                onClick={() => {
+                                                                    updateTask(task.id, { status: 'in_progress', progress: 50 });
+                                                                    toast.error("Directive Sent for Correction");
+                                                                }}
+                                                            >
+                                                                REJECT
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                    {task.status !== 'completed' && task.status !== 'review' && (
                                                         <Button
                                                             size="sm"
                                                             className="h-8 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
-                                                            onClick={() => handleCompleteTask(task.id)}
+                                                            onClick={() => {
+                                                                updateTask(task.id, { status: 'completed', progress: 100 });
+                                                                toast.success("Directive fulfilled");
+                                                            }}
                                                         >
                                                             FULFILL
                                                         </Button>

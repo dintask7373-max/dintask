@@ -251,7 +251,13 @@ const FollowUps = () => {
           { label: 'Completed', value: (followUps || []).filter(f => f.status === 'Completed').length, color: 'emerald' },
           { label: 'Overdue Flow', value: (followUps || []).filter(f => new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled').length, color: 'red' }
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <Card key={i} className={cn(
+            "border-2 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1",
+            stat.color === 'primary' ? 'border-primary-100 shadow-primary-200/50' :
+              stat.color === 'amber' ? 'border-amber-100 shadow-amber-200/50' :
+                stat.color === 'emerald' ? 'border-emerald-100 shadow-emerald-200/50' :
+                  'border-red-100 shadow-red-200/50'
+          )}>
             <CardContent className="p-3 sm:p-4">
               <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
               <p className={cn("text-lg sm:text-xl font-black leading-none",
@@ -264,7 +270,7 @@ const FollowUps = () => {
         ))}
       </div>
 
-      <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+      <Card className="border-2 border-primary-100 shadow-2xl shadow-primary-200/30 dark:shadow-none bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 rounded-3xl overflow-hidden">
         <CardContent className="p-3 sm:p-5">
           <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-5">
             <div className="relative flex-1">

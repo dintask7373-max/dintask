@@ -103,7 +103,6 @@ import Notifications from '@/modules/user/pages/Notifications';
 import Security from '@/modules/user/pages/Security';
 import Preferences from '@/modules/user/pages/Preferences';
 import HelpLegal from '@/modules/user/pages/HelpLegal';
-import AddTask from '@/modules/user/pages/AddTask';
 import NotificationsList from '@/modules/user/pages/NotificationsList';
 import HelpCenter from '@/modules/user/pages/HelpCenter';
 import ChatSupport from '@/modules/user/pages/ChatSupport';
@@ -113,6 +112,7 @@ import TermsOfService from '@/modules/user/pages/TermsOfService';
 import EmployeeSubscription from '@/modules/user/pages/Subscription';
 import SuccessJoin from '@/modules/user/pages/SuccessJoin';
 import Checkout from '@/modules/user/pages/Checkout';
+import AddNote from '@/modules/user/pages/AddNote';
 import PendingApproval from '@/modules/shared/pages/PendingApproval';
 
 // Super Admin Pages
@@ -127,6 +127,7 @@ import BillingPayments from '@/modules/superadmin/pages/BillingPayments';
 import GlobalUsersOverview from '@/modules/superadmin/pages/GlobalUsersOverview';
 import SupportCenter from '@/modules/shared/pages/SupportCenter';
 import LandingPageManager from '@/modules/superadmin/pages/LandingPageManager';
+
 import StaffManagement from '@/modules/superadmin/pages/StaffManagement';
 import IntelManager from '@/modules/superadmin/pages/IntelManager';
 import SuperAdminNotifications from '@/modules/superadmin/pages/Notifications';
@@ -208,9 +209,10 @@ const AppRouter = () => {
             <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
                 <Route index element={<EmployeeDashboard />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />
-                <Route path="tasks/new" element={<AddTask />} />
                 <Route path="calendar" element={<EmployeeCalendar />} />
                 <Route path="notes" element={<EmployeeNotes />} />
+                <Route path="notes/new" element={<AddNote />} />
+                <Route path="notes/edit/:id" element={<AddNote />} />
                 <Route path="notifications" element={<NotificationsList />} />
                 <Route path="chat" element={<EmployeeChat />} />
                 <Route path="profile" element={<EmployeeProfile />} />
@@ -250,6 +252,7 @@ const AppRouter = () => {
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="notifications" element={<SuperAdminNotifications />} />
                 <Route path="landing-page" element={<LandingPageManager />} />
+
                 <Route path="system-intel" element={<IntelManager />} />
 
                 {/* Restricted Routes for Root SuperAdmin Only */}

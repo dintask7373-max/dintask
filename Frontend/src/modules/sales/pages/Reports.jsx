@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { BarChart3, PieChart, LineChart, Download, Filter, Search, TrendingUp, TrendingDown, Target, Users, FileText, Clock, IndianRupee } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -122,9 +122,6 @@ const SalesReports = () => {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 mb-2">
                 <div className="flex items-center gap-3">
-                    <div className="lg:hidden size-9 shrink-0">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain" />
-                    </div>
                     <div>
                         <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                             Intelligence <span className="text-primary-600">Analytics</span>
@@ -139,7 +136,7 @@ const SalesReports = () => {
                         <SelectTrigger className="flex-1 sm:w-[130px] h-9 bg-white dark:bg-slate-900 border-none rounded-xl font-black text-[9px] uppercase tracking-widest px-3 shadow-sm ring-offset-0 focus:ring-0">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                        <SelectContent className="border-none shadow-2xl">
                             <SelectItem value="week" className="text-[10px] font-bold">Week</SelectItem>
                             <SelectItem value="month" className="text-[10px] font-bold">Month</SelectItem>
                             <SelectItem value="quarter" className="text-[10px] font-bold">Quarter</SelectItem>
@@ -161,15 +158,18 @@ const SalesReports = () => {
             {/* Summary Grid - Premium Look */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
                 {[
-                    { label: 'Revenue Velocity', value: `₹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary' },
-                    { label: 'Tactical Wins', value: reportMetrics.totalDeals, change: reportMetrics.dealsChange, icon: <Target size={16} />, color: 'emerald' },
-                    { label: 'Mean Value', value: `₹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue' }
+                    { label: 'Revenue Velocity', value: `₹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary', border: 'border-primary-200', bg: 'bg-primary-50', shadow: 'shadow-primary-200/50' },
+                    { label: 'Tactical Wins', value: reportMetrics.totalDeals, change: reportMetrics.dealsChange, icon: <Target size={16} />, color: 'emerald', border: 'border-emerald-200', bg: 'bg-emerald-50', shadow: 'shadow-emerald-200/50' },
+                    { label: 'Mean Value', value: `₹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue', border: 'border-blue-200', bg: 'bg-blue-50', shadow: 'shadow-blue-200/50' }
                 ].map((stat, i) => (
                     <Card key={i} className={cn(
-                        "border-none shadow-sm sm:shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group",
+                        "border-2 shadow-lg rounded-2xl overflow-hidden group transition-all hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        "bg-white dark:bg-slate-900",
                         i === 2 ? "col-span-2 sm:col-span-1" : ""
                     )}>
-                        <CardContent className="p-3 sm:p-5 flex items-center justify-between">
+                        <CardContent className={cn("p-3 sm:p-5 flex items-center justify-between bg-gradient-to-br from-white to-transparent dark:from-slate-900", stat.bg.replace('bg-', 'to-') + '/20')}>
                             <div className="space-y-2.5 sm:space-y-3">
                                 <div className={cn(
                                     "size-8 sm:size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0",
@@ -214,7 +214,7 @@ const SalesReports = () => {
                 </div>
 
                 <TabsContent value="revenue" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                    <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                    <Card className="border-2 border-primary-100 shadow-xl shadow-primary-100/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden">
                         <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div className="space-y-0.5">
@@ -247,7 +247,7 @@ const SalesReports = () => {
                 <TabsContent value="targets" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-4">
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Individual Targets - Refined */}
-                        <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                        <Card className="border-2 border-blue-100 shadow-xl shadow-blue-100/50 dark:border-blue-900 dark:shadow-none bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-900 dark:to-blue-900/10 rounded-2xl overflow-hidden">
                             <CardHeader className="py-2.5 sm:py-3 px-3 sm:px-6 border-b border-slate-50 dark:border-slate-800">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -292,7 +292,7 @@ const SalesReports = () => {
                         </Card>
 
                         {/* Team Progress - Modernized */}
-                        <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                        <Card className="border-2 border-emerald-100 shadow-xl shadow-emerald-100/50 dark:border-emerald-900 dark:shadow-none bg-gradient-to-br from-white to-emerald-50/30 dark:from-slate-900 dark:to-emerald-900/10 rounded-2xl overflow-hidden">
                             <CardHeader className="py-2.5 sm:py-3 px-3 sm:px-6 border-b border-slate-50 dark:border-slate-800">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ const SalesReports = () => {
                 {/* Fallback for other tabs */}
                 {['deals', 'clients'].includes(activeTab) && (
                     <TabsContent value={activeTab} className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                        <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden">
                             <CardContent className="p-16 text-center">
                                 <div className="size-16 rounded-[1.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
                                     <Clock className="size-8 text-slate-400" />

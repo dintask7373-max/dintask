@@ -58,7 +58,7 @@ const SupportTicketSchema = new mongoose.Schema({
         },
         responderModel: {
             type: String,
-            enum: ['Admin', 'SuperAdmin', 'Employee', 'Manager']
+            enum: ['Admin', 'SuperAdmin', 'Employee', 'Manager', 'SalesExecutive']
         },
         message: String,
         createdAt: {

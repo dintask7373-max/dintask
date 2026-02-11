@@ -242,7 +242,7 @@ const SalesSchedule = () => {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                <Card className="xl:col-span-3 border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem]">
+                <Card className="xl:col-span-3 border-2 border-primary-100 shadow-xl shadow-primary-200/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 overflow-hidden rounded-[2rem]">
                     <div className="p-6 pb-2 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white capitalize">
@@ -326,7 +326,7 @@ const SalesSchedule = () => {
                 </Card>
 
                 <div className="space-y-6">
-                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+                    <Card className="border-2 border-primary-100 shadow-xl shadow-primary-200/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden">
                         <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tactical Briefing</CardTitle>
                         </CardHeader>
