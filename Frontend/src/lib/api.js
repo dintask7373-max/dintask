@@ -28,7 +28,10 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, config);
+    const fullUrl = `${BASE_URL}${endpoint}`;
+    console.log(`[API Request] ${config.method || 'GET'} ${fullUrl}`);
+    const response = await fetch(fullUrl, config);
+    console.log(`[API Response] ${response.status} ${fullUrl}`);
     const data = await response.json();
 
     if (!response.ok) {
