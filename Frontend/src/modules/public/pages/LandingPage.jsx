@@ -51,6 +51,10 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from '@/shared/utils/cn';
 import apiRequest from '@/lib/api';
+import dashboard1 from '@/assets/dashboard_1.png';
+import dashboard2 from '@/assets/dashboard_2.png';
+import dashboard3 from '@/assets/dashboard_3.png';
+
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -107,9 +111,9 @@ const LandingPage = () => {
                         showcaseImages: (tacticalRes.data.images && tacticalRes.data.images.length > 0)
                             ? tacticalRes.data.images
                             : [
-                                '/src/assets/dashboard_1.png',
-                                '/src/assets/dashboard_2.png',
-                                '/src/assets/dashboard_3.png'
+                                dashboard1,
+                                dashboard2,
+                                dashboard3
                             ]
                     });
                 }
@@ -340,7 +344,7 @@ const LandingPage = () => {
             description: 'Centralized control center to manage managers, employees, and overall system health.',
             icon: 'ShieldCheck',
             color: 'from-blue-600 to-indigo-600',
-            image: '/src/assets/dashboard_1.png',
+            image: dashboard1,
             themeColor: 'blue',
             targetAudience: 'For System Admins & Owners',
             detailedFeatures: ['Manager Oversight', 'Employee Directory', 'System Analytics', 'Permission Controls', 'Global Settings'],
@@ -352,7 +356,7 @@ const LandingPage = () => {
             description: 'Powerful tools for task delegation, team progress monitoring, and schedule management.',
             icon: 'LayoutDashboard',
             color: 'from-purple-600 to-pink-600',
-            image: '/src/assets/dashboard_2.png',
+            image: dashboard2,
             themeColor: 'purple',
             targetAudience: 'For Team Leads & Managers',
             detailedFeatures: ['Task Delegation', 'Performance Metrics', 'Team Chat', 'Real-time Sync', 'Leave Approvals'],
@@ -364,7 +368,7 @@ const LandingPage = () => {
             description: 'Personalized task dashboard designed for maximum productivity and focus.',
             icon: 'Target',
             color: 'from-yellow-400 to-orange-500',
-            image: '/src/assets/dashboard_3.png',
+            image: dashboard3,
             themeColor: 'amber',
             targetAudience: 'For Individual Contributors',
             detailedFeatures: ['Task List', 'Calendar Sync', 'Personal Notes', 'Quick Actions', 'Time Tracking'],
@@ -376,7 +380,7 @@ const LandingPage = () => {
             description: 'Track leads, manage pipelines, and close deals with our integrated CRM suite.',
             icon: 'Briefcase',
             color: 'from-amber-500 to-orange-600',
-            image: '/src/assets/dashboard_1.png',
+            image: dashboard1,
             themeColor: 'emerald', // Using emerald theme for sales to differentiate
             targetAudience: 'For Sales Teams & Leaders',
             detailedFeatures: ['Lead Management', 'Sales Pipeline', 'Follow-up Scheduler', 'Client Portal', 'Deal Forecasting'],

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1`;
 
 // Helper to get token from persisted auth storage
 const getAuthToken = () => {

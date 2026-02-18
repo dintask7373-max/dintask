@@ -66,7 +66,7 @@ const useSubscriptionStore = create((set, get) => ({
         ? JSON.parse(sessionStorage.getItem('dintask-auth-storage')).state.token
         : null;
 
-      const response = await fetch(`http://localhost:5000/api/v1/payments/invoice/${paymentId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/payments/invoice/${paymentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

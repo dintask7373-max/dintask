@@ -170,7 +170,7 @@ const SuperAdminSettings = () => {
                                                     <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-xl sm:text-3xl font-black text-white shadow-xl overflow-hidden">
                                                         {user?.profileImage ? (
                                                             <img
-                                                                src={user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000/${user.profileImage}`}
+                                                                src={user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profileImage}`}
                                                                 alt={user.name}
                                                                 className="w-full h-full object-cover"
                                                             />
