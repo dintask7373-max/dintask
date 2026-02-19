@@ -33,23 +33,7 @@ const envOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(','
 const whitelist = [...new Set([...defaultOrigins, ...envOrigins])];
 console.log('CORS whitelist:', whitelist);
 
-// Handle preflight OPTIONS requests for all routes
-app.options('*', cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    const cleanOrigin = origin.replace(/\/$/, '');
-    if (whitelist.some(w => w.replace(/\/$/, '') === cleanOrigin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS preflight blocked for origin:', origin);
-      callback(null, false);
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-}));
-
+// Single cors middleware — handles both preflight OPTIONS and regular requests automatically
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, Postman, etc.)
@@ -64,7 +48,9 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Routes files
