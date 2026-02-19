@@ -44,6 +44,7 @@ import {
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import useEmployeeStore from '@/store/employeeStore';
 import useTaskStore from '@/store/taskStore';
 import useManagerStore from '@/store/managerStore';
@@ -72,8 +73,8 @@ const EmployeeManagement = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [expandedEmployee, setExpandedEmployee] = useState(null);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [newEmployee, setNewEmployee] = useState({ name: '', email: '', role: '', managerId: '' });
-    const [editEmployeeData, setEditEmployeeData] = useState({ name: '', email: '', role: '', status: 'active', managerId: '' });
+    const [newEmployee, setNewEmployee] = useState({ name: '', email: '', password: '', phoneNumber: '', role: '', managerId: '' });
+    const [editEmployeeData, setEditEmployeeData] = useState({ name: '', email: '', phoneNumber: '', role: '', status: 'active', managerId: '' });
 
     const [parent] = useAutoAnimate();
 
@@ -134,7 +135,7 @@ const EmployeeManagement = () => {
                 status: 'active',
                 joinedDate: new Date().toLocaleDateString()
             });
-            setNewEmployee({ name: '', email: '', role: '', managerId: '' });
+            setNewEmployee({ name: '', email: '', password: '', phoneNumber: '', role: '', managerId: '' });
             setIsAddModalOpen(false);
             // Refresh list and limit
             fetchEmployees({ page, limit, search: searchTerm });
@@ -159,6 +160,7 @@ const EmployeeManagement = () => {
         setEditEmployeeData({
             name: emp.name,
             email: emp.email,
+            phoneNumber: emp.phoneNumber || '',
             role: emp.role,
             status: emp.status || 'active',
             managerId: emp.managerId || ''
@@ -581,15 +583,37 @@ const EmployeeManagement = () => {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label htmlFor="role" className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <label htmlFor="password" className="text-xs font-bold text-slate-500 uppercase">Password</label>
                             <Input
-                                id="role"
-                                value={newEmployee.role}
-                                onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
-                                placeholder="Software Engineer"
+                                id="password"
+                                type="password"
+                                value={newEmployee.password}
+                                onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                                placeholder="••••••••"
                                 className="rounded-xl h-11"
                                 required
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="phoneNumber" className="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
+                            <Input
+                                id="phoneNumber"
+                                value={newEmployee.phoneNumber}
+                                onChange={(e) => setNewEmployee({ ...newEmployee, phoneNumber: e.target.value })}
+                                placeholder="+1 234 567 8900"
+                                className="rounded-xl h-11"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="role" className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <Select value={newEmployee.role} onValueChange={(val) => setNewEmployee({ ...newEmployee, role: val })}>
+                                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Select Role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="employee">Employee</SelectItem>
+                                    <SelectItem value="sales_executive">Sales Executive</SelectItem>
+                                    <SelectItem value="manager">Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid gap-2">
                             <label htmlFor="manager" className="text-xs font-bold text-slate-500 uppercase">Assign Manager</label>
@@ -642,14 +666,24 @@ const EmployeeManagement = () => {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
                             <Input
-                                value={editEmployeeData.role}
-                                onChange={(e) => setEditEmployeeData({ ...editEmployeeData, role: e.target.value })}
-                                placeholder="Software Engineer"
+                                value={editEmployeeData.phoneNumber}
+                                onChange={(e) => setEditEmployeeData({ ...editEmployeeData, phoneNumber: e.target.value })}
+                                placeholder="+1 234 567 8900"
                                 className="rounded-xl h-11"
-                                required
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <Select value={editEmployeeData.role} onValueChange={(val) => setEditEmployeeData({ ...editEmployeeData, role: val })}>
+                                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Select Role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="employee">Employee</SelectItem>
+                                    <SelectItem value="sales_executive">Sales Executive</SelectItem>
+                                    <SelectItem value="manager">Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">

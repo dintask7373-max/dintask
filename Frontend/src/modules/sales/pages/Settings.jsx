@@ -15,7 +15,7 @@ const SalesSettings = () => {
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
-        phone: '+1 (555) 123-4567',
+        phone: '',
         department: 'sales'
     });
 
@@ -32,7 +32,7 @@ const SalesSettings = () => {
             setProfileData({
                 name: user.name || '',
                 email: user.email || '',
-                phone: user.phoneNumber || user.phone || '+1 (555) 123-4567',
+                phone: user.phoneNumber || user.phone || '',
                 department: user.department || 'sales'
             });
         }
@@ -134,8 +134,10 @@ const SalesSettings = () => {
                                     />
                                 </div>
                                 <div className="space-y-1.5 sm:space-y-2">
-                                    <Label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Direct Link (Mobile)</Label>
+                                    <Label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Mobile Number</Label>
                                     <Input
+                                        type="tel"
+                                        placeholder="+91 9876543210"
                                         value={profileData.phone}
                                         onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                                         className="h-11 sm:h-12 bg-slate-50/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 rounded-xl font-black text-xs sm:text-sm px-4 sm:px-5 focus:bg-white transition-all shadow-inner shadow-slate-100 dark:shadow-none"

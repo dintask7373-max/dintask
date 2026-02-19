@@ -12,25 +12,69 @@ import { Label } from '@/shared/components/ui/label';
 const EmployeeLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, error, isAuthenticated, role } = useAuthStore();
+
+    // OTP State
+    const [loginMethod, setLoginMethod] = useState('password'); // 'password' or 'otp'
+    const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+
+    const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        if (!email || !password) {
-            toast.error('Please fill in all fields');
-            return;
-        }
 
-        const result = await login(email, password, 'employee');
-        if (result.success) {
-            toast.success('Welcome back!');
-            navigate('/employee');
-        } else {
-            if (result.error && result.error.includes('pending approval')) {
-                navigate('/pending-approval');
+        if (loginMethod === 'password') {
+            if (!email || !password) {
+                toast.error('Please fill in all fields');
+                return;
+            }
+
+            const result = await login(email, password, 'employee');
+            if (result.success) {
+                toast.success('Welcome back!');
+                navigate('/employee');
             } else {
-                toast.error(result.error || 'Login failed');
+                if (result.error && result.error.includes('pending approval')) {
+                    navigate('/pending-approval');
+                } else {
+                    toast.error(result.error || 'Login failed');
+                }
+            }
+        } else {
+            // OTP Flow
+            if (!phone) {
+                toast.error('Please enter phone number');
+                return;
+            }
+
+            if (!otpSent) {
+                // Send OTP
+                const result = await sendOtp(phone, 'employee');
+                if (result && result.success) {
+                    setOtpSent(true);
+                    toast.success('OTP sent successfully');
+                } else {
+                    toast.error(result?.error || 'Failed to send OTP');
+                }
+            } else {
+                // Verify OTP
+                if (!otp) {
+                    toast.error('Please enter OTP');
+                    return;
+                }
+                const result = await verifyOtp(phone, otp, 'employee');
+                if (result && result.success) {
+                    toast.success('Verified successfully');
+                    navigate('/employee');
+                } else {
+                    if (result?.error && result.error.includes('pending approval')) {
+                        navigate('/pending-approval');
+                    } else {
+                        toast.error(result?.error || 'Invalid OTP');
+                    }
+                }
             }
         }
     };
@@ -50,51 +94,111 @@ const EmployeeLogin = () => {
             {/* Premium Sign In Card */}
             <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
                 <div className="bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] p-10 md:p-12 border border-white/40">
-                    <div className="text-center mb-10">
+                    <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Sign in</h1>
                         <p className="text-slate-400 text-xs font-medium italic">Enter your credentials to continue</p>
                     </div>
 
+                    {/* Method Toggle */}
+                    <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+                        <button
+                            type="button"
+                            onClick={() => setLoginMethod('password')}
+                            className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${loginMethod === 'password' ? 'bg-white text-[#4461f2] shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            Password
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setLoginMethod('otp')}
+                            className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${loginMethod === 'otp' ? 'bg-white text-[#4461f2] shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            OTP Login
+                        </button>
+                    </div>
+
                     <form onSubmit={handleLogin} className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="email" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Email Address</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="name@company.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                autoComplete="email"
-                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
-                            />
-                        </div>
+                        {loginMethod === 'password' ? (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Email Address</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="name@company.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        autoComplete="email"
+                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                    />
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                autoComplete="current-password"
-                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between px-1">
-                            <label className="flex items-center group cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    id="remember"
-                                    className="size-4 rounded border-slate-200 text-[#4461f2] focus:ring-[#4461f2] transition-all cursor-pointer"
-                                />
-                                <span className="ml-2.5 text-[11px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors uppercase tracking-wide">Remember</span>
-                            </label>
-                            <Link to="/employee/forgot-password" size="sm" className="text-[11px] font-bold text-[#4461f2] hover:underline uppercase tracking-wide">
-                                Forgot?
-                            </Link>
-                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Password</Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        autoComplete="current-password"
+                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between px-1">
+                                    <label className="flex items-center group cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            id="remember"
+                                            className="size-4 rounded border-slate-200 text-[#4461f2] focus:ring-[#4461f2] transition-all cursor-pointer"
+                                        />
+                                        <span className="ml-2.5 text-[11px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors uppercase tracking-wide">Remember</span>
+                                    </label>
+                                    <Link to="/employee/forgot-password" size="sm" className="text-[11px] font-bold text-[#4461f2] hover:underline uppercase tracking-wide">
+                                        Forgot?
+                                    </Link>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Mobile Number</Label>
+                                    <Input
+                                        id="phone"
+                                        type="text"
+                                        placeholder="9876543210"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        disabled={otpSent}
+                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
+                                    />
+                                </div>
+                                {otpSent && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <Label htmlFor="otp" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Enter OTP</Label>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setOtpSent(false); setOtp(''); }}
+                                                className="text-[10px] text-[#4461f2] font-bold uppercase hover:underline"
+                                            >
+                                                Change Number
+                                            </button>
+                                        </div>
+                                        <Input
+                                            id="otp"
+                                            type="text"
+                                            placeholder="XXXXXX"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200 tracking-widest text-center text-lg"
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
 
                         <Button
                             type="submit"
@@ -104,10 +208,10 @@ const EmployeeLogin = () => {
                             {loading ? (
                                 <div className="flex items-center gap-2">
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    <span>Signing in...</span>
+                                    <span>{loginMethod === 'otp' && !otpSent ? 'Sending...' : 'Signing in...'}</span>
                                 </div>
                             ) : (
-                                "Sign in"
+                                loginMethod === 'password' ? "Sign in" : (otpSent ? "Verify OTP" : "Get OTP")
                             )}
                         </Button>
                     </form>

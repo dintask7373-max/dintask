@@ -12,6 +12,8 @@ const sendEmail = require('../utils/sendEmail');
 
 const Plan = require('../models/Plan');
 const Notification = require('../models/Notification');
+const Otp = require('../models/Otp');
+const smsService = require('../utils/smsService');
 
 const models = {
   employee: Employee,
@@ -109,11 +111,20 @@ exports.register = async (req, res, next) => {
       }
     }
 
+    // Check if phone number is already taken (if provided)
+    if (req.body.phoneNumber) {
+      const phoneExists = await UserModel.findOne({ phoneNumber: req.body.phoneNumber });
+      if (phoneExists) {
+        return next(new ErrorResponse('Phone number already exists', 400));
+      }
+    }
+
     // Create user in specific collection
     const user = await UserModel.create({
       name,
       email,
       password,
+      phoneNumber: req.body.phoneNumber,
       role,
       adminId: role !== 'admin' && role !== 'superadmin' ? adminId : undefined,
       companyName: role === 'admin' ? companyName : undefined,
@@ -124,6 +135,7 @@ exports.register = async (req, res, next) => {
     if (role === 'admin') {
       try {
         const superAdmins = await SuperAdmin.find({ role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] } });
+
 
         const uniqueRecipients = new Map();
         superAdmins.forEach(sa => uniqueRecipients.set(sa._id.toString(), sa._id));
@@ -374,6 +386,14 @@ exports.updateDetails = async (req, res, next) => {
       const emailExists = await UserModel.findOne({ email });
       if (emailExists && emailExists._id.toString() !== req.user.id) {
         return next(new ErrorResponse('Email already exists', 400));
+      }
+    }
+
+    // Check if phone number is being updated and if it's already taken
+    if (phoneNumber) {
+      const phoneExists = await UserModel.findOne({ phoneNumber });
+      if (phoneExists && phoneExists._id.toString() !== req.user.id) {
+        return next(new ErrorResponse('Phone number already exists', 400));
       }
     }
 
@@ -648,3 +668,170 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
+
+// @desc    Send OTP for login
+// @route   POST /api/v1/auth/send-otp
+// @access  Public
+exports.sendOtp = async (req, res, next) => {
+  try {
+    const { phone, role } = req.body;
+
+    if (!phone || !role) {
+      return next(new ErrorResponse('Please provide phone number and role', 400));
+    }
+
+    // Role mapping
+    const roleMap = {
+      'sales': 'sales_executive',
+      'superadmin': 'superadmin'
+    };
+    const dbRole = roleMap[role] || role;
+
+    if (!models[dbRole]) {
+      return next(new ErrorResponse('Invalid role', 400));
+    }
+
+    const UserModel = models[dbRole];
+
+    // Check if user exists
+    // Models use 'phoneNumber' field
+    const user = await UserModel.findOne({ phoneNumber: phone });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Account not found. Please register first.'
+      });
+    }
+
+    // Check status
+    if (user.status === 'pending') {
+      return res.status(403).json({ success: false, error: 'Your account is pending approval.' });
+    }
+    if (user.status === 'rejected') {
+      return res.status(403).json({ success: false, error: 'Your account has been rejected.' });
+    }
+
+    // Test numbers logic (from RukkooIn)
+    const testNumbers = ['9009925021', '6261096283', '9752275626', '8889948896', '7047716600', '6263322405'];
+    const isTestNumber = testNumbers.includes(phone);
+
+    // Generate OTP
+    const otp = isTestNumber ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save/Update OTP
+    // Default expiration is 10 mins in schema
+    await Otp.findOneAndUpdate(
+      { phone },
+      { phone, otp, tempData: { role: dbRole } }, // upsert true handles creation
+      { upsert: true, new: true }
+    );
+
+    // Send SMS
+    if (!isTestNumber) {
+      const smsResult = await smsService.sendOTP(phone, otp);
+      if (!smsResult.success) {
+        return next(new ErrorResponse(`SMS failed: ${smsResult.error}`, 500));
+      }
+    } else {
+      console.log(`🧪 Test Number: ${phone} - OTP: ${otp}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully',
+      expiresIn: 600 // 10 minutes
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Verify OTP and Login
+// @route   POST /api/v1/auth/verify-otp
+// @access  Public
+exports.verifyOtp = async (req, res, next) => {
+  try {
+    const { phone, otp, role } = req.body;
+
+    if (!phone || !otp || !role) {
+      return next(new ErrorResponse('Please provide phone, otp and role', 400));
+    }
+
+    // Role mapping
+    const roleMap = {
+      'sales': 'sales_executive',
+      'superadmin': 'superadmin'
+    };
+    const dbRole = roleMap[role] || role;
+
+    // 1. Verify OTP
+    const otpRecord = await Otp.findOne({ phone });
+
+    if (!otpRecord) {
+      return next(new ErrorResponse('OTP expired or invalid. Request again.', 400));
+    }
+
+    if (otpRecord.otp !== otp) {
+      return next(new ErrorResponse('Invalid OTP', 400));
+    }
+
+    // Check expiration explicitly (though index handles deletion, slight race condition possible)
+    if (otpRecord.expiresAt < Date.now()) {
+      return next(new ErrorResponse('OTP expired', 400));
+    }
+
+    // 2. Find User
+    const UserModel = models[dbRole];
+    if (!UserModel) return next(new ErrorResponse('Invalid role configuration', 500));
+
+    const user = await UserModel.findOne({ phoneNumber: phone });
+
+    if (!user) {
+      return next(new ErrorResponse('User not found', 404));
+    }
+
+    // Reuse login checks logic
+    if (user.status === 'pending') {
+      return res.status(403).json({ success: false, error: 'Your account is pending approval.' });
+    }
+    if (user.status === 'rejected') {
+      return res.status(403).json({ success: false, error: 'Your account has been rejected.' });
+    }
+
+    // Check subscription for team members
+    // Copy logic from login function
+    const teamMemberRoles = ['employee', 'manager', 'sales_executive'];
+    if (teamMemberRoles.includes(user.role)) {
+      const adminId = user.adminId;
+      if (adminId) {
+        const admin = await Admin.findById(adminId);
+        if (admin) {
+          const now = new Date();
+          const expiryDate = new Date(admin.subscriptionExpiry);
+          if (expiryDate < now) {
+            return res.status(403).json({
+              success: false,
+              subscriptionExpired: true,
+              error: 'Organization subscription expired.',
+              expiryDate: admin.subscriptionExpiry
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Cleanup OTP
+    await Otp.deleteOne({ phone });
+
+    // 4. Login Success
+    user.status = 'active';
+    await user.save();
+
+    await sendTokenResponse(user, 200, res);
+
+  } catch (err) {
+    next(err);
+  }
+};

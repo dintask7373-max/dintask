@@ -298,8 +298,7 @@ exports.getSalesExecutives = async (req, res, next) => {
     }
 
     const matchQuery = {
-      adminId: new mongoose.Types.ObjectId(adminId),
-      role: 'sales_executive'
+      adminId: new mongoose.Types.ObjectId(adminId)
     };
 
     if (search) {
@@ -968,7 +967,7 @@ exports.rejectJoinRequest = async (req, res, next) => {
 exports.addTeamMember = async (req, res, next) => {
   try {
     const { name, email, password, role, phoneNumber } = req.body;
-    const adminId = req.user.id;
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
 
     // Check Limit
     const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top

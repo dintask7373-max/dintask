@@ -254,6 +254,7 @@ const useEmployeeStore = create((set, get) => ({
             const registrationData = {
                 name: requestData.fullName,
                 email: requestData.email,
+                phoneNumber: requestData.phoneNumber,
                 password: requestData.password,
                 role: requestData.role?.toLowerCase() === 'sales' ? 'sales_executive' : requestData.role?.toLowerCase(),
                 adminId: requestData.workspaceId

@@ -20,6 +20,7 @@ const EmployeeRegister = () => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: inviteEmail || '',
+        phoneNumber: '',
         password: '',
         confirmPassword: ''
     });
@@ -45,9 +46,9 @@ const EmployeeRegister = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        const { fullName, email, password, confirmPassword } = formData;
+        const { fullName, email, phoneNumber, password, confirmPassword } = formData;
 
-        if (!fullName || !email || !password || !confirmPassword) {
+        if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
             toast.error('Please fill in all fields');
             return;
         }
@@ -65,6 +66,7 @@ const EmployeeRegister = () => {
                 const response = await register({
                     name: fullName,
                     email,
+                    phoneNumber,
                     password,
                     role: 'employee',
                     adminId
@@ -83,6 +85,7 @@ const EmployeeRegister = () => {
                 const success = await addPendingRequest({
                     fullName,
                     email,
+                    phoneNumber,
                     password,
                     workspaceId: referralCode,
                     role: 'Employee'
@@ -179,6 +182,18 @@ const EmployeeRegister = () => {
                                 onChange={handleChange}
                                 readOnly={!!inviteEmail}
                                 className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="phoneNumber" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Mobile Number</Label>
+                            <Input
+                                id="phoneNumber"
+                                type="text"
+                                placeholder="9876543210"
+                                value={formData.phoneNumber}
+                                onChange={handleChange}
+                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200"
                             />
                         </div>
 

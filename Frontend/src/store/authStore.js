@@ -244,6 +244,56 @@ const useAuthStore = create(
                 }
             },
 
+            sendOtp: async (phone, role) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest('/auth/send-otp', {
+                        method: 'POST',
+                        body: { phone, role }
+                    });
+
+                    if (response.success) {
+                        set({ loading: false });
+                        return response;
+                    } else {
+                        throw new Error(response.error || 'Failed to send OTP');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return { success: false, error: err.message };
+                }
+            },
+
+            verifyOtp: async (phone, otp, role) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest('/auth/verify-otp', {
+                        method: 'POST',
+                        body: { phone, otp, role }
+                    });
+
+                    if (response.success) {
+                        const rawRole = response.user.role || role;
+                        let normalizedRole = rawRole;
+                        if (rawRole === 'sales_executive') normalizedRole = 'sales';
+
+                        set({
+                            user: response.user,
+                            role: normalizedRole,
+                            token: response.token,
+                            isAuthenticated: true,
+                            loading: false,
+                        });
+                        return { success: true };
+                    } else {
+                        throw new Error(response.error || 'Invalid OTP');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return { success: false, error: err.message };
+                }
+            },
+
             clearError: () => set({ error: null }),
         }),
         {

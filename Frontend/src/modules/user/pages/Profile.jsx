@@ -26,7 +26,7 @@ const EmployeeProfile = () => {
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
-        phoneNumber: '+1 (555) 123-4567'
+        phoneNumber: ''
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -42,7 +42,7 @@ const EmployeeProfile = () => {
             setProfileData({
                 name: user.name || '',
                 email: user.email || '',
-                phoneNumber: user.phoneNumber || user.phone || '+1 (555) 123-4567'
+                phoneNumber: user.phoneNumber || user.phone || ''
             });
         }
     }, [user]);

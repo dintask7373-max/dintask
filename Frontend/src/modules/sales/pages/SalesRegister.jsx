@@ -25,6 +25,7 @@ const SalesRegister = () => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: inviteEmail || '',
+        phoneNumber: '',
         password: '',
         confirmPassword: ''
     });
@@ -48,9 +49,9 @@ const SalesRegister = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        const { fullName, email, password, confirmPassword } = formData;
+        const { fullName, email, phoneNumber, password, confirmPassword } = formData;
 
-        if (!fullName || !email || !password || !confirmPassword) {
+        if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
             toast.error('Operational initialization failed: missing data');
             return;
         }
@@ -68,6 +69,7 @@ const SalesRegister = () => {
                 const response = await register({
                     name: fullName,
                     email,
+                    phoneNumber,
                     password,
                     role: 'sales_executive', // Correct role for sales
                     adminId
@@ -85,6 +87,7 @@ const SalesRegister = () => {
                 const success = await addPendingRequest({
                     fullName,
                     email,
+                    phoneNumber,
                     password,
                     workspaceId: referralCode,
                     role: 'Sales'
@@ -179,6 +182,18 @@ const SalesRegister = () => {
                                 onChange={handleChange}
                                 readOnly={!!inviteEmail}
                                 className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="phoneNumber" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Direct Line</Label>
+                            <Input
+                                id="phoneNumber"
+                                type="text"
+                                placeholder="9876543210"
+                                value={formData.phoneNumber}
+                                onChange={handleChange}
+                                className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
                             />
                         </div>
 
