@@ -10,16 +10,26 @@ import {
     Info,
     History,
     CircleDashed,
-    Trash
+    Trash,
+    UserPlus,
+    Trophy,
+    FileCode2,
+    Clock,
+    ShieldAlert,
+    Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useNotificationStore from '@/store/notificationStore';
+import useAuthStore from '@/store/authStore';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { toast } from 'sonner';
 
 const NotificationPanel = ({ isOpen, onClose }) => {
+    const { user } = useAuthStore();
+    const role = user?.role;
+
     const {
         notifications,
         fetchNotifications,
@@ -68,8 +78,21 @@ const NotificationPanel = ({ isOpen, onClose }) => {
             case 'success': return <CheckCircle2 size={16} className="text-emerald-500" />;
             case 'error': return <AlertCircle size={16} className="text-red-500" />;
             case 'warning': return <AlertCircle size={16} className="text-amber-500" />;
+            case 'payment': return <Wallet size={16} className="text-emerald-500" />;
+            case 'team_registration': return <UserPlus size={16} className="text-blue-500" />;
+            case 'deal_won': return <Trophy size={16} className="text-amber-500" />;
+            case 'conversion_request': return <FileCode2 size={16} className="text-indigo-500" />;
+            case 'subscription_alert': return <AlertCircle size={16} className="text-red-500" />;
+            case 'task_overdue': return <Clock size={16} className="text-orange-500" />;
+            case 'security_alert': return <ShieldAlert size={16} className="text-red-600" />;
+            case 'support_update': return <Info size={16} className="text-cyan-500" />;
             default: return <Info size={16} className="text-primary-500" />;
         }
+    };
+
+    const getCategory = (type) => {
+        if (!type) return 'System';
+        return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     };
 
     return (
@@ -171,76 +194,83 @@ const NotificationPanel = ({ isOpen, onClose }) => {
                                 </div>
                             ) : (
                                 <div className="p-2 space-y-1">
-                                    {notifications.map((notification) => (
-                                        <motion.div
-                                            key={notification._id}
-                                            layout
-                                            onClick={() => isSelectionMode ? toggleSelection(notification._id) : handleMarkAsRead(notification._id)}
-                                            className={cn(
-                                                "group relative p-3 sm:p-4 rounded-2xl transition-all cursor-pointer border border-transparent",
-                                                !notification.isRead ? "bg-slate-50 dark:bg-slate-800/40" : "hover:bg-slate-50 dark:hover:bg-slate-800/20",
-                                                selectedIds.includes(notification._id) && "bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800 shadow-sm"
-                                            )}
-                                        >
-                                            <div className="flex gap-3 sm:gap-4">
-                                                <div className="relative shrink-0">
-                                                    <div className={cn(
-                                                        "size-9 rounded-xl flex items-center justify-center",
-                                                        !notification.isRead ? "bg-white dark:bg-slate-800 shadow-sm" : "bg-slate-100 dark:bg-slate-800/50"
-                                                    )}>
-                                                        {getIcon(notification.type)}
+                                    {notifications
+                                        .filter(n => {
+                                            if (role === 'admin') {
+                                                return !['task_assigned', 'task_overdue', 'task'].includes(n.type) && n.category !== 'task';
+                                            }
+                                            return true;
+                                        })
+                                        .map((notification) => (
+                                            <motion.div
+                                                key={notification._id}
+                                                layout
+                                                onClick={() => isSelectionMode ? toggleSelection(notification._id) : handleMarkAsRead(notification._id)}
+                                                className={cn(
+                                                    "group relative p-3 sm:p-4 rounded-2xl transition-all cursor-pointer border border-transparent",
+                                                    !notification.isRead ? "bg-slate-50 dark:bg-slate-800/40" : "hover:bg-slate-50 dark:hover:bg-slate-800/20",
+                                                    selectedIds.includes(notification._id) && "bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800 shadow-sm"
+                                                )}
+                                            >
+                                                <div className="flex gap-3 sm:gap-4">
+                                                    <div className="relative shrink-0">
+                                                        <div className={cn(
+                                                            "size-9 rounded-xl flex items-center justify-center",
+                                                            !notification.isRead ? "bg-white dark:bg-slate-800 shadow-sm" : "bg-slate-100 dark:bg-slate-800/50"
+                                                        )}>
+                                                            {getIcon(notification.type)}
+                                                        </div>
+                                                        {!notification.isRead && (
+                                                            <span className="absolute -top-1 -right-1 size-2.5 bg-primary-500 border-2 border-white dark:border-slate-800 rounded-full animate-pulse" />
+                                                        )}
                                                     </div>
-                                                    {!notification.isRead && (
-                                                        <span className="absolute -top-1 -right-1 size-2.5 bg-primary-500 border-2 border-white dark:border-slate-800 rounded-full animate-pulse" />
+
+                                                    <div className="flex-1 min-w-0 pr-6">
+                                                        <div className="flex items-center justify-between mb-0.5">
+                                                            <span className="text-[9px] font-black text-primary-600 uppercase tracking-widest truncate">
+                                                                {getCategory(notification.type)}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold text-slate-400 tabular-nums">
+                                                                {format(new Date(notification.createdAt), 'HH:mm')}
+                                                            </span>
+                                                        </div>
+                                                        <h4 className={cn(
+                                                            "text-[11px] leading-tight mb-1 truncate",
+                                                            !notification.isRead ? "font-black text-slate-900 dark:text-white" : "font-semibold text-slate-500 dark:text-slate-400"
+                                                        )}>
+                                                            {notification.title}
+                                                        </h4>
+                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium italic">
+                                                            {notification.message}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons (Visible on hover) */}
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {!isSelectionMode && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
+                                                            onClick={(e) => handleDelete(e, notification._id)}
+                                                        >
+                                                            <Trash size={14} />
+                                                        </Button>
+                                                    )}
+                                                    {isSelectionMode && (
+                                                        <div className={cn(
+                                                            "size-5 rounded-md border-2 flex items-center justify-center transition-all",
+                                                            selectedIds.includes(notification._id)
+                                                                ? "bg-primary-600 border-primary-600 text-white"
+                                                                : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                                                        )}>
+                                                            {selectedIds.includes(notification._id) && <Check size={12} strokeWidth={4} />}
+                                                        </div>
                                                     )}
                                                 </div>
-
-                                                <div className="flex-1 min-w-0 pr-6">
-                                                    <div className="flex items-center justify-between mb-0.5">
-                                                        <span className="text-[9px] font-black text-primary-600 uppercase tracking-widest truncate">
-                                                            {notification.category || 'System'}
-                                                        </span>
-                                                        <span className="text-[8px] font-bold text-slate-400 tabular-nums">
-                                                            {format(new Date(notification.createdAt), 'HH:mm')}
-                                                        </span>
-                                                    </div>
-                                                    <h4 className={cn(
-                                                        "text-[11px] leading-tight mb-1 truncate",
-                                                        !notification.isRead ? "font-black text-slate-900 dark:text-white" : "font-semibold text-slate-500 dark:text-slate-400"
-                                                    )}>
-                                                        {notification.title}
-                                                    </h4>
-                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium italic">
-                                                        {notification.message}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Action Buttons (Visible on hover) */}
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {!isSelectionMode && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
-                                                        onClick={(e) => handleDelete(e, notification._id)}
-                                                    >
-                                                        <Trash size={14} />
-                                                    </Button>
-                                                )}
-                                                {isSelectionMode && (
-                                                    <div className={cn(
-                                                        "size-5 rounded-md border-2 flex items-center justify-center transition-all",
-                                                        selectedIds.includes(notification._id)
-                                                            ? "bg-primary-600 border-primary-600 text-white"
-                                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                                                    )}>
-                                                        {selectedIds.includes(notification._id) && <Check size={12} strokeWidth={4} />}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    ))}
+                                            </motion.div>
+                                        ))}
                                 </div>
                             )}
                         </div>

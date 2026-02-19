@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 
 const Plan = require('../models/Plan');
+const Notification = require('../models/Notification');
 
 const models = {
   employee: Employee,
@@ -118,6 +119,47 @@ exports.register = async (req, res, next) => {
       companyName: role === 'admin' ? companyName : undefined,
       ...extraData
     });
+
+    // Notify Superadmins about new Admin registration
+    if (role === 'admin') {
+      try {
+        const superAdmins = await SuperAdmin.find({ role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] } });
+
+        const uniqueRecipients = new Map();
+        superAdmins.forEach(sa => uniqueRecipients.set(sa._id.toString(), sa._id));
+
+        const notifications = Array.from(uniqueRecipients.values()).map(recipientId => ({
+          recipient: recipientId,
+          sender: user._id,
+          type: 'general',
+          title: 'New Admin Registered',
+          message: `A new company "${companyName}" has registered with admin ${name}`,
+          link: '/superadmin/admins'
+        }));
+        if (notifications.length > 0) {
+          await Notification.insertMany(notifications);
+        }
+      } catch (notifyErr) {
+        console.error('Superadmin Notification Error:', notifyErr);
+      }
+    }
+
+    // Notify Workspace Admin about new team member registration
+    if (['manager', 'sales_executive', 'employee'].includes(role) && adminId) {
+      try {
+        await Notification.create({
+          recipient: adminId,
+          sender: user._id,
+          adminId: adminId,
+          type: 'team_registration',
+          title: 'New Team Member Registered',
+          message: `A new ${role.replace('_', ' ')} "${name}" has registered and is pending your approval.`,
+          link: '/hr/join-requests'
+        });
+      } catch (notifyErr) {
+        console.error('Admin Registration Notification Error:', notifyErr);
+      }
+    }
 
     // If status is pending, do NOT login immediately
     if (user.status === 'pending') {
@@ -346,6 +388,22 @@ exports.updateDetails = async (req, res, next) => {
       runValidators: true
     });
 
+    // Notify Admin about profile update (Security/Activity alert)
+    try {
+      const targetAdminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+      if (targetAdminId) {
+        await Notification.create({
+          recipient: targetAdminId,
+          sender: req.user.id,
+          adminId: targetAdminId,
+          type: 'security_alert',
+          title: 'Profile Details Updated',
+          message: `${req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1)} "${user.name}" updated their profile details.`,
+          link: '/hr/directory'
+        });
+      }
+    } catch (err) { console.error('Profile Update Notification Error:', err); }
+
     res.status(200).json({
       success: true,
       data: user
@@ -378,6 +436,22 @@ exports.updatePassword = async (req, res, next) => {
 
     user.password = newPassword;
     await user.save();
+
+    // Notify Admin about Password Update (Security Alert)
+    try {
+      const targetAdminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+      if (targetAdminId) {
+        await Notification.create({
+          recipient: targetAdminId,
+          sender: req.user.id,
+          adminId: targetAdminId,
+          type: 'security_alert',
+          title: 'Security Alert: Password Changed',
+          message: `The password for ${req.user.role} "${user.name}" was recently changed. If this wasn't expected, please investigate.`,
+          link: '/hr/directory'
+        });
+      }
+    } catch (err) { console.error('Password Update Notification Error:', err); }
 
     sendTokenResponse(user, 200, res);
   } catch (err) {

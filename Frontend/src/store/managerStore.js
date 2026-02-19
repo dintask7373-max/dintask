@@ -86,7 +86,7 @@ const useManagerStore = create((set, get) => ({
         try {
             const res = await api(`/admin/users/${id}`, {
                 method: 'PUT',
-                body: { ...updatedData, role: 'manager' }
+                body: { ...updatedData, originRole: 'manager' }
             });
 
             if (res.success) {

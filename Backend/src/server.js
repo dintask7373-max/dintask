@@ -1,3 +1,4 @@
+const express = require('express');
 const app = require('./app');
 const initSubscriptionCron = require('./utils/subscriptionCron');
 
@@ -26,7 +27,8 @@ setupChatSocket(io);
 const setupSupportSocket = require('./supportSocket');
 setupSupportSocket(io);
 
-// Make io accessible in controllers
+// Make io accessible globally
+global.io = io;
 app.set('io', io);
 
 // Handle unhandled promise rejections

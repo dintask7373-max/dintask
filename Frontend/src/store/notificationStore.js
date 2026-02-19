@@ -12,9 +12,16 @@ const useNotificationStore = create((set, get) => ({
         try {
             const res = await api('/notifications');
             if (res.success) {
+                const role = localStorage.getItem('role'); // Or use authStore
+                let data = res.data;
+
+                if (role === 'admin') {
+                    data = data.filter(n => !['task_assigned', 'task_overdue', 'task'].includes(n.type) && n.category !== 'task');
+                }
+
                 // Count unread
-                const unread = res.data.filter(n => !n.isRead).length;
-                set({ notifications: res.data, unreadCount: unread, loading: false });
+                const unread = data.filter(n => !n.isRead).length;
+                set({ notifications: data, unreadCount: unread, loading: false });
             }
         } catch (error) {
             console.error("Fetch Notifications Error", error);
@@ -94,6 +101,11 @@ const useNotificationStore = create((set, get) => ({
 
     // For real-time updates (if we implement socket later)
     addNotification: (notification) => {
+        const role = localStorage.getItem('role');
+        if (role === 'admin' && (['task_assigned', 'task_overdue', 'task'].includes(notification.type) || notification.category === 'task')) {
+            return;
+        }
+
         set((state) => {
             const newList = [notification, ...state.notifications];
             return {

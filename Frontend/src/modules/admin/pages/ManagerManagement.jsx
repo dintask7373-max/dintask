@@ -151,7 +151,8 @@ const ManagerManagement = () => {
             try {
                 const success = await updateManager(editingManager._id, {
                     name: editingManager.name,
-                    email: editingManager.email
+                    email: editingManager.email,
+                    status: editingManager.status
                 });
                 if (success) {
                     setIsEditModalOpen(false);
@@ -604,6 +605,17 @@ const ManagerManagement = () => {
                                     className="rounded-xl h-11"
                                     required
                                 />
+                            </div>
+                            <div className="grid gap-2 text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Account Status</label>
+                                <select
+                                    className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
+                                    value={editingManager.status || 'active'}
+                                    onChange={(e) => setEditingManager({ ...editingManager, status: e.target.value })}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
                             </div>
                             {/* ... */}
                             <DialogFooter className="pt-4">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Bell,
     Trash2,
@@ -32,6 +33,7 @@ import { fadeInUp, staggerContainer } from '@/shared/utils/animations';
 import { toast } from 'sonner';
 
 const SalesNotifications = () => {
+    const navigate = useNavigate();
     const {
         notifications,
         fetchNotifications,
@@ -201,8 +203,12 @@ const SalesNotifications = () => {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
+                                onClick={() => {
+                                    if (!n.isRead) markAsRead(n._id);
+                                    if (n.link) navigate(n.link);
+                                }}
                                 className={cn(
-                                    "group relative bg-white dark:bg-slate-900 p-5 sm:p-7 rounded-[2rem] border transition-all flex items-start gap-4 sm:gap-8",
+                                    "group relative bg-white dark:bg-slate-900 p-5 sm:p-7 rounded-[2rem] border transition-all flex items-start gap-4 sm:gap-8 cursor-pointer",
                                     !n.isRead ? "border-blue-100 dark:border-blue-900/30 shadow-lg shadow-blue-500/5 bg-gradient-to-r from-blue-50/20 to-transparent" : "border-slate-100 dark:border-slate-800/50 hover:border-blue-200",
                                     selectedIds.includes(n._id) && "bg-blue-50 border-blue-500"
                                 )}
@@ -228,7 +234,7 @@ const SalesNotifications = () => {
                                     )}
                                 </div>
 
-                                <div className="flex-1 min-w-0 pointer-events-none" onClick={() => !n.isRead && markAsRead(n._id)}>
+                                <div className="flex-1 min-w-0">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
                                         <div className="flex items-center gap-3">
                                             <Badge className={cn(
@@ -237,9 +243,7 @@ const SalesNotifications = () => {
                                             )}>
                                                 {n.type || 'SIGNAL'}
                                             </Badge>
-                                            <div className="pointer-events-auto cursor-pointer" onClick={(e) => { e.stopPropagation(); !n.isRead && markAsRead(n._id); }}>
-                                                {!n.isRead && <span className="text-[10px] font-black uppercase text-blue-500 tracking-widest animate-pulse">New Signal</span>}
-                                            </div>
+                                            {!n.isRead && <span className="text-[10px] font-black uppercase text-blue-500 tracking-widest animate-pulse">New Signal</span>}
                                         </div>
                                         <span className="text-[10px] font-black text-slate-400 tabular-nums uppercase tracking-widest">
                                             {format(new Date(n.createdAt), 'dd MMM • HH:mm')}
@@ -256,7 +260,7 @@ const SalesNotifications = () => {
                                     </p>
                                 </div>
 
-                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 shrink-0 pointer-events-auto">
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 shrink-0">
                                     <Button
                                         variant="ghost"
                                         size="icon"

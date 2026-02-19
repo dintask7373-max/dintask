@@ -1,6 +1,21 @@
 const Team = require('../models/Team');
 const Manager = require('../models/Manager');
+const Employee = require('../models/Employee');
 const ErrorResponse = require('../utils/errorResponse');
+
+// Helper: Validate that all provided member IDs are Employees (not Sales Executives or any other role)
+const validateEmployeeMembers = async (memberIds) => {
+    if (!memberIds || memberIds.length === 0) return { valid: true, invalidIds: [] };
+
+    const found = await Employee.find({ _id: { $in: memberIds } }).select('_id');
+    const foundIds = found.map(e => e._id.toString());
+    const invalidIds = memberIds.filter(id => !foundIds.includes(id.toString()));
+
+    return {
+        valid: invalidIds.length === 0,
+        invalidIds
+    };
+};
 
 // @desc    Create a new team
 // @route   POST /api/v1/teams
@@ -15,6 +30,17 @@ exports.createTeam = async (req, res, next) => {
             return next(new ErrorResponse('Manager record not found', 404));
         }
 
+        // --- VALIDATION: Only Employees can be team members ---
+        if (members && members.length > 0) {
+            const { valid, invalidIds } = await validateEmployeeMembers(members);
+            if (!valid) {
+                return next(new ErrorResponse(
+                    `Only Employees can be added to teams. ${invalidIds.length} invalid member(s) found (Sales Executives or non-employees are not allowed).`,
+                    400
+                ));
+            }
+        }
+
         const team = await Team.create({
             name,
             members,
@@ -22,6 +48,21 @@ exports.createTeam = async (req, res, next) => {
             managerId: req.user.id,
             adminId: manager.adminId
         });
+
+        // -- NOTIFICATION: New Team Created (all members are employees) --
+        if (members && members.length > 0) {
+            const Notification = require('../models/Notification');
+            const notifications = members.map(memberId => ({
+                recipient: memberId,
+                sender: req.user.id,
+                adminId: manager.adminId,
+                type: 'general',
+                title: 'Assigned to New Team',
+                message: `You have been added to the team: "${name}" by Manager ${req.user.name}.`,
+                link: '/employee'
+            }));
+            await Notification.insertMany(notifications);
+        }
 
         res.status(201).json({
             success: true,
@@ -65,10 +106,43 @@ exports.updateTeam = async (req, res, next) => {
             return next(new ErrorResponse('Not authorized to update this team', 403));
         }
 
+        // --- VALIDATION: Only Employees can be team members ---
+        if (req.body.members && req.body.members.length > 0) {
+            const { valid, invalidIds } = await validateEmployeeMembers(req.body.members);
+            if (!valid) {
+                return next(new ErrorResponse(
+                    `Only Employees can be added to teams. ${invalidIds.length} invalid member(s) found (Sales Executives or non-employees are not allowed).`,
+                    400
+                ));
+            }
+        }
+
+        const oldMembers = team.members.map(m => m.toString());
+
         team = await Team.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         }).populate('members', 'name email profileImage role');
+
+        // -- NOTIFICATION: New Members Added (all members are employees) --
+        if (req.body.members) {
+            const newMemberIds = req.body.members.filter(id => !oldMembers.includes(id.toString()));
+            if (newMemberIds.length > 0) {
+                const Notification = require('../models/Notification');
+                const manager = await Manager.findById(req.user.id);
+
+                const notifications = newMemberIds.map(memberId => ({
+                    recipient: memberId,
+                    sender: req.user.id,
+                    adminId: manager.adminId,
+                    type: 'general',
+                    title: 'Joined a Team',
+                    message: `You have been added to the team: "${team.name}" by Manager ${req.user.name}.`,
+                    link: '/employee'
+                }));
+                await Notification.insertMany(notifications);
+            }
+        }
 
         res.status(200).json({
             success: true,
@@ -91,11 +165,26 @@ exports.deleteTeam = async (req, res, next) => {
         }
 
         // Ensure manager owns the team
-        if (team.managerId.toString() !== req.user.id) {
-            return next(new ErrorResponse('Not authorized to delete this team', 403));
-        }
+        const memberIds = team.members.map(m => m._id || m);
+        const teamName = team.name;
+        const adminId = team.adminId;
 
         await Team.findByIdAndDelete(req.params.id);
+
+        // -- NOTIFICATION: Team Disbanded (all members are employees) --
+        if (memberIds.length > 0) {
+            const Notification = require('../models/Notification');
+            const notifications = memberIds.map(memberId => ({
+                recipient: memberId,
+                sender: req.user.id,
+                adminId: adminId,
+                type: 'general',
+                title: 'Team Disbanded',
+                message: `The team "${teamName}" you were part of has been disbanded by the Manager.`,
+                link: '/employee'
+            }));
+            await Notification.insertMany(notifications);
+        }
 
         res.status(200).json({
             success: true,

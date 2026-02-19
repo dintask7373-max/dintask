@@ -108,6 +108,13 @@ class SocketService {
             this.socket.on('support_typing', callback);
         }
     }
+
+    onNotificationReceived(callback) {
+        if (this.socket) {
+            this.socket.off('new_notification');
+            this.socket.on('new_notification', callback);
+        }
+    }
 }
 
 const socketService = new SocketService();

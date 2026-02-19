@@ -520,7 +520,23 @@ exports.deleteUser = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized to delete this user - different workspace', 403));
     }
 
+    const deletedUserName = user.name;
     await models[role].findByIdAndDelete(id);
+
+    // Notify Admin about user deletion
+    try {
+      await Notification.create({
+        recipient: req.user.id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'security_alert',
+        title: 'User Access Terminated',
+        message: `Security Alert: ${role.replace('_', ' ')} "${deletedUserName}" has been deleted from the workspace.`,
+        link: '/hr/directory'
+      });
+    } catch (notifyErr) {
+      console.error('User Delete Notification Error:', notifyErr);
+    }
 
     res.status(200).json({
       success: true,
@@ -530,6 +546,176 @@ exports.deleteUser = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Update a user (Role, Status, etc. with Notifications)
+// @route   PUT /api/v1/admin/users/:id
+// @access  Private (Admin)
+exports.updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { originRole, role, status, isActive, name, email, phoneNumber, managerId } = req.body;
+
+    if (!originRole) return next(new ErrorResponse('Please provide current user role as originRole', 400));
+
+    const models = {
+      employee: Employee,
+      sales_executive: SalesExecutive,
+      manager: Manager
+    };
+
+    if (!models[originRole]) return next(new ErrorResponse(`Invalid role: ${originRole}`, 400));
+
+    let user = await models[originRole].findById(id);
+    if (!user) return next(new ErrorResponse('User not found', 404));
+
+    if (user.adminId.toString() !== req.user.id) {
+      return next(new ErrorResponse('Not authorized to update this user', 403));
+    }
+
+    const Notification = require('../models/Notification');
+
+    // Handle Role Change (Collection Migration)
+    if (role && role !== originRole) {
+      if (!models[role]) return next(new ErrorResponse('Invalid new role', 400));
+
+      const userData = user.toObject();
+      delete userData._id;
+      userData.role = role;
+      if (managerId) userData.managerId = managerId;
+
+      const newUser = await models[role].create(userData);
+      await models[originRole].findByIdAndDelete(id);
+      user = newUser;
+
+      // Notify User about Role Change (Security Alert)
+      try {
+        await Notification.create({
+          recipient: user._id,
+          sender: req.user.id,
+          adminId: req.user.id,
+          type: 'security_alert',
+          title: 'Role Updated',
+          message: `Your role has been upgraded to ${role.replace('_', ' ')} by the Administrator.`,
+          link: '/profile'
+        });
+      } catch (err) { console.error('Role Change Notification Error:', err); }
+    } else {
+      // Standard Update
+      const oldStatus = user.status;
+      const oldIsActive = user.isActive;
+
+      user = await models[originRole].findByIdAndUpdate(id, req.body, {
+        new: true,
+        runValidators: true
+      });
+
+      // Notification for Account Deactivation
+      const isNowInactive = (status === 'inactive' && oldStatus !== 'inactive') || (isActive === false && oldIsActive === true);
+      const isNowActive = (status === 'active' && oldStatus === 'pending');
+
+      if (isNowInactive) {
+        try {
+          await Notification.create({
+            recipient: user._id,
+            sender: req.user.id,
+            adminId: req.user.id,
+            type: 'security_alert',
+            title: 'Account Deactivated',
+            message: 'Your account access has been deactivated by the Admin. Please contact your workspace administrator.',
+            link: '/login'
+          });
+        } catch (err) { console.error('Deactivation Notification Error:', err); }
+      } else if (isNowActive) {
+        try {
+          await Notification.create({
+            recipient: user._id,
+            sender: req.user.id,
+            adminId: req.user.id,
+            type: 'general',
+            title: 'Account Approved!',
+            message: `Welcome aboard! Your ${originRole.replace('_', ' ')} account has been approved by the Administrator.`,
+            link: originRole === 'manager' ? '/manager' : originRole === 'sales_executive' ? '/sales' : '/employee'
+          });
+        } catch (err) { console.error('Approval Notification Error:', err); }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Send Workspace Announcement to all active members
+// @route   POST /api/v1/admin/announcements
+// @access  Private (Admin)
+exports.sendAnnouncement = async (req, res, next) => {
+  try {
+    const { title, message } = req.body;
+    const adminId = req.user.id;
+
+    if (!title || !message) {
+      return next(new ErrorResponse('Please provide both title and announcement message', 400));
+    }
+
+    // Get all active members
+    const [employees, sales, managers] = await Promise.all([
+      Employee.find({ adminId, status: 'active' }).select('_id'),
+      SalesExecutive.find({ adminId, status: 'active' }).select('_id'),
+      Manager.find({ adminId, status: 'active' }).select('_id')
+    ]);
+
+    const allMembers = [...employees, ...sales, ...managers];
+    const Notification = require('../models/Notification');
+
+    // Create notifications for all members with role-aware links
+    const notifications = [
+      ...employees.map(member => ({
+        recipient: member._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: `Announcement: ${title}`,
+        message: message,
+        link: '/employee'
+      })),
+      ...sales.map(member => ({
+        recipient: member._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: `Announcement: ${title}`,
+        message: message,
+        link: '/sales'
+      })),
+      ...managers.map(member => ({
+        recipient: member._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: `Announcement: ${title}`,
+        message: message,
+        link: '/manager'
+      }))
+    ];
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Announcement successfully broadcast to ${notifications.length} members.`,
+      count: notifications.length
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 // @desc    Forgot Password (Admin)
 // @route   POST /api/v1/admin/forgotpassword
@@ -701,6 +887,21 @@ exports.approveJoinRequest = async (req, res, next) => {
     user.status = 'active';
     await user.save();
 
+    // Notify User about Approval
+    try {
+      await Notification.create({
+        recipient: user._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: 'Access Granted!',
+        message: `Your request to join ${req.user.companyName || 'the workspace'} has been approved. Welcome aboard!`,
+        link: '/login'
+      });
+    } catch (err) {
+      console.error('Approval Notification Error:', err);
+    }
+
     res.status(200).json({
       success: true,
       data: user
@@ -734,9 +935,22 @@ exports.rejectJoinRequest = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized', 403));
     }
 
-    // Determine whether to delete or just mark rejected
-    // Usually rejected requests are deleted or kept for record.
-    // Deleting for now to keep it clean.
+    // Notify user about rejection BEFORE deleting
+    try {
+      await Notification.create({
+        recipient: user._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'security_alert',
+        title: 'Join Request Rejected',
+        message: `Your request to join ${req.user.companyName || 'the workspace'} as ${role.replace('_', ' ')} has been rejected by the Admin. Please contact your administrator for more information.`,
+        link: '/login'
+      });
+    } catch (err) {
+      console.error('Rejection Notification Error:', err);
+    }
+
+    // Delete the user record after notifying
     await models[role].findByIdAndDelete(id);
 
     res.status(200).json({
@@ -780,9 +994,24 @@ exports.addTeamMember = async (req, res, next) => {
       adminId,
       managerId: req.body.managerId,
       phoneNumber,
-      status: 'active', // Direct add is active
+      status: 'active',
       isActive: true
     });
+
+    // Notify the member about being added directly
+    try {
+      await Notification.create({
+        recipient: user._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: 'Welcome to DinTask!',
+        message: `Admin has added you to ${req.user.companyName || 'the workspace'}. You can now login with your credentials.`,
+        link: '/login'
+      });
+    } catch (err) {
+      console.error('Member Add Notification Error:', err);
+    }
 
     res.status(201).json({
       success: true,

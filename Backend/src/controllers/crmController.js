@@ -110,6 +110,7 @@ exports.createLead = async (req, res) => {
       await Notification.create({
         recipient: owner,
         sender: req.user.id,
+        adminId: adminId,
         type: 'lead_assigned',
         title: 'New Lead Assigned',
         message: `You have been assigned a new lead: ${leadName} (${companyName})`,
@@ -152,10 +153,60 @@ exports.updateLead = async (req, res) => {
       req.body.owner = null;
     }
 
+    const oldStatus = lead.status;
     lead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
     }).populate('owner', 'name email');
+
+    // 1. Notify Admin if lead is marked "Won"
+    if (req.body.status === 'Won' && oldStatus !== 'Won') {
+      try {
+        await Notification.create({
+          recipient: lead.adminId,
+          sender: req.user.id,
+          adminId: lead.adminId,
+          type: 'deal_won',
+          title: 'Deal Won! 🎉',
+          message: `Victory! Lead "${lead.name}" from "${lead.company || 'Unknown'}" has been marked as WON.`,
+          link: `/sales/deals`
+        });
+      } catch (err) {
+        console.error('CRM Won Notification Error:', err);
+      }
+    }
+
+    // 2. Notify Sales Executive if Admin updates their lead
+    if (req.user.role === 'admin') {
+      const currentOwner = lead.owner?._id || lead.owner;
+      if (currentOwner) {
+        try {
+          // If status or something major changed but owner remains the same
+          if (req.body.status && req.body.status !== oldStatus && req.body.status !== 'Won') {
+            await Notification.create({
+              recipient: currentOwner,
+              sender: req.user.id,
+              adminId: lead.adminId,
+              type: 'general',
+              title: 'Lead Status Updated',
+              message: `Admin updated the status of your lead "${lead.name}" to "${req.body.status}".`,
+              link: `/sales/deals`
+            });
+          } else if (req.body.name || req.body.company || req.body.amount || req.body.priority) {
+            // General update notification
+            await Notification.create({
+              recipient: currentOwner,
+              sender: req.user.id,
+              adminId: lead.adminId,
+              type: 'general',
+              title: 'Lead Details Updated',
+              message: `Admin updated the details of your lead "${lead.name}".`,
+              link: `/sales/deals`
+            });
+          }
+        } catch (err) { console.error('Sales Rep Update Notification Error:', err); }
+      }
+    }
 
     res.status(200).json({ success: true, data: lead });
   } catch (err) {
@@ -187,6 +238,7 @@ exports.assignLead = async (req, res) => {
     await Notification.create({
       recipient: employeeId,
       sender: req.user.id,
+      adminId: lead.adminId,
       type: 'lead_assigned',
       title: 'New Lead Assigned',
       message: `You have been assigned a new lead: ${lead.name} (${lead.company || 'No Company'})`,
@@ -223,6 +275,23 @@ exports.deleteLead = async (req, res) => {
     // Check if lead belongs to user's workspace
     if (lead.adminId.toString() !== userAdminId?.toString()) {
       return res.status(403).json({ success: false, error: 'Not authorized to delete this lead - different workspace' });
+    }
+
+    // Notify Sales Executive if their assigned lead was deleted by Admin
+    if (req.user.role === 'admin' && lead.owner) {
+      try {
+        await Notification.create({
+          recipient: lead.owner,
+          sender: req.user.id,
+          adminId: lead.adminId,
+          type: 'general',
+          title: 'Lead Removed',
+          message: `Your lead "${lead.name}" (${lead.company || 'No Company'}) has been removed by the Admin.`,
+          link: `/sales/deals`
+        });
+      } catch (err) {
+        console.error('Lead Delete Notification Error:', err);
+      }
     }
 
     await Lead.findByIdAndDelete(req.params.id);
@@ -292,6 +361,21 @@ exports.requestProjectConversion = async (req, res) => {
     lead.approvalStatus = 'pending_project';
     await lead.save();
 
+    // Notify Admin about Project Conversion Request
+    try {
+      await Notification.create({
+        recipient: lead.adminId,
+        sender: req.user.id,
+        adminId: lead.adminId,
+        type: 'conversion_request',
+        title: 'Project Conversion Requested',
+        message: `Sales rep ${req.user.name} requested converting lead "${lead.name}" into a Project.`,
+        link: `/admin/sales`
+      });
+    } catch (err) {
+      console.error('Project Request Notification Error:', err);
+    }
+
     res.status(200).json({ success: true, data: lead, message: 'Project conversion requested' });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -338,11 +422,27 @@ exports.approveProject = async (req, res) => {
     await Notification.create({
       recipient: managerId,
       sender: req.user.id,
+      adminId: lead.adminId,
       type: 'project_assigned',
       title: 'New Project Assigned',
       message: `You have been assigned a new project: ${project.name}`,
       link: `/manager/projects/${project._id}`
     });
+
+    // Notify Sales Rep about Approval
+    if (lead.owner) {
+      try {
+        await Notification.create({
+          recipient: lead.owner,
+          sender: req.user.id,
+          adminId: lead.adminId,
+          type: 'project_approved',
+          title: 'Lead Approved as Project',
+          message: `Your lead "${lead.name}" for "${lead.company || 'Unknown'}" has been approved and is now an active project managed by ${req.body.managerName || 'a manager'}.`,
+          link: `/sales/deals`
+        });
+      } catch (err) { console.error('Sales Rep Approval Notification Error:', err); }
+    }
 
     res.status(200).json({ success: true, data: project, lead: lead, message: 'Project approved and assigned' });
 

@@ -59,46 +59,70 @@ exports.getTasks = async (req, res) => {
         ],
         adminId: adminId
       };
-    } else if (req.user.role === 'sales_executive') {
-      // Get sales exec's adminId
-      const salesExec = await SalesExecutive.findById(req.user.id);
-      if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Executive not found' });
-      adminId = salesExec.adminId;
-
-      // Sales sees tasks assigned TO them directly OR via team
-      query = {
-        $or: [
-          { assignedTo: { $in: [req.user.id] } },
-          { team: { $in: teamIds } }
-        ],
-        adminId: adminId
-      };
     }
 
     // -- OVERDUE AUTO-CHECK & ESCALATION --
     // Automatically flag active missions that missed their tactical deadline
     if (adminId) {
-      await Task.updateMany(
-        {
-          adminId: adminId,
-          status: { $in: ['pending', 'in_progress'] },
-          deadline: { $lt: new Date() }
-        },
-        {
-          $set: { status: 'overdue' },
-          $push: {
-            activityLog: {
-              action: 'Tactical Deadline Surpassed: Mission Escalated',
-              timestamp: new Date()
+      const overdueTasks = await Task.find({
+        adminId: adminId,
+        status: { $in: ['pending', 'in_progress'] },
+        deadline: { $lt: new Date() },
+        overdueNotified: { $ne: true }
+      });
+
+      if (overdueTasks.length > 0) {
+        for (const oTask of overdueTasks) {
+          // Update task
+          oTask.status = 'overdue';
+          oTask.overdueNotified = true;
+          oTask.activityLog.push({
+            action: 'Tactical Deadline Surpassed: Mission Escalated',
+            timestamp: new Date()
+          });
+          await oTask.save();
+
+          // Notify the person who assigned the task (usually Manager)
+          try {
+            if (oTask.assignedBy) {
+              await Notification.create({
+                recipient: oTask.assignedBy,
+                sender: oTask.assignedBy,
+                adminId: adminId,
+                type: 'task_overdue',
+                title: 'Task Overdue Alert',
+                message: `Alert: Task "${oTask.title}" has missed its deadline. Immediate attention required.`,
+                link: `/manager/my-tasks`
+              });
             }
+          } catch (err) {
+            console.error('Overdue Notification Error (Manager):', err);
+          }
+
+          // Also notify each assigned Employee that their task is now overdue
+          try {
+            if (oTask.assignedTo && oTask.assignedTo.length > 0) {
+              const overdueEmployeeNotifs = oTask.assignedTo.map(empId => ({
+                recipient: empId,
+                sender: oTask.assignedBy || empId,
+                adminId: adminId,
+                type: 'task_overdue',
+                title: 'Your Task Is Overdue',
+                message: `Urgent: Your task "${oTask.title}" has passed its deadline. Please update your progress immediately.`,
+                link: `/employee/tasks/${oTask._id}`
+              }));
+              await Notification.insertMany(overdueEmployeeNotifs);
+            }
+          } catch (err) {
+            console.error('Overdue Notification Error (Employee):', err);
           }
         }
-      );
+      }
     }
 
     // -- PROJECT STATUS SYNC: Tactical Visibility Filtering --
     // If user is Employee/Sales, hide tasks from inactive projects to reduce noise
-    if (['employee', 'sales_executive'].includes(req.user.role)) {
+    if (['employee'].includes(req.user.role)) {
       const activeProjects = await Project.find({
         adminId: adminId,
         status: { $in: ['active', 'completed'] }
@@ -175,9 +199,6 @@ exports.createTask = async (req, res) => {
     } else if (req.user.role === 'employee') {
       const employee = await Employee.findById(req.user.id);
       adminId = employee?.adminId;
-    } else if (req.user.role === 'sales_executive') {
-      const salesExec = await SalesExecutive.findById(req.user.id);
-      adminId = salesExec?.adminId;
     } else {
       return res.status(403).json({ success: false, error: 'Not authorized to create tasks' });
     }
@@ -231,19 +252,21 @@ exports.createTask = async (req, res) => {
       await Project.findByIdAndUpdate(project, { $push: { tasks: task._id } });
     }
 
-    // -- NOTIFICATION: Alert assigned personnel --
-    const notificationPromises = finalAssignedTo.map(userId =>
-      Notification.create({
-        recipient: userId,
-        sender: req.user.id,
-        title: 'New Mission Assigned',
-        message: `You have been deployed to task: ${task.title}`,
-        type: 'task_assigned',
-        category: 'task',
-        link: `/employee/tasks/${task._id}`,
-        adminId: adminId
-      })
-    );
+    // -- NOTIFICATION: Alert assigned personnel (Exclude Admins as per requirement) --
+    const notificationPromises = finalAssignedTo
+      .filter(userId => userId.toString() !== adminId.toString())
+      .map(userId =>
+        Notification.create({
+          recipient: userId,
+          sender: req.user.id,
+          title: 'New Mission Assigned',
+          message: `You have been deployed to task: ${task.title}`,
+          type: 'task_assigned',
+          category: 'task',
+          link: `/employee/tasks/${task._id}`,
+          adminId: adminId
+        })
+      );
     await Promise.all(notificationPromises);
 
     res.status(201).json({ success: true, data: task });
@@ -270,9 +293,6 @@ exports.updateTask = async (req, res) => {
     } else if (req.user.role === 'employee') {
       const employee = await Employee.findById(req.user.id);
       userAdminId = employee?.adminId;
-    } else if (req.user.role === 'sales_executive') {
-      const salesExec = await SalesExecutive.findById(req.user.id);
-      userAdminId = salesExec?.adminId;
     }
 
     // Check if task belongs to user's workspace
@@ -294,7 +314,7 @@ exports.updateTask = async (req, res) => {
     const activityEntries = [];
 
     // Handle Sub-Task Updates for Individual Employees in Group Missions
-    if (req.user.role === 'employee' || req.user.role === 'sales_executive') {
+    if (req.user.role === 'employee') {
       const isAssigned = task.assignedTo.map(id => id.toString()).includes(req.user.id);
 
       // If updating progress/status, update their specific sub-task entry
@@ -364,8 +384,7 @@ exports.updateTask = async (req, res) => {
     const roleToModel = {
       'admin': 'Admin',
       'manager': 'Manager',
-      'employee': 'Employee',
-      'sales_executive': 'SalesExecutive'
+      'employee': 'Employee'
     };
     const userModel = roleToModel[req.user.role] || 'Admin';
 
@@ -455,22 +474,93 @@ exports.updateTask = async (req, res) => {
       }
     }
 
-    // If status changed to completed, notify the assigner
+    // If status changed, send appropriate notifications
     if (req.body.status && req.body.status !== task.status) {
-      const isEmployee = req.user.role === 'employee' || req.user.role === 'sales_executive';
-      const recipient = isEmployee ? task.assignedBy : task.assignedTo[0]; // Simple logic for now
+      const isEmployee = req.user.role === 'employee';
 
-      if (recipient) {
-        await Notification.create({
-          recipient: recipient,
+      if (isEmployee) {
+        // Employee updated status -> Notify Manager/Assigner
+        const managerRecipient = task.assignedBy;
+        const isRecipientAdmin = managerRecipient && managerRecipient.toString() === task.adminId.toString();
+
+        if (managerRecipient && !isRecipientAdmin) {
+          const statusLabel = req.body.status === 'review' ? 'Submitted for Review' : req.body.status;
+          await Notification.create({
+            recipient: managerRecipient,
+            sender: req.user.id,
+            title: req.body.status === 'review' ? 'Task Submitted for Review' : 'Task Status Updated',
+            message: req.body.status === 'review'
+              ? `Employee ${req.user.name} has submitted task "${task.title}" for your review.`
+              : `Task "${task.title}" status changed to ${statusLabel} by ${req.user.name}.`,
+            type: 'task_assigned',
+            category: 'task',
+            link: `/manager/my-tasks`,
+            adminId: task.adminId
+          });
+        }
+
+        // Also send a confirmation back to the Employee themselves
+        if (req.body.status === 'review') {
+          await Notification.create({
+            recipient: req.user.id,
+            sender: req.user.id,
+            title: 'Task Submitted Successfully',
+            message: `Your task "${task.title}" has been submitted for review. You will be notified once it is approved.`,
+            type: 'general',
+            category: 'task',
+            link: `/employee/tasks/${task._id}`,
+            adminId: task.adminId
+          });
+        }
+      } else {
+        // Manager/Admin updated status -> Notify each assigned employee
+        if (task.assignedTo && task.assignedTo.length > 0) {
+          const isRecipientAdmin = (id) => id.toString() === task.adminId.toString();
+          const statusLabel = req.body.status;
+          const notifTitle = statusLabel === 'completed' ? 'Task Approved & Completed!' :
+            statusLabel === 'in_progress' ? 'Task Activated' :
+              statusLabel === 'pending' ? 'Task Reset to Pending' : 'Task Status Updated';
+          const notifMessage = statusLabel === 'completed'
+            ? `Great work! Your task "${task.title}" has been approved and marked as completed by ${req.user.name}.`
+            : `Task "${task.title}" has been updated to "${statusLabel}" by ${req.user.name}.`;
+
+          const empNotifs = task.assignedTo
+            .filter(id => !isRecipientAdmin(id))
+            .map(empId => ({
+              recipient: empId,
+              sender: req.user.id,
+              title: notifTitle,
+              message: notifMessage,
+              type: 'task_assigned',
+              category: 'task',
+              link: `/employee/tasks/${task._id}`,
+              adminId: task.adminId
+            }));
+
+          if (empNotifs.length > 0) {
+            await Notification.insertMany(empNotifs);
+          }
+        }
+      }
+    }
+
+    // -- NOTIFICATION: Re-assignment --
+    if (req.body.assignedTo) {
+      const oldAssignees = task.assignedTo.map(id => id.toString());
+      const newAssignees = req.body.assignedTo.filter(id => !oldAssignees.includes(id.toString()));
+
+      if (newAssignees.length > 0) {
+        const notifications = newAssignees.map(userId => ({
+          recipient: userId,
           sender: req.user.id,
-          title: 'Task Status Updated',
-          message: `Task "${task.title}" status changed to ${req.body.status}`,
+          title: 'New Mission Assigned',
+          message: `You have been added to task: ${task.title}`,
           type: 'task_assigned',
           category: 'task',
-          link: isEmployee ? `/admin/tasks` : `/employee/tasks/${task._id}`,
+          link: `/employee/tasks/${task._id}`,
           adminId: task.adminId
-        });
+        }));
+        await Notification.insertMany(notifications);
       }
     }
 
@@ -496,6 +586,28 @@ exports.deleteTask = async (req, res) => {
     // 2. User is the one who assigned/created it (Manager or Employee)
     if (!isAdmin && !isAssigner) {
       return res.status(403).json({ success: false, error: 'Not authorized to delete this task' });
+    }
+
+    // -- NOTIFICATION: Task Cancelled/Deleted --
+    if (task.assignedTo && task.assignedTo.length > 0) {
+      const Notification = require('../models/Notification');
+      const deleterRole = req.user.role;
+      const deleterName = req.user.name;
+      const notifications = task.assignedTo
+        .filter(recipientId => recipientId.toString() !== req.user.id) // Don't notify self
+        .map(recipientId => ({
+          recipient: recipientId,
+          sender: req.user.id,
+          adminId: task.adminId,
+          type: 'general',
+          title: 'Task Cancelled',
+          message: `The task "${task.title}" has been cancelled by ${deleterRole === 'admin' ? 'Admin' : 'Manager'} ${deleterName}.`,
+          link: '/employee/tasks'
+        }));
+
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
     }
 
     await task.deleteOne();

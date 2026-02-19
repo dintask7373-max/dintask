@@ -1,4 +1,9 @@
 const admin = require('../config/firebase');
+const Admin = require('../models/Admin');
+const SuperAdmin = require('../models/SuperAdmin');
+const Employee = require('../models/Employee');
+const Manager = require('../models/Manager');
+const SalesExecutive = require('../models/SalesExecutive');
 
 /**
  * Send a push notification to specific FCM tokens
@@ -44,10 +49,40 @@ const sendPushNotification = async (tokens, payload) => {
         }
     } catch (error) {
         console.error('Error sending push notification:', error);
-        // We don't necessarily want to throw and crash the calling process
-        // since push notifications are often "best-effort"
         return { error };
     }
 };
 
-module.exports = sendPushNotification;
+/**
+ * Send push notification to a user by their ID (searches all user models)
+ * @param {string} userId - ID of the recipient
+ * @param {object} payload - { title, body, data }
+ */
+const sendPushToUser = async (userId, payload) => {
+    try {
+        const models = [Admin, SuperAdmin, Employee, Manager, SalesExecutive];
+        let user = null;
+
+        for (const Model of models) {
+            user = await Model.findById(userId);
+            if (user && (user.fcmToken?.app || user.fcmToken?.web)) break;
+        }
+
+        if (!user) return;
+
+        const tokens = [];
+        if (user.fcmToken?.app) tokens.push(user.fcmToken.app);
+        if (user.fcmToken?.web) tokens.push(user.fcmToken.web);
+
+        if (tokens.length > 0) {
+            return await sendPushNotification(tokens, payload);
+        }
+    } catch (error) {
+        console.error('Error in sendPushToUser:', error);
+    }
+};
+
+module.exports = {
+    sendPushNotification,
+    sendPushToUser
+};

@@ -92,6 +92,25 @@ exports.createFollowUp = async (req, res) => {
 
         const followUp = await FollowUp.create(req.body);
 
+        // Notify Sales Rep if Admin creates a follow-up for them
+        if (req.user.role === 'admin' && req.body.salesRepId && req.body.salesRepId !== req.user.id) {
+            try {
+                const Notification = require('../models/Notification');
+                const lead = await Lead.findById(leadId);
+                await Notification.create({
+                    recipient: req.body.salesRepId,
+                    sender: req.user.id,
+                    adminId: req.user.id, // Admin's ID is the workspace ID
+                    type: 'general',
+                    title: 'New Follow-up Scheduled',
+                    message: `Admin scheduled a ${type} for lead "${lead?.name || 'Unknown'}" on ${new Date(scheduledAt).toLocaleString()}.`,
+                    link: '/sales/follow-ups'
+                });
+            } catch (err) {
+                console.error('Follow-up Notification Error:', err);
+            }
+        }
+
         res.status(201).json({ success: true, data: followUp });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });

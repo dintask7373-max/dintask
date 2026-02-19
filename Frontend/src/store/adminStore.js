@@ -131,7 +131,31 @@ const useAdminStore = create((set) => ({
         projectHealthChartData: null,
         actionableLists: null,
         error: null
-    })
+    }),
+
+    // Send Workspace Announcement
+    sendAnnouncement: async (announcementData) => {
+        set({ loading: true, error: null });
+        try {
+            const token = getAuthToken();
+            if (!token) throw new Error('Authentication required');
+
+            const response = await axios.post(`${API_URL}/admin/announcement`, announcementData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ loading: false });
+                toast.success('Announcement broadcasted successfully');
+                return true;
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message || 'Failed to send announcement';
+            set({ error: errorMessage, loading: false });
+            toast.error(errorMessage);
+            return false;
+        }
+    }
 }));
 
 export default useAdminStore;

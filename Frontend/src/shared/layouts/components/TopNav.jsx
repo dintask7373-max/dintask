@@ -36,7 +36,7 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
         logout();
         if (role === 'superadmin') navigate('/superadmin/login');
         else if (role === 'admin') navigate('/admin/login');
-        else if (role === 'manager') navigate('/admin/login');
+        else if (role === 'manager') navigate('/manager/login');
         else navigate('/employee/login');
     };
 

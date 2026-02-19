@@ -72,6 +72,7 @@ const ManagerSchedule = lazy(() => import('@/modules/manager/pages/Schedule'));
 const ManagerReports = lazy(() => import('@/modules/manager/pages/Reports'));
 const ManagerSettings = lazy(() => import('@/modules/manager/pages/Settings'));
 const ManagerChat = lazy(() => import('@/modules/manager/pages/Chat'));
+const ManagerNotifications = lazy(() => import('@/modules/manager/pages/Notifications'));
 
 // Sales Pages
 const SalesLogin = lazy(() => import('@/modules/sales/pages/SalesLogin'));
@@ -286,6 +287,7 @@ const AppRouter = () => {
                     <Route path="schedule" element={<ManagerSchedule />} />
                     <Route path="reports" element={<ManagerReports />} />
                     <Route path="settings" element={<ManagerSettings />} />
+                    <Route path="notifications" element={<ManagerNotifications />} />
                     <Route path="support" element={<SupportCenter />} />
                 </Route>
 

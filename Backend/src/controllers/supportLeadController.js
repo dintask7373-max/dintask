@@ -36,22 +36,28 @@ exports.submitLead = async (req, res, next) => {
 
         // --- NOTIFICATION LOGIC START ---
         try {
-            // 1. Find all Superadmins to notify (including staff)
+            // 1. Find all Superadmins to notify (including staff and super_admin variant)
             const superAdmins = await SuperAdmin.find({
-                role: { $in: ['superadmin', 'superadmin_staff'] }
+                role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] }
             });
 
             // 2. Pick a "sender" ID (Since this is public, use the first superadmin acting as 'System')
             const systemSenderId = superAdmins.length > 0 ? superAdmins[0]._id : null;
 
             if (systemSenderId) {
-                const notifications = superAdmins.map(admin => ({
-                    recipient: admin._id,
+                // Use a Map to ensure unique recipients by ID string
+                const uniqueRecipients = new Map();
+                superAdmins.forEach(admin => {
+                    uniqueRecipients.set(admin._id.toString(), admin._id);
+                });
+
+                const notifications = Array.from(uniqueRecipients.values()).map(recipientId => ({
+                    recipient: recipientId,
                     sender: systemSenderId, // Self-notification acts as System notification
                     type: 'inquiry',
                     title: 'New Business Inquiry',
                     message: `New Lead: ${name} from ${companyName || 'Unknown'} (${interestedPlan || 'General'})`,
-                    link: `/superadmin/inquiries` // Link to the Inquiries page (frontend route)
+                    link: `/superadmin/inquiries`
                 }));
 
                 if (notifications.length > 0) {
@@ -60,7 +66,6 @@ exports.submitLead = async (req, res, next) => {
             }
         } catch (notifyErr) {
             console.error('Notification Error:', notifyErr);
-            // Don't fail the request if notification fails
         }
         // --- NOTIFICATION LOGIC END ---
 

@@ -73,7 +73,7 @@ const EmployeeManagement = () => {
     const [expandedEmployee, setExpandedEmployee] = useState(null);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [newEmployee, setNewEmployee] = useState({ name: '', email: '', role: '', managerId: '' });
-    const [editEmployeeData, setEditEmployeeData] = useState({ name: '', email: '', role: '', managerId: '' });
+    const [editEmployeeData, setEditEmployeeData] = useState({ name: '', email: '', role: '', status: 'active', managerId: '' });
 
     const [parent] = useAutoAnimate();
 
@@ -160,6 +160,7 @@ const EmployeeManagement = () => {
             name: emp.name,
             email: emp.email,
             role: emp.role,
+            status: emp.status || 'active',
             managerId: emp.managerId || ''
         });
         setIsEditModalOpen(true);
@@ -650,18 +651,31 @@ const EmployeeManagement = () => {
                                 required
                             />
                         </div>
-                        <div className="grid gap-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Assign Manager</label>
-                            <select
-                                className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
-                                value={editEmployeeData.managerId}
-                                onChange={(e) => setEditEmployeeData({ ...editEmployeeData, managerId: e.target.value })}
-                            >
-                                <option value="">No Manager (Unassigned)</option>
-                                {allManagers.map(mgr => (
-                                    <option key={mgr._id} value={mgr._id}>{mgr.name} ({mgr.department || 'No Dept'})</option>
-                                ))}
-                            </select>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Assign Manager</label>
+                                <select
+                                    className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
+                                    value={editEmployeeData.managerId}
+                                    onChange={(e) => setEditEmployeeData({ ...editEmployeeData, managerId: e.target.value })}
+                                >
+                                    <option value="">No Manager (Unassigned)</option>
+                                    {allManagers.map(mgr => (
+                                        <option key={mgr._id} value={mgr._id}>{mgr.name} ({mgr.department || 'No Dept'})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="grid gap-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Account Status</label>
+                                <select
+                                    className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
+                                    value={editEmployeeData.status}
+                                    onChange={(e) => setEditEmployeeData({ ...editEmployeeData, status: e.target.value })}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
                         </div>
                         <DialogFooter className="pt-4 gap-2">
                             <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl h-11 px-6 flex-1 sm:flex-none">Cancel</Button>

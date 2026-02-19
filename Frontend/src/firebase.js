@@ -44,12 +44,11 @@ export const requestForToken = async () => {
     }
 };
 
-export const onMessageListener = () =>
-    new Promise((resolve) => {
-        onMessage(messaging, (payload) => {
-            console.log("Foreground message received:", payload);
-            resolve(payload);
-        });
+export const onMessageListener = (callback) => {
+    return onMessage(messaging, (payload) => {
+        console.log("Foreground message received:", payload);
+        callback(payload);
     });
+};
 
 export default app;

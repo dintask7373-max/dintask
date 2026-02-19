@@ -221,7 +221,7 @@ const useEmployeeStore = create((set, get) => ({
         try {
             const res = await api(`/admin/users/${id}`, {
                 method: 'PUT',
-                body: { ...updatedData, role }
+                body: { ...updatedData, originRole: role }
             });
 
             if (res.success) {

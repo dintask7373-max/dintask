@@ -7,6 +7,8 @@ const {
     getSalesExecutives,
     getCRMStats, // Added
     deleteUser,
+    updateUser, // Added
+    sendAnnouncement, // Added
 
     forgotPassword,
     resetPassword,
@@ -50,7 +52,10 @@ router.get('/reports/stats', getReportsStats);
 
 // Restricted Admin and Super Admin only routes
 router.use(authorize('admin', 'superadmin'));
-router.delete('/users/:id', deleteUser);
+router.route('/users/:id')
+    .put(updateUser)
+    .delete(deleteUser);
+
 router.get('/managers', getManagers);
 router.get('/employees', getEmployees);
 router.get('/sales-executives', getSalesExecutives);
@@ -63,5 +68,8 @@ router.put('/join-requests/:id/reject', rejectJoinRequest);
 
 // Add Member Direct
 router.post('/add-member', addTeamMember);
+
+// Announcements
+router.post('/announcement', sendAnnouncement);
 
 module.exports = router;

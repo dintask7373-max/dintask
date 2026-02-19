@@ -90,6 +90,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Progress', path: '/manager/progress', icon: BarChart3 },
                 { name: 'Chat', path: '/manager/chat', icon: MessageSquare },
                 { name: 'Schedule', path: '/manager/schedule', icon: CalendarIcon },
+                { name: 'Notifications', path: '/manager/notifications', icon: Bell, badge: unreadCount },
                 { name: 'Settings', path: '/manager/settings', icon: SettingsIcon },
                 { name: 'Reports', path: '/manager/reports', icon: BarChart3 },
                 { name: 'Support', path: '/manager/support', icon: LifeBuoy },

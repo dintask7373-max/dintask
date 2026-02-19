@@ -95,9 +95,31 @@ exports.sendMessage = async (req, res) => {
             .populate("senderId")
             .populate("conversationId");
 
-        await Conversation.findByIdAndUpdate(conversationId, {
-            lastMessage: message
-        });
+        // -- NOTIFICATION: New Message --
+        const conversation = await Conversation.findById(conversationId);
+        if (conversation && conversation.participants) {
+            const Notification = require('../models/Notification');
+            const recipients = conversation.participants
+                .map(p => p.user.toString())
+                .filter(id => id !== req.user.id); // Notify everyone except sender
+
+            const notifications = conversation.participants
+                .filter(p => p.user.toString() !== req.user.id)
+                .map(p => {
+                    const roleBase = p.onModel === 'Manager' ? '/manager' : p.onModel === 'Admin' ? '/admin' : p.onModel === 'SalesExecutive' ? '/sales' : '/employee';
+                    return {
+                        recipient: p.user,
+                        sender: req.user.id,
+                        type: 'general',
+                        title: conversation.isGroup ? `New in ${conversation.groupName}` : 'New Message',
+                        message: `${req.user.name}: ${content.substring(0, 40)}${content.length > 40 ? '...' : ''}`,
+                        link: `${roleBase}/chat`
+                    };
+                });
+            if (notifications.length > 0) {
+                await Notification.insertMany(notifications);
+            }
+        }
 
         res.status(200).json({ success: true, data: message });
     } catch (error) {

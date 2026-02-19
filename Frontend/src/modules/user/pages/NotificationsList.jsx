@@ -76,8 +76,12 @@ const NotificationsList = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
+            onClick={() => {
+                if (!notification.isRead) markAsRead(notification._id);
+                if (notification.link) navigate(notification.link);
+            }}
             className={cn(
-                "p-5 flex items-start gap-4 transition-all relative group border-b border-slate-50 dark:border-slate-800 last:border-0",
+                "p-5 flex items-start gap-4 transition-all relative group border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer",
                 !notification.isRead ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "border-l-4 border-l-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
             )}
         >
@@ -105,7 +109,10 @@ const NotificationsList = () => {
                 </p>
             </div>
 
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2">
+            <div
+                className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2"
+                onClick={e => e.stopPropagation()} // Prevent card navigation on button click
+            >
                 {!notification.isRead && (
                     <Button
                         variant="ghost"

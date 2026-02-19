@@ -147,7 +147,66 @@ exports.updateProject = async (req, res) => {
     project = await Project.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
-    });
+    }).populate('salesRep', 'name').populate('manager', 'name');
+
+    // -- NOTIFICATIONS: Status Update --
+    if (req.body.status && req.body.status !== project.status) {
+      const Notification = require('../models/Notification');
+      const Employee = require('../models/Employee');
+
+      // Notify Admin and Sales Rep
+      const participants = [];
+      if (project.adminId) participants.push({ id: project.adminId, link: `/admin/projects` });
+      if (project.salesRep) participants.push({ id: project.salesRep._id || project.salesRep, link: `/sales/deals` });
+
+      const adminSalesNotifs = participants.map(p =>
+        Notification.create({
+          recipient: p.id,
+          sender: req.user.id,
+          adminId: project.adminId,
+          type: 'general',
+          title: 'Project Status Updated',
+          message: `Project "${project.name}" status changed to ${req.body.status} by Manager ${req.user.name}.`,
+          link: p.link
+        })
+      );
+      await Promise.all(adminSalesNotifs);
+
+      // Also notify all Employees assigned to tasks in this project
+      try {
+        const projectTasks = await Task.find({ project: project._id }).select('assignedTo');
+        const allEmployeeIds = [...new Set(
+          projectTasks.flatMap(t => t.assignedTo.map(id => id.toString()))
+        )];
+
+        if (allEmployeeIds.length > 0) {
+          const statusLabel = req.body.status;
+          const empTitle = statusLabel === 'completed' ? 'Project Completed!' :
+            statusLabel === 'on_hold' ? 'Project On Hold' :
+              statusLabel === 'cancelled' ? 'Project Cancelled' : 'Project Status Updated';
+          const empMessage = statusLabel === 'completed'
+            ? `Project "${project.name}" has been completed. Well done!`
+            : statusLabel === 'on_hold'
+              ? `Project "${project.name}" has been put on hold by ${req.user.name}. Your tasks are paused.`
+              : statusLabel === 'cancelled'
+                ? `Project "${project.name}" has been cancelled by ${req.user.name}. Associated tasks have been removed.`
+                : `Project "${project.name}" status has been updated to "${statusLabel}" by ${req.user.name}.`;
+
+          const empNotifs = allEmployeeIds.map(empId => ({
+            recipient: empId,
+            sender: req.user.id,
+            adminId: project.adminId,
+            type: 'general',
+            title: empTitle,
+            message: empMessage,
+            link: `/employee/tasks`
+          }));
+          await Notification.insertMany(empNotifs);
+        }
+      } catch (err) {
+        console.error('Employee Project Notification Error:', err);
+      }
+    }
 
     // CASCADE STATUS SYNC: If project is on_hold or cancelled, pause all associated tasks
     if (['on_hold', 'cancelled'].includes(req.body.status)) {
@@ -184,6 +243,20 @@ exports.deleteProject = async (req, res) => {
     // Check workspace
     if (project.adminId.toString() !== userAdminId?.toString()) {
       return res.status(403).json({ success: false, error: 'Authorization denied' });
+    }
+
+    // -- NOTIFICATION: Deletion Alert --
+    const Notification = require('../models/Notification');
+    if (project.adminId && req.user.role === 'manager') {
+      await Notification.create({
+        recipient: project.adminId,
+        sender: req.user.id,
+        adminId: project.adminId,
+        type: 'security_alert',
+        title: 'Project Purged',
+        message: `Security Alert: Manager ${req.user.name} has deleted the project "${project.name}" and all its historical tasks.`,
+        link: '/admin/projects'
+      });
     }
 
     // CASCADE DELETION: Purge all tasks associated with this project

@@ -95,7 +95,7 @@ const useSalesStore = create(
                 try {
                     const res = await api(`/admin/users/${salesRepId}`, {
                         method: 'PUT',
-                        body: { ...updatedData, role: 'sales_executive' }
+                        body: { ...updatedData, originRole: 'sales_executive' }
                     });
                     if (res.success) {
                         get().fetchSalesReps();

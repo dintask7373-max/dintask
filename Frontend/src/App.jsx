@@ -28,13 +28,19 @@ function App() {
   }, [isAuthenticated, fetchProfile]);
 
   useEffect(() => {
-    onMessageListener()
-      .then((payload) => {
-        toast(payload.notification.title, {
-          description: payload.notification.body,
-        });
-      })
-      .catch((err) => console.log('failed: ', err));
+    const unsubscribe = onMessageListener((payload) => {
+      toast(payload.notification.title, {
+        description: payload.notification.body,
+        action: payload.data?.link ? {
+          label: 'View',
+          onClick: () => window.location.href = payload.data.link
+        } : null
+      });
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   return (

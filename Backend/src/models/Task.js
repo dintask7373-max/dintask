@@ -84,6 +84,10 @@ const TaskSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  overdueNotified: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 
