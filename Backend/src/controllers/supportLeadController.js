@@ -21,17 +21,18 @@ exports.submitLead = async (req, res, next) => {
             interestedPlan
         } = req.body;
 
+        // Sanitize optional enum fields: empty string must become undefined to avoid validation errors
         const lead = await SupportLead.create({
             name,
             businessEmail,
             phone,
             companyName,
-            jobTitle,
-            companySize,
-            industry,
-            requirements,
-            source,
-            interestedPlan
+            jobTitle: jobTitle || undefined,
+            companySize: companySize || undefined,
+            industry: industry || undefined,
+            requirements: requirements || undefined,
+            source: source || 'contact_form',
+            interestedPlan: interestedPlan || undefined
         });
 
         // --- NOTIFICATION LOGIC START ---
@@ -89,14 +90,7 @@ exports.getLeads = async (req, res, next) => {
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
 
-        // DEBUG: Log incoming queries
-        const fs = require('fs');
         console.log(`[SEARCH DEBUG] Query Params:`, req.query);
-        try {
-            fs.appendFileSync('C:/Users/Hp/Desktop/DinTask/Backend/debug_search_final.log', `Time: ${new Date().toISOString()} | Query: ${JSON.stringify(req.query)}\n`);
-        } catch (e) {
-            console.error('Log failed:', e);
-        }
 
         // Build query
         let query = {};

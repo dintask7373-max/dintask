@@ -24,25 +24,24 @@ const SupportLeadSchema = new mongoose.Schema({
     companySize: {
         type: String,
         required: false, // Optional
-        enum: [
-            '1-10 Employees',
-            '11-50 Employees',
-            '51-200 Employees',
-            '201-500 Employees',
-            '500+ Employees'
-        ]
+        validate: {
+            validator: function (v) {
+                if (!v || v === '') return true; // allow blank
+                return ['1-10 Employees', '11-50 Employees', '51-200 Employees', '201-500 Employees', '500+ Employees'].includes(v);
+            },
+            message: props => `${props.value} is not a valid company size`
+        }
     },
     industry: {
         type: String,
         required: false, // Optional
-        enum: [
-            'Technology',
-            'Finance',
-            'Healthcare',
-            'Education',
-            'Manufacturing',
-            'Others'
-        ]
+        validate: {
+            validator: function (v) {
+                if (!v || v === '') return true; // allow blank
+                return ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing', 'Others'].includes(v);
+            },
+            message: props => `${props.value} is not a valid industry`
+        }
     },
     requirements: {
         type: String

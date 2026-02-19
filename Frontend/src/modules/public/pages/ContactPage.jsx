@@ -26,6 +26,8 @@ const ContactPage = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [submitError, setSubmitError] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -44,12 +46,39 @@ const ContactPage = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
-    const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+    const validateStep = (step) => {
+        const newErrors = {};
+        if (step === 1) {
+            if (!formData.name.trim()) newErrors.name = 'Name is required';
+            if (!formData.businessEmail.trim()) newErrors.businessEmail = 'Business email is required';
+            if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
+        }
+        if (step === 2) {
+            if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
+            if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
+        }
+        if (step === 3) {
+            if (!formData.requirements.trim()) newErrors.requirements = 'Please describe your requirements';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const nextStep = () => {
+        if (validateStep(currentStep)) {
+            setErrors({});
+            setCurrentStep(prev => Math.min(prev + 1, 3));
+        }
+    };
+    const prevStep = () => {
+        setErrors({});
+        setCurrentStep(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleSubmit = async () => {
+        if (!validateStep(3)) return;
         setIsSubmitting(true);
+        setSubmitError('');
 
         try {
             await api('/support/lead', {
@@ -69,7 +98,7 @@ const ContactPage = () => {
         } catch (error) {
             console.error('Failed to submit inquiry:', error);
             setIsSubmitting(false);
-            // Optionally add toast error here
+            setSubmitError(error.message || 'Failed to submit. Please try again.');
         }
     };
 
@@ -209,9 +238,10 @@ const ContactPage = () => {
                                                     name="name"
                                                     value={formData.name}
                                                     onChange={handleInputChange}
-                                                    className="h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-md"
+                                                    className={`h-12 bg-white dark:bg-slate-800 dark:border-slate-700 focus:ring-1 focus:ring-[#2563EB] rounded-md ${errors.name ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-[#2563EB]'}`}
                                                     placeholder="Enter your full name"
                                                 />
+                                                {errors.name && <p className="text-xs text-red-500 font-semibold mt-1">{errors.name}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Business email <span className="text-red-500">*</span></label>
@@ -220,9 +250,10 @@ const ContactPage = () => {
                                                     type="email"
                                                     value={formData.businessEmail}
                                                     onChange={handleInputChange}
-                                                    className="h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-md"
+                                                    className={`h-12 bg-white dark:bg-slate-800 dark:border-slate-700 focus:ring-1 focus:ring-[#2563EB] rounded-md ${errors.businessEmail ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-[#2563EB]'}`}
                                                     placeholder="example@company.com"
                                                 />
+                                                {errors.businessEmail && <p className="text-xs text-red-500 font-semibold mt-1">{errors.businessEmail}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Phone <span className="text-red-500">*</span></label>
@@ -230,9 +261,10 @@ const ContactPage = () => {
                                                     name="phone"
                                                     value={formData.phone}
                                                     onChange={handleInputChange}
-                                                    className="h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-md"
+                                                    className={`h-12 bg-white dark:bg-slate-800 dark:border-slate-700 focus:ring-1 focus:ring-[#2563EB] rounded-md ${errors.phone ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-[#2563EB]'}`}
                                                     placeholder="+91 XXXXX XXXXX"
                                                 />
+                                                {errors.phone && <p className="text-xs text-red-500 font-semibold mt-1">{errors.phone}</p>}
                                             </div>
                                         </motion.div>
                                     )}
@@ -251,9 +283,10 @@ const ContactPage = () => {
                                                     name="companyName"
                                                     value={formData.companyName}
                                                     onChange={handleInputChange}
-                                                    className="h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-md"
+                                                    className={`h-12 bg-white dark:bg-slate-800 dark:border-slate-700 focus:ring-1 focus:ring-[#2563EB] rounded-md ${errors.companyName ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-[#2563EB]'}`}
                                                     placeholder="e.g. Acme Corporation"
                                                 />
+                                                {errors.companyName && <p className="text-xs text-red-500 font-semibold mt-1">{errors.companyName}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Job title <span className="text-red-500">*</span></label>
@@ -261,9 +294,10 @@ const ContactPage = () => {
                                                     name="jobTitle"
                                                     value={formData.jobTitle}
                                                     onChange={handleInputChange}
-                                                    className="h-12 bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] rounded-md"
+                                                    className={`h-12 bg-white dark:bg-slate-800 dark:border-slate-700 focus:ring-1 focus:ring-[#2563EB] rounded-md ${errors.jobTitle ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-[#2563EB]'}`}
                                                     placeholder="e.g. Project Manager"
                                                 />
+                                                {errors.jobTitle && <p className="text-xs text-red-500 font-semibold mt-1">{errors.jobTitle}</p>}
                                             </div>
                                             <div className="grid md:grid-cols-2 gap-6">
                                                 <div className="space-y-2">
@@ -318,9 +352,10 @@ const ContactPage = () => {
                                                     value={formData.requirements}
                                                     onChange={handleInputChange}
                                                     rows={8}
-                                                    className="w-full bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700 p-4 rounded-md text-sm font-medium focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] outline-none resize-none"
+                                                    className={`w-full bg-white dark:bg-slate-800 dark:border-slate-700 p-4 rounded-md text-sm font-medium focus:ring-1 focus:ring-[#2563EB] outline-none resize-none ${errors.requirements ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-[#2563EB]'}`}
                                                     placeholder="Share your specific needs, team size, desired modules..."
                                                 />
+                                                {errors.requirements && <p className="text-xs text-red-500 font-semibold mt-1">{errors.requirements}</p>}
                                             </div>
                                         </motion.div>
                                     )}
@@ -331,46 +366,53 @@ const ContactPage = () => {
 
                     {/* Footer - Dynamic Progress and Navigation like Image 4 */}
                     {!isSubmitted && (
-                        <div className="px-10 py-8 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
-                            <div className="flex flex-col gap-2 w-1/2">
-                                <div className="h-2 w-full max-w-[200px] bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: '33.33%' }}
-                                        animate={{ width: `${(currentStep / 3) * 100}%` }}
-                                        className="h-full bg-[#2563EB]"
-                                    />
+                        <div className="px-10 pb-8 flex flex-col gap-3">
+                            {submitError && (
+                                <div className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold px-4 py-3 rounded-lg flex items-center gap-2">
+                                    ⚠️ {submitError}
                                 </div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                                    {Math.round((currentStep / 3) * 100)}% COMPLETE
-                                </span>
-                            </div>
+                            )}
+                            <div className="py-3 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                                <div className="flex flex-col gap-2 w-1/2">
+                                    <div className="h-2 w-full max-w-[200px] bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: '33.33%' }}
+                                            animate={{ width: `${(currentStep / 3) * 100}%` }}
+                                            className="h-full bg-[#2563EB]"
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                                        {Math.round((currentStep / 3) * 100)}% COMPLETE
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-4">
-                                {currentStep > 1 && (
-                                    <Button
-                                        onClick={prevStep}
-                                        variant="outline"
-                                        className="h-11 px-6 border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all rounded-md"
-                                    >
-                                        PREVIOUS
-                                    </Button>
-                                )}
-                                {currentStep < 3 ? (
-                                    <Button
-                                        onClick={nextStep}
-                                        className="h-11 px-8 bg-[#2563EB] text-white font-black uppercase text-[10px] tracking-widest hover:bg-[#1d4ed8] transition-all rounded-md flex items-center gap-2 group"
-                                    >
-                                        NEXT <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        onClick={handleSubmit}
-                                        disabled={isSubmitting}
-                                        className="h-11 px-8 bg-[#2563EB] text-white font-black uppercase text-[10px] tracking-widest hover:bg-[#1d4ed8] transition-all rounded-md flex items-center gap-2"
-                                    >
-                                        {isSubmitting ? <RefreshCw className="animate-spin" size={14} /> : <>SUBMIT REQ <ArrowRight size={14} /></>}
-                                    </Button>
-                                )}
+                                <div className="flex items-center gap-4">
+                                    {currentStep > 1 && (
+                                        <Button
+                                            onClick={prevStep}
+                                            variant="outline"
+                                            className="h-11 px-6 border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all rounded-md"
+                                        >
+                                            PREVIOUS
+                                        </Button>
+                                    )}
+                                    {currentStep < 3 ? (
+                                        <Button
+                                            onClick={nextStep}
+                                            className="h-11 px-8 bg-[#2563EB] text-white font-black uppercase text-[10px] tracking-widest hover:bg-[#1d4ed8] transition-all rounded-md flex items-center gap-2 group"
+                                        >
+                                            NEXT <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            onClick={handleSubmit}
+                                            disabled={isSubmitting}
+                                            className="h-11 px-8 bg-[#2563EB] text-white font-black uppercase text-[10px] tracking-widest hover:bg-[#1d4ed8] transition-all rounded-md flex items-center gap-2"
+                                        >
+                                            {isSubmitting ? <RefreshCw className="animate-spin" size={14} /> : <>SUBMIT REQ <ArrowRight size={14} /></>}
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
