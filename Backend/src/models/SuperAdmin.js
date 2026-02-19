@@ -49,16 +49,6 @@ const SuperAdminSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive'],
     default: 'inactive'
-  },
-  fcmToken: {
-    app: {
-      type: String,
-      default: ''
-    },
-    web: {
-      type: String,
-      default: ''
-    }
   }
 }, { timestamps: true });
 

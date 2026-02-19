@@ -64,18 +64,26 @@ const sendPushToUser = async (userId, payload) => {
         let user = null;
 
         for (const Model of models) {
-            user = await Model.findById(userId);
-            if (user && (user.fcmToken?.app || user.fcmToken?.web)) break;
+            const found = await Model.findById(userId).select('+fcmToken');
+            if (found) {
+                user = found;
+                // Only break early if user has token(s)
+                const hasToken = (found.fcmToken?.app && found.fcmToken.app.trim() !== '') ||
+                    (found.fcmToken?.web && found.fcmToken.web.trim() !== '');
+                if (hasToken) break;
+            }
         }
 
         if (!user) return;
 
         const tokens = [];
-        if (user.fcmToken?.app) tokens.push(user.fcmToken.app);
-        if (user.fcmToken?.web) tokens.push(user.fcmToken.web);
+        if (user.fcmToken?.app && user.fcmToken.app.trim() !== '') tokens.push(user.fcmToken.app.trim());
+        if (user.fcmToken?.web && user.fcmToken.web.trim() !== '') tokens.push(user.fcmToken.web.trim());
 
         if (tokens.length > 0) {
             return await sendPushNotification(tokens, payload);
+        } else {
+            console.log(`[Push] No FCM token found for user ${userId} — skipping push.`);
         }
     } catch (error) {
         console.error('Error in sendPushToUser:', error);
