@@ -27,12 +27,35 @@ app.use((req, res, next) => {
 });
 
 // Enable CORS
-const whitelist = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [];
+// Always include production domains + any extra origins from env
+const defaultOrigins = ['https://dintask.com', 'https://www.dintask.com', 'http://localhost:5173', 'http://localhost:3000'];
+const envOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(o => o.trim()) : [];
+const whitelist = [...new Set([...defaultOrigins, ...envOrigins])];
+console.log('CORS whitelist:', whitelist);
+
+// Handle preflight OPTIONS requests for all routes
+app.options('*', cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const cleanOrigin = origin.replace(/\/$/, '');
+    if (whitelist.some(w => w.replace(/\/$/, '') === cleanOrigin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS preflight blocked for origin:', origin);
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
     if (!origin) return callback(null, true);
-    if (whitelist.indexOf(origin) !== -1 || whitelist.indexOf(origin + '/') !== -1) {
+    const cleanOrigin = origin.replace(/\/$/, '');
+    if (whitelist.some(w => w.replace(/\/$/, '') === cleanOrigin)) {
       callback(null, true);
     } else {
       console.log('Blocked by CORS:', origin);
