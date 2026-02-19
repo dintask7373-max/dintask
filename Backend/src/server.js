@@ -27,7 +27,7 @@ setupChatSocket(io);
 const setupSupportSocket = require('./supportSocket');
 setupSupportSocket(io);
 
-// Make io accessible globally
+// Make io accessible globally ....
 global.io = io;
 app.set('io', io);
 
