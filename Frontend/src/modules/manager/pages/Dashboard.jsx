@@ -53,8 +53,9 @@ const ManagerDashboard = () => {
         return [
             {
                 title: 'My Tasks',
-                value: myTasksToComplete.length,
+                value: myTasksToComplete.length.toString(),
                 icon: CheckSquare,
+<<<<<<< HEAD
                 color: 'text-primary-600',
                 bg: 'bg-primary-50 dark:bg-primary-900/10',
                 trend: 'Assigned to me'
@@ -66,12 +67,34 @@ const ManagerDashboard = () => {
                 color: 'text-amber-600',
                 bg: 'bg-amber-50 dark:bg-amber-900/10',
                 trend: 'In progress'
+=======
+                color: 'text-blue-600',
+                bg: 'bg-blue-100',
+                border: 'border-blue-100 dark:border-blue-900',
+                shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20',
+                trend: 'Assigned to me',
+                label: 'PERSONAL DIRECTIVES'
+            },
+            {
+                title: 'Pending Tasks',
+                value: managerTasks.filter(t => !t.delegatedBy && t.status !== 'completed').length.toString(),
+                icon: Zap,
+                color: 'text-amber-600',
+                bg: 'bg-amber-100',
+                border: 'border-amber-100 dark:border-amber-900',
+                shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20',
+                trend: 'In progress',
+                label: 'PENDING ACTION'
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             },
             {
                 title: 'Completion Rate',
                 value: `${completionRate}%`,
                 icon: TrendingUp,
                 color: 'text-emerald-600',
+<<<<<<< HEAD
                 bg: 'bg-emerald-50 dark:bg-emerald-900/10',
                 trend: 'Team performance'
             },
@@ -82,6 +105,26 @@ const ManagerDashboard = () => {
                 color: 'text-indigo-600',
                 bg: 'bg-indigo-50 dark:bg-indigo-900/10',
                 trend: `Active employees`
+=======
+                bg: 'bg-emerald-100',
+                border: 'border-emerald-100 dark:border-emerald-900',
+                shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20',
+                trend: 'Team performance',
+                label: 'FORCE EFFICIENCY'
+            },
+            {
+                title: 'Team Members',
+                value: employees.filter(e => e.managerId === user?.id && e.status === 'active').length.toString(),
+                icon: Users,
+                color: 'text-purple-600',
+                bg: 'bg-purple-100',
+                border: 'border-purple-100 dark:border-purple-900',
+                shadow: 'shadow-lg shadow-purple-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-purple-50 dark:from-slate-900 dark:to-purple-900/20',
+                trend: `Active employees`,
+                label: 'DEPLOYED UNITS'
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             }
         ];
     }, [tasks, employees, user]);
@@ -112,6 +155,7 @@ const ManagerDashboard = () => {
                 animate="animate"
                 className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
             >
+<<<<<<< HEAD
                 {stats.map((stat, index) => (
                     <motion.div key={index} variants={fadeInUp}>
                         <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
@@ -134,6 +178,37 @@ const ManagerDashboard = () => {
                                     <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter italic">
                                         {stat.trend}
                                     </p>
+=======
+                {stats.map((stat, i) => (
+                    <motion.div key={i} variants={fadeInUp}>
+                        <Card className={cn(
+                            "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                            stat.border,
+                            stat.shadow,
+                            stat.gradient
+                        )}>
+                            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                                <div className="space-y-3 sm:space-y-4">
+                                    <div className={cn(
+                                        "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
+                                        stat.bg
+                                    )}>
+                                        <stat.icon className={cn("size-4.5 sm:size-5", stat.color)} />
+                                    </div>
+                                    <div className="space-y-0.5 sm:space-y-1 text-left">
+                                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                        <p className={cn("text-lg sm:text-2xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
+                                        <div className="flex items-center gap-1 pt-1">
+                                            <div className={cn("flex items-center justify-center size-3.5 rounded-full", stat.bg)}>
+                                                <TrendingUp size={10} className={stat.color} />
+                                            </div>
+                                            <span className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={cn("hidden sm:block size-16 -mr-2 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
+                                    <stat.icon size={64} />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </div>
                             </CardContent>
                         </Card>

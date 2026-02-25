@@ -19,7 +19,11 @@ const TaskSchema = new mongoose.Schema({
   }],
   subTasks: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+<<<<<<< HEAD
     status: { type: String, enum: ['pending', 'in_progress', 'completed'], default: 'pending' },
+=======
+    status: { type: String, enum: ['pending', 'in_progress', 'completed', 'review'], default: 'pending' },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     progress: { type: Number, default: 0 }
   }],
   statusNotes: { type: String },
@@ -62,6 +66,22 @@ const TaskSchema = new mongoose.Schema({
   submissionNote: {
     type: String
   },
+<<<<<<< HEAD
+=======
+  recurrence: {
+    type: {
+      type: String,
+      enum: ['daily', 'weekly', 'monthly', 'none'],
+      default: 'none'
+    },
+    interval: {
+      type: Number,
+      default: 1
+    },
+    endDate: Date,
+    nextRun: Date
+  },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   activityLog: [{
     user: { type: mongoose.Schema.Types.ObjectId, refPath: 'activityLog.userModel' },
     userModel: { type: String, enum: ['Admin', 'Manager', 'Employee', 'SalesExecutive'] },
@@ -71,6 +91,13 @@ const TaskSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+<<<<<<< HEAD
+=======
+  },
+  overdueNotified: {
+    type: Boolean,
+    default: false
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   }
 }, { timestamps: true });
 

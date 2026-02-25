@@ -31,7 +31,12 @@ import {
     Menu,
     X,
     HelpCircle,
+<<<<<<< HEAD
     ChevronDown
+=======
+    ChevronDown,
+    Loader2
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -48,7 +53,16 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
+<<<<<<< HEAD
 import axios from 'axios';
+=======
+import { cn } from '@/shared/utils/cn';
+import apiRequest from '@/lib/api';
+import dashboard1 from '@/assets/dashboard_1.png';
+import dashboard2 from '@/assets/dashboard_2.png';
+import dashboard3 from '@/assets/dashboard_3.png';
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -59,10 +73,111 @@ const LandingPage = () => {
     const [heroContent, setHeroContent] = useState({
         heroBadge: "YOUR COMPLETE CRM PLATFORM",
         heroTitle: "Five powerful CRM modules to run your entire business.",
+<<<<<<< HEAD
         heroSubtitle: "Access our Sales, Project Management, HR, Finance, and Client Portal modules—all integrated in one platform.",
         heroCtaPrimary: "Get Started",
         heroCtaSecondary: "View Modules"
     });
+=======
+        heroSubtitle: "Access our Sales, Project Management, HR, Finance, and Client Portal modules—all integrated in one platform. Manage your entire business operations without switching between multiple tools. Get started today and transform how you work.",
+        heroCtaPrimary: "Get Started",
+        heroCtaSecondary: "View Modules"
+    });
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                // Fetch Hero
+                const heroRes = await apiRequest('/landing-page/hero');
+                if (heroRes.success && heroRes.data) {
+                    setHeroContent({
+                        heroBadge: heroRes.data.badge || "YOUR COMPLETE CRM PLATFORM",
+                        heroTitle: heroRes.data.title || "Five powerful CRM modules to run your entire business.",
+                        heroSubtitle: heroRes.data.subtitle || "Access our Sales, Project Management, HR, Finance, and Client Portal modules—all integrated in one platform.",
+                        heroCtaPrimary: heroRes.data.ctaPrimary || "Get Started",
+                        heroCtaSecondary: heroRes.data.ctaSecondary || "View Modules"
+                    });
+                }
+
+                // Fetch Platform Section
+                const platformRes = await apiRequest('/landing-page/platform');
+                if (platformRes.success && platformRes.data) {
+                    setTestimonialSection({
+                        testimonialBadge: platformRes.data.badge || "All-in-one suite",
+                        testimonialTitle: platformRes.data.title || "DinTask One",
+                        testimonialSubtitle: platformRes.data.subtitle || "The operating system for business.",
+                        testimonialDescription: platformRes.data.description || "Run your entire business on DinTask with our unified cloud software.",
+                        testimonialCtaText: platformRes.data.ctaText || "TRY DINTASK ONE",
+                        testimonialQuote: platformRes.data.quote || "DinTask One is a boon for all. It transformed our workflow.",
+                        testimonialAuthorName: platformRes.data.authorName || "Rishi Sir",
+                        testimonialAuthorRole: platformRes.data.authorRole || "Founder & CEO, DinTask",
+                        testimonialAuthorImage: platformRes.data.authorImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Rishi",
+                        testimonialBgColor: "#ffcc00"
+                    });
+                }
+
+                // Fetch Tactical Section
+                const tacticalRes = await apiRequest('/landing-page/tactical');
+                if (tacticalRes.success && tacticalRes.data) {
+                    setTacticalContent({
+                        tacticalTitle: tacticalRes.data.title || "The Tactical Interface.",
+                        tacticalSubtitle: tacticalRes.data.subtitle || "Tactical Preview",
+                        showcaseImages: (tacticalRes.data.images && tacticalRes.data.images.length > 0)
+                            ? tacticalRes.data.images
+                            : [
+                                dashboard1,
+                                dashboard2,
+                                dashboard3
+                            ]
+                    });
+                }
+
+                // Fetch Footer CTA (Command Center)
+                const footerCtaRes = await apiRequest('/landing-page/footer-cta');
+                if (footerCtaRes.success && footerCtaRes.data) {
+                    setDemoCta({
+                        demoTitle: footerCtaRes.data.title || "Ready to experience the Command Center?",
+                        demoDescription: footerCtaRes.data.description || "Join thousands of managers who have optimized their workforce with DinTask's integrated suite.",
+                        demoCtaPrimary: footerCtaRes.data.ctaPrimary || "START FREE TRIAL",
+                        demoCtaSecondary: footerCtaRes.data.ctaSecondary || "BOOK A DEMO",
+                        demoFloatingImages: footerCtaRes.data.images || []
+                    });
+                }
+
+                // Fetch Pricing Plans
+                const pricingRes = await apiRequest('/landing-page-plans');
+                if (pricingRes.success) {
+                    setPricingPlans(pricingRes.data);
+                }
+
+                // Fetch Tactical Modules
+                const modulesRes = await apiRequest('/tactical-modules');
+                if (modulesRes.success && modulesRes.data && modulesRes.data.length > 0) {
+                    setModules(modulesRes.data.map(m => ({
+                        ...m,
+                        id: m.moduleId
+                    })));
+                }
+            } catch (error) {
+                console.error('Failed to fetch landing page content:', error);
+            }
+        };
+
+        const fetchTestimonials = async () => {
+            try {
+                const res = await apiRequest('/testimonials/approved');
+                if (res.success && res.data) {
+                    setTestimonials(res.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch testimonials:', error);
+            }
+        };
+
+        fetchContent();
+        fetchTestimonials();
+    }, []);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const [isAnnual, setIsAnnual] = useState(true);
 
     // Testimonial Submission States
@@ -88,6 +203,7 @@ const LandingPage = () => {
     const [tacticalContent, setTacticalContent] = useState({
         tacticalTitle: "The Tactical Interface.",
         tacticalSubtitle: "Tactical Preview",
+<<<<<<< HEAD
         showcaseImages: [
             '/src/assets/dashboard_1.png',
             '/src/assets/dashboard_2.png',
@@ -95,6 +211,13 @@ const LandingPage = () => {
         ]
     });
 
+=======
+        showcaseImages: []
+    });
+
+    const [pricingPlans, setPricingPlans] = useState([]);
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const [socialContact, setSocialContact] = useState({
         socialLinks: {
             facebook: '#',
@@ -143,7 +266,11 @@ const LandingPage = () => {
 
     const [openFaq, setOpenFaq] = useState(null);
 
+<<<<<<< HEAD
     const faqs = [
+=======
+    const [faqs, setFaqs] = useState([
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         {
             id: 1,
             question: "Can I customize the modules to fit my business needs?",
@@ -159,13 +286,32 @@ const LandingPage = () => {
             question: "What kind of support do you provide?",
             answer: "We offer comprehensive support including 24/7 email assistance, a detailed knowledge base, and priority support for enterprise clients to ensure your success."
         }
+<<<<<<< HEAD
     ];
+=======
+    ]);
+
+    useEffect(() => {
+        const fetchFaqs = async () => {
+            try {
+                const res = await apiRequest('/landing-page/faqs');
+                if (res.success && res.data && Array.isArray(res.data)) {
+                    setFaqs(res.data.map((f, i) => ({ ...f, id: f._id || i + 1 })));
+                }
+            } catch (error) {
+                console.error('Failed to fetch FAQs:', error);
+            }
+        };
+        fetchFaqs();
+    }, []);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const toggleFaq = (index) => {
         setOpenFaq(prev => prev === index ? null : index);
     };
 
     useEffect(() => {
+<<<<<<< HEAD
         const fetchContent = async () => {
             try {
                 const res = await axios.get('http://localhost:5000/api/v1/landing-page/content');
@@ -184,6 +330,8 @@ const LandingPage = () => {
 
         fetchContent();
 
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         // Ensure body is scrollable when landing page mounts
         document.body.style.overflow = 'auto';
         document.body.style.overflowX = 'hidden';
@@ -194,6 +342,11 @@ const LandingPage = () => {
 
 
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     useEffect(() => {
         if (!tacticalContent.showcaseImages || tacticalContent.showcaseImages.length === 0) return;
 
@@ -222,7 +375,14 @@ const LandingPage = () => {
         setSubmitStatus(null);
 
         try {
+<<<<<<< HEAD
             await axios.post('http://localhost:5000/api/v1/testimonials', formData);
+=======
+            await apiRequest('/testimonials', {
+                method: 'POST',
+                body: formData
+            });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             setSubmitStatus('success');
             // Reset form
             setTimeout(() => {
@@ -245,7 +405,15 @@ const LandingPage = () => {
             description: 'Centralized control center to manage managers, employees, and overall system health.',
             icon: 'ShieldCheck',
             color: 'from-blue-600 to-indigo-600',
+<<<<<<< HEAD
             features: ['Manager Oversight', 'Employee Directory', 'System Analytics', 'Permission Controls']
+=======
+            image: dashboard1,
+            themeColor: 'blue',
+            targetAudience: 'For System Admins & Owners',
+            detailedFeatures: ['Manager Oversight', 'Employee Directory', 'System Analytics', 'Permission Controls', 'Global Settings'],
+            tags: ['Management', 'Security', 'Control', 'Dashboard']
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         },
         {
             id: 'manager',
@@ -253,14 +421,33 @@ const LandingPage = () => {
             description: 'Powerful tools for task delegation, team progress monitoring, and schedule management.',
             icon: 'LayoutDashboard',
             color: 'from-purple-600 to-pink-600',
+<<<<<<< HEAD
             features: ['Task Delegation', 'Performance Metrics', 'Team Chat', 'Real-time Sync']
         },
         {
+=======
+            image: dashboard2,
+            themeColor: 'purple',
+            targetAudience: 'For Team Leads & Managers',
+            detailedFeatures: ['Task Delegation', 'Performance Metrics', 'Team Chat', 'Real-time Sync', 'Leave Approvals'],
+            tags: ['Leadership', 'Strategy', 'Oversight', 'Planning']
+        },
+        {
+            id: 'employee',
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             title: 'Employee Portal',
             description: 'Personalized task dashboard designed for maximum productivity and focus.',
             icon: 'Target',
             color: 'from-yellow-400 to-orange-500',
+<<<<<<< HEAD
             features: ['Task List', 'Calendar Sync', 'Personal Notes', 'Quick Actions']
+=======
+            image: dashboard3,
+            themeColor: 'amber',
+            targetAudience: 'For Individual Contributors',
+            detailedFeatures: ['Task List', 'Calendar Sync', 'Personal Notes', 'Quick Actions', 'Time Tracking'],
+            tags: ['Productivity', 'Focus', 'Tasks', 'Goals']
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         },
         {
             id: 'sales',
@@ -268,6 +455,7 @@ const LandingPage = () => {
             description: 'Track leads, manage pipelines, and close deals with our integrated CRM suite.',
             icon: 'Briefcase',
             color: 'from-amber-500 to-orange-600',
+<<<<<<< HEAD
             features: ['Lead Management', 'Sales Pipeline', 'Follow-up Scheduler', 'Client Portal']
         }
     ]);
@@ -331,6 +519,26 @@ const LandingPage = () => {
             highlighted: false
         }
     ]);
+=======
+            image: dashboard1,
+            themeColor: 'emerald', // Using emerald theme for sales to differentiate
+            targetAudience: 'For Sales Teams & Leaders',
+            detailedFeatures: ['Lead Management', 'Sales Pipeline', 'Follow-up Scheduler', 'Client Portal', 'Deal Forecasting'],
+            tags: ['Leads', 'Deals', 'Revenue', 'Growth']
+        }
+    ]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveModule((prev) => (prev + 1) % modules.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [modules.length]);
+
+
+
+    const [testimonials, setTestimonials] = useState([]);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 
 
@@ -363,7 +571,11 @@ const LandingPage = () => {
                         <img
                             src="/dintask-logo.png"
                             alt="DinTask"
+<<<<<<< HEAD
                             className="h-12 sm:h-16 w-auto object-contain"
+=======
+                            className="h-16 sm:h-24 md:h-28 w-auto object-contain transition-transform hover:scale-105 py-2"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         />
                     </div>
 
@@ -375,6 +587,10 @@ const LandingPage = () => {
                                 onClick={() => {
                                     if (item === 'Contact') navigate('/contact');
                                     else if (item === 'About') document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+<<<<<<< HEAD
+=======
+                                    else if (item === 'Features') document.getElementById('tactical')?.scrollIntoView({ behavior: 'smooth' });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     else document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
                                 }}
                                 className="text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors uppercase tracking-widest"
@@ -415,6 +631,10 @@ const LandingPage = () => {
                                         setIsMenuOpen(false);
                                         if (item === 'Contact') navigate('/contact');
                                         else if (item === 'About') document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+<<<<<<< HEAD
+=======
+                                        else if (item === 'Features') document.getElementById('tactical')?.scrollIntoView({ behavior: 'smooth' });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         else document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
                                     }}
                                     className="block text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest text-center w-full py-2 hover:text-primary-600 transition-colors"
@@ -422,11 +642,19 @@ const LandingPage = () => {
                                     {item}
                                 </button>
                             ))}
+<<<<<<< HEAD
                             <div className="pt-4 flex flex-row gap-2">
                                 <Button variant="outline" onClick={() => navigate('/admin/login')} className="flex-1 h-10 rounded-xl font-black uppercase tracking-wider text-[10px] border-slate-200 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-200">
                                     Login
                                 </Button>
                                 <Button onClick={() => navigate('/admin/register')} className="flex-1 h-10 rounded-xl bg-yellow-400 text-slate-900 font-black uppercase tracking-wider text-[10px] hover:bg-yellow-500">
+=======
+                            <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                                <Button variant="outline" onClick={() => navigate('/admin/login')} className="flex-1 h-12 rounded-xl font-black uppercase tracking-wider text-xs border-slate-200 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-200">
+                                    Login
+                                </Button>
+                                <Button onClick={() => navigate('/admin/register')} className="flex-1 h-12 rounded-xl bg-yellow-400 text-slate-900 font-black uppercase tracking-wider text-xs hover:bg-yellow-500">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     Sign Up
                                 </Button>
                             </div>
@@ -436,7 +664,11 @@ const LandingPage = () => {
             </nav>
 
             {/* Hero Section */}
+<<<<<<< HEAD
             <section className="sticky top-0 h-screen flex flex-col justify-center pt-24 pb-16 md:pt-36 md:pb-24 px-6 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden z-0 transition-all duration-300">
+=======
+            <section className="fixed top-0 left-0 w-full h-screen flex flex-col justify-center pt-24 pb-16 md:pt-36 md:pb-24 px-6 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden z-0 transition-all duration-300">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 {/* Background Blobs - Adjusted for Dark Mode */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                     <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FFEE8C]/40 rounded-full blur-[100px]" />
@@ -458,6 +690,7 @@ const LandingPage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
+<<<<<<< HEAD
                         className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-8"
                     >
                         <span className="text-yellow-600 block sm:inline">Five powerful</span> <span className="text-blue-600">CRM</span> modules to run your entire <span className="relative inline-block mt-2 sm:mt-0">
@@ -469,6 +702,11 @@ const LandingPage = () => {
                                 className="absolute bottom-1 sm:bottom-3 left-0 h-3 sm:h-6 bg-[#FFEE8C] -z-0 -rotate-1 rounded-sm"
                             />
                         </span>
+=======
+                        className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-8"
+                    >
+                        {heroContent.heroTitle}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </motion.h1>
 
                     <motion.p
@@ -477,7 +715,11 @@ const LandingPage = () => {
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed mb-10"
                     >
+<<<<<<< HEAD
                         Access our Sales, Project Management, HR, Finance, and Client Portal modules—all integrated in one platform. Manage your entire business operations without switching between multiple tools. Get started today and transform how you work.
+=======
+                        {heroContent.heroSubtitle}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </motion.p>
 
                     <motion.div
@@ -486,10 +728,17 @@ const LandingPage = () => {
                         transition={{ duration: 0.6, delay: 0.6 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
+<<<<<<< HEAD
                         <Button onClick={() => navigate('/admin/register')} className="h-14 px-12 rounded-lg bg-yellow-400 border border-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-lg shadow-sm transition-all hover:scale-105">
                             {heroContent.heroCtaPrimary}
                         </Button>
                         <Button variant="outline" onClick={() => document.getElementById('tactical').scrollIntoView({ behavior: 'smooth' })} className="h-14 px-8 rounded-full border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-bold text-base hover:bg-transparent transition-all">
+=======
+                        <Button onClick={() => navigate('/admin/register')} className="w-full sm:w-auto h-12 sm:h-14 px-8 sm:px-12 rounded-lg bg-yellow-400 border border-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm sm:text-lg shadow-sm transition-all hover:scale-105">
+                            {heroContent.heroCtaPrimary}
+                        </Button>
+                        <Button variant="outline" onClick={() => document.getElementById('tactical').scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-lg sm:rounded-full border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-bold text-sm sm:text-base hover:bg-transparent transition-all">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             {heroContent.heroCtaSecondary}
                         </Button>
                     </motion.div>
@@ -497,7 +746,11 @@ const LandingPage = () => {
             </section>
 
 
+<<<<<<< HEAD
             <div className="relative z-10 bg-transparent dark:bg-slate-950 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+=======
+            <div className="relative z-10 mt-[100vh] bg-white dark:bg-slate-950 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 <section id="about" className="py-20 relative overflow-x-clip border-t border-b border-white/50 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                     <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
                         <motion.div
@@ -509,10 +762,17 @@ const LandingPage = () => {
                             <Badge className="bg-black/10 text-black border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
                                 {testimonialSection.testimonialBadge}
                             </Badge>
+<<<<<<< HEAD
                             <h2 className="text-5xl lg:text-7xl font-black leading-none tracking-tight text-slate-900 mb-4">
                                 {testimonialSection.testimonialTitle}
                             </h2>
                             <p className="text-lg font-black text-slate-800 mb-6 uppercase tracking-tight">
+=======
+                            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-none tracking-tight text-slate-900 mb-4">
+                                {testimonialSection.testimonialTitle}
+                            </h2>
+                            <p className="text-base sm:text-lg font-black text-slate-800 mb-6 uppercase tracking-tight">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 {testimonialSection.testimonialSubtitle}
                             </p>
                             <p className="text-base text-slate-700 font-medium leading-relaxed max-w-lg mb-8">
@@ -520,7 +780,11 @@ const LandingPage = () => {
                             </p>
                             <Button
                                 onClick={() => navigate('/admin/register')}
+<<<<<<< HEAD
                                 className="h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-base shadow-xl group"
+=======
+                                className="w-full sm:w-auto h-12 sm:h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-sm sm:text-base shadow-xl group"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             >
                                 {testimonialSection.testimonialCtaText} <ArrowRight className="ml-3 group-hover:translate-x-2" />
                             </Button>
@@ -533,8 +797,13 @@ const LandingPage = () => {
                             className="relative"
                         >
                             <div className="pl-12 border-l border-slate-900/20 py-4 lg:py-12">
+<<<<<<< HEAD
                                 <span className="text-7xl font-serif text-slate-900 absolute -left-4 top-0 opacity-20">“</span>
                                 <blockquote className="text-2xl lg:text-3xl font-black text-slate-900 italic leading-tight mb-8">
+=======
+                                <span className="text-5xl sm:text-7xl font-serif text-slate-900 absolute -left-4 top-0 opacity-20">“</span>
+                                <blockquote className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 italic leading-tight mb-8">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     "{testimonialSection.testimonialQuote}"
                                 </blockquote>
                                 <div className="flex items-center gap-6">
@@ -553,6 +822,7 @@ const LandingPage = () => {
 
 
                 {/* Strategic Options Section - Based on Reference Image */}
+<<<<<<< HEAD
                 <section className="py-12 sm:py-24 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-x-clip">
                     <div className="max-w-7xl mx-auto px-2 sm:px-6">
                         <div className="grid grid-cols-3 gap-2 sm:gap-16 lg:gap-24">
@@ -615,6 +885,9 @@ const LandingPage = () => {
                         </div>
                     </div>
                 </section>
+=======
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
                 {/* Five Powerful Modules Section */}
                 <section id="tactical" className="py-24 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden scroll-mt-20">
@@ -623,7 +896,11 @@ const LandingPage = () => {
                             <Badge className="bg-[#FFEE8C] text-slate-900 border-none px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-widest mb-6">
                                 Your Complete CRM Platform
                             </Badge>
+<<<<<<< HEAD
                             <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
+=======
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 Five <span className="text-yellow-600">powerful</span> modules to <span className="bg-[#FFEE8C] text-slate-900 px-2 py-1 transform -rotate-1 inline-block rounded-md">run your entire business.</span>
                             </h2>
                             <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -633,7 +910,11 @@ const LandingPage = () => {
 
                         <div className="relative">
                             {/* Module Content */}
+<<<<<<< HEAD
                             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+=======
+                            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[auto] lg:min-h-[600px]">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 {/* Left: Content Card */}
                                 <motion.div
                                     key={`content-${activeModule}`}
@@ -644,6 +925,7 @@ const LandingPage = () => {
                                 >
                                     <div>
                                         <div className="flex items-center gap-4 mb-8">
+<<<<<<< HEAD
                                             <div className={`p-3 rounded-xl ${[
                                                 'bg-[#FFEE8C] text-slate-900',
                                                 'bg-blue-100 text-blue-600',
@@ -710,6 +992,40 @@ const LandingPage = () => {
                                                 ['Automated invoice generation', 'Expense tracking & approval', 'P&L analysis dashboard', 'Multi-currency support', 'Tax automation hooks'],
                                                 ['Secure file sharing', 'Project status timeline', 'Ticket & support system', 'Contract digital signing', 'Integrated feedback loops']
                                             ][activeModule].map((feature, i) => (
+=======
+                                            <div className={cn("p-3 rounded-xl",
+                                                modules[activeModule].themeColor === 'blue' ? "bg-blue-100 text-blue-600" :
+                                                    modules[activeModule].themeColor === 'purple' ? "bg-purple-100 text-purple-600" :
+                                                        modules[activeModule].themeColor === 'amber' ? "bg-amber-100 text-amber-600" :
+                                                            "bg-emerald-100 text-emerald-600"
+                                            )}>
+                                                {React.createElement(getIconComponent(modules[activeModule].icon), { size: 28 })}
+                                            </div>
+                                            <span className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider",
+                                                modules[activeModule].themeColor === 'blue' ? "bg-blue-50 text-blue-700" :
+                                                    modules[activeModule].themeColor === 'purple' ? "bg-purple-50 text-purple-700" :
+                                                        modules[activeModule].themeColor === 'amber' ? "bg-amber-50 text-amber-700" :
+                                                            "bg-emerald-50 text-emerald-700"
+                                            )}>
+                                                {modules[activeModule].title}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                                            {modules[activeModule].title}
+                                        </h3>
+
+                                        <p className="text-slate-600 dark:text-slate-400 text-lg mb-8 leading-relaxed">
+                                            {modules[activeModule].description}
+                                        </p>
+
+                                        <div className="inline-block bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 text-sm font-semibold mb-8">
+                                            {modules[activeModule].targetAudience}
+                                        </div>
+
+                                        <ul className="space-y-3">
+                                            {modules[activeModule].detailedFeatures.map((feature, i) => (
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                 <li key={i} className="flex items-start gap-3">
                                                     <div className="mt-1 size-5 rounded-full bg-[#FFEE8C] dark:bg-yellow-900/30 flex items-center justify-center text-slate-900 dark:text-yellow-400 shrink-0">
                                                         <CheckCircle2 size={12} strokeWidth={3} />
@@ -722,7 +1038,11 @@ const LandingPage = () => {
                                 </motion.div>
 
                                 {/* Right: Image */}
+<<<<<<< HEAD
                                 <div className="relative h-full min-h-[400px] lg:min-h-[600px]">
+=======
+                                <div className="relative h-full min-h-[300px] sm:min-h-[400px] lg:min-h-[600px] flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     <AnimatePresence mode='wait'>
                                         <motion.div
                                             key={`image-${activeModule}`}
@@ -730,6 +1050,7 @@ const LandingPage = () => {
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 1.05 }}
                                             transition={{ duration: 0.5 }}
+<<<<<<< HEAD
                                             className="absolute inset-0 rounded-[2rem] overflow-hidden shadow-2xl"
                                         >
                                             <img
@@ -756,6 +1077,24 @@ const LandingPage = () => {
                                                         ['Support', 'Success', 'Feedback', 'Retention']
                                                     ][activeModule].map((tag, i) => (
                                                         <span key={i} className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-xs font-bold">{tag}</span>
+=======
+                                            className="absolute inset-0 flex items-center justify-center p-8"
+                                        >
+                                            <img
+                                                src={modules[activeModule].image}
+                                                alt={modules[activeModule].title}
+                                                className="w-full h-full object-contain drop-shadow-2xl"
+                                                loading="lazy"
+                                            />
+
+                                            {/* Badge Overlay */}
+                                            <div className="absolute bottom-6 left-0 right-0 text-center pointer-events-none">
+                                                <div className="inline-flex gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                                                    {modules[activeModule].tags.map((tag, i) => (
+                                                        <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                                                            {tag}
+                                                        </span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     ))}
                                                 </div>
                                             </div>
@@ -765,6 +1104,7 @@ const LandingPage = () => {
                             </div>
 
                             {/* Pagination Dots */}
+<<<<<<< HEAD
                             <div className="flex justify-start gap-3 mt-12">
                                 {[0, 1, 2, 3, 4].map((index) => (
                                     <button
@@ -775,6 +1115,17 @@ const LandingPage = () => {
                                             : 'w-3 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
                                             }`}
                                         aria-label={`Go to slide ${index + 1}`}
+=======
+                            <div className="flex justify-center gap-3 mt-12">
+                                {modules.map((_, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setActiveModule(index)}
+                                        aria-label={`Go to slide ${index + 1}`}
+                                        className={cn("h-2 rounded-full transition-all duration-300",
+                                            activeModule === index ? "w-8 bg-slate-900 dark:bg-yellow-400" : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+                                        )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     />
                                 ))}
                             </div>
@@ -800,32 +1151,52 @@ const LandingPage = () => {
                             </p>
                         </div>
 
+<<<<<<< HEAD
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
                                 {
                                     title: "Admin Panel",
                                     description: "Complete web-based control center",
+=======
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                            {[
+                                {
+                                    title: "Admin Panel",
+                                    description: "Web control center",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     icon: Monitor,
                                     color: "bg-yellow-400",
                                     iconColor: "text-slate-900"
                                 },
                                 {
                                     title: "Sales App",
+<<<<<<< HEAD
                                     description: "Mobile app for sales app",
+=======
+                                    description: "Mobile sales app",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     icon: Target,
                                     color: "bg-blue-500",
                                     iconColor: "text-white"
                                 },
                                 {
                                     title: "Project Manager",
+<<<<<<< HEAD
                                     description: "Mobile app for project manager",
+=======
+                                    description: "Project management",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     icon: Layers,
                                     color: "bg-purple-500",
                                     iconColor: "text-white"
                                 },
                                 {
                                     title: "Employee App",
+<<<<<<< HEAD
                                     description: "Mobile app for employee app",
+=======
+                                    description: "Employee focus",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     icon: Users,
                                     color: "bg-emerald-500",
                                     iconColor: "text-white"
@@ -841,6 +1212,7 @@ const LandingPage = () => {
                                         viewport={{ once: true }}
                                         className="group"
                                     >
+<<<<<<< HEAD
                                         <div className="bg-white dark:bg-slate-900 border border-[#FFEE8C] dark:border-slate-800 rounded-3xl p-6 flex flex-col items-center text-center h-full hover:shadow-xl transition-all duration-300 hover:border-yellow-400">
                                             <div className={`w-16 h-16 rounded-2xl ${item.color} flex items-center justify-center mb-4 shadow-lg shadow-yellow-100/50 dark:shadow-none transition-transform duration-300 group-hover:scale-105 group-hover:-translate-y-2`}>
                                                 <Icon className={`w-8 h-8 ${item.iconColor}`} strokeWidth={2} />
@@ -848,18 +1220,37 @@ const LandingPage = () => {
 
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{item.title}</h3>
                                             <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-4 max-w-[200px] text-sm">
+=======
+                                        <div className="bg-white dark:bg-slate-900 border border-[#FFEE8C] dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col items-center text-center h-full hover:shadow-xl transition-all duration-300 hover:border-yellow-400">
+                                            <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl ${item.color} flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-yellow-100/50 dark:shadow-none transition-transform duration-300 group-hover:scale-105 group-hover:-translate-y-1`}>
+                                                <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${item.iconColor}`} strokeWidth={2} />
+                                            </div>
+
+                                            <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white mb-1 sm:mb-2">{item.title}</h3>
+                                            <p className="text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-tight sm:leading-relaxed mb-3 sm:mb-4">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                 {item.description}
                                             </p>
 
                                             <div className="mt-auto">
+<<<<<<< HEAD
                                                 <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#FFEE8C]/30 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 font-bold text-xs">
                                                     {index === 0 ? <Monitor size={14} /> : <Smartphone size={14} />}
                                                     {index === 0 ? "Web Access" : "App Access"}
+=======
+                                                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#FFEE8C]/30 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 font-bold text-[8px] sm:text-xs uppercase">
+                                                    {(index === 0 || index === 2) ? <Monitor size={10} className="sm:size-[14px]" /> : <Smartphone size={10} className="sm:size-[14px]" />}
+                                                    <span className="truncate">{(index === 0 || index === 2) ? "Web" : "App"}</span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                 </div>
                                             </div>
                                         </div>
                                     </motion.div>
+<<<<<<< HEAD
                                 )
+=======
+                                );
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             })}
                         </div>
                     </div>
@@ -882,6 +1273,7 @@ const LandingPage = () => {
                             </div>
                         </div>
 
+<<<<<<< HEAD
                         {/* Pricing Cards Grid */}
                         <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                             {/* Starter Plan */}
@@ -1009,22 +1401,125 @@ const LandingPage = () => {
                                     Get Started
                                 </Button>
                             </div>
+=======
+                        {/* Pricing Cards Grid - Horizontal Scroll on Mobile with Designer Animation */}
+                        <div className="flex lg:grid lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto overflow-x-auto lg:overflow-visible snap-x snap-mandatory no-scrollbar -mx-6 px-6 lg:mx-auto lg:px-0 pb-8 lg:pb-0">
+                            {pricingPlans.length > 0 ? pricingPlans.map((plan, index) => (
+                                <motion.div
+                                    key={plan._id || index}
+                                    initial={{ opacity: 0, scale: 0.9, rotateY: -15 }}
+                                    whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
+                                    viewport={{ amount: 0.5, margin: "0px -50px 0px -50px" }}
+                                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                                    className="snap-center flex-shrink-0 w-[85vw] sm:w-[400px] lg:w-full"
+                                >
+                                    <div
+                                        className={cn(
+                                            "rounded-2xl p-6 relative flex flex-col h-full transition-all duration-300",
+                                            plan.isPopular
+                                                ? "border-2 border-yellow-200 dark:border-yellow-900/50 bg-[#FFEE8C]/20 dark:bg-slate-900 shadow-2xl shadow-yellow-100/50 dark:shadow-none lg:transform lg:-translate-y-2"
+                                                : "border border-yellow-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-yellow-50/50 dark:shadow-none hover:border-yellow-300"
+                                        )}
+                                    >
+                                        <div className="absolute top-6 left-6">
+                                            <span className="bg-[#FFEE8C] text-slate-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">{plan.badge}</span>
+                                        </div>
+
+                                        <div className="mt-8 mb-4">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 whitespace-pre-line">
+                                                {plan.subtitle.split('*').map((part, i) =>
+                                                    i % 2 === 1 ? <span key={i} className="text-yellow-600">{part}</span> : part
+                                                )}
+                                            </h3>
+                                            <div className="flex items-baseline gap-1 mb-1">
+                                                <span className="text-3xl font-bold text-yellow-500">₹{isAnnual ? (plan.annualPriceMonthly || plan.monthlyPrice) : plan.monthlyPrice}</span>
+                                                <span className="text-slate-500 text-sm">/month</span>
+                                            </div>
+                                            {isAnnual && plan.yearlySaveText && (
+                                                <div className="text-xs text-slate-400 font-medium">
+                                                    {plan.yearlyFakePrice && <span className="line-through mr-2">{plan.yearlyFakePrice}</span>}
+                                                    <span className="text-emerald-500">{plan.yearlySaveText}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {plan.isPopular && (
+                                            <div className="flex items-center gap-2 mb-8 text-xs font-bold text-amber-500 uppercase tracking-widest">
+                                                <Zap className="fill-current" size={16} /> Most Popular
+                                            </div>
+                                        )}
+                                        {plan.isBestValue && !plan.isPopular && (
+                                            <div className="flex items-center gap-2 mb-8 text-xs font-bold text-purple-500 uppercase tracking-widest">
+                                                <Star className="fill-current" size={16} /> Best Value
+                                            </div>
+                                        )}
+                                        {!plan.isPopular && !plan.isBestValue && (
+                                            <div className="flex items-center gap-2 mb-8 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                <CheckCircle2 className="text-emerald-500" size={16} /> Best for small teams
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-2 mb-4 flex-1">
+                                            {plan.features.map((feature, i) => (
+                                                <div key={i} className={cn("flex items-center gap-2 text-xs", plan.isPopular ? "text-slate-700 dark:text-slate-200 font-medium" : "text-slate-600 dark:text-slate-300")}>
+                                                    <div className={cn(
+                                                        "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center",
+                                                        plan.isPopular ? "bg-yellow-400 text-slate-900" : "border border-yellow-200 text-yellow-600"
+                                                    )}>
+                                                        <CheckCircle2 size={12} />
+                                                    </div>
+                                                    {feature}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <Button
+                                            onClick={() => navigate(plan.buttonLink || '/register')}
+                                            variant={plan.isPopular ? 'default' : 'outline'}
+                                            className={cn(
+                                                "w-full font-bold py-3 h-12",
+                                                plan.isPopular
+                                                    ? "bg-yellow-400 hover:bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-200 dark:shadow-none border-0"
+                                                    : "border-yellow-200 text-yellow-600 hover:bg-[#FFEE8C]/30 hover:text-yellow-700 dark:border-yellow-800 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                            )}
+                                        >
+                                            {plan.buttonText || "Get Started"}
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            )) : (
+                                <div className="col-span-3 text-center py-10 w-full">
+                                    <Loader2 className="animate-spin text-yellow-500 mx-auto" size={32} />
+                                    <p className="text-slate-500 mt-2">Loading plans...</p>
+                                </div>
+                            )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </div>
 
                         <div className="mt-16 text-center text-slate-400 text-sm">
                             Need custom features or enterprise support? Contact us for tailored solutions and dedicated assistance.
                         </div>
                     </div>
+<<<<<<< HEAD
                 </section>
 
                 {/* Demo CTA Section */}
                 <section className="py-20 px-6 relative overflow-x-clip bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-slate-900 dark:bg-white rounded-[3rem] p-12 lg:p-24 relative overflow-hidden group">
+=======
+                </section >
+
+                {/* Demo CTA Section */}
+                < section className="py-20 px-6 relative overflow-x-clip bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" >
+                    <div className="max-w-7xl mx-auto">
+                        <div className="bg-slate-900 dark:bg-white rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 lg:p-24 relative overflow-hidden group">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <div className="absolute -bottom-20 -right-20 size-80 bg-yellow-500/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000" />
 
                             <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
                                 <div>
+<<<<<<< HEAD
                                     <h2 className="text-5xl lg:text-7xl font-black text-white dark:text-slate-900 tracking-tighter mb-8 leading-none">
                                         {demoCta.demoTitle}
                                     </h2>
@@ -1036,6 +1531,19 @@ const LandingPage = () => {
                                             {demoCta.demoCtaPrimary}
                                         </Button>
                                         <Button onClick={() => navigate('/contact')} className="h-10 sm:h-16 px-3 sm:px-10 bg-white text-slate-900 dark:bg-slate-900 dark:text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-lg whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+=======
+                                    <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black text-white dark:text-slate-900 tracking-tighter mb-8 leading-none">
+                                        {demoCta.demoTitle}
+                                    </h2>
+                                    <p className="text-base sm:text-xl text-slate-400 dark:text-slate-500 mb-12 max-w-md">
+                                        {demoCta.demoDescription}
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <Button onClick={() => navigate('/welcome')} className="w-full sm:w-auto h-12 sm:h-16 px-6 sm:px-10 bg-yellow-400 text-slate-900 rounded-xl sm:rounded-2xl font-black text-sm sm:text-lg whitespace-nowrap hover:bg-yellow-500 transition-colors">
+                                            {demoCta.demoCtaPrimary}
+                                        </Button>
+                                        <Button onClick={() => navigate('/contact')} className="w-full sm:w-auto h-12 sm:h-16 px-6 sm:px-10 bg-white text-slate-900 dark:bg-slate-900 dark:text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-lg whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             {demoCta.demoCtaSecondary}
                                         </Button>
                                     </div>
@@ -1064,10 +1572,17 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
+<<<<<<< HEAD
                 </section>
 
                 {/* Testimonials Section */}
                 <section className="py-12 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+=======
+                </section >
+
+                {/* Testimonials Section */}
+                < section className="py-12 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" >
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     <div className="max-w-6xl mx-auto px-6">
                         {/* Section Title & Dialog */}
                         <div className="text-center mb-10">
@@ -1132,6 +1647,7 @@ const LandingPage = () => {
                             </Dialog>
                         </div>
 
+<<<<<<< HEAD
                         {/* Testimonials Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {testimonials.slice(0, 3).map((testimonial, index) => (
@@ -1178,13 +1694,78 @@ const LandingPage = () => {
 
                 {/* FAQ Section */}
                 <section className="py-20 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden">
+=======
+                        {/* Testimonials Grid - Horizontal Scroll */}
+                        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 -mx-6 px-6 no-scrollbar touch-pan-x">
+                            {testimonials.length > 0 ? (
+                                testimonials.map((testimonial, index) => (
+                                    <motion.div
+                                        key={testimonial._id || index}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.1 }}
+                                        className="snap-center flex-shrink-0 w-[85vw] md:w-[350px]"
+                                    >
+                                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-lg border border-slate-100 dark:border-slate-800 flex flex-col h-full hover:shadow-xl transition-all duration-300">
+                                            {/* Stars & Content */}
+                                            <div className="flex-1 mb-4 text-left">
+                                                <div className="flex gap-1 mb-3 text-yellow-400">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star size={14} fill={i < testimonial.rating ? "currentColor" : "none"} className={i < testimonial.rating ? "" : "text-slate-300 dark:text-slate-700"} key={i} />
+                                                    ))}
+                                                </div>
+                                                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed italic">
+                                                    "{testimonial.testimonial}"
+                                                </p>
+                                            </div>
+
+                                            {/* Profile - Bottom Right */}
+                                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-50 dark:border-slate-800/50 mt-auto">
+                                                <div className="text-right">
+                                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{testimonial.name}</h3>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{testimonial.role}</p>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-full p-0.5 border border-yellow-400 flex-shrink-0">
+                                                    {testimonial.image ? (
+                                                        <img
+                                                            src={testimonial.image}
+                                                            alt={testimonial.name}
+                                                            className="w-full h-full rounded-full object-cover bg-slate-100"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-xs">
+                                                            {testimonial.name?.charAt(0)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            ) : (
+                                <div className="col-span-full text-center py-12 w-full text-slate-500">
+                                    No testimonials yet. Be the first to share your story!
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section >
+
+                {/* FAQ Section */}
+                < section className="py-20 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden" >
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     <div className="max-w-4xl mx-auto px-6">
                         <div className="text-center mb-16">
                             <div className="flex items-center justify-center gap-3 mb-4">
                                 <div className="p-2 rounded-full bg-teal-50 text-teal-500">
                                     <HelpCircle size={24} />
                                 </div>
+<<<<<<< HEAD
                                 <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
+=======
+                                <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     Frequently asked questions.
                                 </h2>
                             </div>
@@ -1208,7 +1789,11 @@ const LandingPage = () => {
                                     >
                                         <div className={`flex-shrink-0 size-8 sm:size-10 rounded-lg flex items-center justify-center font-bold text-sm sm:text-base transition-colors ${openFaq === index ? 'bg-[#FFEE8C] text-slate-900' : 'bg-[#FFEE8C]/50 text-slate-700'
                                             }`}>
+<<<<<<< HEAD
                                             {faq.id}
+=======
+                                            {index + 1}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         </div>
                                         <span className="flex-1 font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-lg">
                                             {faq.question}
@@ -1226,7 +1811,11 @@ const LandingPage = () => {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 transition={{ duration: 0.3 }}
                                             >
+<<<<<<< HEAD
                                                 <div className="px-6 pb-6 pt-0 ml-[3.5rem] sm:ml-[4.5rem]">
+=======
+                                                <div className="px-6 pb-6 pt-0 ml-12 sm:ml-16 md:ml-20">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm sm:text-base">
                                                         {faq.answer}
                                                     </p>
@@ -1238,6 +1827,7 @@ const LandingPage = () => {
                             ))}
                         </div>
                     </div>
+<<<<<<< HEAD
                 </section>
 
                 {/* Contact Support Section */}
@@ -1247,26 +1837,50 @@ const LandingPage = () => {
                         <a
                             href={`tel:${socialContact.contactInfo.phone}`}
                             className="flex items-center gap-4 group transition-all"
+=======
+                </section >
+
+                {/* Contact Support Floating Sidebar */}
+                <div className="fixed right-4 bottom-4 sm:right-6 sm:bottom-6 z-50 flex flex-col gap-2 sm:gap-4 pointer-events-none">
+                    <div className="pointer-events-auto flex flex-col items-end gap-2 sm:gap-4">
+                        <a
+                            href={`tel:${socialContact.contactInfo.phone}`}
+                            className="flex items-center gap-2 group transition-all"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         >
                             <div className="hidden group-hover:block bg-white dark:bg-slate-900 py-2 px-4 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 mr-2">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Call Us</p>
                                 <p className="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{socialContact.contactInfo.phone}</p>
                             </div>
+<<<<<<< HEAD
                             <div className="p-3 sm:p-4 bg-blue-600 rounded-full text-white shadow-lg shadow-blue-600/30 hover:scale-110 hover:shadow-blue-600/50 transition-all duration-300">
                                 <Phone size={20} />
+=======
+                            <div className="p-2 sm:p-4 bg-blue-600 rounded-full text-white shadow-lg shadow-blue-600/30 hover:scale-110 hover:shadow-blue-600/50 transition-all duration-300">
+                                <Phone size={18} className="sm:size-5" />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         </a>
 
                         <a
                             href={`mailto:${socialContact.contactInfo.email}`}
+<<<<<<< HEAD
                             className="flex items-center gap-4 group transition-all"
+=======
+                            className="flex items-center gap-2 group transition-all"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         >
                             <div className="hidden group-hover:block bg-white dark:bg-slate-900 py-2 px-4 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 mr-2">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Email Us</p>
                                 <p className="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{socialContact.contactInfo.email}</p>
                             </div>
+<<<<<<< HEAD
                             <div className="p-3 sm:p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:scale-110 hover:shadow-red-500/50 transition-all duration-300">
                                 <Mail size={20} />
+=======
+                            <div className="p-2 sm:p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:scale-110 hover:shadow-red-500/50 transition-all duration-300">
+                                <Mail size={18} className="sm:size-5" />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         </a>
 
@@ -1274,14 +1888,23 @@ const LandingPage = () => {
                             href={`https://wa.me/${socialContact.contactInfo.whatsapp}`}
                             target="_blank"
                             rel="noopener noreferrer"
+<<<<<<< HEAD
                             className="flex items-center gap-4 group transition-all"
+=======
+                            className="flex items-center gap-2 group transition-all"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         >
                             <div className="hidden group-hover:block bg-white dark:bg-slate-900 py-2 px-4 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 mr-2">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">WhatsApp</p>
                                 <p className="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">Chat with us</p>
                             </div>
+<<<<<<< HEAD
                             <div className="p-3 sm:p-4 bg-green-500 rounded-full text-white shadow-lg shadow-green-500/30 hover:scale-110 hover:shadow-green-500/50 transition-all duration-300">
                                 <MessageCircle size={20} />
+=======
+                            <div className="p-2 sm:p-4 bg-green-500 rounded-full text-white shadow-lg shadow-green-500/30 hover:scale-110 hover:shadow-green-500/50 transition-all duration-300">
+                                <MessageCircle size={18} className="sm:size-5" />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         </a>
                     </div>
@@ -1297,7 +1920,11 @@ const LandingPage = () => {
                                 <Badge className="bg-[#FFEE8C] text-slate-900 border-none px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-widest mb-6">
                                     {tacticalContent.tacticalSubtitle}
                                 </Badge>
+<<<<<<< HEAD
                                 <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
+=======
+                                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     {tacticalContent.tacticalTitle}
                                 </h2>
                             </div>
@@ -1326,8 +1953,13 @@ const LandingPage = () => {
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+<<<<<<< HEAD
                                             <div className="bg-black/50 text-white p-3 rounded-full backdrop-blur-sm">
                                                 <Search size={24} />
+=======
+                                            <div className="bg-black/50 text-white p-2 sm:p-3 rounded-full backdrop-blur-sm">
+                                                <Search size={18} className="sm:size-6" />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             </div>
                                         </div>
                                         {/* Overlay Gradient for depth */}
@@ -1344,8 +1976,13 @@ const LandingPage = () => {
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentImage(idx % tacticalContent.showcaseImages.length)}
+<<<<<<< HEAD
                                         className={`relative flex-shrink-0 w-32 sm:w-48 aspect-video rounded-lg overflow-hidden border-2 transition-all duration-300 group ${currentImage === (idx % tacticalContent.showcaseImages.length)
                                             ? 'border-teal-400 ring-4 ring-teal-400/20 scale-105'
+=======
+                                        className={`relative flex-shrink-0 w-28 sm:w-48 aspect-video rounded-lg overflow-hidden border-2 transition-all duration-300 group ${currentImage === (idx % tacticalContent.showcaseImages.length)
+                                            ? 'border-teal-400 ring-2 sm:ring-4 ring-teal-400/20 scale-105'
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             : 'border-slate-700 opacity-60 hover:opacity-100 hover:border-slate-500'
                                             }`}
                                     >
@@ -1389,9 +2026,15 @@ const LandingPage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 text-center sm:text-left">
                             <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6 sm:space-y-8 flex flex-col items-center sm:items-start">
                                 <div className="flex items-center gap-3">
+<<<<<<< HEAD
                                     <img src={footerContent.footerLogoUrl || "/dintask-logo.png"} alt="DinTask" className="h-24 sm:h-32 w-24 sm:w-32 object-contain" />
                                     <span className="text-4xl font-black tracking-tighter text-white italic uppercase whitespace-nowrap">
                                         Din<span className="text-yellow-400">Task</span>
+=======
+                                    <img src={footerContent.footerLogoUrl || "/dintask-logo.png"} alt="DinTask" className="h-20 sm:h-32 w-20 sm:w-32 object-contain" />
+                                    <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white italic uppercase whitespace-nowrap">
+                                        Din<span className="text-blue-500">Task</span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </span>
                                 </div>
                                 <p className="text-slate-400 max-w-sm font-medium leading-relaxed text-sm sm:text-base">
@@ -1422,6 +2065,11 @@ const LandingPage = () => {
                                                             window.scrollTo(0, 0);
                                                         } else if (link === 'About') {
                                                             document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+<<<<<<< HEAD
+=======
+                                                        } else if (link === 'Features') {
+                                                            document.getElementById('tactical')?.scrollIntoView({ behavior: 'smooth' });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                         } else {
                                                             document.getElementById(link.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
                                                         }

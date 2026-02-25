@@ -40,17 +40,30 @@ const ChatSupport = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden">
+<<<<<<< HEAD
             {/* Enhanced Background Visibility (Identical to Join Page) */}
+=======
+            {/* Calendar-Style Brand Background Integration */}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             <div className="absolute inset-0 h-[420px] z-0 overflow-hidden">
                 <img
                     src="/WLCOMPAGE .png"
                     alt="Background"
+<<<<<<< HEAD
                     className="w-full h-full object-cover object-center opacity-70 dark:opacity-30 translate-y-[-10%]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-white dark:from-slate-950/40 dark:via-slate-950/80 dark:to-slate-950" />
             </div>
 
             {/* Support Content Container - Matches Join Page max-width and margin */}
+=======
+                    className="w-full h-full object-cover object-center pointer-events-none"
+                />
+                <div className="absolute inset-0 bg-slate-950/40 dark:bg-black/60 pointer-events-none" />
+            </div>
+
+            {/* Support Content Container */}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             <div className="w-full max-w-[440px] mt-16 px-4 relative z-10 pb-20">
                 <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] p-10 md:p-12 border border-white dark:border-slate-800">
                     <div className="text-center mb-10">

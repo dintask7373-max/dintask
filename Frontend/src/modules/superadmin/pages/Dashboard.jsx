@@ -123,7 +123,11 @@ const SuperAdminDashboard = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Total Revenue - Root Or Staff (Locked for Staff) */}
                 <motion.div variants={fadeInUp}>
+<<<<<<< HEAD
                     <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl relative">
+=======
+                    <Card className="border-2 border-emerald-100 shadow-lg shadow-emerald-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] relative hover:-translate-y-1">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         {!isSuperAdminRoot && (
                             <div className="absolute inset-0 bg-slate-50/10 dark:bg-slate-950/20 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-2 text-center">
                                 <Lock className="text-slate-400 mb-1" size={16} />
@@ -132,11 +136,19 @@ const SuperAdminDashboard = () => {
                         )}
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
+<<<<<<< HEAD
                                 <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 group-hover:scale-105 transition-transform">
                                     <IndianRupee className="text-emerald-500" size={14} />
                                 </div>
                                 {isSuperAdminRoot && (
                                     <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+=======
+                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 group-hover:scale-105 transition-transform shadow-inner shadow-emerald-100">
+                                    <IndianRupee className="text-emerald-600" size={14} />
+                                </div>
+                                {isSuperAdminRoot && (
+                                    <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         <ArrowUpRight size={8} /> {stats?.monthlyGrowthPercentage || 0}%
                                     </div>
                                 )}
@@ -154,13 +166,13 @@ const SuperAdminDashboard = () => {
 
                 {/* Active Companies */}
                 <motion.div variants={fadeInUp}>
-                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl">
+                    <Card className="border-2 border-blue-100 shadow-lg shadow-blue-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] hover:-translate-y-1">
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
-                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-blue-50 dark:bg-blue-900/10 group-hover:scale-105 transition-transform">
-                                    <Building2 className="text-blue-500" size={14} />
+                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-blue-50 dark:bg-blue-900/20 group-hover:scale-105 transition-transform shadow-inner shadow-blue-100">
+                                    <Building2 className="text-blue-600" size={14} />
                                 </div>
-                                <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded-full uppercase">
+                                <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded-full uppercase">
                                     Live
                                 </div>
                             </div>
@@ -172,6 +184,7 @@ const SuperAdminDashboard = () => {
 
                 {/* Total Users */}
                 <motion.div variants={fadeInUp}>
+<<<<<<< HEAD
                     <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-xl md:rounded-3xl">
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
@@ -180,8 +193,36 @@ const SuperAdminDashboard = () => {
                                 </div>
                                 <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded-full uppercase">
                                     Global
+=======
+                    <Card className="border-2 border-indigo-100 shadow-lg shadow-indigo-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] hover:-translate-y-1">
+                        <CardContent className="p-3 sm:p-5">
+                            <div className="flex justify-between items-start mb-2 sm:mb-3">
+                                <div className="p-1.5 sm:p-2.5 rounded-lg md:rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 group-hover:scale-105 transition-transform shadow-inner shadow-indigo-100">
+                                    <Users className="text-indigo-600" size={14} />
+                                </div>
+                                <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded-full uppercase">
+                                    Global
                                 </div>
                             </div>
+                            <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Total Users</p>
+                            <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">{stats?.totalUsers || 0}</h3>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* Active Support Tickets */}
+                <motion.div variants={fadeInUp}>
+                    <Card className="border-2 border-orange-100 shadow-lg shadow-orange-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] cursor-pointer hover:-translate-y-1"
+                        onClick={() => navigate('/superadmin/support')}>
+                        <CardContent className="p-3 sm:p-5">
+                            <div className="flex justify-between items-start mb-2 sm:mb-3">
+                                <div className="p-1.5 sm:p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 group-hover:scale-105 transition-transform shadow-inner shadow-orange-100">
+                                    <MessageSquare className="text-orange-600" size={16} />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
+                                </div>
+                                <div className="text-[8px] sm:text-[10px] font-black text-orange-600 uppercase tracking-widest">Ongoing</div>
+                            </div>
+<<<<<<< HEAD
                             <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Total Users</p>
                             <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">{stats?.totalUsers || 0}</h3>
                         </CardContent>
@@ -199,6 +240,8 @@ const SuperAdminDashboard = () => {
                                 </div>
                                 <div className="text-[8px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest">Ongoing</div>
                             </div>
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Pending Tickets</p>
                             <h3 className="text-sm sm:text-lg lg:text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate">{pendingSupport?.length || 0}</h3>
                         </CardContent>
@@ -212,7 +255,11 @@ const SuperAdminDashboard = () => {
                 {/* Growth Chart */}
                 {isSuperAdmin && (
                     <motion.div variants={fadeInUp} className="lg:col-span-2">
+<<<<<<< HEAD
                         <Card className="h-full border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-xl md:rounded-[2rem] relative">
+=======
+                        <Card className="h-full border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem] relative">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             {!isSuperAdminRoot && (
                                 <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md z-20 flex flex-col items-center justify-center p-8 text-center">
                                     <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 shadow-xl">
@@ -289,7 +336,7 @@ const SuperAdminDashboard = () => {
 
                 {/* Plan Distribution */}
                 <motion.div variants={fadeInUp}>
-                    <Card className="h-full border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-xl md:rounded-[2rem]">
+                    <Card className="h-full border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem]">
                         <CardHeader className="px-5 md:px-8 py-4 md:py-6 border-b border-slate-50 dark:border-slate-800/50">
                             <CardTitle className="text-xs md:text-base font-black uppercase tracking-widest text-slate-900 dark:text-slate-200">Adoption</CardTitle>
                             <p className="text-[9px] font-bold text-slate-400 uppercase">Plan distribution</p>
@@ -345,7 +392,11 @@ const SuperAdminDashboard = () => {
 
                 {/* Pending Support Tickets List */}
                 <motion.div variants={fadeInUp}>
+<<<<<<< HEAD
                     <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl md:rounded-[2rem] overflow-hidden h-full">
+=======
+                    <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden h-full">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         <CardHeader className="flex flex-row items-center justify-between px-5 py-4 border-b border-slate-50 dark:border-slate-800">
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
@@ -393,7 +444,11 @@ const SuperAdminDashboard = () => {
 
                 {/* Recent Inquiries List */}
                 <motion.div variants={fadeInUp}>
+<<<<<<< HEAD
                     <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl md:rounded-[2rem] overflow-hidden h-full">
+=======
+                    <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden h-full">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         <CardHeader className="flex flex-row items-center justify-between px-5 py-4 border-b border-slate-50 dark:border-slate-800">
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
@@ -438,7 +493,7 @@ const SuperAdminDashboard = () => {
 
             {/* Recent Activity Table */}
             <motion.div variants={fadeInUp}>
-                <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-xl md:rounded-[2rem] overflow-hidden">
+                <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
                     <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 md:px-8 py-4 sm:py-6 gap-3 md:gap-4 border-b border-slate-50 dark:border-slate-800">
                         <div>
                             <CardTitle className="text-sm sm:text-lg font-black uppercase tracking-tight">Recent Registrations</CardTitle>

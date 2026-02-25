@@ -75,6 +75,7 @@ const useSalesStore = create(
                     });
 
                     if (res.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             salesReps: [...state.salesReps, {
                                 ...res.data,
@@ -85,6 +86,14 @@ const useSalesStore = create(
                             }],
                             loading: false
                         }));
+=======
+                        get().fetchSalesReps();
+
+                        // Background re-fetch for global state synchronization
+                        import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                            .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         toast.success('Sales Representative added successfully');
                     }
                 } catch (error) {
@@ -95,16 +104,30 @@ const useSalesStore = create(
                 }
             },
 
-            updateSalesRep: (salesRepId, updatedData) => {
-                set((state) => ({
-                    salesReps: state.salesReps.map((salesRep) =>
-                        salesRep.id === salesRepId ? { ...salesRep, ...updatedData } : salesRep
-                    ),
-                }));
+            updateSalesRep: async (salesRepId, updatedData) => {
+                try {
+                    const res = await api(`/admin/users/${salesRepId}`, {
+                        method: 'PUT',
+                        body: { ...updatedData, originRole: 'sales_executive' }
+                    });
+                    if (res.success) {
+                        get().fetchSalesReps();
+
+                        // Background re-fetch for global state synchronization
+                        import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                            .catch(err => console.error("Background sync error:", err));
+
+                        toast.success('Sales Representative updated');
+                    }
+                } catch (error) {
+                    console.error("Update Sales Rep Error", error);
+                    toast.error(error.message || 'Failed to update sales rep');
+                }
             },
 
             deleteSalesRep: async (salesRepId) => {
                 try {
+<<<<<<< HEAD
                     await api(`/admin/users/${salesRepId}`, {
                         method: 'DELETE',
                         body: { role: 'sales_executive' }
@@ -113,6 +136,21 @@ const useSalesStore = create(
                         salesReps: state.salesReps.filter((salesRep) => salesRep.id !== salesRepId),
                     }));
                     toast.success('Sales Representative removed');
+=======
+                    const res = await api(`/admin/users/${salesRepId}`, {
+                        method: 'DELETE',
+                        body: { role: 'sales_executive' }
+                    });
+                    if (res.success) {
+                        get().fetchSalesReps();
+
+                        // Background re-fetch for global state synchronization
+                        import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                            .catch(err => console.error("Background sync error:", err));
+
+                        toast.success('Sales Representative removed');
+                    }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 } catch (error) {
                     console.error("Delete Sales Rep Error", error);
                     toast.error(error.message || 'Failed to remove sales rep');

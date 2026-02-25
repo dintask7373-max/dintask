@@ -124,6 +124,21 @@ const StaffManagement = () => {
 
   const handleAddStaff = async (e) => {
     e.preventDefault();
+<<<<<<< HEAD
+=======
+
+    // Client-side validation
+    const { name, email, password } = formData;
+    if (!name.trim()) return toast.error("Name is required");
+    if (!email.trim()) return toast.error("Email is required");
+    if (!password) return toast.error("Password is required");
+
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) return toast.error("Invalid email format");
+
+    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const success = await addStaff(formData);
     if (success) {
       toast.success("Staff member added successfully");
@@ -136,6 +151,20 @@ const StaffManagement = () => {
 
   const handleEditStaff = async (e) => {
     e.preventDefault();
+<<<<<<< HEAD
+=======
+
+    // Client-side validation
+    const { name, email, password } = formData;
+    if (!name.trim()) return toast.error("Name cannot be empty");
+    if (!email.trim()) return toast.error("Email cannot be empty");
+
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) return toast.error("Invalid email format");
+
+    if (password && password.length < 6) return toast.error("Password must be at least 6 characters");
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const success = await updateStaff(selectedStaff._id, formData);
     if (success) {
       toast.success("Staff details updated");
@@ -197,36 +226,63 @@ const StaffManagement = () => {
       </div>
 
       {/* Stats Overview */}
+<<<<<<< HEAD
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl">
+=======
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-2 border-blue-100 shadow-lg shadow-blue-200/40 bg-white dark:bg-slate-900 rounded-[2rem] transition-all hover:-translate-y-1">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-primary-50 dark:bg-primary-900/10">
               <Users className="text-primary-600" size={24} />
             </div>
             <div>
+<<<<<<< HEAD
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Staff</p>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">{staffPagination?.total || 0}</h3>
             </div>
           </CardContent>
         </Card>
         <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl">
+=======
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Active Staff</p>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter italic">{staffPagination?.total || 0}</h3>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-2 border-emerald-100 shadow-lg shadow-emerald-200/40 bg-white dark:bg-slate-900 rounded-[2rem] transition-all hover:-translate-y-1">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10">
               <ShieldCheck className="text-emerald-600" size={24} />
             </div>
             <div>
+<<<<<<< HEAD
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Security</p>
               <h3 className="text-2xl font-black text-emerald-600 uppercase italic">Active</h3>
             </div>
           </CardContent>
         </Card>
         <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl">
+=======
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">System Security</p>
+              <h3 className="text-2xl font-black text-emerald-600 uppercase italic tracking-tighter">Active</h3>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-2 border-amber-100 shadow-lg shadow-amber-200/40 bg-white dark:bg-slate-900 rounded-[2rem] transition-all hover:-translate-y-1">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10">
               <Lock className="text-amber-600" size={24} />
             </div>
             <div>
+<<<<<<< HEAD
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Access Protocol</p>
+=======
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Access Protocol</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
               <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">RBAC 2.0</h3>
             </div>
           </CardContent>
@@ -234,7 +290,11 @@ const StaffManagement = () => {
       </div>
 
       {/* Main Table Section */}
+<<<<<<< HEAD
       <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+=======
+      <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         <CardHeader className="p-6 border-b border-slate-50 dark:border-slate-800">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">

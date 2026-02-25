@@ -26,7 +26,11 @@ const EmployeeProfile = () => {
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
+<<<<<<< HEAD
         phoneNumber: '+1 (555) 123-4567'
+=======
+        phoneNumber: ''
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -42,7 +46,11 @@ const EmployeeProfile = () => {
             setProfileData({
                 name: user.name || '',
                 email: user.email || '',
+<<<<<<< HEAD
                 phoneNumber: user.phoneNumber || user.phone || '+1 (555) 123-4567'
+=======
+                phoneNumber: user.phoneNumber || user.phone || ''
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             });
         }
     }, [user]);
@@ -103,14 +111,24 @@ const EmployeeProfile = () => {
     // Default Profile View
     return (
         <div className="min-h-screen w-full bg-white dark:bg-slate-950 relative flex flex-col items-center justify-start font-sans overflow-x-hidden pb-20">
+<<<<<<< HEAD
             {/* Enhanced Background Visibility */}
+=======
+            {/* Calendar-Style Brand Background Integration */}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             <div className="absolute inset-0 h-[480px] z-0 overflow-hidden">
                 <img
                     src="/WLCOMPAGE .png"
                     alt="Background"
+<<<<<<< HEAD
                     className="w-full h-full object-cover object-center opacity-70 dark:opacity-30 translate-y-[-10%]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/80 to-white dark:from-slate-950/40 dark:via-slate-950/80 dark:to-slate-950" />
+=======
+                    className="w-full h-full object-cover object-center pointer-events-none"
+                />
+                <div className="absolute inset-0 bg-slate-950/40 dark:bg-black/60 pointer-events-none" />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             </div>
 
             {/* Profile Content Content */}
@@ -118,10 +136,17 @@ const EmployeeProfile = () => {
                 {/* Header Section */}
                 <div className="flex items-center justify-between">
                     <div>
+<<<<<<< HEAD
                         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                             My Profile
                         </h1>
                         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+=======
+                        <h1 className="text-3xl font-black text-white tracking-tight">
+                            My Profile
+                        </h1>
+                        <p className="text-[11px] font-bold text-white/70 uppercase tracking-widest mt-1">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             Identity & security settings
                         </p>
                     </div>

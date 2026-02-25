@@ -11,7 +11,12 @@ import {
     Video,
     Info,
     CheckCheck,
-    Clock
+    Clock,
+    Copy,
+    Share,
+    Clipboard,
+    X,
+    Forward
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -20,6 +25,22 @@ import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
+<<<<<<< HEAD
+=======
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { toast } from 'sonner';
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 import useAuthStore from '@/store/authStore';
 import useEmployeeStore from '@/store/employeeStore';
@@ -27,7 +48,11 @@ import useChatStore from '@/store/chatStore';
 
 const ManagerChat = () => {
     const { user: currentUser, role: userRole } = useAuthStore();
+<<<<<<< HEAD
     const { employees, fetchEmployees } = useEmployeeStore();
+=======
+    const { allEmployees, fetchAllEmployees } = useEmployeeStore();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const {
         conversations,
         activeConversation,
@@ -43,13 +68,27 @@ const ManagerChat = () => {
     const [newMessage, setNewMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [showAllUsers, setShowAllUsers] = useState(false);
+<<<<<<< HEAD
+=======
+
+    // Share/Forward States
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [messageToShare, setMessageToShare] = useState(null);
+    const [shareSearchTerm, setShareSearchTerm] = useState('');
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const scrollRef = useRef(null);
 
     // Initial load
     useEffect(() => {
         fetchConversations();
+<<<<<<< HEAD
         fetchEmployees();
     }, [fetchConversations, fetchEmployees]);
+=======
+        fetchAllEmployees();
+    }, [fetchConversations, fetchAllEmployees]);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     // Map role to DB Model
     const getModelName = (role) => {
@@ -66,11 +105,19 @@ const ManagerChat = () => {
     // Filter employees for search
     const filteredEmployees = useMemo(() => {
         if (!searchTerm) return [];
+<<<<<<< HEAD
         return employees.filter(e =>
             e._id !== currentUser?._id &&
             e.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [employees, currentUser, searchTerm]);
+=======
+        return allEmployees.filter(e =>
+            e._id !== currentUser?._id &&
+            e.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [allEmployees, currentUser, searchTerm]);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -108,6 +155,63 @@ const ManagerChat = () => {
         return chat.participants.find(p => (p.user?._id || p.user?.id) !== currentId)?.user || { name: 'Unknown', avatar: '' };
     };
 
+<<<<<<< HEAD
+=======
+    const handleCopy = (text) => {
+        navigator.clipboard.writeText(text);
+        toast.success('Message copied to clipboard');
+    };
+
+    const handlePaste = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            setNewMessage(prev => prev + text);
+        } catch (err) {
+            toast.error('Failed to read clipboard');
+        }
+    };
+
+    const handleShare = (msg) => {
+        setMessageToShare(msg);
+        setShareModalOpen(true);
+    };
+
+    const handleForwardMessage = async (targetUser) => {
+        if (!messageToShare) return;
+
+        try {
+            const targetModel = targetUser.role ? getModelName(targetUser.role) : 'Employee';
+            const conversation = await accessOrCreateChat(targetUser._id, targetModel, currentUser.workspaceId || 'global');
+
+            if (conversation) {
+                const participantIds = conversation.participants.map(p => p.user._id || p.user);
+                sendMessage(
+                    messageToShare.text,
+                    conversation._id,
+                    currentUser._id,
+                    getModelName(userRole),
+                    participantIds
+                );
+                toast.success('Message forwarded');
+                setShareModalOpen(false);
+                setMessageToShare(null);
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to forward message');
+        }
+    };
+
+    const filteredShareUsers = useMemo(() => {
+        if (!shareSearchTerm) return allEmployees?.filter(e => e._id !== currentUser?._id) || [];
+        return allEmployees.filter(e =>
+            e._id !== currentUser?._id &&
+            e.name.toLowerCase().includes(shareSearchTerm.toLowerCase())
+        );
+    }, [allEmployees, currentUser, shareSearchTerm]);
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] lg:h-[calc(100vh-120px)] bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
             <div className="flex flex-1 overflow-hidden">
@@ -156,7 +260,11 @@ const ManagerChat = () => {
                             {showAllUsers && !searchTerm && (
                                 <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <p className="px-3 text-[9px] font-black text-primary-600 uppercase tracking-widest mb-2">Internal Directory</p>
+<<<<<<< HEAD
                                     {employees.filter(u => u._id !== currentUser?._id).map(emp => (
+=======
+                                    {allEmployees.filter(u => u._id !== currentUser?._id).map(emp => (
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         <button
                                             key={emp._id}
                                             onClick={() => handleStartChat(emp)}
@@ -324,32 +432,77 @@ const ManagerChat = () => {
                                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 className={cn(
+<<<<<<< HEAD
                                                     "flex w-full",
+=======
+                                                    "flex w-full group relative mb-2",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     isMe ? "justify-end" : "justify-start"
                                                 )}
                                             >
                                                 <div className={cn(
+<<<<<<< HEAD
                                                     "max-w-[85%] sm:max-w-[70%] space-y-1",
+=======
+                                                    "max-w-[85%] sm:max-w-[70%] space-y-1 flex flex-col",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     isMe ? "items-end" : "items-start"
                                                 )}>
                                                     <div className="flex items-center gap-1.5 px-1 mb-1">
                                                         <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+<<<<<<< HEAD
                                                             {isMe ? `YOU (${currentUser?.name})` : (msg.senderId?.name || "Partner")}
                                                         </span>
                                                         <span className={cn(
                                                             "text-[7px] font-bold text-white uppercase tracking-widest px-1.5 py-0.5 rounded",
                                                             isMe ? "bg-slate-500" : "bg-primary-600"
+=======
+                                                            {isMe ? null : (msg.senderId?.name || "Partner")}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded",
+                                                            isMe ? "text-slate-500" : "bg-primary-600 text-white"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                         )}>
                                                             {isMe ? 'MANAGER' : (msg.senderId?.role || 'MEMBER').toUpperCase()}
                                                         </span>
                                                     </div>
                                                     <div className={cn(
+<<<<<<< HEAD
                                                         "px-4 py-2 sm:px-5 sm:py-3 rounded-2xl group relative",
+=======
+                                                        "px-4 py-2 sm:px-5 sm:py-3 rounded-2xl relative",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                         isMe
                                                             ? "bg-primary-600 text-white rounded-tr-none shadow-md shadow-primary-500/10"
                                                             : "bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-none border border-slate-100 dark:border-slate-800"
                                                     )}>
                                                         <p className="text-[13px] sm:text-sm font-bold leading-relaxed">{msg.text}</p>
+<<<<<<< HEAD
+=======
+
+                                                        {/* Message Actions */}
+                                                        <div className={cn(
+                                                            "absolute top-1 opacity-0 group-hover:opacity-100 transition-opacity z-10",
+                                                            isMe ? "-left-8" : "-right-8"
+                                                        )}>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 shadow-sm border border-slate-200 dark:border-slate-700">
+                                                                        <MoreVertical size={12} className="text-slate-500" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align={isMe ? "end" : "start"}>
+                                                                    <DropdownMenuItem onClick={() => handleCopy(msg.text)} className="gap-2 text-xs font-bold">
+                                                                        <Copy size={12} /> Copy
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleShare(msg)} className="gap-2 text-xs font-bold">
+                                                                        <Share size={12} /> Share / Forward
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     </div>
                                                     <div className={cn("flex items-center gap-1.5 px-1", isMe ? "justify-end" : "justify-start")}>
                                                         <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest">
@@ -380,6 +533,19 @@ const ManagerChat = () => {
                                             className="h-11 sm:h-14 pl-5 sm:pl-6 pr-12 sm:pr-14 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl sm:rounded-3xl focus:ring-2 focus:ring-primary/10 text-xs sm:text-sm font-bold placeholder:text-slate-300 transition-all shadow-inner"
                                         />
                                         <Button
+<<<<<<< HEAD
+=======
+                                            type="button"
+                                            onClick={handlePaste}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute right-14 sm:right-16 text-slate-400 hover:text-primary-600"
+                                            title="Paste from Clipboard"
+                                        >
+                                            <Clipboard size={16} />
+                                        </Button>
+                                        <Button
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             type="submit"
                                             disabled={!newMessage.trim()}
                                             className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl sm:rounded-3xl bg-primary-600 text-white shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-95 transition-all flex items-center justify-center p-0 shrink-0"
@@ -403,7 +569,58 @@ const ManagerChat = () => {
                     )}
                 </div>
             </div>
-        </div>
+            {/* Share/Forward Modal */}
+            <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+                <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                            <Forward size={18} /> Forward Message
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-300 line-clamp-3 italic">
+                                "{messageToShare?.text}"
+                            </p>
+                        </div>
+
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                                placeholder="Search user to forward..."
+                                className="pl-9 h-10 bg-slate-50 border-none"
+                                value={shareSearchTerm}
+                                onChange={(e) => setShareSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="max-h-[300px] overflow-y-auto space-y-1 pr-2">
+                            {filteredShareUsers.map(user => (
+                                <button
+                                    key={user._id}
+                                    onClick={() => handleForwardMessage(user)}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left group transition-all"
+                                >
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={user.avatar} />
+                                        <AvatarFallback className="bg-primary-100 text-primary-700 font-bold text-xs">{user.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary-600 transition-colors">{user.name}</h4>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{user.role}</p>
+                                    </div>
+                                    <Forward size={16} className="text-slate-300 group-hover:text-primary-500 opacity-0 group-hover:opacity-100 transition-all" />
+                                </button>
+                            ))}
+                            {filteredShareUsers.length === 0 && (
+                                <p className="text-center text-xs text-slate-400 py-4 italic">No users found</p>
+                            )}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div >
     );
 };
 

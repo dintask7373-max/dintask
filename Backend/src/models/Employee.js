@@ -34,7 +34,12 @@ const EmployeeSchema = new mongoose.Schema({
   },
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
+<<<<<<< HEAD
     ref: 'Admin'
+=======
+    ref: 'Admin',
+    required: [true, 'Admin ID is required to link this user to a workspace']
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   },
   managerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -45,6 +50,19 @@ const EmployeeSchema = new mongoose.Schema({
     enum: ['pending', 'active', 'inactive', 'rejected'],
     default: 'pending'
   },
+<<<<<<< HEAD
+=======
+  fcmToken: {
+    app: {
+      type: String,
+      default: ''
+    },
+    web: {
+      type: String,
+      default: ''
+    }
+  },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   resetPasswordToken: String,
   resetPasswordExpire: Date
 }, { timestamps: true });

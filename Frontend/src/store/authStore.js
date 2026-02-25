@@ -121,6 +121,13 @@ const useAuthStore = create(
                     } else {
                         await apiRequest('/auth/logout');
                     }
+<<<<<<< HEAD
+=======
+
+                    // Disconnect socket on logout
+                    const socketService = (await import('../services/socket')).default;
+                    socketService.disconnect();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 } catch (err) {
                     console.error('Logout API failed:', err);
                 }
@@ -238,6 +245,59 @@ const useAuthStore = create(
                     set({ loading: false, error: err.message });
                     return { success: false, error: err.message };
                 }
+<<<<<<< HEAD
+=======
+            },
+
+            sendOtp: async (phone, role) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest('/auth/send-otp', {
+                        method: 'POST',
+                        body: { phone, role }
+                    });
+
+                    if (response.success) {
+                        set({ loading: false });
+                        return response;
+                    } else {
+                        throw new Error(response.error || 'Failed to send OTP');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return { success: false, error: err.message };
+                }
+            },
+
+            verifyOtp: async (phone, otp, role) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await apiRequest('/auth/verify-otp', {
+                        method: 'POST',
+                        body: { phone, otp, role }
+                    });
+
+                    if (response.success) {
+                        const rawRole = response.user.role || role;
+                        let normalizedRole = rawRole;
+                        if (rawRole === 'sales_executive') normalizedRole = 'sales';
+
+                        set({
+                            user: response.user,
+                            role: normalizedRole,
+                            token: response.token,
+                            isAuthenticated: true,
+                            loading: false,
+                        });
+                        return { success: true };
+                    } else {
+                        throw new Error(response.error || 'Invalid OTP');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return { success: false, error: err.message };
+                }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             },
 
             clearError: () => set({ error: null }),

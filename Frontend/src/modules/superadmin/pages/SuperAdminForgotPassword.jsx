@@ -56,6 +56,7 @@ const SuperAdminForgotPassword = () => {
             {/* Recovery Side */}
             <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 overflow-y-auto no-scrollbar">
                 <div className="w-full max-w-md space-y-8">
+<<<<<<< HEAD
                     <div className="text-center md:text-left">
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Account Recovery</h2>
                         <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
@@ -66,23 +67,51 @@ const SuperAdminForgotPassword = () => {
 
                     <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900">
                         <CardContent className="pt-8 pb-8 px-6 space-y-6">
+=======
+                    <div className="text-center md:text-left space-y-2">
+                        <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
+                            Account <span className="text-primary-600">Recovery</span>
+                        </h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            {step === 0 && 'Initiate Secure Recall Protocol'}
+                            {step === 1 && 'Authentication Link Dispatched'}
+                        </p>
+                    </div>
+
+                    <Card className="border-2 border-slate-100 shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
+                        <CardContent className="pt-10 pb-10 px-8 space-y-8">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <AnimatePresence mode="wait">
                                 {step === 0 && (
                                     <motion.div key="s0" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
                                         <Tabs defaultValue="admin" className="w-full">
+<<<<<<< HEAD
                                             <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-1 mb-6">
                                                 <TabsTrigger value="admin" className="rounded-md h-9 text-xs font-bold uppercase tracking-tight">Super Admin</TabsTrigger>
                                                 <TabsTrigger value="employee" className="rounded-md h-9 text-xs font-bold uppercase tracking-tight">Staff</TabsTrigger>
+=======
+                                            <TabsList className="grid w-full grid-cols-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl p-1.5 mb-8">
+                                                <TabsTrigger value="admin" className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Super Admin</TabsTrigger>
+                                                <TabsTrigger value="employee" className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Operations Staff</TabsTrigger>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             </TabsList>
 
                                             <TabsContent value="admin">
                                                 <form onSubmit={(e) => handleSendResetLink(e, 'admin')} className="space-y-4">
                                                     <div className="space-y-2">
+<<<<<<< HEAD
                                                         <Label htmlFor="admin-email">Root Email</Label>
                                                         <Input id="admin-email" type="email" placeholder="root@dintask.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-lg" />
                                                     </div>
                                                     <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20" disabled={loading}>
                                                         {loading ? 'Processing...' : 'Send Recovery Link'}
+=======
+                                                        <Label htmlFor="admin-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Administrator Protocol ID</Label>
+                                                        <Input id="admin-email" type="email" placeholder="ROOT@DINTASK.EXE" value={email} onChange={(e) => setEmail(e.target.value)} className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs" />
+                                                    </div>
+                                                    <Button type="submit" className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 text-white shadow-xl shadow-primary-900/20 rounded-2xl active:scale-95 transition-all" disabled={loading}>
+                                                        {loading ? 'PROCESSING...' : 'INITIATE RECALL PROTOCOL'}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     </Button>
                                                 </form>
                                             </TabsContent>
@@ -90,11 +119,19 @@ const SuperAdminForgotPassword = () => {
                                             <TabsContent value="employee">
                                                 <form onSubmit={(e) => handleSendResetLink(e, 'employee')} className="space-y-4">
                                                     <div className="space-y-2">
+<<<<<<< HEAD
                                                         <Label htmlFor="staff-email">Staff Email</Label>
                                                         <Input id="staff-email" type="email" placeholder="staff@dintask.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-lg" />
                                                     </div>
                                                     <Button type="submit" className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20" disabled={loading}>
                                                         {loading ? 'Processing...' : 'Send Recovery Link'}
+=======
+                                                        <Label htmlFor="staff-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Operations Staff Protocol ID</Label>
+                                                        <Input id="staff-email" type="email" placeholder="STAFF@DINTASK.EXE" value={email} onChange={(e) => setEmail(e.target.value)} className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs" />
+                                                    </div>
+                                                    <Button type="submit" className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em] bg-slate-900 hover:bg-black text-white shadow-xl shadow-slate-900/20 rounded-2xl active:scale-95 transition-all" disabled={loading}>
+                                                        {loading ? 'PROCESSING...' : 'INITIATE RECALL PROTOCOL'}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     </Button>
                                                 </form>
                                             </TabsContent>

@@ -134,9 +134,15 @@ const IntelManager = () => {
                                 whileHover={{ x: 4 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleSelectRole(intel)}
+<<<<<<< HEAD
                                 className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center gap-4 ${isActive
                                     ? 'bg-white dark:bg-slate-900 border-primary-500 shadow-xl shadow-primary-500/10 ring-1 ring-primary-500/20'
                                     : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+=======
+                                className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${isActive
+                                    ? 'bg-white dark:bg-slate-900 border-primary-500 shadow-xl shadow-primary-500/10 ring-2 ring-primary-500/10'
+                                    : 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     }`}
                             >
                                 <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${colorClass}`}>
@@ -146,7 +152,11 @@ const IntelManager = () => {
                                     <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-sm">
                                         {intel.role}
                                     </h3>
+<<<<<<< HEAD
                                     <p className="text-xs text-slate-500 truncate font-medium">{intel.title}</p>
+=======
+                                    <p className="text-xs text-slate-500 truncate font-bold uppercase tracking-widest text-[9px] mt-0.5">{intel.title}</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </div>
                                 <ChevronRight
                                     size={18}
@@ -168,8 +178,13 @@ const IntelManager = () => {
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ duration: 0.3 }}
                             >
+<<<<<<< HEAD
                                 <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
                                     <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 p-8">
+=======
+                                <Card className="border-2 border-slate-100 shadow-2xl shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+                                    <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b-2 border-slate-100 dark:border-slate-800 p-8">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${roleColors[selectedRole]}`}>
@@ -285,10 +300,17 @@ const IntelManager = () => {
                                 </Card>
                             </motion.div>
                         ) : (
+<<<<<<< HEAD
                             <div className="h-full min-h-[400px] flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-slate-50/50 dark:bg-slate-900/20">
                                 <Edit3 size={48} className="text-slate-300 mb-4" />
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Select Entity to Modify</h3>
                                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Choose a role from the list to update its displayed intelligence.</p>
+=======
+                            <div className="h-full min-h-[400px] flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] bg-slate-50/50 dark:bg-slate-900/20 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
+                                <Edit3 size={48} className="text-slate-300 mb-4" />
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Select Entity to Modify</h3>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Choose a role from the list to update its displayed intelligence.</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         )}
                     </AnimatePresence>

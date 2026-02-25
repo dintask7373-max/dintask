@@ -11,6 +11,10 @@ const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const Plan = require('../models/Plan');
 const Payment = require('../models/Payment');
+<<<<<<< HEAD
+=======
+const Notification = require('../models/Notification');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 // @desc    Get system stats
 // @route   GET /api/v1/superadmin/stats
@@ -143,6 +147,20 @@ exports.createAdmin = async (req, res, next) => {
   try {
     const { companyName, name, email, subscriptionPlan, password } = req.body;
 
+<<<<<<< HEAD
+=======
+    // Validation
+    if (!companyName || !name || !email) {
+      return next(new ErrorResponse('Please provide company name, owner name and email', 400));
+    }
+
+    // Email format validation
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      return next(new ErrorResponse('Please provide a valid email', 400));
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     // Check if admin already exists
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
@@ -219,6 +237,25 @@ exports.updateAdmin = async (req, res, next) => {
       return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
     }
 
+<<<<<<< HEAD
+=======
+    // Notify Admin of Status Change
+    if (subscriptionStatus && subscriptionStatus !== admin.subscriptionStatus) {
+      try {
+        await Notification.create({
+          recipient: admin._id,
+          sender: req.user.id,
+          type: 'general',
+          title: 'Account Status Update',
+          message: `Your account status has been updated to: ${subscriptionStatus}`,
+          link: '/billing'
+        });
+      } catch (error) {
+        console.error('Notification Error:', error);
+      }
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     res.status(200).json({
       success: true,
       data: admin
@@ -282,6 +319,23 @@ exports.updateAdminPlan = async (req, res, next) => {
       return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
     }
 
+<<<<<<< HEAD
+=======
+    // Notify Admin of Plan Update
+    try {
+      await Notification.create({
+        recipient: admin._id,
+        sender: req.user.id,
+        type: 'general',
+        title: 'Plan Updated',
+        message: `Your plan has been updated to ${planName} by the Super Admin.`,
+        link: '/billing'
+      });
+    } catch (error) {
+      console.error('Notification Error:', error);
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     res.status(200).json({
       success: true,
       data: admin
@@ -1267,6 +1321,25 @@ exports.createStaff = async (req, res, next) => {
   try {
     const { name, email, password, phoneNumber } = req.body;
 
+<<<<<<< HEAD
+=======
+    // Validation
+    if (!name || !email || !password) {
+      return next(new ErrorResponse('Please provide name, email and password', 400));
+    }
+
+    // Email format validation
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      return next(new ErrorResponse('Please provide a valid email', 400));
+    }
+
+    // Password length validation
+    if (password.length < 6) {
+      return next(new ErrorResponse('Password must be at least 6 characters', 400));
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const existingUser = await SuperAdmin.findOne({ email });
     if (existingUser) {
       return next(new ErrorResponse('Staff with this email already exists', 400));
@@ -1300,11 +1373,55 @@ exports.updateStaff = async (req, res, next) => {
       return next(new ErrorResponse('Staff not found', 404));
     }
 
+<<<<<<< HEAD
+=======
+    // Validation for update
+    if (req.body.email) {
+      const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(req.body.email)) {
+        return next(new ErrorResponse('Please provide a valid email', 400));
+      }
+
+      // Check if email is already taken by another user
+      const existingUser = await SuperAdmin.findOne({ email: req.body.email, _id: { $ne: req.params.id } });
+      if (existingUser) {
+        return next(new ErrorResponse('Email is already in use', 400));
+      }
+    }
+
+    if (req.body.name === '') {
+      return next(new ErrorResponse('Name cannot be empty', 400));
+    }
+
+    if (req.body.password && req.body.password.length < 6) {
+      return next(new ErrorResponse('Password must be at least 6 characters', 400));
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     staff = await SuperAdmin.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
     });
 
+<<<<<<< HEAD
+=======
+    // Notify Staff
+    try {
+      if (req.user.id !== staff._id.toString()) { // Don't notify if self-update (though route is superadmin root only)
+        await Notification.create({
+          recipient: staff._id,
+          sender: req.user.id,
+          type: 'general',
+          title: 'Profile Updated',
+          message: 'Your account details have been updated by the Administrator.',
+          link: '/profile'
+        });
+      }
+    } catch (error) {
+      console.error('Notification Error:', error);
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     res.status(200).json({
       success: true,
       data: staff

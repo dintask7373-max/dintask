@@ -122,6 +122,7 @@ const SalesSchedule = () => {
 
     const handleDateClick = (arg) => {
         const eventsOnDate = allEvents.filter(e => e.start.startsWith(arg.dateStr));
+<<<<<<< HEAD
         setSelectedDate(arg.dateStr);
         if (eventsOnDate.length > 0) {
             setSelectedDateEvents(eventsOnDate);
@@ -138,6 +139,53 @@ const SalesSchedule = () => {
             return;
         }
 
+=======
+
+        // Prevent clicking on past dates for NEW events
+        const clickedDate = new Date(arg.dateStr);
+        clickedDate.setHours(23, 59, 59, 999); // Allow clicking on "Today"
+        if (clickedDate < new Date()) {
+            toast.error('Cannot schedule events in the past');
+            return;
+        }
+
+        setSelectedDate(arg.dateStr);
+        if (eventsOnDate.length > 0) {
+            setSelectedDateEvents(eventsOnDate);
+            setIsDateSelectionModalOpen(true);
+        } else {
+            setIsModalOpen(true);
+        }
+    };
+
+    const handleCreateEvent = async (e) => {
+        e.preventDefault();
+
+        if (!newEvent.title || newEvent.title.trim().length < 3) {
+            toast.error('Event title is required (min 3 chars)');
+            return;
+        }
+
+        if (!newEvent.startTime || !newEvent.endTime) {
+            toast.error('Start and end times are required');
+            return;
+        }
+
+        if (newEvent.endTime <= newEvent.startTime) {
+            toast.error('End time must be after start time');
+            return;
+        }
+
+        const syncDate = new Date(selectedDate);
+        const [startH, startM] = newEvent.startTime.split(':').map(Number);
+        syncDate.setHours(startH, startM, 0, 0);
+
+        if (syncDate < new Date()) {
+            toast.error('Cannot schedule events in the past');
+            return;
+        }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         const hasConflict = (schedules || []).some(s => {
             const sameDate = s.date.split('T')[0] === selectedDate;
             if (!sameDate) return false;
@@ -149,7 +197,11 @@ const SalesSchedule = () => {
         });
 
         if (hasConflict) {
+<<<<<<< HEAD
             toast.error('T-Slot Conflict: Operational overlap detected');
+=======
+            toast.error('Time slot busy: Another event exists at this time');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             return;
         }
 
@@ -184,7 +236,11 @@ const SalesSchedule = () => {
                 meetingLink: '',
                 agenda: ''
             });
+<<<<<<< HEAD
             toast.success('Sync Timeline updated');
+=======
+            toast.success('Schedule updated');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         } catch (error) {
             console.error(error);
         }
@@ -227,16 +283,26 @@ const SalesSchedule = () => {
         <div className="space-y-6 pb-12 transition-all duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
+<<<<<<< HEAD
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Strategic <span className="text-primary-600">Schedule</span></h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-xs font-black tracking-widest italic opacity-70">
                         Coordinate high-impact engagements
+=======
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Sales <span className="text-primary-600">Schedule</span></h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-xs font-black tracking-widest italic opacity-70">
+                        Manage your upcoming meetings and calls
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                     <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 shadow-lg shadow-primary-200 dark:shadow-none bg-primary-600 hover:bg-primary-700 text-white rounded-xl h-11 px-5 font-black uppercase text-[10px] tracking-widest">
                         <Plus size={18} />
+<<<<<<< HEAD
                         <span>Initialize Entry</span>
+=======
+                        <span>Add New Event</span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </Button>
                 </div>
             </div>
@@ -328,7 +394,11 @@ const SalesSchedule = () => {
                 <div className="space-y-6">
                     <Card className="border-2 border-primary-100 shadow-xl shadow-primary-200/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/20 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden">
                         <CardHeader className="pb-2 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+<<<<<<< HEAD
                             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tactical Briefing</CardTitle>
+=======
+                            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">Upcoming Events</CardTitle>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </CardHeader>
                         <CardContent className="p-4 space-y-4">
                             {upcomingEvents.length > 0 ? upcomingEvents.map(event => (
@@ -361,7 +431,11 @@ const SalesSchedule = () => {
                                 </div>
                             )) : (
                                 <div className="text-center py-8">
+<<<<<<< HEAD
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">No Future Ops</p>
+=======
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">No Upcoming Events</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </div>
                             )}
                         </CardContent>
@@ -373,36 +447,62 @@ const SalesSchedule = () => {
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="sm:max-w-[450px] rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900">
                     <div className="bg-slate-900 p-8 text-white border-b-4 border-primary-600">
+<<<<<<< HEAD
                         <DialogTitle className="text-2xl font-black uppercase tracking-tight leading-none mb-1">Initialize Operation</DialogTitle>
                         <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest italic opacity-70">
                             Appending directive for {selectedDate && format(new Date(selectedDate), 'MMM dd')}
+=======
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight leading-none mb-1">Add New Event</DialogTitle>
+                        <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest italic opacity-70">
+                            Schedule a new event for {selectedDate && format(new Date(selectedDate), 'MMM dd')}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </DialogDescription>
                     </div>
                     <div className="p-8 space-y-4 bg-white dark:bg-slate-900 overflow-y-auto max-h-[70vh] custom-scrollbar">
                         <div className="space-y-1.5">
+<<<<<<< HEAD
                             <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Event Header</Label>
                             <Input
                                 value={newEvent.title}
                                 onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                                 placeholder="STRATEGIC SYNC"
+=======
+                            <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Event Title</Label>
+                            <Input
+                                value={newEvent.title}
+                                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                                placeholder="Meeting with Client"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 className="h-12 rounded-2xl bg-slate-50 border-none focus:ring-2 ring-primary-500/20 font-black text-xs px-5"
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
+<<<<<<< HEAD
                                 <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Commencement</Label>
                                 <Input type="time" value={newEvent.startTime} onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-none px-5 font-black" />
                             </div>
                             <div className="space-y-1.5">
                                 <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Conclusion</Label>
+=======
+                                <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Start Time</Label>
+                                <Input type="time" value={newEvent.startTime} onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-none px-5 font-black" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">End Time</Label>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 <Input type="time" value={newEvent.endTime} onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-none px-5 font-black" />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
+<<<<<<< HEAD
                                 <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Type Classification</Label>
+=======
+                                <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Event Type</Label>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 <Select
                                     value={newEvent.type}
                                     onValueChange={(value) => setNewEvent({ ...newEvent, type: value })}
@@ -411,9 +511,15 @@ const SalesSchedule = () => {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl border-none shadow-2xl">
+<<<<<<< HEAD
                                         <SelectItem value="meeting" className="text-[10px] font-black uppercase">SYNC MEETING</SelectItem>
                                         <SelectItem value="call" className="text-[10px] font-black uppercase">TACTICAL CALL</SelectItem>
                                         <SelectItem value="review" className="text-[10px] font-black uppercase text-emerald-500">INTEL REVIEW</SelectItem>
+=======
+                                        <SelectItem value="meeting" className="text-[10px] font-black uppercase">Meeting</SelectItem>
+                                        <SelectItem value="call" className="text-[10px] font-black uppercase">Call</SelectItem>
+                                        <SelectItem value="review" className="text-[10px] font-black uppercase text-emerald-500">Review</SelectItem>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -429,11 +535,19 @@ const SalesSchedule = () => {
                         </div>
 
                         <div className="space-y-1.5">
+<<<<<<< HEAD
                             <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Engage Link</Label>
                             <Input
                                 value={newEvent.meetingLink}
                                 onChange={(e) => setNewEvent({ ...newEvent, meetingLink: e.target.value })}
                                 placeholder="https://link.com/..."
+=======
+                            <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Meeting Link</Label>
+                            <Input
+                                value={newEvent.meetingLink}
+                                onChange={(e) => setNewEvent({ ...newEvent, meetingLink: e.target.value })}
+                                placeholder="https://zoom.us/..."
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 className="h-12 rounded-2xl bg-slate-50 border-none px-5 font-black text-xs"
                             />
                         </div>
@@ -453,13 +567,21 @@ const SalesSchedule = () => {
                             <Textarea
                                 value={newEvent.agenda}
                                 onChange={(e) => setNewEvent({ ...newEvent, agenda: e.target.value })}
+<<<<<<< HEAD
                                 placeholder="STRATEGIC OBJECTIVES..."
+=======
+                                placeholder="What will be discussed?"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 className="bg-slate-50 border-none rounded-2xl font-black text-xs px-5 py-3 min-h-[80px]"
                             />
                         </div>
 
                         <div className="space-y-3">
+<<<<<<< HEAD
                             <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Deployed Personnel</Label>
+=======
+                            <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest ml-1">Participants</Label>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100 custom-scrollbar">
                                 {participants.map(person => (
                                     <button
@@ -488,8 +610,13 @@ const SalesSchedule = () => {
                         </div>
                     </div>
                     <div className="p-6 bg-slate-50/50 flex gap-3">
+<<<<<<< HEAD
                         <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest">Abort</Button>
                         <Button onClick={handleCreateEvent} className="flex-1 h-12 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary-500/20">Commit Sync</Button>
+=======
+                        <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest">Cancel</Button>
+                        <Button onClick={handleCreateEvent} className="flex-1 h-12 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary-500/20">Save Event</Button>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </div>
                 </DialogContent>
             </Dialog >
@@ -503,7 +630,11 @@ const SalesSchedule = () => {
                             selectedEventDetails?.type === 'review' ? "bg-emerald-600" : "bg-indigo-600"
                     )}>
                         <div className="flex justify-between items-start mb-4">
+<<<<<<< HEAD
                             <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 italic">Engagement Briefing</span>
+=======
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 italic">Event Details</span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                                 {selectedEventDetails?.type}
                             </div>
@@ -530,7 +661,11 @@ const SalesSchedule = () => {
                     <div className="p-8 space-y-6 bg-white dark:bg-slate-900">
                         {selectedEventDetails?.description && (
                             <div className="space-y-2">
+<<<<<<< HEAD
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Directive Summary</p>
+=======
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 <p className="text-xs font-bold text-slate-600 dark:text-slate-300 italic leading-relaxed uppercase tracking-tight">
                                     "{selectedEventDetails.description}"
                                 </p>
@@ -538,7 +673,11 @@ const SalesSchedule = () => {
                         )}
 
                         <div className="space-y-4">
+<<<<<<< HEAD
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Deployed Personnel</p>
+=======
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Participants</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <div className="flex flex-wrap gap-2">
                                 {selectedEventDetails?.participants?.map((p, i) => (
                                     <div key={i} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 py-1.5 pl-1.5 pr-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -560,7 +699,11 @@ const SalesSchedule = () => {
                                     className="w-full h-12 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary-500/20 gap-3"
                                     onClick={() => window.open(selectedEventDetails.meetingLink, '_blank')}
                                 >
+<<<<<<< HEAD
                                     INITIALIZE VIRTUAL LINK
+=======
+                                    Join Meeting
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </Button>
                             </div>
                         )}
@@ -571,13 +714,18 @@ const SalesSchedule = () => {
                                 className="flex-1 h-11 rounded-xl font-black text-[10px] uppercase tracking-widest border-slate-200 text-slate-400 hover:bg-slate-50"
                                 onClick={() => setIsDetailsModalOpen(false)}
                             >
+<<<<<<< HEAD
                                 Close Intel
+=======
+                                Close
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </Button>
                             {selectedEventDetails?.createdBy === user?.id ? (
                                 <Button
                                     variant="ghost"
                                     className="h-11 px-4 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 font-black text-[10px] uppercase tracking-widest"
                                     onClick={async () => {
+<<<<<<< HEAD
                                         if (confirm('Are you sure you want to purge this record?')) {
                                             await deleteScheduleEvent(selectedEventDetails.id);
                                             setIsDetailsModalOpen(false);
@@ -586,6 +734,16 @@ const SalesSchedule = () => {
                                     }}
                                 >
                                     Purge
+=======
+                                        if (confirm('Are you sure you want to delete this event?')) {
+                                            await deleteScheduleEvent(selectedEventDetails.id);
+                                            setIsDetailsModalOpen(false);
+                                            toast.success('Event deleted');
+                                        }
+                                    }}
+                                >
+                                    Delete
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </Button>
                             ) : (
                                 <div className="h-11 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex items-center gap-2 border border-slate-100 dark:border-slate-800">
@@ -603,7 +761,11 @@ const SalesSchedule = () => {
                 <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900">
                     <div className="bg-slate-900 p-8 text-white relative">
                         <DialogTitle className="text-2xl font-black uppercase tracking-tight leading-none mb-1">
+<<<<<<< HEAD
                             Daily Briefing
+=======
+                            Daily Schedule
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </DialogTitle>
                         <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest opacity-60">
                             {selectedDate && format(new Date(selectedDate), 'EEEE, MMMM dd')}
@@ -663,14 +825,22 @@ const SalesSchedule = () => {
                                 setIsModalOpen(true);
                             }}
                         >
+<<<<<<< HEAD
                             <Plus size={16} className="mr-2" /> Schedule New
+=======
+                            <Plus size={16} className="mr-2" /> Add New Event
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </Button>
                         <Button
                             variant="outline"
                             className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-400"
                             onClick={() => setIsDateSelectionModalOpen(false)}
                         >
+<<<<<<< HEAD
                             Close Brief
+=======
+                            Close
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </Button>
                     </div>
                 </DialogContent>

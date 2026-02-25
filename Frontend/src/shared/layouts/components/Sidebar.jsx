@@ -90,6 +90,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Progress', path: '/manager/progress', icon: BarChart3 },
                 { name: 'Chat', path: '/manager/chat', icon: MessageSquare },
                 { name: 'Schedule', path: '/manager/schedule', icon: CalendarIcon },
+                { name: 'Notifications', path: '/manager/notifications', icon: Bell, badge: unreadCount },
                 { name: 'Settings', path: '/manager/settings', icon: SettingsIcon },
                 { name: 'Reports', path: '/manager/reports', icon: BarChart3 },
                 { name: 'Support', path: '/manager/support', icon: LifeBuoy },
@@ -104,6 +105,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
                 { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
                 { name: 'Schedule', path: '/sales/schedule', icon: CalendarIcon },
+                { name: 'Notifications', path: '/sales/notifications', icon: Bell, badge: unreadCount },
                 { name: 'Settings', path: '/sales/settings', icon: SettingsIcon },
                 { name: 'Support', path: '/sales/support', icon: LifeBuoy },
             ]
@@ -116,7 +118,11 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Managers', path: '/admin/managers', icon: ShieldCheck },
                 { name: 'Employees', path: '/admin/employees', icon: Users },
                 { name: 'Sales', path: '/admin/sales', icon: TrendingUp },
+<<<<<<< HEAD
                 { name: 'Projects', path: '/admin/projects', icon: Briefcase },
+=======
+                { name: 'Projects', path: '/admin/projects', icon: Briefcase, end: true },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 // Added Project Approvals
                 {
                     name: 'Project Approvals',
@@ -150,6 +156,10 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
                 ...(isSuperAdminRoot ? [
                     { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
+<<<<<<< HEAD
+=======
+                    { name: 'Testimonials', path: '/superadmin/testimonials', icon: MessageSquare },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
                     { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
                 ] : []),
@@ -185,8 +195,13 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     return (
         <aside
             className={cn(
+<<<<<<< HEAD
                 "fixed left-0 top-0 h-full border-r transition-all duration-300 z-50 overflow-hidden",
                 role === 'sales' ? "bg-[#3063a0] border-[#3063a0]/20 shadow-xl" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-900",
+=======
+                "fixed left-0 top-0 h-full border-r transition-all duration-300 z-[100] overflow-hidden",
+                (role === 'sales' || isSuperAdmin || isAdmin || isManager) ? "bg-[#3063a0] border-[#3063a0]/20 shadow-xl" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-900",
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 isCollapsed ? "w-20" : "w-64",
                 isOpen ? "translate-x-0" : "-translate-x-full",
                 "lg:translate-x-0"
@@ -195,10 +210,17 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
             <div className="flex flex-col h-full">
                 <div className={cn(
                     "flex items-center justify-between p-4 mb-4 border-b h-16 shrink-0",
+<<<<<<< HEAD
                     role === 'sales' ? "border-white/10" : "border-slate-100 dark:border-slate-900"
                 )}>
                     {role === 'sales' ? (
                         /* Sales Role: Left Aligned Text Logo */
+=======
+                    (role === 'sales' || isSuperAdmin || isAdmin || isManager) ? "border-white/10" : "border-slate-100 dark:border-slate-900"
+                )}>
+                    {(role === 'sales' || isSuperAdmin || isAdmin || isManager) ? (
+                        /* Sales & Superadmin Role: Left Aligned Text Logo */
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         !isCollapsed ? (
                             <div className="flex items-center justify-start w-full gap-2 -ml-3 -my-2">
                                 <div className="h-16 w-16 flex-shrink-0">
@@ -329,11 +351,15 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                             <NavLink
                                 key={item.path}
                                 to={item.path}
-                                end={item.path === `/${role}`}
+                                end={item.end || item.path === `/${role}`}
                                 onClick={() => setIsOpen(false)}
                                 className={({ isActive }) => cn(
                                     "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold group border border-transparent",
+<<<<<<< HEAD
                                     role === 'sales'
+=======
+                                    (role === 'sales' || isSuperAdmin || isAdmin || isManager)
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         ? isActive
                                             ? "bg-white/20 text-white shadow-lg backdrop-blur-md border-white/20"
                                             : "text-blue-50 hover:text-white hover:bg-white/10 transition-all duration-300"
@@ -362,14 +388,22 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
 
                 <div className={cn(
                     "p-3 border-t",
+<<<<<<< HEAD
                     role === 'sales' ? "border-white/10" : "border-slate-100 dark:border-slate-800"
+=======
+                    (role === 'sales' || isSuperAdmin || isAdmin || isManager) ? "border-white/10" : "border-slate-100 dark:border-slate-800"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 )}>
                     <Button
                         variant="ghost"
                         className={cn(
                             "w-full justify-start font-bold",
                             isCollapsed && "justify-center",
+<<<<<<< HEAD
                             role === 'sales'
+=======
+                            (role === 'sales' || isSuperAdmin || isAdmin || isManager)
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 ? "text-blue-50 hover:text-white hover:bg-white/10"
                                 : "text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
                         )}
@@ -380,7 +414,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                     </Button>
                 </div>
             </div>
-        </aside>
+        </aside >
     );
 };
 

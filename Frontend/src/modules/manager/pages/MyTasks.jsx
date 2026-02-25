@@ -15,7 +15,14 @@ import {
     Target,
     Layers,
     Shield,
+<<<<<<< HEAD
     Paperclip
+=======
+    Paperclip,
+    Repeat,
+    Edit,
+    Trash2
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -116,13 +123,22 @@ const MyTasks = () => {
                 <div className="relative flex-1 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                     <Input
+<<<<<<< HEAD
                         placeholder="Search objectives..."
                         className="pl-11 h-11 bg-white dark:bg-slate-900 border-none shadow-xl shadow-slate-200/20 dark:shadow-none rounded-2xl font-bold text-xs"
+=======
+                        placeholder="SEARCH DIRECTIVES..."
+                        className="pl-11 h-12 bg-white dark:bg-slate-900 border-none shadow-xl shadow-slate-200/20 dark:shadow-none rounded-2xl font-black text-xs uppercase tracking-wider"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+<<<<<<< HEAD
                 <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-none overflow-x-auto no-scrollbar">
+=======
+                <div className="flex items-center gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-none overflow-x-auto no-scrollbar">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     {['all', 'pending', 'overdue', 'review', 'completed'].map((status) => (
                         <Button
                             key={status}
@@ -132,8 +148,13 @@ const MyTasks = () => {
                             className={cn(
                                 "h-9 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all",
                                 statusFilter === status
+<<<<<<< HEAD
                                     ? "bg-primary-600 text-white shadow-lg shadow-primary-500/20"
                                     : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+=======
+                                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-lg"
+                                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             )}
                         >
                             {status}
@@ -152,14 +173,28 @@ const MyTasks = () => {
                 <AnimatePresence mode="popLayout">
                     {myTasks.length > 0 ? myTasks.map((task) => (
                         <motion.div key={task.id} variants={fadeInUp} layout>
+<<<<<<< HEAD
                             <Card className="border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden group hover:scale-[1.005] transition-all">
+=======
+                            <Card className={cn(
+                                "border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden group hover:scale-[1.005] transition-all",
+                                task.status === 'overdue' && "ring-2 ring-rose-500/50"
+                            )}>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 <CardContent className="p-0">
                                     <div className="flex">
                                         <div className={cn(
                                             "w-1.5 sm:w-2 shrink-0 transition-colors",
+<<<<<<< HEAD
                                             task.priority === 'urgent' ? 'bg-red-500' :
                                                 task.priority === 'high' ? 'bg-orange-500' :
                                                     task.priority === 'medium' ? 'bg-primary-500' : 'bg-slate-200'
+=======
+                                            task.status === 'overdue' ? 'bg-rose-600' :
+                                                task.priority === 'urgent' ? 'bg-red-500' :
+                                                    task.priority === 'high' ? 'bg-orange-500' :
+                                                        task.priority === 'medium' ? 'bg-primary-500' : 'bg-slate-200'
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         )} />
                                         <div className="flex-1 p-4 sm:p-5 text-left">
                                             <div className="flex items-start justify-between gap-4">
@@ -199,12 +234,27 @@ const MyTasks = () => {
                                                         <div className="flex items-center gap-1.5">
                                                             <CalendarIcon size={12} className="text-primary-500" />
                                                             {format(new Date(task.deadline), "MMM dd, yyyy").toUpperCase()}
+<<<<<<< HEAD
                                                         </div>
                                                         <div className="flex items-center gap-1.5">
                                                             <Target size={12} className="text-indigo-500" />
                                                             {task.labels?.[0]?.toUpperCase() || 'CORE'}
                                                         </div>
                                                         <div className="flex items-center gap-1.5">
+=======
+                                                        </div>
+                                                        {task.recurrence && task.recurrence.type !== 'none' && (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Repeat size={12} className="text-indigo-500" />
+                                                                {task.recurrence.type.toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Target size={12} className="text-indigo-500" />
+                                                            {task.labels?.[0]?.toUpperCase() || 'CORE'}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                             <Clock size={12} className="text-amber-500" />
                                                             INIT: {format(new Date(task.createdAt), "MMM dd").toUpperCase()}
                                                         </div>
@@ -216,12 +266,20 @@ const MyTasks = () => {
                                                         )}
                                                     </div>
                                                 </div>
+<<<<<<< HEAD
                                                 <div className="flex flex-col items-end gap-3 shrink-0">
+=======
+                                                <div className="flex flex-col items-end gap-3 shrink-0 cursor-pointer" onClick={() => navigate(`/manager/tasks/${task.id}`)}>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         className="size-8 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary-600"
+<<<<<<< HEAD
                                                         onClick={() => navigate(`/manager/projects/${task.project}`)}
+=======
+                                                        onClick={() => navigate(`/manager/tasks/${task.id}`)}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     >
                                                         <ChevronRight size={18} />
                                                     </Button>
@@ -261,6 +319,30 @@ const MyTasks = () => {
                                                             FULFILL
                                                         </Button>
                                                     )}
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="size-8 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                            onClick={() => navigate(`/manager/assign-task?edit=${task.id}`)}
+                                                            title="Edit Task"
+                                                        >
+                                                            <Edit size={14} />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="size-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                                                            onClick={() => {
+                                                                if (confirm("Confirm deletion of this directive? This action is irreversible.")) {
+                                                                    useTaskStore.getState().deleteTask(task.id);
+                                                                }
+                                                            }}
+                                                            title="Delete Task"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

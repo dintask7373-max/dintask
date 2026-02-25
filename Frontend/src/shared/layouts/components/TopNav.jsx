@@ -36,14 +36,13 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
         logout();
         if (role === 'superadmin') navigate('/superadmin/login');
         else if (role === 'admin') navigate('/admin/login');
-        else if (role === 'manager') navigate('/admin/login');
+        else if (role === 'manager') navigate('/manager/login');
         else navigate('/employee/login');
     };
 
     return (
         <header className={cn(
-            "h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md fixed top-0 right-0 z-40 transition-all duration-300 left-0",
-            isSidebarCollapsed ? "lg:left-20" : "lg:left-64"
+            "h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 w-full z-40 transition-all duration-300"
         )}>
             <div className="flex h-full items-center justify-between px-4 lg:px-8">
                 <div className="flex items-center gap-4">
@@ -56,6 +55,7 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                         <Menu className="h-6 w-6" />
                     </Button>
 
+<<<<<<< HEAD
                     {/* Search Bar - Hidden for Super Admin */}
                     {!['superadmin', 'superadmin_staff'].includes(role) && (
                         <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 w-64">
@@ -67,6 +67,8 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                             />
                         </div>
                     )}
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -111,7 +113,11 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-tighter">{role}</p>
                                 </div>
                                 <Avatar className="h-9 w-9 border-2 border-primary-100 dark:border-primary-900">
+<<<<<<< HEAD
                                     <AvatarImage src={user?.profileImage ? (user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000/${user.profileImage}`) : `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
+=======
+                                    <AvatarImage src={user?.profileImage ? (user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profileImage}`) : `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     <AvatarFallback className="bg-primary-600 text-white font-bold">{user?.name?.charAt(0)}</AvatarFallback>
                                 </Avatar>
                             </Button>

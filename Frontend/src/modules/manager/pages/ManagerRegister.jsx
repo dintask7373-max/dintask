@@ -102,6 +102,7 @@ const ManagerRegister = () => {
         }
     };
 
+<<<<<<< HEAD
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
             {/* Brand Side */}
@@ -130,6 +131,63 @@ const ManagerRegister = () => {
                             {referralCode ? `Initiating uplink to node: ${referralCode}` : adminId ? 'Secure invitation accepted. Build your profile.' : 'Create your credentials to join the force.'}
                         </p>
                     </div>
+=======
+    if (!adminId && !referralCode) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-900 p-6">
+                <div className="w-full max-w-md bg-slate-800 rounded-[2rem] p-10 text-center border border-slate-700 shadow-2xl">
+                    <div className="w-20 h-20 bg-primary-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <Terminal size={32} className="text-primary-500" />
+                    </div>
+                    <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-4 tracking-[0.1em]">Protocol <span className="text-primary-500">Restricted</span></h1>
+                    <p className="text-slate-400 text-sm font-medium leading-relaxed mb-8">
+                        Manager registration requires an encrypted invitation link or a valid workspace authorization code.
+                    </p>
+                    <div className="space-y-4">
+                        <Button
+                            onClick={() => navigate('/manager/login')}
+                            className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-900/20"
+                        >
+                            Back to Command Center
+                        </Button>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-loose">
+                            Unauthorized access attempt logged. <br /> Security clearance required.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
+            {/* Brand Side */}
+            <div className="hidden md:flex md:w-1/2 bg-slate-900 relative items-center justify-center p-12 overflow-hidden">
+                <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+                <div className="relative z-10 text-white space-y-6 max-w-md">
+                    <div className="h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-900/30">
+                        <img src="/dintask-logo.png" alt="DinTask" className="h-9 w-9 object-contain" />
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight">Deploy your leadership potential.</h1>
+                    <p className="text-slate-400 text-lg">Join the DinTask ecosystem to orchestrate teams, manage complex workflows, and drive organizational success.</p>
+                </div>
+            </div>
+
+            {/* Form Side */}
+            <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+                {/* Decorative element for mobile */}
+                <div className="md:hidden absolute top-0 left-0 w-full h-1 bg-primary-600 shadow-[0_0_20px_rgba(99,116,242,0.5)]" />
+
+                <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="text-center md:text-left">
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                            {referralCode ? 'Join Workspace' : 'Accept Invite'}
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2">
+                            {referralCode ? `Initiating uplink to node: ${referralCode}` : `Secure invitation accepted. Workspace: ${adminId.substring(0, 8)}...`}
+                        </p>
+                    </div>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
                     <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
                         <CardContent className="pt-8 pb-8 px-8 space-y-6">

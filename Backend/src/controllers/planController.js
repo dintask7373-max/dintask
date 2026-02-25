@@ -49,8 +49,34 @@ exports.getPlan = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.createPlan = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     // Check if trying to create a free plan
     if (Number(req.body.price) === 0) {
+=======
+    const { name, price, userLimit, duration } = req.body;
+
+    // Validation
+    if (!name || price === undefined || userLimit === undefined || duration === undefined) {
+      return next(new ErrorResponse('Please provide name, price, user limit and duration', 400));
+    }
+
+    if (name.trim() === '') {
+      return next(new ErrorResponse('Plan name cannot be empty', 400));
+    }
+
+    if (price < 0 || userLimit < 1 || duration < 1) {
+      return next(new ErrorResponse('Price must be non-negative, and user limit/duration must be at least 1', 400));
+    }
+
+    // Check for existing plan with the same name
+    const existingPlan = await Plan.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    if (existingPlan) {
+      return next(new ErrorResponse('A plan with this name already exists', 400));
+    }
+
+    // Check if trying to create a free plan
+    if (Number(price) === 0) {
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       const existingFreePlan = await Plan.findOne({ price: 0 });
       if (existingFreePlan) {
         return next(new ErrorResponse('You can only create one free plan (Amount 0).', 400));

@@ -112,7 +112,11 @@ const Inquiries = () => {
                 </div>
             </div>
 
+<<<<<<< HEAD
             <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
+=======
+            <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem]">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 <CardContent className="p-4 sm:p-5">
                     <div className="flex flex-col lg:flex-row gap-4 items-end">
                         <div className="space-y-2 flex-1 w-full">
@@ -179,7 +183,7 @@ const Inquiries = () => {
                                 transition={{ duration: 0.2, delay: index * 0.05 }}
                             >
                                 <Card
-                                    className="overflow-hidden border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all duration-300 cursor-pointer"
+                                    className="overflow-hidden border-2 border-slate-100 dark:border-slate-800 shadow-lg shadow-slate-200/30 dark:shadow-none rounded-[2rem] hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-300 cursor-pointer hover:-translate-y-1"
                                     onClick={() => setSelectedInquiry(inq)}
                                 >
                                     <div className={`h-1 w-full ${inq.status === 'new' ? 'bg-primary-500' : inq.status === 'replied' ? 'bg-green-500' : 'bg-slate-400'}`} />

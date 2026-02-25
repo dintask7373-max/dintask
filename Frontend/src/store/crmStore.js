@@ -12,6 +12,10 @@ const useCRMStore = create(
       pendingProjects: [],
       followUps: [], // Added followUps state
       crmStats: null, // Global CRM statistics
+<<<<<<< HEAD
+=======
+      reportData: null, // Sales report data
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       loading: false,
       error: null,
 
@@ -19,10 +23,29 @@ const useCRMStore = create(
       pipelineStages: ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'],
 
       // Fetch Leads
+<<<<<<< HEAD
       fetchLeads: async () => {
         set({ loading: true });
         try {
           const res = await api('/crm');
+=======
+      fetchLeads: async (options = {}) => {
+        set({ loading: true });
+        try {
+          const { search = '', status = '', priority = '', page = 1, limit = 100 } = options;
+          let url = '/crm';
+          const params = new URLSearchParams();
+          if (search) params.append('search', search);
+          if (status) params.append('status', status);
+          if (priority) params.append('priority', priority);
+          if (page) params.append('page', page);
+          if (limit) params.append('limit', limit);
+
+          const queryString = params.toString();
+          if (queryString) url += `?${queryString}`;
+
+          const res = await api(url);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
           if (res.success) {
             set({ leads: res.data, loading: false, error: null });
           }
@@ -57,9 +80,16 @@ const useCRMStore = create(
       },
 
       // Fetch Pending Projects
+<<<<<<< HEAD
       fetchPendingProjects: async () => {
         try {
           const res = await api('/crm/pending-projects');
+=======
+      fetchPendingProjects: async (search = '') => {
+        try {
+          const url = search ? `/crm/pending-projects?search=${search}` : '/crm/pending-projects';
+          const res = await api(url);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
           if (res.success) {
             set({ pendingProjects: res.data }); // Store separately or filter from leads
           }
@@ -78,10 +108,20 @@ const useCRMStore = create(
           });
           if (res.success) {
             const newLead = res.data;
+<<<<<<< HEAD
             set((state) => ({
               leads: [...state.leads, newLead],
               loading: false
             }));
+=======
+            get().fetchLeads();
+            get().fetchCRMStats();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Lead added successfully");
             return newLead;
           }
@@ -99,10 +139,20 @@ const useCRMStore = create(
             body: leadData
           });
           if (res.success) {
+<<<<<<< HEAD
             const updatedLead = res.data;
             set((state) => ({
               leads: state.leads.map(l => l._id === leadId ? updatedLead : l)
             }));
+=======
+            get().fetchLeads();
+            get().fetchCRMStats();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Lead updated");
           }
         } catch (error) {
@@ -117,9 +167,19 @@ const useCRMStore = create(
             method: 'DELETE'
           });
           if (res.success) {
+<<<<<<< HEAD
             set((state) => ({
               leads: state.leads.filter(l => l._id !== leadId)
             }));
+=======
+            get().fetchLeads();
+            get().fetchCRMStats();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Lead deleted successfully");
           }
         } catch (error) {
@@ -135,9 +195,19 @@ const useCRMStore = create(
             body: { ids: leadIds }
           });
           if (res.success) {
+<<<<<<< HEAD
             set((state) => ({
               leads: state.leads.filter(l => !leadIds.includes(l._id || l.id))
             }));
+=======
+            get().fetchLeads();
+            get().fetchCRMStats();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success(res.message || "Leads deleted successfully");
           }
         } catch (error) {
@@ -153,10 +223,19 @@ const useCRMStore = create(
             body: { employeeId }
           });
           if (res.success) {
+<<<<<<< HEAD
             const updatedLead = res.data;
             set((state) => ({
               leads: state.leads.map(l => l._id === leadId ? updatedLead : l)
             }));
+=======
+            get().fetchLeads();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Lead assigned");
           }
         } catch (error) {
@@ -171,6 +250,7 @@ const useCRMStore = create(
             method: 'PUT'
           });
           if (res.success) {
+<<<<<<< HEAD
             set((state) => ({
               leads: state.leads.map(l => l._id === leadId ? { ...l, approvalStatus: 'pending_project' } : l)
             }));
@@ -201,6 +281,44 @@ const useCRMStore = create(
         }
       },
 
+=======
+            get().fetchLeads();
+            get().fetchPendingProjects();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+            toast.success("Project requested");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to request project");
+        }
+      },
+
+      // Approve Project
+      approveProject: async (leadId, managerId) => {
+        try {
+          const res = await api(`/crm/${leadId}/approve-project`, {
+            method: 'POST',
+            body: { managerId }
+          });
+          if (res.success) {
+            get().fetchLeads();
+            get().fetchPendingProjects();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+            toast.success("Project approved and assigned");
+          }
+        } catch (error) {
+          toast.error(error.message || "Failed to approve project");
+        }
+      },
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       // Fetch Follow-ups
       fetchFollowUps: async () => {
         set({ loading: true });
@@ -213,6 +331,23 @@ const useCRMStore = create(
           set({ error: error.message, loading: false });
           console.error("Failed to fetch follow-ups", error);
         }
+<<<<<<< HEAD
+=======
+      },
+
+      // Fetch Sales Report Data
+      fetchSalesReport: async (period = 'month') => {
+        set({ loading: true });
+        try {
+          const res = await api(`/crm/reports?period=${period}`);
+          if (res.success) {
+            set({ reportData: res.data, loading: false });
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          console.error("Failed to fetch sales report", error);
+        }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       },
 
       // Add Follow-up
@@ -223,9 +358,18 @@ const useCRMStore = create(
             body: followUpData
           });
           if (res.success) {
+<<<<<<< HEAD
             set((state) => ({
               followUps: [...state.followUps, res.data]
             }));
+=======
+            get().fetchFollowUps();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Follow-up scheduled");
             return res.data;
           }
@@ -242,9 +386,18 @@ const useCRMStore = create(
             body: followUpData
           });
           if (res.success) {
+<<<<<<< HEAD
             set((state) => ({
               followUps: state.followUps.map(f => (f._id === id || f.id === id) ? res.data : f)
             }));
+=======
+            get().fetchFollowUps();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Follow-up updated");
           }
         } catch (error) {
@@ -259,9 +412,18 @@ const useCRMStore = create(
             method: 'DELETE'
           });
           if (res.success) {
+<<<<<<< HEAD
             set((state) => ({
               followUps: state.followUps.filter(f => (f._id !== id && f.id !== id))
             }));
+=======
+            get().fetchFollowUps();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+              .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success("Follow-up deleted");
           }
         } catch (error) {

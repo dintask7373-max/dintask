@@ -1,5 +1,10 @@
 const SupportLead = require('../models/SupportLead');
 const ErrorResponse = require('../utils/errorResponse');
+<<<<<<< HEAD
+=======
+const Notification = require('../models/Notification');
+const SuperAdmin = require('../models/SuperAdmin');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 // @desc    Submit a new support/business inquiry lead
 // @route   POST /api/v1/support/lead
@@ -19,11 +24,16 @@ exports.submitLead = async (req, res, next) => {
             interestedPlan
         } = req.body;
 
+<<<<<<< HEAD
+=======
+        // Sanitize optional enum fields: empty string must become undefined to avoid validation errors
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         const lead = await SupportLead.create({
             name,
             businessEmail,
             phone,
             companyName,
+<<<<<<< HEAD
             jobTitle,
             companySize,
             industry,
@@ -32,6 +42,51 @@ exports.submitLead = async (req, res, next) => {
             interestedPlan
         });
 
+=======
+            jobTitle: jobTitle || undefined,
+            companySize: companySize || undefined,
+            industry: industry || undefined,
+            requirements: requirements || undefined,
+            source: source || 'contact_form',
+            interestedPlan: interestedPlan || undefined
+        });
+
+        // --- NOTIFICATION LOGIC START ---
+        try {
+            // 1. Find all Superadmins to notify (including staff and super_admin variant)
+            const superAdmins = await SuperAdmin.find({
+                role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] }
+            });
+
+            // 2. Pick a "sender" ID (Since this is public, use the first superadmin acting as 'System')
+            const systemSenderId = superAdmins.length > 0 ? superAdmins[0]._id : null;
+
+            if (systemSenderId) {
+                // Use a Map to ensure unique recipients by ID string
+                const uniqueRecipients = new Map();
+                superAdmins.forEach(admin => {
+                    uniqueRecipients.set(admin._id.toString(), admin._id);
+                });
+
+                const notifications = Array.from(uniqueRecipients.values()).map(recipientId => ({
+                    recipient: recipientId,
+                    sender: systemSenderId, // Self-notification acts as System notification
+                    type: 'inquiry',
+                    title: 'New Business Inquiry',
+                    message: `New Lead: ${name} from ${companyName || 'Unknown'} (${interestedPlan || 'General'})`,
+                    link: `/superadmin/inquiries`
+                }));
+
+                if (notifications.length > 0) {
+                    await Notification.insertMany(notifications);
+                }
+            }
+        } catch (notifyErr) {
+            console.error('Notification Error:', notifyErr);
+        }
+        // --- NOTIFICATION LOGIC END ---
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         res.status(201).json({
             success: true,
             message: 'Support request submitted successfully',
@@ -52,6 +107,7 @@ exports.getLeads = async (req, res, next) => {
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
 
+<<<<<<< HEAD
         // DEBUG: Log incoming queries
         const fs = require('fs');
         console.log(`[SEARCH DEBUG] Query Params:`, req.query);
@@ -60,6 +116,9 @@ exports.getLeads = async (req, res, next) => {
         } catch (e) {
             console.error('Log failed:', e);
         }
+=======
+        console.log(`[SEARCH DEBUG] Query Params:`, req.query);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
         // Build query
         let query = {};

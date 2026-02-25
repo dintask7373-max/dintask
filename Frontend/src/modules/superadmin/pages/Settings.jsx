@@ -136,7 +136,7 @@ const SuperAdminSettings = () => {
                                 <TabsTrigger
                                     key={tab.id}
                                     value={tab.id}
-                                    className="relative overflow-hidden group justify-center lg:justify-between px-3 py-3 sm:px-5 sm:py-5 h-auto w-auto lg:w-full data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 border border-transparent data-[state=active]:border-slate-100 dark:data-[state=active]:border-slate-800 data-[state=active]:shadow-lg data-[state=active]:shadow-slate-200/40 dark:data-[state=active]:shadow-none rounded-2xl sm:rounded-3xl transition-all text-left shrink-0 lg:shrink"
+                                    className="relative overflow-hidden group justify-center lg:justify-between px-3 py-3 sm:px-5 sm:py-5 h-auto w-auto lg:w-full data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 border-2 border-transparent data-[state=active]:border-slate-100 dark:data-[state=active]:border-slate-800 data-[state=active]:shadow-xl data-[state=active]:shadow-slate-200/40 dark:data-[state=active]:shadow-none rounded-2xl sm:rounded-3xl transition-all text-left shrink-0 lg:shrink active:scale-95"
                                 >
                                     <div className="flex items-center gap-3 sm:gap-4 z-10 w-full lg:justify-start justify-center">
                                         <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 group-data-[state=active]:bg-primary-600 group-data-[state=active]:text-white transition-all duration-300">
@@ -159,10 +159,10 @@ const SuperAdminSettings = () => {
                             {/* Account Tab */}
                             <TabsContent value="profile" className="m-0 focus-visible:outline-none" key="profile">
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 sm:space-y-6">
-                                    <Card className="border-none shadow-lg shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
-                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b border-slate-100 dark:border-slate-800">
-                                            <CardTitle className="text-lg sm:text-2xl font-black">Account Details</CardTitle>
-                                            <CardDescription className="text-xs sm:text-sm font-bold text-slate-400">Update your personal information</CardDescription>
+                                    <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b-2 border-slate-100 dark:border-slate-800">
+                                            <CardTitle className="text-lg sm:text-2xl font-black uppercase tracking-tight italic">Account <span className="text-primary-600">Details</span></CardTitle>
+                                            <CardDescription className="text-xs sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Update your personal identity & tactical metrics</CardDescription>
                                         </CardHeader>
                                         <CardContent className="p-5 sm:p-8 space-y-6 sm:space-y-8">
                                             <div className="flex items-center gap-4 sm:gap-8">
@@ -170,7 +170,11 @@ const SuperAdminSettings = () => {
                                                     <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-xl sm:text-3xl font-black text-white shadow-xl overflow-hidden">
                                                         {user?.profileImage ? (
                                                             <img
+<<<<<<< HEAD
                                                                 src={user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000/${user.profileImage}`}
+=======
+                                                                src={user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${user.profileImage}`}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                                 alt={user.name}
                                                                 className="w-full h-full object-cover"
                                                             />
@@ -254,10 +258,10 @@ const SuperAdminSettings = () => {
                             {/* Security Tab */}
                             <TabsContent value="security" className="m-0 focus-visible:outline-none" key="security">
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 sm:space-y-6">
-                                    <Card className="border-none shadow-lg shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem]">
-                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b border-slate-100 dark:border-slate-800">
-                                            <CardTitle className="text-lg sm:text-2xl font-black">Security Settings</CardTitle>
-                                            <CardDescription className="text-xs sm:text-sm font-bold text-slate-400">Manage your password and account security</CardDescription>
+                                    <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b-2 border-slate-100 dark:border-slate-800">
+                                            <CardTitle className="text-lg sm:text-2xl font-black uppercase tracking-tight italic">Security <span className="text-primary-600">Shield</span></CardTitle>
+                                            <CardDescription className="text-xs sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Manage your encrypted access protocols</CardDescription>
                                         </CardHeader>
                                         <CardContent className="p-5 sm:p-8">
                                             <form onSubmit={handlePasswordSubmit} className="space-y-6 sm:space-y-8 max-w-2xl">
@@ -338,10 +342,10 @@ const SuperAdminSettings = () => {
                             {/* Platform Tab */}
                             <TabsContent value="platform" className="m-0 focus-visible:outline-none" key="platform">
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 sm:space-y-6">
-                                    <Card className="border-none shadow-lg shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem]">
-                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b border-slate-100 dark:border-slate-800">
-                                            <CardTitle className="text-lg sm:text-2xl font-black">Platform Settings</CardTitle>
-                                            <CardDescription className="text-xs sm:text-sm font-bold text-slate-400">Configure global parameters and platform identity</CardDescription>
+                                    <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b-2 border-slate-100 dark:border-slate-800">
+                                            <CardTitle className="text-lg sm:text-2xl font-black uppercase tracking-tight italic">Platform <span className="text-primary-600">Core</span></CardTitle>
+                                            <CardDescription className="text-xs sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Global system parameters & identity controls</CardDescription>
                                         </CardHeader>
                                         <CardContent className="p-5 sm:p-8 space-y-6 sm:space-y-8">
                                             <form onSubmit={handleSystemSubmit} className="space-y-6 sm:space-y-8">

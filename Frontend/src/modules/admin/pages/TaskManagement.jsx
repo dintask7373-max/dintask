@@ -126,6 +126,12 @@ const TaskManagement = () => {
             return;
         }
 
+        // Validate Deadline is not in the past
+        if (new Date(newTask.deadline) < new Date(new Date().setHours(0, 0, 0, 0))) {
+            toast.error("Deployment Failure: Deadline cannot be set in the past.");
+            return;
+        }
+
         const taskRecord = {
             ...newTask,
             id: Date.now(),
@@ -279,6 +285,7 @@ const TaskManagement = () => {
                                     <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Deadline</Label>
                                     <Input
                                         type="date"
+                                        min={new Date().toISOString().split('T')[0]}
                                         value={newTask.deadline}
                                         onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
                                         className="h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"

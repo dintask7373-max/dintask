@@ -43,11 +43,16 @@ exports.createTicket = async (req, res, next) => {
             priority,
             attachments,
             creator: req.user.id,
+<<<<<<< HEAD
             creatorModel: req.user.role === 'sales' ? 'SalesExecutive' : req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1), // Capitalize
+=======
+            creatorModel: (req.user.role === 'sales' || req.user.role === 'sales_executive') ? 'SalesExecutive' : req.user.role === 'admin' ? 'Admin' : req.user.role === 'manager' ? 'Manager' : 'Employee',
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             companyId,
             isEscalatedToSuperAdmin
         });
 
+<<<<<<< HEAD
         // Emit socket event for real-time update
         const io = req.app.get('io');
         if (io) {
@@ -62,10 +67,16 @@ exports.createTicket = async (req, res, next) => {
                 io.to(ticket.creator.toString()).emit('new_support_ticket', ticket);
             }
         }
+=======
+        // Socket updates are now handled globally via Notification model hooks.
+        // We only keep functional room joined/left events if necessary, 
+        // but for ticket list updates, the Notification hook is sufficient.
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
         // Create Persistent Notification
         try {
             if (ticket.isEscalatedToSuperAdmin) {
+<<<<<<< HEAD
                 // For Super Admins
                 const superAdmins = await SuperAdmin.find({ role: 'superadmin' });
                 for (const sa of superAdmins) {
@@ -77,6 +88,25 @@ exports.createTicket = async (req, res, next) => {
                         message: `Admin ${req.user.name} has raised a new escalation: ${ticket.title}`,
                         link: `/support`
                     });
+=======
+                // For Super Admins AND Staff
+                const superAdmins = await SuperAdmin.find({ role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] } });
+
+                const uniqueRecipients = new Map();
+                superAdmins.forEach(sa => uniqueRecipients.set(sa._id.toString(), sa._id));
+
+                const notifications = Array.from(uniqueRecipients.values()).map(recipientId => ({
+                    recipient: recipientId,
+                    sender: req.user.id,
+                    type: 'support_ticket',
+                    title: 'New Support Escalation',
+                    message: `Admin ${req.user.name} has raised a new escalation: ${ticket.title}`,
+                    link: `/superadmin/support`
+                }));
+
+                if (notifications.length > 0) {
+                    await Notification.insertMany(notifications);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 }
             } else {
                 // For Company Admin
@@ -111,6 +141,10 @@ exports.getTickets = async (req, res, next) => {
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const startIndex = (page - 1) * limit;
+<<<<<<< HEAD
+=======
+        const search = req.query.search;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
         // Build query based on role
         let match = {};
@@ -138,6 +172,17 @@ exports.getTickets = async (req, res, next) => {
             match.priority = req.query.priority;
         }
 
+<<<<<<< HEAD
+=======
+        // Search Filter
+        if (search) {
+            match.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { ticketId: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         query = SupportTicket.find(match)
             .populate('creator', 'name email role')
             .populate('companyId', 'companyName');
@@ -164,6 +209,36 @@ exports.getTickets = async (req, res, next) => {
     }
 };
 
+<<<<<<< HEAD
+=======
+// @desc    Delete ticket
+// @route   DELETE /api/v1/support-tickets/:id
+// @access  Private (SuperAdmin only)
+exports.deleteTicket = async (req, res, next) => {
+    try {
+        const ticket = await SupportTicket.findById(req.params.id);
+
+        if (!ticket) {
+            return next(new ErrorResponse('Ticket not found', 404));
+        }
+
+        // Only Super Admin can delete
+        if (req.user.role !== 'superadmin' && req.user.role !== 'superadmin_staff') {
+            return next(new ErrorResponse('Not authorized to delete tickets', 403));
+        }
+
+        await ticket.deleteOne();
+
+        res.status(200).json({
+            success: true,
+            data: {}
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 // @desc    Get single ticket
 // @route   GET /api/v1/support-tickets/:id
 // @access  Private
@@ -267,6 +342,7 @@ exports.updateTicket = async (req, res, next) => {
         // Create Persistent Notification for Response
         try {
             if (req.body.response) {
+<<<<<<< HEAD
                 const isResponderAdmin = ['admin', 'superadmin', 'superadmin_staff'].includes(req.user.role);
                 const recipientId = isResponderAdmin ? ticket.creator : ticket.companyId;
 
@@ -288,6 +364,71 @@ exports.updateTicket = async (req, res, next) => {
                     message: `Your ticket "${ticket.title}" is now ${req.body.status}`,
                     link: `/support`
                 });
+=======
+                const isResponderSuperAdmin = ['superadmin', 'superadmin_staff'].includes(req.user.role);
+
+                if (isResponderSuperAdmin) {
+                    // Responder is Super Admin -> Notify Admin (Creator)
+                    await Notification.create({
+                        recipient: ticket.creator,
+                        sender: req.user.id,
+                        type: 'support_ticket',
+                        title: 'New Support Reply',
+                        message: `${req.user.name} (Support) replied to: ${ticket.title}`,
+                        link: `/support?ticketId=${ticket._id}`
+                    });
+                } else {
+                    // Responder is Admin -> Notify ALL Super Admins & Staff
+                    const superAdmins = await SuperAdmin.find({ role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] } });
+
+                    const uniqueRecipients = new Map();
+                    superAdmins.forEach(sa => uniqueRecipients.set(sa._id.toString(), sa._id));
+
+                    const notifications = Array.from(uniqueRecipients.values()).map(recipientId => ({
+                        recipient: recipientId,
+                        sender: req.user.id, // The Admin
+                        type: 'support_ticket',
+                        title: 'New Reply on Ticket',
+                        message: `${req.user.name} replied to escalation: ${ticket.title}`,
+                        link: `/superadmin/support?ticketId=${ticket._id}`
+                    }));
+                    if (notifications.length > 0) {
+                        await Notification.insertMany(notifications);
+                    }
+                }
+            } else if (req.body.status) {
+                // Notify creator of status change
+                // If updated by Super Admin -> Notify Admin
+                // If updated by Admin -> Notify Creator (if different, e.g. employee) or usually just Admin managing it
+
+                // Focusing on Superadmin -> Admin updates
+                const title = req.body.status === 'Resolved' ? 'Support Ticket Resolved' : 'Ticket Status Updated';
+                const type = req.body.status === 'Resolved' ? 'support_update' : 'support_ticket';
+                const message = req.body.status === 'Resolved'
+                    ? `Great news! Your support ticket "${ticket.title}" has been marked as Resolved.`
+                    : `Your ticket "${ticket.title}" is now ${req.body.status}`;
+
+                if (['superadmin', 'superadmin_staff'].includes(req.user.role)) {
+                    await Notification.create({
+                        recipient: ticket.creator,
+                        sender: req.user.id,
+                        type,
+                        title,
+                        message,
+                        link: `${ticket.creatorModel === 'Manager' ? '/manager' : ticket.creatorModel === 'SalesExecutive' ? '/sales' : ticket.creatorModel === 'Admin' ? '/admin' : '/employee'}/support?ticketId=${ticket._id}`
+                    });
+                } else {
+                    // Standard behavior for Workspace Admin resolving their team's ticket
+                    await Notification.create({
+                        recipient: ticket.creator,
+                        sender: req.user.id,
+                        type,
+                        title,
+                        message,
+                        link: `${ticket.creatorModel === 'Manager' ? '/manager' : ticket.creatorModel === 'SalesExecutive' ? '/sales' : '/employee'}/support?ticketId=${ticket._id}`
+                    });
+                }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             }
         } catch (err) {
             console.error('Notification Error:', err);

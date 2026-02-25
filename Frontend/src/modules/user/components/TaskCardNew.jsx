@@ -1,16 +1,40 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Clock, MessageSquare, Paperclip, CheckCircle2 } from 'lucide-react';
+import { Clock, MessageSquare, Paperclip, CheckCircle2, Repeat } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 
 const TaskCardNew = ({ task, onClick, managers = [] }) => {
-    // Priority Badge Styles - matching user's HTML classes
+    // Premium Color System: More vibrant ("color-full") and outlined
     const priorityConfig = {
-        low: { label: 'Low', color: 'bg-green-100 text-green-600' },
-        medium: { label: 'Medium', color: 'bg-orange-100 text-orange-600' },
-        high: { label: 'High Priority', color: 'bg-red-100 text-red-600' },
-        urgent: { label: 'Urgent', color: 'bg-red-100 text-red-600' }
+        low: {
+            label: 'Low',
+            base: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
+            border: 'border-emerald-100 dark:border-emerald-900/50',
+            accent: 'bg-emerald-500',
+            glow: 'rgba(16,185,129,0.1)'
+        },
+        medium: {
+            label: 'Medium',
+            base: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
+            border: 'border-blue-100 dark:border-blue-900/50',
+            accent: 'bg-blue-500',
+            glow: 'rgba(59,130,246,0.1)'
+        },
+        high: {
+            label: 'High Priority',
+            base: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
+            border: 'border-amber-100 dark:border-amber-900/50',
+            accent: 'bg-amber-500',
+            glow: 'rgba(245,158,11,0.1)'
+        },
+        urgent: {
+            label: 'Urgent',
+            base: 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
+            border: 'border-rose-100 dark:border-rose-900/50',
+            accent: 'bg-rose-500',
+            glow: 'rgba(244,63,94,0.1)'
+        }
     };
 
     const config = priorityConfig[task.priority] || priorityConfig.low;
@@ -28,16 +52,45 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
         <div
             onClick={onClick}
             className={cn(
+<<<<<<< HEAD
                 "group relative flex flex-col gap-3 rounded-xl bg-white dark:bg-slate-800 p-4 border shadow-sm hover:shadow-md transition-shadow cursor-pointer",
                 isOverdue ? "border-red-200 dark:border-red-900/50" : "border-slate-100 dark:border-slate-700"
             )}
+=======
+                "group relative flex flex-col gap-3 rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer overflow-hidden",
+                isOverdue
+                    ? "bg-rose-50/30 dark:bg-rose-950/10 border-rose-200 dark:border-rose-800 shadow-lg shadow-rose-500/5"
+                    : isCompleted
+                        ? "bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800"
+                        : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_30px_-15px_rgba(0,0,0,0.08)] hover:-translate-y-1"
+            )}
+            style={{
+                boxShadow: !isCompleted && !isOverdue ? `0 8px 15px -10px ${config.glow}` : undefined
+            }}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         >
-            <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2">
-                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide", config.color)}>
+            {/* Visual Accent Bar */}
+            <div className={cn(
+                "absolute top-0 left-0 w-1 h-full transition-all duration-300 group-hover:w-1.5",
+                isCompleted ? "bg-slate-300 dark:bg-slate-700" : config.accent
+            )} />
+
+            {/* Design Ornament Glow - Smaller blurred area */}
+            <div className={cn(
+                "absolute top-0 right-0 w-32 h-32 blur-[60px] opacity-15 transition-opacity group-hover:opacity-30",
+                isCompleted ? "bg-slate-400" : config.accent
+            )} />
+
+            <div className="flex justify-between items-start relative z-10 pl-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={cn(
+                        "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border shadow-sm transition-all",
+                        config.base
+                    )}>
                         {config.label}
                     </span>
                     {isOverdue && (
+<<<<<<< HEAD
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-600 text-white shadow-lg shadow-red-500/20 animate-pulse">
                             Overdue
                         </span>
@@ -58,37 +111,48 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
                             )}
                         >
                             {label}
+=======
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-rose-600 text-white shadow-lg shadow-rose-500/30 border border-rose-500">
+                            Overdue
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </span>
-                    ))}
+                    )}
                 </div>
-                <div className="flex size-6 items-center justify-center">
-                    <input
-                        type="checkbox"
-                        checked={isCompleted}
-                        readOnly
-                        className="size-5 rounded-full border-slate-300 text-primary focus:ring-primary/20 cursor-pointer transition-all"
-                    />
+
+                <div className="flex shrink-0">
+                    <div className={cn(
+                        "size-5.5 rounded-lg flex items-center justify-center transition-all duration-300 border-[1.5px]",
+                        isCompleted
+                            ? "bg-[#4461f2] border-[#4461f2] shadow-md shadow-[#4461f2]/20"
+                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 group-hover:border-[#4461f2]/50"
+                    )}>
+                        {isCompleted && <CheckCircle2 size={12} className="text-white" />}
+                    </div>
                 </div>
             </div>
 
-            <div className={cn("flex flex-col gap-1", isCompleted && "opacity-60")}>
-                <p className={cn(
-                    "text-text-main dark:text-white text-base font-bold leading-tight",
-                    isCompleted && "line-through"
+            <div className={cn("flex flex-col gap-1.5 relative z-10 pl-1.5", isCompleted && "opacity-60")}>
+                <h3 className={cn(
+                    "text-slate-800 dark:text-white text-base font-black leading-tight tracking-tight",
+                    isCompleted && "line-through decoration-[2px] decoration-[#4461f2]/30"
                 )}>
                     {task.title}
-                </p>
-                <div className="flex items-center gap-1.5 text-text-secondary dark:text-gray-400">
-                    <Clock size={16} />
-                    <p className="text-xs font-medium">
+                </h3>
+                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                    <Clock size={14} className={cn(isOverdue ? "text-rose-500" : "text-slate-300")} />
+                    <p className={cn(
+                        "text-[10px] font-black uppercase tracking-widest",
+                        isOverdue && "text-rose-500"
+                    )}>
                         {isCompleted
-                            ? `Completed at ${format(new Date(), 'h:mm a')}`
-                            : `Due ${format(new Date(task.deadline), 'MMM dd, h:mm a')}`
+                            ? `Done at ${format(new Date(), 'h:mm a')}`
+                            : `${format(new Date(task.deadline), 'MMM dd • h:mm a')}`
                         }
                     </p>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <div className={cn("flex items-center justify-between pt-2 mt-1 border-t border-slate-50 dark:border-slate-700", isCompleted ? "opacity-50" : "")}>
                 <div className="flex items-center gap-2">
                     <div className="flex -space-x-2">
@@ -108,20 +172,30 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
                             </div>
                         )}
                     </div>
+=======
+            <div className={cn(
+                "flex items-center justify-between pt-3 mt-1 border-t transition-colors relative z-10 pl-1.5",
+                isOverdue ? "border-rose-200/50 dark:border-rose-800/50" : "border-slate-100 dark:border-slate-800"
+            )}>
+                <div className="flex items-center gap-2.5">
+                    <Avatar className="h-6.5 w-6.5 border-2 border-white dark:border-slate-900 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm">
+                        <AvatarFallback className="text-[8px] font-black bg-slate-100 text-slate-500">U</AvatarFallback>
+                    </Avatar>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
-                    {/* Assigner Info */}
-                    <div className="flex items-center gap-1.5 ml-2 border-l border-slate-100 dark:border-slate-700 pl-3">
+                    <div className="flex items-center gap-2 border-l border-slate-100 dark:border-slate-800 pl-2.5">
                         <div className={cn(
-                            "size-1.5 rounded-full",
-                            assigner.isSelf ? "bg-emerald-500" :
-                                assigner.isAdmin ? "bg-amber-500" : "bg-primary-500"
+                            "size-1.5 rounded-full shadow-[0_0_5px]",
+                            assigner.isSelf ? "bg-emerald-500 shadow-emerald-500/50" :
+                                assigner.isAdmin ? "bg-amber-500 shadow-amber-500/50" : "bg-[#4461f2] shadow-blue-500/50"
                         )} />
-                        <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">
-                            By: {assigner.name}
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            {assigner.name}
                         </span>
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <div className="flex items-center gap-3">
                     {task.attachments?.length > 0 && (
                         <div className="flex items-center gap-1 text-slate-400 group-hover:text-emerald-500 transition-colors">
@@ -133,6 +207,15 @@ const TaskCardNew = ({ task, onClick, managers = [] }) => {
                         <MessageSquare size={16} />
                         <span className="text-[10px] font-bold">2</span>
                     </div>
+=======
+                <div className="flex items-center gap-3.5">
+                    {task.attachments?.length > 0 && (
+                        <div className="flex items-center gap-1 text-slate-400 group-hover:text-emerald-500 transition-colors">
+                            <Paperclip size={14} strokeWidth={2.5} />
+                            <span className="text-[9px] font-black">{task.attachments.length}</span>
+                        </div>
+                    )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 </div>
             </div>
         </div>

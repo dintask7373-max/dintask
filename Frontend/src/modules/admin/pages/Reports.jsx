@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     FileText,
     Download,
@@ -70,6 +70,28 @@ const Reports = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [reportType, setReportType] = useState('overview'); // overview, employees, managers
 
+    const { fetchTasks, reportsStats, fetchReportsStats } = useTaskStore();
+    const { fetchEmployees } = useEmployeeStore();
+    const { fetchManagers } = useManagerStore();
+
+    useEffect(() => {
+        fetchTasks();
+        fetchEmployees();
+        fetchManagers();
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchReportsStats({
+                days: dateRange,
+                memberId: selectedMember,
+                status: selectedStatus,
+                search: searchTerm
+            });
+        }, 300); // Add debounce for search
+        return () => clearTimeout(timer);
+    }, [dateRange, selectedMember, selectedStatus, searchTerm]);
+
     const allMembersList = useMemo(() => [
         ...employees.map(e => ({ ...e, type: 'Employee' })),
         ...managers.map(m => ({ ...m, type: 'Manager' }))
@@ -84,7 +106,7 @@ const Reports = () => {
 
             const matchesMember = selectedMember === 'all'
                 ? true
-                : (task.assignedTo.includes(selectedMember) || task.assignedToManager === selectedMember);
+                : (task.assignedTo.includes(selectedMember) || task.assignedBy === selectedMember);
 
             const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus;
 
@@ -98,6 +120,13 @@ const Reports = () => {
     }, [tasks, searchTerm, selectedMember, selectedStatus, dateRange, reportType]);
 
     const reportStats = useMemo(() => {
+        if (reportsStats) {
+            return {
+                total: reportsStats.totalTasks,
+                completed: reportsStats.completedTasks,
+                completionRate: reportsStats.completionRate
+            };
+        }
         return {
             total: filteredData.length,
             completed: filteredData.filter(t => t.status === 'completed').length,
@@ -105,7 +134,7 @@ const Reports = () => {
                 ? Math.round((filteredData.filter(t => t.status === 'completed').length / filteredData.length) * 100)
                 : 0
         };
-    }, [filteredData]);
+    }, [filteredData, reportsStats]);
 
     const employeeReportData = useMemo(() => {
         return employees

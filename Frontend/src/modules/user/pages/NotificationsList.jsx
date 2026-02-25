@@ -25,19 +25,23 @@ import { cn } from '@/shared/utils/cn';
 const NotificationsList = () => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuthStore();
-    const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotificationStore();
+    const { notifications, fetchNotifications, markAsRead, markAllAsRead, deleteNotification, loading } = useNotificationStore();
     const [filterType, setFilterType] = useState('all'); // all, unread, task, message
     const [searchQuery, setSearchQuery] = useState('');
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     // Filter notifications for the current user
     const userNotifications = useMemo(() => {
         return notifications.filter(n => {
-            // General notifications (no recipientId) or notifications specifically for this user
-            const forMe = !n.recipientId || n.recipientId === currentUser?.id;
+            // Recipient check (backend already filters for recipient, but good for safety)
+            const forMe = !n.recipient || n.recipient === currentUser?.id;
 
             // Search filter
             const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                n.description.toLowerCase().includes(searchQuery.toLowerCase());
+                n.message.toLowerCase().includes(searchQuery.toLowerCase());
 
             // Type filter
             const matchesFilter = filterType === 'all' ||
@@ -49,11 +53,11 @@ const NotificationsList = () => {
     }, [notifications, currentUser, searchQuery, filterType]);
 
     const unreadCount = useMemo(() =>
-        notifications.filter(n => (!n.recipientId || n.recipientId === currentUser?.id) && !n.isRead).length
+        notifications.filter(n => (!n.recipient || n.recipient === currentUser?.id) && !n.isRead).length
         , [notifications, currentUser]);
 
-    const handleMarkAll = () => {
-        markAllAsRead();
+    const handleMarkAll = async () => {
+        await markAllAsRead();
         toast.success('All notifications marked as read');
     };
 
@@ -72,8 +76,12 @@ const NotificationsList = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
+            onClick={() => {
+                if (!notification.isRead) markAsRead(notification._id);
+                if (notification.link) navigate(notification.link);
+            }}
             className={cn(
-                "p-5 flex items-start gap-4 transition-all relative group border-b border-slate-50 dark:border-slate-800 last:border-0",
+                "p-5 flex items-start gap-4 transition-all relative group border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer",
                 !notification.isRead ? "bg-primary/5 dark:bg-primary/10 border-l-4 border-l-primary" : "border-l-4 border-l-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
             )}
         >
@@ -92,19 +100,24 @@ const NotificationsList = () => {
                     )}>
                         {notification.title}
                     </h4>
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{notification.time}</span>
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                        {new Date(notification.createdAt).toLocaleDateString()}
+                    </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    {notification.description}
+                    {notification.message}
                 </p>
             </div>
 
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2">
+            <div
+                className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2"
+                onClick={e => e.stopPropagation()} // Prevent card navigation on button click
+            >
                 {!notification.isRead && (
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => markAsRead(notification._id)}
                         className="h-8 w-8 hover:bg-white dark:hover:bg-slate-800 text-primary rounded-xl shadow-sm"
                     >
                         <CheckCheck size={16} />
@@ -113,7 +126,7 @@ const NotificationsList = () => {
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => deleteNotification(notification.id)}
+                    onClick={() => deleteNotification(notification._id)}
                     className="h-8 w-8 hover:bg-white dark:hover:bg-slate-800 text-red-500 rounded-xl shadow-sm"
                 >
                     <Trash2 size={16} />
@@ -124,51 +137,53 @@ const NotificationsList = () => {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] pb-20">
-            {/* Elegant Desktop Header */}
-            <div className="bg-white dark:bg-slate-900/50 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-30">
-                <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(-1)}
-                            className="rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800"
-                        >
-                            <ArrowLeft size={20} />
-                        </Button>
-                        <div>
-                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                                Notifications
-                                {unreadCount > 0 && (
-                                    <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full ring-4 ring-primary/10">
-                                        {unreadCount} New
-                                    </span>
-                                )}
-                            </h1>
-                        </div>
-                    </div>
+            {/* Calendar-Style Brand Background Integration */}
+            <div className="relative h-64 overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/WLCOMPAGE .png"
+                        alt="Background"
+                        className="w-full h-full object-cover object-center pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/40 dark:bg-black/60 pointer-events-none" />
+                </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex relative w-64 group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                            <Input
-                                placeholder="Search notifications..."
-                                className="pl-10 h-10 bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        {unreadCount > 0 && (
+                <div className="relative z-10 max-w-6xl mx-auto px-6 h-full flex flex-col justify-center">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
                             <Button
-                                onClick={handleMarkAll}
-                                className="bg-primary hover:bg-primary-600 text-[10px] font-black uppercase tracking-widest px-6 h-10 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate(-1)}
+                                className="rounded-2xl bg-white/10 hover:bg-white/20 text-white border-none"
                             >
-                                Mark all as read
+                                <ArrowLeft size={20} />
                             </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="rounded-2xl opacity-50">
-                            <MoreHorizontal size={20} />
-                        </Button>
+                            <div>
+                                <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                                    Notifications
+                                    {unreadCount > 0 && (
+                                        <span className="bg-[#4461f2] text-white text-[10px] px-2 py-0.5 rounded-full ring-4 ring-blue-500/20 font-black">
+                                            {unreadCount} NEW
+                                        </span>
+                                    )}
+                                </h1>
+                                <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest mt-1">
+                                    Your system alerts & activity
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {unreadCount > 0 && (
+                                <Button
+                                    onClick={handleMarkAll}
+                                    className="bg-white hover:bg-slate-100 text-[#4461f2] text-[10px] font-black uppercase tracking-widest px-6 h-12 rounded-2xl shadow-xl transition-all active:scale-95 border-none"
+                                >
+                                    Mark all as read
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

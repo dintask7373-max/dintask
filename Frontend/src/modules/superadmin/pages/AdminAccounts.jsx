@@ -160,8 +160,29 @@ const AdminAccounts = () => {
 
     const handleAddAdmin = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
         if (!newAdmin.name || !newAdmin.owner || !newAdmin.email) {
             toast.error("Please fill all required fields");
+=======
+
+        // Client-side validation
+        if (!newAdmin.name) {
+            toast.error("Company Name is required");
+            return;
+        }
+        if (!newAdmin.owner) {
+            toast.error("Owner Name is required");
+            return;
+        }
+        if (!newAdmin.email) {
+            toast.error("Email Address is required");
+            return;
+        }
+
+        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        if (!emailRegex.test(newAdmin.email)) {
+            toast.error("Please provide a valid email address");
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             return;
         }
 
@@ -284,7 +305,11 @@ const AdminAccounts = () => {
             </motion.div>
 
             <motion.div variants={fadeInUp}>
+<<<<<<< HEAD
                 <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-2xl sm:rounded-[2rem]">
+=======
+                <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem]">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 border-b border-slate-50 dark:border-slate-800">
                         <div className="flex items-center gap-3">
                             <h2 className="text-sm font-extrabold uppercase tracking-widest text-slate-400 italic">Company Directory</h2>
@@ -599,6 +624,7 @@ const AdminAccounts = () => {
                 </Card>
             </motion.div>
 
+<<<<<<< HEAD
             <div className="grid grid-cols-2 gap-2 px-1 md:px-0">
                 <motion.div variants={fadeInUp} className="p-2 md:p-5 rounded-xl md:rounded-[2rem] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-1.5 md:gap-3 transition-all duration-500 min-w-0">
                     <div className="p-1 md:p-3 bg-white dark:bg-emerald-900/20 rounded-lg md:rounded-2xl shadow-sm shrink-0">
@@ -617,6 +643,26 @@ const AdminAccounts = () => {
                     <div className="min-w-0 overflow-hidden">
                         <h4 className="text-sm md:text-2xl font-black text-red-700 dark:text-red-400 tracking-tighter leading-none">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'suspended').length}</h4>
                         <p className="text-[6px] md:text-[8px] font-black text-red-600 dark:text-red-500/70 uppercase tracking-widest mt-0.5 md:mt-1 truncate">Blocked</p>
+=======
+            <div className="grid grid-cols-2 gap-4 px-1 md:px-0">
+                <motion.div variants={fadeInUp} className="p-4 md:p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-emerald-100 shadow-lg shadow-emerald-200/30 flex items-center gap-1.5 md:gap-4 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="p-2 md:p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl shadow-inner shadow-emerald-100 transition-transform group-hover:scale-110 shrink-0">
+                        <CheckCircle2 className="text-emerald-600 h-4 w-4 md:h-6 md:w-6" />
+                    </div>
+                    <div className="min-w-0 overflow-hidden">
+                        <h4 className="text-sm md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'active').length}</h4>
+                        <p className="text-[7px] md:text-[10px] font-black text-emerald-600 dark:text-emerald-500/70 uppercase tracking-widest mt-1 truncate">Operational</p>
+                    </div>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="p-4 md:p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-red-100 shadow-lg shadow-red-200/30 flex items-center gap-1.5 md:gap-4 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="p-2 md:p-3 bg-red-50 dark:bg-red-900/20 rounded-2xl shadow-inner shadow-red-100 transition-transform group-hover:scale-110 shrink-0">
+                        <XOctagon className="text-red-600 h-4 w-4 md:h-6 md:w-6" />
+                    </div>
+                    <div className="min-w-0 overflow-hidden">
+                        <h4 className="text-sm md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'suspended').length}</h4>
+                        <p className="text-[7px] md:text-[10px] font-black text-red-600 dark:text-red-500/70 uppercase tracking-widest mt-1 truncate">Decommissioned</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </div>
                 </motion.div>
             </div>

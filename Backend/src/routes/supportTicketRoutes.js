@@ -5,6 +5,10 @@ const {
     getTickets,
     getTicket,
     updateTicket,
+<<<<<<< HEAD
+=======
+    deleteTicket,
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     getTicketStats
 } = require('../controllers/supportTicketController');
 
@@ -21,6 +25,11 @@ router.route('/')
 
 router.route('/:id')
     .get(getTicket)
+<<<<<<< HEAD
     .put(updateTicket);
+=======
+    .put(updateTicket)
+    .delete(deleteTicket);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 module.exports = router;

@@ -41,13 +41,13 @@ const Settings = () => {
     const [isSaving, setIsSaving] = useState(false);
 
     // Form States
-    const [profileForm, setProfileForm] = useState({ name: '', email: '' });
+    const [profileForm, setProfileForm] = useState({ name: '', email: '', phoneNumber: '' });
     const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
     const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
     useEffect(() => {
         if (user) {
-            setProfileForm({ name: user.name, email: user.email });
+            setProfileForm({ name: user.name, email: user.email, phoneNumber: user.phoneNumber || '' });
         }
     }, [user]);
 
@@ -181,6 +181,18 @@ const Settings = () => {
                                                     value={profileForm.email}
                                                     onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                                                     className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-xs sm:text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5 sm:space-y-2">
+                                            <Label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</Label>
+                                            <div className="relative">
+                                                <Smartphone size={16} className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 sm:w-[18px] sm:h-[18px]" />
+                                                <Input
+                                                    value={profileForm.phoneNumber}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, phoneNumber: e.target.value })}
+                                                    className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-xs sm:text-sm"
+                                                    placeholder="+1 234 567 8900"
                                                 />
                                             </div>
                                         </div>

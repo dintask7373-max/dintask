@@ -50,6 +50,12 @@ const useSubscriptionStore = create((set, get) => ({
         method: 'POST',
         body: paymentData
       });
+<<<<<<< HEAD
+=======
+      if (response.success) {
+        get().fetchBillingHistory();
+      }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       return response;
     } catch (err) {
       console.error('Payment verification failed:', err);
@@ -63,7 +69,11 @@ const useSubscriptionStore = create((set, get) => ({
         ? JSON.parse(sessionStorage.getItem('dintask-auth-storage')).state.token
         : null;
 
+<<<<<<< HEAD
       const response = await fetch(`http://localhost:5000/api/v1/payments/invoice/${paymentId}`, {
+=======
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1/payments/invoice/${paymentId}`, {
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         headers: {
           'Authorization': `Bearer ${token}`
         }

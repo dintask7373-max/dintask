@@ -19,7 +19,12 @@ import {
     Paperclip,
     FileText,
     X,
+<<<<<<< HEAD
     Loader2
+=======
+    Loader2,
+    Repeat
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 } from 'lucide-react';
 import api from '@/lib/api';
 import { format, isAfter } from 'date-fns';
@@ -63,7 +68,7 @@ const TaskDetail = () => {
     const { tasks, updateTask } = useTaskStore();
     const { employees } = useEmployeeStore();
     const { managers } = useManagerStore();
-    const { user: currentUser } = useAuthStore();
+    const { user } = useAuthStore();
     const addNotification = useNotificationStore(state => state.addNotification);
 
 
@@ -88,7 +93,11 @@ const TaskDetail = () => {
     React.useEffect(() => {
         if (task) {
             // Find user's subtask if available (for group tasks)
+<<<<<<< HEAD
             const mySubTask = task.subTasks?.find(st => st.user?._id === currentUser?.id || st.user === currentUser?.id);
+=======
+            const mySubTask = task.subTasks?.find(st => st.user?._id === user?.id || st.user === user?.id);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             if (mySubTask) {
                 setMyProgress(mySubTask.progress || 0);
             } else {
@@ -96,7 +105,11 @@ const TaskDetail = () => {
             }
             setMyStatusNote(task.statusNotes || '');
         }
+<<<<<<< HEAD
     }, [task, currentUser]);
+=======
+    }, [task, user]);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const handleUpdateProgress = async () => {
         setIsUpdating(true);
@@ -148,8 +161,14 @@ const TaskDetail = () => {
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
+<<<<<<< HEAD
     const isAssignee = task?.assignedTo?.includes(currentUser?.id) || task?.assignedTo?.some(u => u._id === currentUser?.id);
     const mySubTask = task?.subTasks?.find(st => st.user?._id === currentUser?.id || st.user === currentUser?.id);
+=======
+    const isAssignee = task?.assignedTo?.includes(user?.id) || task?.assignedTo?.some(u => u._id === user?.id);
+    const isManager = (user?.role === 'manager' && (task?.assignedBy === user?.id || task?.assignedBy?._id === user?.id)) || user?.role === 'admin';
+    const mySubTask = task?.subTasks?.find(st => st.user?._id === user?.id || st.user === user?.id);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const handleMarkComplete = () => {
         setIsSubmittingReview(true);
@@ -164,7 +183,11 @@ const TaskDetail = () => {
         if (task.delegatedBy || task.assignedBy) {
             addNotification({
                 title: 'Task Review Requested',
+<<<<<<< HEAD
                 description: `${currentUser?.name} submitted: "${task.title}" for approval`,
+=======
+                description: `${user?.name} submitted: "${task.title}" for approval`,
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 category: 'task',
                 recipientId: task.delegatedBy || task.assignedBy
             });
@@ -200,6 +223,7 @@ const TaskDetail = () => {
 
                     {/* Main Column */}
                     <div className="lg:col-span-8 space-y-4 md:space-y-6">
+<<<<<<< HEAD
                         {/* Header Section */}
                         <div className="mb-2">
                             <div className="flex flex-wrap gap-2 mb-3">
@@ -226,6 +250,44 @@ const TaskDetail = () => {
                                 {task.labels && task.labels.map((label, i) => (
                                     <div key={i} className="flex h-6 md:h-7 items-center justify-center rounded-full bg-primary/10 px-2.5 md:px-3">
                                         <p className="text-primary text-[10px] md:text-xs font-bold uppercase tracking-wider">{label}</p>
+=======
+                        {/* Back Button */}
+                        <div className="mb-2">
+                            <Button
+                                variant="ghost"
+                                onClick={() => navigate(-1)}
+                                className="pl-0 hover:bg-transparent hover:text-primary gap-2 text-slate-400 transition-colors"
+                            >
+                                <ArrowLeft size={20} />
+                                <span className="text-xs font-black uppercase tracking-widest">Back to Command</span>
+                            </Button>
+                        </div>
+
+                        {/* Header Section */}
+                        <div className="mb-2">
+                            <div className="flex flex-wrap gap-2.5 mb-4">
+                                <div className={cn("flex h-7 items-center justify-center rounded-full px-3 border-2 border-transparent", pConfig.color)}>
+                                    <p className="text-[10px] font-black uppercase tracking-wider">{pConfig.label}</p>
+                                </div>
+                                {task.team && (
+                                    <div className={cn("flex h-7 items-center justify-center rounded-full px-3 bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400")}>
+                                        <p className="text-[10px] font-black uppercase tracking-wider">TEAM: {task.team.name}</p>
+                                    </div>
+                                )}
+                                <div className={cn("flex h-7 items-center justify-center rounded-full px-3 border-2",
+                                    task.status === 'overdue' ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                        task.status === 'pending' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                            task.status === 'in_progress' ? "bg-sky-50 text-sky-600 border-sky-100" :
+                                                task.status === 'review' ? "bg-purple-50 text-purple-600 border-purple-100" :
+                                                    task.status === 'completed' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                        "bg-slate-50 text-slate-500 border-slate-100"
+                                )}>
+                                    <p className="text-[10px] font-black uppercase tracking-wider">{task.status.replace('_', ' ')}</p>
+                                </div>
+                                {task.labels && task.labels.map((label, i) => (
+                                    <div key={i} className="flex h-7 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-3 border-2 border-blue-100 dark:border-blue-800">
+                                        <p className="text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-wider">{label}</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </div>
                                 ))}
                             </div>
@@ -264,6 +326,7 @@ const TaskDetail = () => {
                                 </h3>
                                 <div className="space-y-4">
                                     {task.subTasks?.map((subTask, idx) => (
+<<<<<<< HEAD
                                         <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
                                             <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
                                                 <AvatarImage src={subTask.user?.profileImage || subTask.user?.avatar} />
@@ -280,12 +343,34 @@ const TaskDetail = () => {
                                                             subTask.status === 'review' ? "bg-blue-50 text-blue-600 border-blue-200" :
                                                                 subTask.status === 'in_progress' ? "bg-amber-50 text-amber-600 border-amber-200" :
                                                                     "bg-slate-100 text-slate-500 border-slate-200"
+=======
+                                        <div key={idx} className="flex items-center gap-4 p-4 bg-gradient-to-br from-indigo-50/80 to-blue-50/80 dark:from-indigo-900/10 dark:to-blue-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-800/30">
+                                            <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm ring-2 ring-indigo-100 dark:ring-indigo-900/50">
+                                                <AvatarImage src={subTask.user?.profileImage || subTask.user?.avatar} />
+                                                <AvatarFallback className="text-xs font-black bg-indigo-100 text-indigo-600">{subTask.user?.name?.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between mb-2">
+                                                    <span className="text-sm font-black text-slate-800 dark:text-gray-100 uppercase truncate tracking-tight">
+                                                        {subTask.user?.name || 'Unknown Agent'}
+                                                    </span>
+                                                    <Badge variant="outline" className={cn(
+                                                        "text-[9px] font-black uppercase tracking-widest h-6 px-2.5",
+                                                        subTask.status === 'completed' ? "bg-emerald-100 text-emerald-700 border-emerald-200" :
+                                                            subTask.status === 'review' ? "bg-blue-100 text-blue-700 border-blue-200" :
+                                                                subTask.status === 'in_progress' ? "bg-amber-100 text-amber-700 border-amber-200" :
+                                                                    "bg-white/60 text-slate-500 border-slate-200/60"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                     )}>
                                                         {subTask.status?.replace('_', ' ') || 'Pending'}
                                                     </Badge>
                                                 </div>
                                                 <div className="flex items-center gap-3">
+<<<<<<< HEAD
                                                     <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+=======
+                                                    <div className="flex-1 h-2 bg-white/60 dark:bg-slate-800/60 rounded-full overflow-hidden">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                         <div
                                                             className={cn("h-full rounded-full transition-all duration-500",
                                                                 subTask.status === 'completed' ? "bg-emerald-500" : "bg-primary"
@@ -381,17 +466,24 @@ const TaskDetail = () => {
                                         <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shadow-sm relative group">
                                             <Shield size={18} />
                                         </div>
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Admin</span>
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Manager</span>
                                     </div>
-                                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800 relative">
+                                    <div className="h-px flex-1 bg-gradient-to-r from-amber-200 to-blue-200 dark:from-amber-900/50 dark:to-blue-900/50 relative">
                                         <div className="absolute inset-x-0 -top-1.5 flex items-center justify-center">
-                                            <ChevronRight size={12} className="text-slate-300 dark:text-slate-700" />
+                                            <ChevronRight size={12} className="text-slate-400 dark:text-slate-600" />
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-center gap-1">
                                         <div className={cn(
+<<<<<<< HEAD
                                             "h-10 w-10 rounded-full flex items-center justify-center shadow-sm border-2 bg-white dark:bg-slate-800 border-white dark:border-slate-800 text-slate-600 dark:text-slate-400",
                                             task.team && "border-indigo-400 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40"
+=======
+                                            "h-10 w-10 rounded-full flex items-center justify-center shadow-sm",
+                                            task.team
+                                                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                                                : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         )}>
                                             {task.team ? <Users size={18} /> : <User size={18} />}
                                         </div>
@@ -421,6 +513,30 @@ const TaskDetail = () => {
                                     </p>
                                 </CardContent>
                             </Card>
+
+                            {task.recurrence?.type && task.recurrence.type !== 'none' && (
+                                <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-white dark:bg-slate-900">
+                                    <CardContent className="p-4 md:p-5 text-left">
+                                        <div className="flex items-center gap-2 mb-3 text-slate-400">
+                                            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600">
+                                                <Repeat size={14} />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Recurrence</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white capitalize">
+                                            {task.recurrence.type} Cycle
+                                        </p>
+                                        <p className="text-[10px] text-indigo-600 font-medium mt-1">
+                                            Repeats every {task.recurrence.interval} {task.recurrence.type === 'daily' ? 'day(s)' : task.recurrence.type === 'weekly' ? 'week(s)' : 'month(s)'}
+                                        </p>
+                                        {task.recurrence.endDate && (
+                                            <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wider">
+                                                Until: {format(new Date(task.recurrence.endDate), 'MMM dd, yyyy')}
+                                            </p>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             <Card className="rounded-3xl border-none shadow-sm bg-white dark:bg-slate-900">
                                 <CardContent className="p-5 text-left space-y-4">
@@ -490,12 +606,49 @@ const TaskDetail = () => {
                             </Card>
                         </div>
                     </div>
+<<<<<<< HEAD
+=======
+
+                    {/* Manager/Owner Controls */}
+                    {((user?.role === 'manager' && (task.assignedBy === user.id || task.assignedBy?._id === user.id)) || user?.role === 'admin') && (
+                        <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800">
+                            <CardContent className="p-4 md:p-5 text-left space-y-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Command Controls</h4>
+
+
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => navigate(`/manager/assign-task?edit=${task.id}`)}
+                                        className="h-9 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase tracking-widest rounded-lg"
+                                    >
+                                        Edit Directive
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            if (confirm("Confirm deletion of this directive? This action is irreversible.")) {
+                                                useTaskStore.getState().deleteTask(task.id);
+                                                navigate(-1);
+                                            }
+                                        }}
+                                        className="h-9 border-rose-100 dark:border-rose-900/30 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-bold text-[10px] uppercase tracking-widest rounded-lg"
+                                    >
+                                        Delete
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 </div>
             </div>
 
             {/* Sticky Footer Actions */}
             <div className="fixed bottom-0 left-0 right-0 p-4 backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-t border-slate-100 dark:border-slate-800 z-30">
                 <div className="max-w-4xl mx-auto">
+<<<<<<< HEAD
                     {task.status !== 'completed' && task.status !== 'review' ? (
                         <Dialog>
                             <DialogTrigger asChild>
@@ -574,10 +727,115 @@ const TaskDetail = () => {
                             <CheckCircle2 size={24} />
                             <span>{task.status === 'review' ? 'Awaiting Review' : 'Mission Fulfilled'}</span>
                         </button>
+=======
+                    {/* MANAGER / ADMIN VIEW: Review Controls */}
+                    {isManager && task.status === 'review' ? (
+                        <div className="grid grid-cols-2 gap-3 w-full">
+                            <Button
+                                onClick={() => {
+                                    updateTask(task.id, { status: 'completed', progress: 100 });
+                                    toast.success("Directive Approved");
+                                }}
+                                className="h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20"
+                            >
+                                <CheckCircle2 size={18} className="mr-2" /> Approve Mission
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    updateTask(task.id, { status: 'in_progress', progress: 50 });
+                                    toast.error("Directive Returned for Revision");
+                                }}
+                                className="h-14 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-rose-500/20"
+                            >
+                                <X size={18} className="mr-2" /> Reject Mission
+                            </Button>
+                        </div>
+                    ) : (
+                        /* ASSIGNEE VIEW: Submit Controls */
+                        isAssignee && task.status !== 'completed' && task.status !== 'review' ? (
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <button
+                                        disabled={task.project && ['on_hold', 'cancelled'].includes(task.project.status)}
+                                        className={cn(
+                                            "w-full h-14 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all",
+                                            task.status === 'overdue' ? "bg-red-600 shadow-red-500/20" : "bg-primary shadow-primary/20",
+                                            task.project && ['on_hold', 'cancelled'].includes(task.project.status) && "opacity-50 cursor-not-allowed filter grayscale"
+                                        )}
+                                    >
+                                        <Send size={20} />
+                                        <span>{task.status === 'overdue' ? 'Submit Overdue Mission' : 'Submit for Review'}</span>
+                                    </button>
+                                </DialogTrigger>
+                                <DialogContent className="rounded-[2.5rem] border-none">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Mission Submission</DialogTitle>
+                                        <DialogDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Provide operational evidence for directive fulfilment.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Evidence Statement</label>
+                                            <Input
+                                                placeholder="What exactly was completed? (e.g. Migration finished, repo updated)"
+                                                value={submissionNote}
+                                                onChange={(e) => setSubmissionNote(e.target.value)}
+                                                className="h-12 bg-slate-50 border-none rounded-xl font-bold"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between px-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Technical Attachments</label>
+                                                <label className="cursor-pointer">
+                                                    <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-2 py-1 rounded-lg hover:bg-primary-100 transition-colors">
+                                                        {isUploading ? <Loader2 size={10} className="animate-spin" /> : <Paperclip size={10} />}
+                                                        ATTACH FILES
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                            {attachments.length > 0 && (
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    {attachments.map((file, idx) => (
+                                                        <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-xl group">
+                                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                                <FileText size={14} className="text-slate-400 shrink-0" />
+                                                                <span className="text-[10px] font-bold text-slate-600 truncate">{file.name}</span>
+                                                            </div>
+                                                            <button onClick={() => removeAttachment(idx)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {attachments.length === 0 && !isUploading && (
+                                                <div className="h-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl">
+                                                    <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">No technical assets attached</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button onClick={handleMarkComplete} className="w-full h-12 bg-primary text-white font-black uppercase tracking-wider rounded-xl">
+                                            CONFIRM DEPLOΥΜΕΝΤ
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        ) : (
+                            <button disabled className="w-full h-14 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl flex items-center justify-center gap-2 opacity-80 cursor-not-allowed">
+                                {task.status === 'review' ? <Clock size={24} className="text-amber-500" /> : <CheckCircle2 size={24} />}
+                                <span>{task.status === 'review' ? 'Awaiting Command Review' : task.status === 'completed' ? 'Mission Fulfilled' : 'Active Operation'}</span>
+                            </button>
+                        )
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

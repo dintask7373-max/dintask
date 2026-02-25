@@ -7,6 +7,15 @@ const useTicketStore = create((set, get) => ({
     tickets: [],
     loading: false,
     error: null,
+<<<<<<< HEAD
+=======
+    pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 1
+    },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     stats: {
         avgFeedback: 0,
@@ -25,6 +34,7 @@ const useTicketStore = create((set, get) => ({
         }
     },
 
+<<<<<<< HEAD
     fetchTickets: async (scope = 'all') => {
         set({ loading: true, error: null });
         try {
@@ -35,6 +45,50 @@ const useTicketStore = create((set, get) => ({
             console.error("Fetch Tickets Error:", err);
             set({ error: err.message, loading: false });
             // toast.error(err.message || 'Failed to fetch tickets'); 
+=======
+    fetchTickets: async ({ page = 1, limit = 10, search = '', scope = 'all' } = {}) => {
+        set({ loading: true, error: null });
+        try {
+            const queryParams = new URLSearchParams({
+                page,
+                limit,
+                search,
+                scope
+            });
+            const res = await api(`/support-tickets?${queryParams.toString()}`);
+            set({
+                tickets: res.data || [],
+                pagination: res.pagination || { page, limit, total: 0, pages: 1 },
+                loading: false
+            });
+        } catch (err) {
+            console.error("Fetch Tickets Error:", err);
+            set({ error: err.message, loading: false });
+        }
+    },
+
+    deleteTicket: async (id) => {
+        try {
+            const res = await api(`/support-tickets/${id}`, { method: 'DELETE' });
+            if (res.success) {
+                set(state => ({
+                    tickets: state.tickets.filter(t => t._id !== id)
+                }));
+                get().fetchTickets(get().pagination);
+                get().fetchTicketStats();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+                toast.success('Ticket deleted successfully');
+                return true;
+            }
+        } catch (err) {
+            console.error("Delete Ticket Error:", err);
+            toast.error(err.message || 'Failed to delete ticket');
+            return false;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         }
     },
 
@@ -55,12 +109,29 @@ const useTicketStore = create((set, get) => ({
                 body: payload
             });
 
+<<<<<<< HEAD
             set((state) => ({
                 tickets: [res.data, ...state.tickets],
                 loading: false
             }));
             toast.success('Ticket created successfully');
             return true;
+=======
+            if (res.success) {
+                // We rely on socket listener or fetchTickets to avoid duplicate key issues
+                // Simply clear the loading state and fetch fresh data
+                set({ loading: false });
+                get().fetchTickets(get().pagination);
+                get().fetchTicketStats();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+                toast.success('Ticket created successfully');
+                return true;
+            }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         } catch (err) {
             console.error("Create Ticket Error:", err);
             toast.error(err.message || 'Failed to create ticket');
@@ -83,6 +154,16 @@ const useTicketStore = create((set, get) => ({
                 method: 'PUT',
                 body: { status }
             });
+<<<<<<< HEAD
+=======
+            get().fetchTickets(get().pagination);
+            get().fetchTicketStats();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success(`Ticket marked as ${status}`);
         } catch (err) {
             console.error("Update Ticket Error:", err);
@@ -160,6 +241,10 @@ const useTicketStore = create((set, get) => ({
     },
 
     initializeSocket: (userId) => {
+<<<<<<< HEAD
+=======
+        // Prevent multiple listeners
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         socketService.onSupportResponse(({ ticketId, updatedTicket }) => {
             set((state) => ({
                 tickets: state.tickets.map((t) =>
@@ -167,6 +252,7 @@ const useTicketStore = create((set, get) => ({
                 )
             }));
 
+<<<<<<< HEAD
             // Optional: If we want to show a toast if the user is not looking at the ticket
             // But usually, real-time update in the view is enough.
         });
@@ -179,6 +265,42 @@ const useTicketStore = create((set, get) => ({
                 tickets: [newTicket, ...state.tickets]
             }));
             toast.info(`New support ticket: ${newTicket.title}`);
+=======
+            // If the ticket was resolved/closed, refresh stats
+            if (['Resolved', 'Closed'].includes(updatedTicket.status)) {
+                get().fetchTicketStats();
+                // Refresh admin dashboard stats if applicable
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(e => console.error("Stats sync error:", e));
+            }
+        });
+
+        socketService.onSupportTicket((newTicket) => {
+            set((state) => {
+                // Prevent duplicate tickets in state
+                const exists = state.tickets.some(t => t._id === newTicket._id);
+                if (exists) return state;
+
+                return {
+                    tickets: [newTicket, ...state.tickets]
+                };
+            });
+
+            toast.info(`New support ticket: ${newTicket.title}`, {
+                description: `Category: ${newTicket.category}`,
+                action: {
+                    label: 'View',
+                    onClick: () => {
+                        // Logic to navigate can be added here if needed
+                    }
+                }
+            });
+
+            // Refresh global stats
+            get().fetchTicketStats();
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                .catch(e => console.error("Stats sync error:", e));
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         });
     },
 

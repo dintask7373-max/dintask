@@ -3,6 +3,11 @@ const crypto = require('crypto');
 const Payment = require('../models/Payment');
 const Admin = require('../models/Admin');
 const Plan = require('../models/Plan');
+<<<<<<< HEAD
+=======
+const Notification = require('../models/Notification');
+const SuperAdmin = require('../models/SuperAdmin');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -128,6 +133,32 @@ exports.verifyPayment = async (req, res, next) => {
         admin.subscriptionExpiry = expiryDate;
 
         await admin.save();
+<<<<<<< HEAD
+=======
+
+        // --- NOTIFICATION LOGIC START ---
+        try {
+          const superAdmins = await SuperAdmin.find({
+            role: { $in: ['superadmin', 'superadmin_staff'] }
+          });
+
+          if (superAdmins.length > 0) {
+            const notifications = superAdmins.map(sa => ({
+              recipient: sa._id,
+              sender: admin._id, // The Admin who PAID is the sender
+              type: 'payment',
+              title: 'Payment Received',
+              message: `Received ₹${payment.amount} from ${admin.companyName || admin.name} for ${plan.name} plan`,
+              link: `/superadmin/billing`
+            }));
+
+            await Notification.insertMany(notifications);
+          }
+        } catch (notifyErr) {
+          console.error('Payment Notification Error:', notifyErr);
+        }
+        // --- NOTIFICATION LOGIC END ---
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       }
 
       res.status(200).json({

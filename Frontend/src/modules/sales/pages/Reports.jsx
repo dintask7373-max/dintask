@@ -7,6 +7,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { Badge } from '@/shared/components/ui/badge';
 import { Progress } from '@/shared/components/ui/progress';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart as ReLineChart, Line, PieChart as RePieChart, Pie, Cell } from 'recharts';
 import useAuthStore from '@/store/authStore';
 import useSalesStore from '@/store/salesStore';
 import useSalesTargetsStore from '@/store/salesTargetsStore';
@@ -14,11 +15,15 @@ import useSalesTargetsStore from '@/store/salesTargetsStore';
 import useCRMStore from '@/store/crmStore';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+<<<<<<< HEAD
+=======
+import { format } from 'date-fns';
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 const SalesReports = () => {
     const { user } = useAuthStore();
     const { salesReps, getSalesRepByEmail } = useSalesStore();
-    const { leads } = useCRMStore();
+    const { reportData, fetchSalesReport, loading } = useCRMStore();
     const {
         individualTargets,
         teamTargets,
@@ -34,6 +39,14 @@ const SalesReports = () => {
     const [filters, setFilters] = useState({ status: 'all', type: 'all' });
     const [targetPeriod, setTargetPeriod] = useState('monthly');
     const [activeTab, setActiveTab] = useState('revenue');
+<<<<<<< HEAD
+=======
+
+    // Fetch report data on period change
+    React.useEffect(() => {
+        fetchSalesReport(selectedPeriod);
+    }, [selectedPeriod]);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const salesRep = useMemo(() => {
         return getSalesRepByEmail(user?.email);
@@ -66,6 +79,7 @@ const SalesReports = () => {
     }, [selectedPeriod, calculateIndividualProgress, calculateTeamProgress, getIndividualTargetsByPeriod, getTeamTargetsByPeriod, getActualPerformanceByPeriod]);
 
     const reportMetrics = useMemo(() => {
+<<<<<<< HEAD
         let filteredLeads = leads;
 
         const totalRevenue = filteredLeads
@@ -86,6 +100,21 @@ const SalesReports = () => {
             avgValueChange: '+5.2%'
         };
     }, [salesRep, selectedPeriod, leads]);
+=======
+        if (!reportData?.metrics) {
+            return {
+                totalRevenue: 0,
+                totalDeals: 0,
+                avgDealValue: 0,
+                revenueChange: '0%',
+                dealsChange: '0%',
+                avgValueChange: '0%'
+            };
+        }
+
+        return reportData.metrics;
+    }, [reportData]);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const handleExport = () => {
         const rows = [
@@ -124,10 +153,17 @@ const SalesReports = () => {
                 <div className="flex items-center gap-3">
                     <div>
                         <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+<<<<<<< HEAD
                             Intelligence <span className="text-primary-600">Analytics</span>
                         </h1>
                         <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
                             Decipher performance trends
+=======
+                            Sales <span className="text-primary-600">Analytics</span>
+                        </h1>
+                        <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                            Track performance and revenue trends
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </p>
                     </div>
                 </div>
@@ -149,7 +185,11 @@ const SalesReports = () => {
                         onClick={handleExport}
                     >
                         <Download size={14} />
+<<<<<<< HEAD
                         <span className="hidden sm:inline">Export Intelligence</span>
+=======
+                        <span className="hidden sm:inline">Export Report</span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         <span className="sm:hidden">Export</span>
                     </Button>
                 </div>
@@ -158,9 +198,15 @@ const SalesReports = () => {
             {/* Summary Grid - Premium Look */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
                 {[
+<<<<<<< HEAD
                     { label: 'Revenue Velocity', value: `₹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary', border: 'border-primary-200', bg: 'bg-primary-50', shadow: 'shadow-primary-200/50' },
                     { label: 'Tactical Wins', value: reportMetrics.totalDeals, change: reportMetrics.dealsChange, icon: <Target size={16} />, color: 'emerald', border: 'border-emerald-200', bg: 'bg-emerald-50', shadow: 'shadow-emerald-200/50' },
                     { label: 'Mean Value', value: `₹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue', border: 'border-blue-200', bg: 'bg-blue-50', shadow: 'shadow-blue-200/50' }
+=======
+                    { label: 'Total Revenue', value: `₹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary', border: 'border-primary-200', bg: 'bg-primary-50', shadow: 'shadow-primary-200/50' },
+                    { label: 'Deals Won', value: reportMetrics.wonDealsCount, change: reportMetrics.dealsChange, icon: <Target size={16} />, color: 'emerald', border: 'border-emerald-200', bg: 'bg-emerald-50', shadow: 'shadow-emerald-200/50' },
+                    { label: 'Avg Deal Value', value: `₹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue', border: 'border-blue-200', bg: 'bg-blue-50', shadow: 'shadow-blue-200/50' }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 ].map((stat, i) => (
                     <Card key={i} className={cn(
                         "border-2 shadow-lg rounded-2xl overflow-hidden group transition-all hover:-translate-y-1",
@@ -186,7 +232,11 @@ const SalesReports = () => {
                                         <div className="flex items-center justify-center size-3 sm:size-3.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
                                             <TrendingUp size={7} className="sm:size-2" />
                                         </div>
+<<<<<<< HEAD
                                         <span className="text-[7px] sm:text-[8px] font-black text-emerald-600 uppercase tracking-widest">{stat.change} Acceleration</span>
+=======
+                                        <span className="text-[7px] sm:text-[8px] font-black text-emerald-600 uppercase tracking-widest">{stat.change} Growth</span>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </div>
                                 </div>
                             </div>
@@ -218,6 +268,7 @@ const SalesReports = () => {
                         <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div className="space-y-0.5">
+<<<<<<< HEAD
                                     <CardTitle className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Revenue Trajectory</CardTitle>
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic pl-0.5">Financial infrastructure breakdown</p>
                                 </div>
@@ -225,11 +276,21 @@ const SalesReports = () => {
                                     <div className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100/50 dark:border-emerald-800/50">
                                         <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest text-center leading-none mb-0.5">Efficiency</p>
                                         <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 text-center uppercase">92.4%</p>
+=======
+                                    <CardTitle className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Revenue Growth</CardTitle>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic pl-0.5">Monthly revenue overview</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100/50 dark:border-emerald-800/50">
+                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest text-center leading-none mb-0.5">Won Rate</p>
+                                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 text-center uppercase">{reportData?.metrics?.conversionRate || 0}%</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </div>
                                 </div>
                             </div>
                         </CardHeader>
                         <CardContent className="p-6">
+<<<<<<< HEAD
                             <div className="h-[280px] sm:h-[350px] flex items-center justify-center bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent transition-opacity opacity-0 group-hover:opacity-100" />
                                 <div className="text-center z-10 p-6">
@@ -239,6 +300,56 @@ const SalesReports = () => {
                                     <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Neural Projection Matrix</p>
                                     <p className="text-[8px] text-slate-400 font-black mt-2 max-w-[200px] leading-relaxed uppercase tracking-wider">Analyzing historical revenue flows for optimization strategies.</p>
                                 </div>
+=======
+                            <div className="h-[280px] sm:h-[350px] w-full">
+                                {reportData?.trajectory?.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={reportData.trajectory}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                            <XAxis
+                                                dataKey="date"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#94a3b8', fontSize: 10 }}
+                                                tickFormatter={(str) => {
+                                                    try {
+                                                        const date = new Date(str);
+                                                        if (selectedPeriod === 'year') return format(date, 'MMM');
+                                                        if (selectedPeriod === 'week') return format(date, 'EEE');
+                                                        return format(date, 'MMM d');
+                                                    } catch (e) { return str; }
+                                                }}
+                                            />
+                                            <YAxis
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#94a3b8', fontSize: 10 }}
+                                                tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(value) => [`₹${Number(value).toLocaleString()}`, 'Revenue']}
+                                            />
+                                            <Bar
+                                                dataKey="revenue"
+                                                fill="#4f46e5"
+                                                radius={[6, 6, 0, 0]}
+                                                maxBarSize={40}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
+                                        <div className="text-center z-10 p-6">
+                                            <div className="size-16 rounded-[1.5rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center mx-auto mb-4">
+                                                <IndianRupee className="size-8 text-primary-600" />
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">No Intelligence Data</p>
+                                            <p className="text-[8px] text-slate-400 font-black mt-2 max-w-[200px] leading-relaxed uppercase tracking-wider">Historical revenue flows will appear as deals are secured.</p>
+                                        </div>
+                                    </div>
+                                )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         </CardContent>
                     </Card>
@@ -254,7 +365,11 @@ const SalesReports = () => {
                                         <div className="hidden sm:flex size-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 items-center justify-center text-primary-600">
                                             <Target size={14} />
                                         </div>
+<<<<<<< HEAD
                                         <CardTitle className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Neural Tasking</CardTitle>
+=======
+                                        <CardTitle className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Individual Goals</CardTitle>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </div>
                                     <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-400 border-none rounded-lg font-black text-[7px] sm:text-[8px] uppercase tracking-widest px-1.5 sm:px-2 py-0.5 whitespace-nowrap">
                                         {targetPeriod}
@@ -299,7 +414,11 @@ const SalesReports = () => {
                                         <div className="hidden sm:flex size-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 items-center justify-center text-emerald-600">
                                             <Users size={14} />
                                         </div>
+<<<<<<< HEAD
                                         <CardTitle className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Squad Synergy</CardTitle>
+=======
+                                        <CardTitle className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Team Goals</CardTitle>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </div>
                                     <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-400 border-none rounded-lg font-black text-[7px] sm:text-[8px] uppercase tracking-widest px-1.5 sm:px-2 py-0.5 whitespace-nowrap">
                                         Sector Avg
@@ -338,16 +457,65 @@ const SalesReports = () => {
                     </div>
                 </TabsContent>
 
+<<<<<<< HEAD
                 {/* Fallback for other tabs */}
                 {['deals', 'clients'].includes(activeTab) && (
                     <TabsContent value={activeTab} className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+=======
+                {/* Deals (Distribution) Tab */}
+                {activeTab === 'deals' && (
+                    <TabsContent value="deals" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                        <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden">
+                            <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
+                                <CardTitle className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Lead Distribution</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 h-[400px]">
+                                {reportData?.distribution?.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <RePieChart>
+                                            <Pie
+                                                data={reportData.distribution}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {reportData.distribution.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#6366f1'][index % 5]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                            <XAxis hide />
+                                        </RePieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center">
+                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Gathering deal data...</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
+
+                {/* Clients fallback */}
+                {activeTab === 'clients' && (
+                    <TabsContent value="clients" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden">
                             <CardContent className="p-16 text-center">
                                 <div className="size-16 rounded-[1.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
                                     <Clock className="size-8 text-slate-400" />
                                 </div>
+<<<<<<< HEAD
                                 <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Sector Analytics pending</h3>
                                 <p className="text-[9px] text-slate-400 font-black mt-2 uppercase tracking-widest">Aggregating real-time data from neural nodes...</p>
+=======
+                                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Analytics processing</h3>
+                                <p className="text-[9px] text-slate-400 font-black mt-2 uppercase tracking-widest">Connecting to live database for real-time updates...</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </CardContent>
                         </Card>
                     </TabsContent>

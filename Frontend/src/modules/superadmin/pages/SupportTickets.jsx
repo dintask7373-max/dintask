@@ -257,6 +257,7 @@ const SuperAdminSupport = () => {
     return (
         <div className="space-y-6 pb-6 px-4 md:px-6 max-w-7xl mx-auto">
             {/* Header section */}
+<<<<<<< HEAD
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                     <div className="flex items-center gap-3">
@@ -269,6 +270,20 @@ const SuperAdminSupport = () => {
                             </h1>
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
                                 Managing Admin Escalations
+=======
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-xl shadow-slate-200/30 border-2 border-slate-100 dark:border-slate-800">
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/20">
+                            <LifeBuoy className="text-white" size={24} />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase italic">
+                                Support <span className="text-indigo-600">Command</span>
+                            </h1>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">
+                                Managing High-Priority Escalations
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </p>
                         </div>
                     </div>
@@ -280,9 +295,15 @@ const SuperAdminSupport = () => {
                             placeholder="SEARCH TICKETS..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+<<<<<<< HEAD
                             className="pl-9 w-full sm:w-64 h-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-lg font-bold text-[10px] uppercase tracking-widest focus:ring-indigo-500"
                         />
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+=======
+                            className="pl-12 w-full sm:w-72 h-12 border-none bg-slate-50 dark:bg-slate-950 rounded-xl font-black text-[10px] uppercase tracking-widest focus-visible:ring-indigo-500/20"
+                        />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     </div>
                 </div>
             </div>
@@ -324,7 +345,11 @@ const SuperAdminSupport = () => {
                                     transition={{ delay: i * 0.05 }}
                                 >
                                     <Card
+<<<<<<< HEAD
                                         className={`border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all cursor-pointer overflow-hidden rounded-xl group ${selectedTicket?._id === ticket._id ? 'ring-2 ring-indigo-500 bg-indigo-50/5' : 'bg-white dark:bg-slate-900'
+=======
+                                        className={`border-2 transition-all duration-300 cursor-pointer overflow-hidden rounded-[2rem] group hover:-translate-y-1 ${selectedTicket?._id === ticket._id ? 'border-primary-500 ring-4 ring-primary-500/5 bg-primary-50/5 shadow-xl shadow-primary-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-lg shadow-slate-200/30'
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             }`}
                                         onClick={() => handleTicketSelect(ticket)}
                                     >
@@ -394,9 +419,16 @@ const SuperAdminSupport = () => {
                                 />
                             </motion.div>
                         ) : (
+<<<<<<< HEAD
                             <div className="h-full rounded-xl border-2 border-dashed border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center p-6 text-slate-300">
                                 <MessageSquare size={32} className="mb-4 opacity-50" />
                                 <h3 className="text-xs font-black uppercase tracking-widest">Select a ticket to view conversation</h3>
+=======
+                            <div className="h-full rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center p-8 text-slate-300 bg-slate-50/30 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
+                                <MessageSquare size={48} className="mb-4 opacity-50" />
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Communication Node Inactive</h3>
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2">Select a tactical support ticket to engage</p>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         )}
                     </AnimatePresence>

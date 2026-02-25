@@ -11,16 +11,44 @@ import {
     Archive,
     Inbox,
     Trash,
+<<<<<<< HEAD
     MoreHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useNotificationStore from '@/store/notificationStore';
+=======
+    MoreHorizontal,
+    CreditCard,
+    MessageSquare,
+    Headphones,
+    Send,
+    Megaphone
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import useNotificationStore from '@/store/notificationStore';
+import useAdminStore from '@/store/adminStore';
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
+<<<<<<< HEAD
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import {
+=======
+import { Textarea } from '@/shared/components/ui/textarea';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter
+} from '@/shared/components/ui/dialog';
+import {
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -47,6 +75,27 @@ const Notifications = () => {
     const [filterType, setFilterType] = useState('all');
     const [selectedIds, setSelectedIds] = useState([]);
 
+<<<<<<< HEAD
+=======
+    // Announcement State
+    const { sendAnnouncement, loading: announcementLoading } = useAdminStore();
+    const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
+    const [announcement, setAnnouncement] = useState({ title: '', message: '' });
+
+    const handleSendAnnouncement = async () => {
+        if (!announcement.title || !announcement.message) {
+            toast.error('Please fill in both title and message');
+            return;
+        }
+
+        const success = await sendAnnouncement(announcement);
+        if (success) {
+            setIsAnnouncementOpen(false);
+            setAnnouncement({ title: '', message: '' });
+        }
+    };
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     useEffect(() => {
         fetchNotifications();
     }, [fetchNotifications]);
@@ -90,6 +139,12 @@ const Notifications = () => {
             case 'success': return <CheckCircle2 size={18} className="text-emerald-500" />;
             case 'error': return <AlertCircle size={18} className="text-red-500" />;
             case 'warning': return <AlertCircle size={18} className="text-amber-500" />;
+<<<<<<< HEAD
+=======
+            case 'payment': return <CreditCard size={18} className="text-blue-500" />;
+            case 'inquiry': return <MessageSquare size={18} className="text-purple-500" />;
+            case 'support_ticket': return <Headphones size={18} className="text-indigo-500" />;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             default: return <Info size={18} className="text-primary-500" />;
         }
     };
@@ -112,6 +167,67 @@ const Notifications = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+<<<<<<< HEAD
+=======
+                    <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
+                        <DialogTrigger asChild>
+                            <Button
+                                className="rounded-xl bg-primary-600 hover:bg-primary-700 text-[10px] font-black uppercase tracking-widest h-10 px-4 gap-2 shadow-lg shadow-primary-500/25"
+                            >
+                                <Megaphone size={16} />
+                                Broadcast Announcement
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-8 border-none bg-white dark:bg-slate-900 shadow-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                                    Broadcast Announcement
+                                </DialogTitle>
+                                <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest pt-2">
+                                    Send a workspace-wide notification to all members
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-6 py-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white ml-1">Title</label>
+                                    <Input
+                                        placeholder="Enter announcement title..."
+                                        value={announcement.title}
+                                        onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
+                                        className="h-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl text-xs font-bold"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white ml-1">Message</label>
+                                    <Textarea
+                                        placeholder="Write your announcement details here..."
+                                        value={announcement.message}
+                                        onChange={(e) => setAnnouncement({ ...announcement, message: e.target.value })}
+                                        className="min-h-[150px] bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl text-xs font-bold resize-none p-4"
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setIsAnnouncementOpen(false)}
+                                    className="flex-1 rounded-2xl text-[10px] font-black uppercase tracking-widest h-12"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleSendAnnouncement}
+                                    disabled={announcementLoading}
+                                    className="flex-1 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest h-12 gap-2 shadow-xl"
+                                >
+                                    {announcementLoading ? 'Broadcasting...' : 'Post Announcement'}
+                                    <Send size={16} />
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     <Button
                         variant="outline"
                         size="sm"

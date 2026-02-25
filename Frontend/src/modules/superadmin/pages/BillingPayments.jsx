@@ -40,6 +40,10 @@ import {
 import useSuperAdminStore from '@/store/superAdminStore';
 import useAuthStore from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+=======
+import { cn } from '@/shared/utils/cn';
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 const BillingPayments = () => {
     const { role } = useAuthStore();
@@ -189,11 +193,23 @@ const BillingPayments = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
+<<<<<<< HEAD
                     { label: 'Total Revenue', value: role === 'superadmin' ? `₹${(billingStats.totalRevenue || 0).toLocaleString()}` : '₹ ••••••', icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50', trend: role === 'superadmin' ? '+12.5%' : 'LOCKED', isUp: true },
                     { label: 'Active Subscriptions', value: billingStats.activeSubscriptions || 0, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+3.2%', isUp: true },
                     { label: 'Churn Rate', value: `${billingStats.churnRate || 0}%`, icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', trend: '+0.5%', isUp: false }
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all rounded-[2rem] relative">
+=======
+                    { label: 'Total Revenue', value: role === 'superadmin' ? `₹${(billingStats.totalRevenue || 0).toLocaleString()}` : '₹ ••••••', icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-100', shadow: 'shadow-primary-200/40', trend: role === 'superadmin' ? '+12.5%' : 'LOCKED', isUp: true },
+                    { label: 'Active Subscriptions', value: billingStats.activeSubscriptions || 0, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', shadow: 'shadow-emerald-200/40', trend: '+3.2%', isUp: true },
+                    { label: 'Churn Rate', value: `${billingStats.churnRate || 0}%`, icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', shadow: 'shadow-rose-200/40', trend: '+0.5%', isUp: false }
+                ].map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-2 shadow-lg transition-all duration-300 rounded-[2rem] relative bg-white overflow-hidden group hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow
+                    )}>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         {role === 'superadmin_staff' && stat.label === 'Total Revenue' && (
                             <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] z-10 flex items-center justify-center">
                                 <ShieldCheck className="text-primary-200 opacity-20" size={80} />
@@ -210,8 +226,13 @@ const BillingPayments = () => {
                                 </div>
                             </div>
                             <div className="space-y-1">
+<<<<<<< HEAD
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
                                 <h3 className="text-2xl font-black text-slate-900 tracking-tighter">{stat.value}</h3>
+=======
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tighter italic">{stat.value}</h3>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         </CardContent>
                     </Card>
@@ -219,7 +240,11 @@ const BillingPayments = () => {
             </div>
 
             {/* Payment Filter & Search */}
+<<<<<<< HEAD
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+=======
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-200/30 border-2 border-slate-100">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 <div className="flex items-center gap-2 p-1 bg-slate-50 rounded-xl w-full md:w-auto">
                     {['all', 'success', 'failed', 'refunded'].map((tab) => (
                         <button
@@ -247,7 +272,11 @@ const BillingPayments = () => {
             </div>
 
             {/* Transactions Table */}
+<<<<<<< HEAD
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+=======
+            <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/30 border-2 border-slate-100 overflow-hidden">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                     <div className="flex items-center gap-3">
                         <History className="text-primary-600" size={20} />

@@ -9,7 +9,12 @@ const {
   approveProject,
   getPendingProjects,
   getSalesExecutives,
+<<<<<<< HEAD
   bulkDeleteLeads
+=======
+  bulkDeleteLeads,
+  getSalesReport
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 } = require('../controllers/crmController');
 
 const { protect, authorize } = require('../middleware/auth');
@@ -30,6 +35,11 @@ router.route('/bulk-delete').post(protect, authorize('admin', 'sales'), bulkDele
 
 router.route('/pending-projects').get(protect, authorize('admin', 'sales'), getPendingProjects);
 
+<<<<<<< HEAD
+=======
+router.route('/reports').get(protect, authorize('admin', 'sales'), getSalesReport);
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 router
   .route('/:id')
   .put(protect, authorize('admin', 'sales'), updateLead)

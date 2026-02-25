@@ -2,7 +2,11 @@ import { create } from 'zustand';
 import axios from 'axios';
 import { toast } from 'sonner';
 
+<<<<<<< HEAD
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+=======
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1`;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 // Helper to get token from persisted auth storage
 const getAuthToken = () => {
@@ -131,7 +135,35 @@ const useAdminStore = create((set) => ({
         projectHealthChartData: null,
         actionableLists: null,
         error: null
+<<<<<<< HEAD
     })
+=======
+    }),
+
+    // Send Workspace Announcement
+    sendAnnouncement: async (announcementData) => {
+        set({ loading: true, error: null });
+        try {
+            const token = getAuthToken();
+            if (!token) throw new Error('Authentication required');
+
+            const response = await axios.post(`${API_URL}/admin/announcement`, announcementData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                set({ loading: false });
+                toast.success('Announcement broadcasted successfully');
+                return true;
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message || 'Failed to send announcement';
+            set({ error: errorMessage, loading: false });
+            toast.error(errorMessage);
+            return false;
+        }
+    }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 }));
 
 export default useAdminStore;

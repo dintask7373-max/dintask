@@ -10,11 +10,23 @@ import {
     Flag,
     Plus,
     Save,
+<<<<<<< HEAD
     ArrowLeft,
     Zap,
     Target,
     Layers
+=======
+    Layers,
+    ArrowLeft,
+    Target,
+    Zap,
+    Clock,
+    Paperclip,
+    X,
+    Loader2
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 } from 'lucide-react';
+import api from '@/lib/api'; // Ensure api import for uploads
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -55,6 +67,10 @@ const AssignTask = () => {
     const addNotification = useNotificationStore(state => state.addNotification);
     const [searchParams] = useSearchParams();
     const urlProjectId = searchParams.get('projectId');
+<<<<<<< HEAD
+=======
+    const editTaskId = searchParams.get('edit');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     React.useEffect(() => {
         fetchProjects();
@@ -66,6 +82,34 @@ const AssignTask = () => {
         }
     }, [urlProjectId]);
 
+<<<<<<< HEAD
+=======
+    // Load Task Data for Edit Mode
+    React.useEffect(() => {
+        if (editTaskId && tasks.length > 0) {
+            const taskToEdit = tasks.find(t => t.id === editTaskId || t._id === editTaskId);
+            if (taskToEdit) {
+                // Populate Form
+                setFormData({
+                    title: taskToEdit.title,
+                    description: taskToEdit.description || '',
+                    priority: taskToEdit.priority,
+                    assignedTo: 'none', // Not used directly, but kept for structure
+                    selectedEmployees: taskToEdit.assignedTo?.map(u => u._id || u) || [],
+                    labels: taskToEdit.labels?.join(', ') || '',
+                    projectId: taskToEdit.project?._id || taskToEdit.project || 'none',
+                    teamId: taskToEdit.team?._id || taskToEdit.team || 'none',
+                    recurrenceType: taskToEdit.recurrence?.type || 'none',
+                    recurrenceInterval: taskToEdit.recurrence?.interval || '1',
+                    recurrenceEndDate: taskToEdit.recurrence?.endDate ? new Date(taskToEdit.recurrence.endDate).toISOString().split('T')[0] : ''
+                });
+                setDate(new Date(taskToEdit.deadline));
+                setTaskFiles(taskToEdit.attachments || []);
+            }
+        }
+    }, [editTaskId, tasks]);
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const subEmployees = employees.filter(e => {
         const userId = (user?._id || user?.id)?.toString();
         const userAdminId = (user?.adminId?._id || user?.adminId)?.toString();
@@ -84,8 +128,18 @@ const AssignTask = () => {
         assignedTo: 'none',
         labels: '',
         projectId: 'none',
+<<<<<<< HEAD
         teamId: 'none'
+=======
+        teamId: 'none',
+        recurrenceType: 'none',
+        recurrenceInterval: '1',
+        recurrenceEndDate: '',
+        selectedEmployees: [] // For multi-assign
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     });
+    const [taskFiles, setTaskFiles] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -98,19 +152,49 @@ const AssignTask = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
         if (!formData.title || (!formData.assignedTo && formData.teamId === 'none') || !date) {
             toast.error("Tactical parameters incomplete. Assign to a Personnel or Team.");
+=======
+        // Validation: Must have title, deadline, and at least one assignee or team
+        if (!formData.title || (formData.selectedEmployees.length === 0 && formData.teamId === 'none') || !date) {
+            toast.error("Deployment incomplete. Title, Deadline, and Personnel/Team required.");
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             return;
+        }
+
+        // Validate Deadline is not in the past
+        if (date < new Date(new Date().setSeconds(0, 0) - 60000)) {
+            toast.error("Tactical Failure: Deadline cannot be set in the temporal past.");
+            return;
+        }
+
+        // Validate Recurrence
+        if (formData.recurrenceType !== 'none') {
+            if (parseInt(formData.recurrenceInterval) < 1) {
+                toast.error("Interval must be positive");
+                return;
+            }
+            if (formData.recurrenceEndDate && new Date(formData.recurrenceEndDate) <= date) {
+                toast.error("Cycle end date must be after start deadline");
+                return;
+            }
         }
 
         setIsSubmitting(true);
         try {
+<<<<<<< HEAD
             // Task Object matches Backend Schema
             const newTaskPayload = {
+=======
+            // Task Object
+            const taskPayload = {
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 title: formData.title,
                 description: formData.description,
                 deadline: date ? date.toISOString() : null,
                 priority: formData.priority,
+<<<<<<< HEAD
                 assignedTo: formData.assignedTo !== 'none' ? [formData.assignedTo] : [],
                 team: formData.teamId === 'none' ? undefined : formData.teamId,
                 project: formData.projectId === 'none' ? undefined : formData.projectId,
@@ -134,9 +218,89 @@ const AssignTask = () => {
         } catch (error) {
             console.error(error);
             toast.error("Failed to create task");
+=======
+                assignedTo: formData.selectedEmployees,
+                team: formData.teamId === 'none' ? undefined : formData.teamId,
+                project: formData.projectId === 'none' ? undefined : formData.projectId,
+                labels: formData.labels.split(',').map(l => l.trim()).filter(l => l),
+                recurrence: {
+                    type: formData.recurrenceType,
+                    interval: parseInt(formData.recurrenceInterval) || 1,
+                    endDate: formData.recurrenceEndDate ? new Date(formData.recurrenceEndDate) : null
+                },
+                attachments: taskFiles
+            };
+
+            // Status Auto-Update Logic
+            if (editTaskId) {
+                const taskToEdit = tasks.find(t => t.id === editTaskId || t._id === editTaskId);
+                if (taskToEdit && taskToEdit.status === 'overdue' && new Date(date) > new Date()) {
+                    taskPayload.status = 'pending';
+                    taskPayload.progress = 0; // Reset progress or keep? Better to reset if it was overdue
+                    toast.info("Directive status reset to PENDING due to deadline extension.");
+                }
+            }
+
+            if (editTaskId) {
+                // Update Existing Task
+                await useTaskStore.getState().updateTask(editTaskId, taskPayload);
+                toast.success("Directive Updated Successfully");
+            } else {
+                // Create New Task
+                await addTask(taskPayload);
+                toast.success("Task deployed successfully");
+            }
+
+            navigate('/manager/my-tasks');
+        } catch (error) {
+            console.error(error);
+            toast.error(editTaskId ? "Update failed" : "Deployment failed");
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleFileUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        setIsUploading(true);
+        const uploadData = new FormData();
+        files.forEach(file => uploadData.append('files', file));
+
+        try {
+            // Use standard API util
+            const res = await api('/upload/multiple', {
+                method: 'POST',
+                body: uploadData
+            });
+
+            if (res.success) {
+                const newAttachments = files.map((file, idx) => ({
+                    name: file.name,
+                    url: res.urls[idx]
+                }));
+                setTaskFiles(prev => [...prev, ...newAttachments]);
+                toast.success("Assets secured");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Upload failed");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    // Toggle Employee Selection
+    const toggleEmployee = (empId) => {
+        setFormData(prev => {
+            const current = prev.selectedEmployees;
+            const newSelection = current.includes(empId)
+                ? current.filter(id => id !== empId)
+                : [...current, empId];
+            return { ...prev, selectedEmployees: newSelection, assignedTo: newSelection.length > 0 ? newSelection[0] : 'none' };
+        });
     };
 
     return (
@@ -154,10 +318,17 @@ const AssignTask = () => {
                     </Button>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+<<<<<<< HEAD
                             Task <span className="text-primary-600">Deployment</span>
                         </h1>
                         <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
                             Operational assignment protocols
+=======
+                            {editTaskId ? (<>Update <span className="text-primary-600">Directive</span></>) : (<>Task <span className="text-primary-600">Deployment</span></>)}
+                        </h1>
+                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                            {editTaskId ? 'Modify existing operational parameters' : 'Operational assignment protocols'}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </p>
                     </div>
                 </div>
@@ -229,13 +400,44 @@ const AssignTask = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Attachments Section */}
+                            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center justify-between px-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Technical Assets ({taskFiles.length})</Label>
+                                    <label className="cursor-pointer">
+                                        <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-2 py-1 rounded-lg hover:bg-primary-100 transition-colors">
+                                            {isUploading ? <Loader2 size={10} className="animate-spin" /> : <Paperclip size={10} />}
+                                            ATTACH FILES
+                                        </div>
+                                    </label>
+                                </div>
+                                {taskFiles.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {taskFiles.map((file, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 rounded-lg group">
+                                                <span className="text-[9px] font-bold text-slate-600 truncate max-w-[100px]">{file.name}</span>
+                                                <button type="button" onClick={() => setTaskFiles(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500 transition-colors">
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Assignment & Deployment Sidebar */}
+<<<<<<< HEAD
                 <div className="lg:col-span-4 space-y-4 sm:space-y-6">
                     <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden sticky top-6">
+=======
+                <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:sticky lg:top-6 lg:h-fit">
+                    <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                                 <Target size={14} className="text-primary-500" />
@@ -245,6 +447,7 @@ const AssignTask = () => {
                         <CardContent className="p-5 space-y-5">
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Assign to Project (Optional)</Label>
+<<<<<<< HEAD
                                 <Select
                                     value={formData.projectId}
                                     onValueChange={(val) => handleSelectChange('projectId', val)}
@@ -285,10 +488,13 @@ const AssignTask = () => {
 
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Assign To</Label>
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 <Select
-                                    value={formData.assignedTo}
-                                    onValueChange={(val) => handleSelectChange('assignedTo', val)}
+                                    value={formData.projectId}
+                                    onValueChange={(val) => handleSelectChange('projectId', val)}
                                 >
+<<<<<<< HEAD
                                     <SelectTrigger className="h-12 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-black text-[10px] uppercase tracking-widest px-4">
                                         <SelectValue placeholder="IDENTIFY TARGET" />
                                     </SelectTrigger>
@@ -309,10 +515,88 @@ const AssignTask = () => {
                                         ) : (
                                             <div className="p-2 text-[8px] font-black uppercase text-center text-slate-400">Zero Personnel Detected</div>
                                         )}
+=======
+                                    <SelectTrigger className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4">
+                                        <SelectValue placeholder="Select Project" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl h-60">
+                                        <SelectItem value="none" className="text-[10px] font-black uppercase">No Project</SelectItem>
+                                        {projects.map(project => (
+                                            <SelectItem key={project._id} value={project._id} className="text-[10px] font-black uppercase">
+                                                {project.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
 
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Team (Optional)</Label>
+                                <Select
+                                    value={formData.teamId}
+                                    onValueChange={(val) => handleSelectChange('teamId', val)}
+                                >
+                                    <SelectTrigger className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4">
+                                        <SelectValue placeholder="Select Team" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                                        <SelectItem value="none" className="text-[10px] font-black uppercase">No Team</SelectItem>
+                                        {teams.map(team => (
+                                            <SelectItem key={team._id} value={team._id} className="text-[10px] font-black uppercase">
+                                                {team.name}
+                                            </SelectItem>
+                                        ))}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+<<<<<<< HEAD
+=======
+                            <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Assign To</Label>
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
+                                    {subEmployees.length > 0 ? (
+                                        subEmployees.map(emp => {
+                                            const isSelected = formData.selectedEmployees.includes(emp._id || emp.id);
+                                            return (
+                                                <div
+                                                    key={emp._id || emp.id}
+                                                    onClick={() => toggleEmployee(emp._id || emp.id)}
+                                                    className={cn(
+                                                        "flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer bg-slate-50 dark:bg-slate-800/50",
+                                                        isSelected
+                                                            ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                                                            : "border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                                                    )}
+                                                >
+                                                    <div className="relative">
+                                                        <Avatar className="h-8 w-8 mb-1.5">
+                                                            <AvatarImage src={emp.avatar || emp.profileImage} />
+                                                            <AvatarFallback className="text-[10px] font-black">{emp?.name?.charAt(0) || '?'}</AvatarFallback>
+                                                        </Avatar>
+                                                        {isSelected && (
+                                                            <div className="absolute -top-1 -right-1 size-4 bg-primary-500 text-white rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
+                                                                <CheckSquare size={10} strokeWidth={4} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className={cn(
+                                                        "text-[9px] font-black text-center leading-tight uppercase",
+                                                        isSelected ? "text-primary-700 dark:text-primary-400" : "text-slate-500"
+                                                    )}>
+                                                        {(emp?.name?.split(' ')[0] || 'Unknown')}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="col-span-full p-4 text-[9px] font-black uppercase text-center text-slate-400 italic">No Personnel Available</div>
+                                    )}
+                                </div>
+                            </div>
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Deadline</Label>
                                 <Popover>
@@ -334,6 +618,10 @@ const AssignTask = () => {
                                             selected={date}
                                             onSelect={setDate}
                                             initialFocus
+<<<<<<< HEAD
+=======
+                                            disabled={{ before: new Date() }} // Prevent past dates
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                             className="font-sans"
                                         />
                                     </PopoverContent>
@@ -349,12 +637,77 @@ const AssignTask = () => {
                                     <>INITIALIZING...</>
                                 ) : (
                                     <>
+<<<<<<< HEAD
                                         <Zap size={14} className="fill-current" /> DEPLOY TASK
+=======
+                                        {searchParams.get('edit') ? (
+                                            <><Save size={14} className="fill-current" /> UPDATE DIRECTIVE</>
+                                        ) : (
+                                            <><Zap size={14} className="fill-current" /> DEPLOY TASK</>
+                                        )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </>
                                 )}
                             </Button>
                         </CardContent>
                     </Card>
+
+                    <Card className="border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+                        <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                <Clock size={14} className="text-amber-500" />
+                                Temporal Cycle
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-5 space-y-5">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Recurrence Pattern</Label>
+                                <Select
+                                    value={formData.recurrenceType}
+                                    onValueChange={(val) => handleSelectChange('recurrenceType', val)}
+                                >
+                                    <SelectTrigger className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                                        <SelectItem value="none" className="text-[10px] font-black uppercase">One-off Mission</SelectItem>
+                                        <SelectItem value="daily" className="text-[10px] font-black uppercase">Daily Cycle</SelectItem>
+                                        <SelectItem value="weekly" className="text-[10px] font-black uppercase">Weekly Cycle</SelectItem>
+                                        <SelectItem value="monthly" className="text-[10px] font-black uppercase">Monthly Cycle</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {formData.recurrenceType !== 'none' && (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Interval Factor</Label>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            name="recurrenceInterval"
+                                            value={formData.recurrenceInterval}
+                                            onChange={handleInputChange}
+                                            className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4"
+                                            placeholder="Frequency (e.g. 1)"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Cycle Termination (Optional)</Label>
+                                        <Input
+                                            type="date"
+                                            name="recurrenceEndDate"
+                                            min={new Date().toISOString().split('T')[0]}
+                                            value={formData.recurrenceEndDate}
+                                            onChange={handleInputChange}
+                                            className="h-11 bg-slate-50 border-none dark:bg-slate-800/50 rounded-xl font-bold text-sm px-4"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+
                 </div>
             </div>
 

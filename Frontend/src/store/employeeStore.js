@@ -88,11 +88,34 @@ const useEmployeeStore = create((set, get) => ({
     },
 
 
+<<<<<<< HEAD
     fetchPendingRequests: async () => {
         try {
             const res = await api('/admin/join-requests');
             if (res.success) {
                 set({ pendingRequests: res.data || [] });
+=======
+    pendingPagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 1
+    },
+
+    fetchPendingRequests: async (params = {}) => {
+        try {
+            const queryParams = new URLSearchParams();
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            if (params.search) queryParams.append('search', params.search);
+
+            const res = await api(`/admin/join-requests?${queryParams.toString()}`);
+            if (res.success) {
+                set({
+                    pendingRequests: res.data || [],
+                    pendingPagination: res.pagination || { page: 1, limit: 10, total: 0, pages: 1 }
+                });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             }
         } catch (error) {
             console.error("Fetch Pending Requests Error", error);
@@ -113,6 +136,16 @@ const useEmployeeStore = create((set, get) => ({
                     employees: [...state.employees, res.data],
                     loading: false
                 }));
+<<<<<<< HEAD
+=======
+                get().fetchEmployees();
+                get().fetchSubscriptionLimit();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 toast.success('Team member added successfully');
                 return true;
             }
@@ -136,6 +169,17 @@ const useEmployeeStore = create((set, get) => ({
                     pendingRequests: state.pendingRequests.filter(r => r._id !== id),
                     employees: [...state.employees, res.data]
                 }));
+<<<<<<< HEAD
+=======
+                get().fetchEmployees();
+                get().fetchPendingRequests();
+                get().fetchSubscriptionLimit();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 return true;
             }
         } catch (error) {
@@ -154,6 +198,10 @@ const useEmployeeStore = create((set, get) => ({
             set((state) => ({
                 pendingRequests: state.pendingRequests.filter(r => r._id !== id)
             }));
+<<<<<<< HEAD
+=======
+            get().fetchPendingRequests();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             return true;
         } catch (error) {
             console.error("Reject Request Error", error);
@@ -171,6 +219,16 @@ const useEmployeeStore = create((set, get) => ({
             set((state) => ({
                 employees: state.employees.filter((emp) => emp._id !== id),
             }));
+<<<<<<< HEAD
+=======
+            get().fetchEmployees();
+            get().fetchSubscriptionLimit();
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             toast.success('User deleted');
         } catch (error) {
             console.error("Delete User Error", error);
@@ -178,6 +236,39 @@ const useEmployeeStore = create((set, get) => ({
         }
     },
 
+<<<<<<< HEAD
+=======
+    updateEmployee: async (id, updatedData, role) => {
+        set({ loading: true });
+        try {
+            const res = await api(`/admin/users/${id}`, {
+                method: 'PUT',
+                body: { ...updatedData, originRole: role }
+            });
+
+            if (res.success) {
+                set((state) => ({
+                    employees: state.employees.map((e) => (e._id === id ? res.data : e)),
+                    loading: false
+                }));
+                get().fetchEmployees();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+                toast.success('Employee updated successfully');
+                return true;
+            }
+        } catch (error) {
+            console.error("Update Employee Error", error);
+            toast.error(error.message || 'Failed to update member');
+            set({ loading: false });
+            return false;
+        }
+    },
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     addPendingRequest: async (requestData) => {
         set({ loading: true });
         try {
@@ -186,6 +277,10 @@ const useEmployeeStore = create((set, get) => ({
             const registrationData = {
                 name: requestData.fullName,
                 email: requestData.email,
+<<<<<<< HEAD
+=======
+                phoneNumber: requestData.phoneNumber,
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 password: requestData.password,
                 role: requestData.role?.toLowerCase() === 'sales' ? 'sales_executive' : requestData.role?.toLowerCase(),
                 adminId: requestData.workspaceId

@@ -49,8 +49,13 @@ const ManagerLayout = ({ role = 'manager' }) => {
                 {/* Scrollable Page Content */}
                 <div className="flex-1 overflow-y-auto scroll-smooth w-full no-scrollbar">
                     <main className={cn(
+<<<<<<< HEAD
                         "w-full min-h-full px-4 md:px-8 pt-20",
                         showMobileFooter ? "pb-20 md:pb-8" : "pb-8"
+=======
+                        "w-full min-h-full px-4 md:px-8 pt-6",
+                        showMobileFooter ? "pb-16 md:pb-8" : "pb-8"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     )}>
                         <AnimatePresence mode="wait">
                             <motion.div
@@ -98,7 +103,11 @@ const ManagerLayout = ({ role = 'manager' }) => {
                         animate={{ y: 0 }}
                         exit={{ y: 100 }}
                         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+<<<<<<< HEAD
                         className="fixed bottom-0 left-0 w-full h-[56px] bg-white dark:bg-slate-900 z-50 px-4 flex items-center justify-around lg:hidden border-t border-slate-200 dark:border-slate-800 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]"
+=======
+                        className="fixed bottom-0 left-0 w-full h-[60px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl z-50 px-4 flex items-center justify-around lg:hidden border-t border-slate-200/50 dark:border-slate-800/50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     >
                         {salesNavItems.map((item) => {
                             const isActive = location.pathname === item.path || (item.path === '/sales' && location.pathname === '/sales/');
@@ -117,23 +126,49 @@ const ManagerLayout = ({ role = 'manager' }) => {
                                             "relative flex items-center justify-center transition-all duration-500",
                                             isActive ? "text-[#4461f2]" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                                         )}>
+<<<<<<< HEAD
                                             <item.icon
                                                 size={20}
                                                 strokeWidth={isActive ? 2.5 : 2}
                                                 className={cn(
                                                     "transition-all duration-300 relative z-10",
                                                     isActive ? "-translate-y-0.5" : ""
+=======
+                                            {/* Glow Background for Active Icon */}
+                                            {isActive && (
+                                                <motion.div
+                                                    layoutId="sales_icon_glow"
+                                                    className="absolute inset-0 bg-blue-500/10 blur-xl rounded-full scale-150 z-0"
+                                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.8 }}
+                                                />
+                                            )}
+
+                                            <item.icon
+                                                size={isActive ? 22 : 20}
+                                                strokeWidth={isActive ? 2.5 : 1.8}
+                                                className={cn(
+                                                    "transition-all duration-500 relative z-10",
+                                                    isActive ? "-translate-y-1 scale-105 drop-shadow-[0_0_8px_rgba(68,97,242,0.4)]" : "group-hover:scale-110"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                 )}
                                             />
                                         </div>
                                         <span className={cn(
+<<<<<<< HEAD
                                             "text-[8.5px] font-black mt-0.5 tracking-tight uppercase transition-all duration-300",
                                             isActive ? "text-[#4461f2] opacity-100 translate-y-0" : "text-slate-400 opacity-60 translate-y-0.5"
+=======
+                                            "text-[9px] font-black mt-0.5 tracking-[0.05em] uppercase transition-all duration-300 relative z-10",
+                                            isActive
+                                                ? "text-[#4461F2] opacity-100 -translate-y-0.5"
+                                                : "text-slate-400 opacity-60 translate-y-0 group-hover:opacity-100"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         )}>
                                             {item.name}
                                         </span>
                                     </motion.div>
 
+<<<<<<< HEAD
                                     {/* Small Active Dot */}
                                     {isActive && (
                                         <motion.div
@@ -142,6 +177,9 @@ const ManagerLayout = ({ role = 'manager' }) => {
                                             transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                                         />
                                     )}
+=======
+                                    {/* Premium Active Indicator Bar Removed */}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </NavLink>
                             );
                         })}

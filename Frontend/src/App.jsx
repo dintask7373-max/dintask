@@ -9,6 +9,9 @@ import SubscriptionExpiredModal from './shared/components/SubscriptionExpiredMod
 import AdminSubscriptionExpiredModal from './shared/components/AdminSubscriptionExpiredModal';
 import './index.css';
 
+import { requestForToken, onMessageListener } from './firebase';
+import { toast } from 'sonner';
+
 function App() {
   const { isAuthenticated, fetchProfile } = useAuthStore();
   const { showTeamExpiredModal, showAdminExpiredModal, handleTeamLogout, adminExpiryDate } = useSubscriptionMonitor();
@@ -19,9 +22,33 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchProfile();
+<<<<<<< HEAD
     }
   }, [isAuthenticated, fetchProfile]);
 
+=======
+      // Setup Push Notifications
+      requestForToken();
+    }
+  }, [isAuthenticated, fetchProfile]);
+
+  useEffect(() => {
+    const unsubscribe = onMessageListener((payload) => {
+      toast(payload.notification.title, {
+        description: payload.notification.body,
+        action: payload.data?.link ? {
+          label: 'View',
+          onClick: () => window.location.href = payload.data.link
+        } : null
+      });
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   return (
     <BrowserRouter>
       <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 transition-colors duration-300">

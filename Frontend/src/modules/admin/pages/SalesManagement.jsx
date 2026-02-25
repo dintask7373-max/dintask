@@ -51,7 +51,11 @@ import useManagerStore from '@/store/managerStore'; // Kept in case required by 
 
 
 const SalesManagement = () => {
+<<<<<<< HEAD
     const { salesReps, salesPagination, fetchSalesReps, addSalesRep, updateSalesRep, deleteSalesRep, crmStats, fetchCRMStats } = useSalesStore();
+=======
+    const { salesReps, salesPagination, fetchSalesReps, updateSalesRep, deleteSalesRep, crmStats, fetchCRMStats } = useSalesStore();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const { leads, getPipelineData, moveLead, addLead, assignLead, requestProjectConversion, fetchLeads } = useCRMStore();
     const { employees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { managers } = useManagerStore();
@@ -62,9 +66,11 @@ const SalesManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+<<<<<<< HEAD
     const [isAddRepModalOpen, setIsAddRepModalOpen] = useState(false);
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
-    const [newRepData, setNewRepData] = useState({ name: '', email: '' });
     const [newDealData, setNewDealData] = useState({
         name: '',
         company: '',
@@ -120,6 +126,7 @@ const SalesManagement = () => {
     };
 
 
+<<<<<<< HEAD
     const handleAddRep = async (e) => {
         e.preventDefault();
 
@@ -141,6 +148,8 @@ const SalesManagement = () => {
             }
         }
     };
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const handleExport = () => {
         try {
@@ -259,6 +268,7 @@ const SalesManagement = () => {
                 <TabsContent value="team" className="space-y-4 sm:space-y-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
                         {[
+<<<<<<< HEAD
                             { label: 'Total Reps', value: crmStats?.totalReps || 0, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
                             { label: 'Active Deals', value: crmStats?.activeDeals || 0, icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                             { label: 'Revenue', value: `₹${((crmStats?.totalRevenue || 0) / 1000).toFixed(0)}K`, icon: IndianRupee, color: 'text-purple-600', bg: 'bg-purple-50' },
@@ -272,12 +282,47 @@ const SalesManagement = () => {
                                     <div className="text-left min-w-0">
                                         <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{stat.label}</p>
                                         <p className="text-sm sm:text-xl font-black text-slate-900 dark:text-white truncate">{stat.value}</p>
+=======
+                            { label: 'Total Reps', value: (crmStats?.totalReps || 0).toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-100 dark:border-blue-900', shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20', trend: "Force" },
+                            { label: 'Active Deals', value: (crmStats?.activeDeals || 0).toString(), icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-emerald-100 dark:border-emerald-900', shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20', trend: "Live" },
+                            { label: 'Projected Revenue', value: `₹${((crmStats?.totalRevenue || 0) / 1000).toFixed(0)}K`, icon: IndianRupee, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-100 dark:border-purple-900', shadow: 'shadow-lg shadow-purple-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-purple-50 dark:from-slate-900 dark:to-purple-900/20', trend: "Value" },
+                            { label: 'Conversion Performance', value: `${crmStats?.conversionRate || 0}%`, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-100 dark:border-amber-900', shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20', trend: "Success" }
+                        ].map((stat, i) => (
+                            <Card key={i} className={cn(
+                                "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                                stat.border,
+                                stat.shadow,
+                                stat.gradient
+                            )}>
+                                <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                                    <div className="space-y-3 sm:space-y-4">
+                                        <div className={cn(
+                                            "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
+                                            stat.bg
+                                        )}>
+                                            <stat.icon className={cn("size-4.5 sm:size-5", stat.color)} />
+                                        </div>
+                                        <div className="space-y-0.5 sm:space-y-1 text-left">
+                                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                            <p className={cn("text-lg sm:text-2xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
+                                            <div className="flex items-center gap-1 pt-1">
+                                                <div className={cn("flex items-center justify-center size-3.5 rounded-full", stat.bg)}>
+                                                    <TrendingUp size={10} className={stat.color} />
+                                                </div>
+                                                <span className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className={cn("hidden sm:block size-16 -mr-2 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
+                                        <stat.icon size={64} />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     </div>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
 
+<<<<<<< HEAD
                     {/* Performance Matrix Table */}
                     <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
                         <CardHeader className="border-b border-slate-100 dark:border-slate-800 py-4 px-6">
@@ -346,6 +391,9 @@ const SalesManagement = () => {
                             </div>
                         </CardContent>
                     </Card>
+=======
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div className="relative w-full sm:w-[250px] lg:w-[300px]">
@@ -380,6 +428,7 @@ const SalesManagement = () => {
                             >
                                 <Download size={14} />
                                 <span className="hidden sm:inline">Export</span>
+<<<<<<< HEAD
                             </Button>
                             <Button
                                 onClick={() => setIsAddRepModalOpen(true)}
@@ -388,6 +437,8 @@ const SalesManagement = () => {
                             >
                                 <Plus size={14} />
                                 <span>Add Rep</span>
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </Button>
                         </div>
                     </div>
@@ -644,6 +695,7 @@ const SalesManagement = () => {
                                                                 >
                                                                     {/* Card Content same as before */}
                                                                     <div className="absolute top-0 right-0 w-12 h-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-bl-full -mr-6 -mt-6 group-hover:scale-110 transition-transform" />
+<<<<<<< HEAD
 
                                                                     <div className="flex justify-between items-start mb-2 relative z-10">
                                                                         <Badge className={cn("text-[8px] uppercase font-black px-1.5 py-0 border-none shadow-none", getPriorityColor(lead.priority))}>
@@ -738,6 +790,79 @@ const SalesManagement = () => {
                     </form>
                 </DialogContent>
             </Dialog >
+=======
+
+                                                                    <div className="flex justify-between items-start mb-2 relative z-10">
+                                                                        <Badge className={cn("text-[8px] uppercase font-black px-1.5 py-0 border-none shadow-none", getPriorityColor(lead.priority))}>
+                                                                            {lead.priority}
+                                                                        </Badge>
+
+                                                                        {stage === 'Won' && (
+                                                                            lead.approvalStatus === 'pending_project' ? (
+                                                                                <Badge variant="outline" className="text-[8px] h-5 bg-amber-50 text-amber-600 border-amber-200">Pending Project</Badge>
+                                                                            ) : lead.approvalStatus === 'approved_project' ? (
+                                                                                <Badge variant="outline" className="text-[8px] h-5 bg-emerald-50 text-emerald-600 border-emerald-200">Active Project</Badge>
+                                                                            ) : (
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="outline"
+                                                                                    className="h-5 text-[8px] px-2 bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100"
+                                                                                    onClick={async (e) => {
+                                                                                        e.stopPropagation(); // prevent drag interference if button clicked
+                                                                                        await requestProjectConversion(lead.id);
+                                                                                        toast.success("Project conversion requested sent to Admin");
+                                                                                    }}
+                                                                                    onMouseDown={(e) => e.stopPropagation()} // Important for button inside draggable
+                                                                                >
+                                                                                    Request Project
+                                                                                </Button>
+                                                                            )
+                                                                        )}
+
+                                                                        {stage !== 'Won' && (
+                                                                            <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1.5 text-slate-300 hover:text-slate-600 rounded-lg">
+                                                                                <MoreHorizontal size={12} />
+                                                                            </Button>
+                                                                        )}
+                                                                    </div>
+                                                                    <h4 className="font-black text-slate-900 dark:text-white text-[11px] mb-1 line-clamp-1 relative z-10 uppercase tracking-tight">{lead.name}</h4>
+                                                                    <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-3 relative z-10 font-bold tracking-wide">
+                                                                        <Building2 size={10} className="text-slate-300" />
+                                                                        <span className="truncate">{lead.company}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 mb-3 relative z-10">
+                                                                        <Avatar className="h-4 w-4 border border-white dark:border-slate-800 shrink-0">
+                                                                            <AvatarFallback className="text-[7px] font-black bg-primary-50 text-primary-600 uppercase">{getRepName(lead.owner).charAt(0)}</AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest truncate">{getRepName(lead.owner)}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-50 dark:border-slate-800 relative z-10">
+                                                                        <div className="flex items-center gap-0.5 text-primary-600 font-black text-[11px] tracking-tight">
+                                                                            <IndianRupee size={10} className="stroke-[3.5px]" />
+                                                                            {Number(lead.amount || 0).toLocaleString()}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1 text-[8px] text-slate-300 font-black uppercase tracking-widest">
+                                                                            <Calendar size={9} />
+                                                                            {lead.deadline ? format(new Date(lead.deadline), 'MMM d') : '—'}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))
+                                                )}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+                                    </Droppable>
+                                </div>
+                            ))}
+                        </div>
+                    </DragDropContext>
+                </TabsContent>
+            </Tabs >
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
             {/* Add Deal Dialog */}
             < Dialog open={isAddDealModalOpen} onOpenChange={setIsAddDealModalOpen} >

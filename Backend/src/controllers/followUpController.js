@@ -41,16 +41,47 @@ exports.getFollowUps = async (req, res) => {
 // @access  Private
 exports.createFollowUp = async (req, res) => {
     try {
+<<<<<<< HEAD
         // Determine adminId based on role
         if (req.user.role === 'admin') {
             req.body.adminId = req.user.id;
         } else {
             req.body.adminId = req.user.adminId;
+=======
+        const { leadId, type, scheduledAt } = req.body;
+
+        if (!leadId) {
+            return res.status(400).json({ success: false, error: 'Please select a valid Lead for tracking' });
+        }
+
+        if (!type || !['Call', 'Meeting', 'Email', 'WhatsApp'].includes(type)) {
+            return res.status(400).json({ success: false, error: 'Invalid interaction type selected' });
+        }
+
+        if (!scheduledAt) {
+            return res.status(400).json({ success: false, error: 'Mandatory: Please specify the temporal window for this sync' });
+        }
+
+        const syncDate = new Date(scheduledAt);
+        if (isNaN(syncDate.getTime())) {
+            return res.status(400).json({ success: false, error: 'Invalid temporal format' });
+        }
+
+        // Only enforce future dates for NEW "Scheduled" follow-ups
+        // Note: For migrations or manual logging of past events, we might relax this, 
+        // but for fresh commands, we want to ensure focus on future ops.
+        if (req.body.status === 'Scheduled' && syncDate < new Date()) {
+            return res.status(400).json({ success: false, error: 'Temporal Anomaly: Cannot schedule synchronization in the past' });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         }
 
         // If Sales Executive, verify the lead belongs to them
         if (req.user.role === 'sales' || req.user.role === 'sales_executive') {
+<<<<<<< HEAD
             const lead = await Lead.findById(req.body.leadId);
+=======
+            const lead = await Lead.findById(leadId);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             if (!lead) {
                 return res.status(404).json({ success: false, error: 'Lead not found' });
             }
@@ -73,6 +104,28 @@ exports.createFollowUp = async (req, res) => {
 
         const followUp = await FollowUp.create(req.body);
 
+<<<<<<< HEAD
+=======
+        // Notify Sales Rep if Admin creates a follow-up for them
+        if (req.user.role === 'admin' && req.body.salesRepId && req.body.salesRepId !== req.user.id) {
+            try {
+                const Notification = require('../models/Notification');
+                const lead = await Lead.findById(leadId);
+                await Notification.create({
+                    recipient: req.body.salesRepId,
+                    sender: req.user.id,
+                    adminId: req.user.id, // Admin's ID is the workspace ID
+                    type: 'general',
+                    title: 'New Follow-up Scheduled',
+                    message: `Admin scheduled a ${type} for lead "${lead?.name || 'Unknown'}" on ${new Date(scheduledAt).toLocaleString()}.`,
+                    link: '/sales/follow-ups'
+                });
+            } catch (err) {
+                console.error('Follow-up Notification Error:', err);
+            }
+        }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         res.status(201).json({ success: true, data: followUp });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });

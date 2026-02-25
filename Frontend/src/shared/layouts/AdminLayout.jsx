@@ -35,7 +35,7 @@ const AdminLayout = ({ role }) => {
 
                 {/* Scrollable Page Content */}
                 <div className="flex-1 overflow-y-auto scroll-smooth w-full">
-                    <main className="w-full min-h-full px-4 md:px-8 pt-20 pb-8">
+                    <main className="w-full min-h-full px-4 md:px-8 pt-6 pb-8">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={location.pathname}

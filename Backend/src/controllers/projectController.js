@@ -8,10 +8,19 @@ const SalesExecutive = require('../models/SalesExecutive');
 // @access  Private
 exports.getProjects = async (req, res) => {
   try {
+<<<<<<< HEAD
+=======
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const search = req.query.search || '';
+    const startIndex = (page - 1) * limit;
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     let query = {};
     let adminId;
 
     if (req.user.role === 'admin') {
+<<<<<<< HEAD
       // Admin sees all projects in their workspace
       adminId = req.user.id;
       query = {
@@ -42,13 +51,67 @@ exports.getProjects = async (req, res) => {
       };
     }
 
+=======
+      adminId = req.user.id;
+      query = { adminId: adminId };
+    } else if (req.user.role === 'manager') {
+      const manager = await Manager.findById(req.user.id);
+      if (!manager) return res.status(404).json({ success: false, error: 'Manager not found' });
+      adminId = manager.adminId;
+      query = { manager: req.user.id, adminId: adminId };
+    } else if (req.user.role === 'sales_executive') {
+      const salesExec = await SalesExecutive.findById(req.user.id);
+      if (!salesExec) return res.status(404).json({ success: false, error: 'Sales Executive not found' });
+      adminId = salesExec.adminId;
+      query = { salesRep: req.user.id, adminId: adminId };
+    }
+
+    // Advanced search filter
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { name: searchRegex },
+        { 'client.name': searchRegex },
+        { 'client.company': searchRegex }
+      ];
+    }
+
+    // To search within populated client fields properly, we might need a different approach 
+    // but for now, we'll fetch and filter if needed, or use a more complex aggregation.
+    // However, Mongoose doesn't support $or on populated fields directly without aggregation.
+    // Let's stick to a simpler name search or use a better query if client info is stored in Project.
+
+    // Check Project model to see if it has client info embedded or just ref.
+    // For now, let's just search by Project Name.
+
+    const total = await Project.countDocuments(query);
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const projects = await Project.find(query)
       .populate('client', 'name company email mobile')
       .populate('manager', 'name email')
       .populate('salesRep', 'name')
+<<<<<<< HEAD
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: projects.length, data: projects });
+=======
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      count: projects.length,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      },
+      data: projects
+    });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -126,7 +189,70 @@ exports.updateProject = async (req, res) => {
     project = await Project.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
+<<<<<<< HEAD
     });
+=======
+    }).populate('salesRep', 'name').populate('manager', 'name');
+
+    // -- NOTIFICATIONS: Status Update --
+    if (req.body.status && req.body.status !== project.status) {
+      const Notification = require('../models/Notification');
+      const Employee = require('../models/Employee');
+
+      // Notify Admin and Sales Rep
+      const participants = [];
+      if (project.adminId) participants.push({ id: project.adminId, link: `/admin/projects` });
+      if (project.salesRep) participants.push({ id: project.salesRep._id || project.salesRep, link: `/sales/deals` });
+
+      const adminSalesNotifs = participants.map(p =>
+        Notification.create({
+          recipient: p.id,
+          sender: req.user.id,
+          adminId: project.adminId,
+          type: 'general',
+          title: 'Project Status Updated',
+          message: `Project "${project.name}" status changed to ${req.body.status} by Manager ${req.user.name}.`,
+          link: p.link
+        })
+      );
+      await Promise.all(adminSalesNotifs);
+
+      // Also notify all Employees assigned to tasks in this project
+      try {
+        const projectTasks = await Task.find({ project: project._id }).select('assignedTo');
+        const allEmployeeIds = [...new Set(
+          projectTasks.flatMap(t => t.assignedTo.map(id => id.toString()))
+        )];
+
+        if (allEmployeeIds.length > 0) {
+          const statusLabel = req.body.status;
+          const empTitle = statusLabel === 'completed' ? 'Project Completed!' :
+            statusLabel === 'on_hold' ? 'Project On Hold' :
+              statusLabel === 'cancelled' ? 'Project Cancelled' : 'Project Status Updated';
+          const empMessage = statusLabel === 'completed'
+            ? `Project "${project.name}" has been completed. Well done!`
+            : statusLabel === 'on_hold'
+              ? `Project "${project.name}" has been put on hold by ${req.user.name}. Your tasks are paused.`
+              : statusLabel === 'cancelled'
+                ? `Project "${project.name}" has been cancelled by ${req.user.name}. Associated tasks have been removed.`
+                : `Project "${project.name}" status has been updated to "${statusLabel}" by ${req.user.name}.`;
+
+          const empNotifs = allEmployeeIds.map(empId => ({
+            recipient: empId,
+            sender: req.user.id,
+            adminId: project.adminId,
+            type: 'general',
+            title: empTitle,
+            message: empMessage,
+            link: `/employee/tasks`
+          }));
+          await Notification.insertMany(empNotifs);
+        }
+      } catch (err) {
+        console.error('Employee Project Notification Error:', err);
+      }
+    }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     // CASCADE STATUS SYNC: If project is on_hold or cancelled, pause all associated tasks
     if (['on_hold', 'cancelled'].includes(req.body.status)) {
@@ -165,6 +291,23 @@ exports.deleteProject = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Authorization denied' });
     }
 
+<<<<<<< HEAD
+=======
+    // -- NOTIFICATION: Deletion Alert --
+    const Notification = require('../models/Notification');
+    if (project.adminId && req.user.role === 'manager') {
+      await Notification.create({
+        recipient: project.adminId,
+        sender: req.user.id,
+        adminId: project.adminId,
+        type: 'security_alert',
+        title: 'Project Purged',
+        message: `Security Alert: Manager ${req.user.name} has deleted the project "${project.name}" and all its historical tasks.`,
+        link: '/admin/projects'
+      });
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     // CASCADE DELETION: Purge all tasks associated with this project
     await Task.deleteMany({ project: project._id });
 

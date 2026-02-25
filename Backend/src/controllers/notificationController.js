@@ -99,3 +99,37 @@ exports.bulkDeleteNotifications = async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 };
+<<<<<<< HEAD
+=======
+
+// @desc    Update user FCM token
+// @route   PUT /api/v1/notifications/fcm-token
+// @access  Private
+exports.updateFcmToken = async (req, res) => {
+    try {
+        const { token, platform } = req.body;
+
+        if (!token || !platform || !['app', 'web'].includes(platform)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Please provide a valid token and platform (app or web)'
+            });
+        }
+
+        // Initialize fcmToken object if it doesn't exist (for existing records)
+        if (!req.user.fcmToken) {
+            req.user.fcmToken = { app: '', web: '' };
+        }
+
+        req.user.fcmToken[platform] = token;
+        await req.user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `FCM ${platform} token updated successfully`
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94

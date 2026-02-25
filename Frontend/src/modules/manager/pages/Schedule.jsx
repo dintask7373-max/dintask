@@ -111,6 +111,7 @@ const ManagerSchedule = () => {
             };
         });
     }, [schedules]);
+<<<<<<< HEAD
 
     const upcomingEvents = useMemo(() => {
         const today = new Date();
@@ -139,6 +140,42 @@ const ManagerSchedule = () => {
             return;
         }
 
+=======
+
+    const upcomingEvents = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return allEvents
+            .filter(e => new Date(e.start) >= today)
+            .sort((a, b) => new Date(a.start) - new Date(b.start))
+            .slice(0, 5);
+    }, [allEvents]);
+
+    const handleDateClick = (arg) => {
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
+        if (arg.dateStr < todayStr) {
+            toast.error("Temporal Lock: Cannot schedule operations in the past.");
+            return;
+        }
+
+        const eventsOnDate = allEvents.filter(e => e.start.startsWith(arg.dateStr));
+        setSelectedDate(arg.dateStr);
+        if (eventsOnDate.length > 0) {
+            setSelectedDateEvents(eventsOnDate);
+            setIsDateSelectionModalOpen(true);
+        } else {
+            setIsModalOpen(true);
+        }
+    };
+
+    const handleCreateEvent = async (e) => {
+        e.preventDefault();
+        if (!newEvent.title) {
+            toast.error('Event title is required');
+            return;
+        }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         // Local validation for temporal overlap
         const hasConflict = (schedules || []).some(s => {
             const sameDate = s.date.split('T')[0] === selectedDate;

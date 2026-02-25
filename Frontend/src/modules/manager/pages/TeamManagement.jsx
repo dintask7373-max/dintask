@@ -77,9 +77,15 @@ const TeamManagement = () => {
     const stats = useMemo(() => {
         const active = teamMembers.filter(e => e.status === 'active').length;
         return [
+<<<<<<< HEAD
             { label: 'Total Force', value: teamMembers.length, color: 'primary' },
             { label: 'Units Online', value: active, color: 'emerald' },
             { label: 'Idle Units', value: teamMembers.length - active, color: 'amber' }
+=======
+            { label: 'Total Force', value: teamMembers.length.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-100 dark:border-blue-900', shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20', trend: "Personnel" },
+            { label: 'Units Online', value: active.toString(), icon: Zap, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-emerald-100 dark:border-emerald-900', shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20', trend: "Active" },
+            { label: 'Idle Units', value: (teamMembers.length - active).toString(), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-100 dark:border-amber-900', shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20', trend: "Standby" }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         ];
     }, [teamMembers]);
 
@@ -204,6 +210,7 @@ const TeamManagement = () => {
             </div>
 
             {/* Tactical Summary bar */}
+<<<<<<< HEAD
             <div className="grid grid-cols-3 gap-3">
                 {stats.map((stat, i) => (
                     <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
@@ -213,6 +220,38 @@ const TeamManagement = () => {
                                 stat.color === 'primary' ? 'text-primary-600' :
                                     stat.color === 'emerald' ? 'text-emerald-600' : 'text-amber-600'
                             )}>{stat.value}</p>
+=======
+            <div className="grid grid-cols-3 gap-3 sm:gap-6">
+                {stats.map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        stat.gradient
+                    )}>
+                        <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                            <div className="space-y-3 sm:space-y-4">
+                                <div className={cn(
+                                    "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
+                                    stat.bg
+                                )}>
+                                    <stat.icon className={cn("size-4.5 sm:size-5", stat.color)} />
+                                </div>
+                                <div className="space-y-0.5 sm:space-y-1 text-left">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                    <p className={cn("text-lg sm:text-2xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
+                                    <div className="flex items-center gap-1 pt-1">
+                                        <div className={cn("flex items-center justify-center size-3.5 rounded-full", stat.bg)}>
+                                            <TrendingUp size={10} className={stat.color} />
+                                        </div>
+                                        <span className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={cn("hidden sm:block size-16 -mr-2 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
+                                <stat.icon size={64} />
+                            </div>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         </CardContent>
                     </Card>
                 ))}

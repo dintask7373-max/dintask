@@ -34,7 +34,17 @@ const useTeamStore = create((set, get) => ({
                     teams: [...state.teams, res.data],
                     loading: false,
                 }));
+<<<<<<< HEAD
                 toast.success('Team created successfully');
+=======
+                get().fetchTeams();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+                toast.success(res.message || 'Team created successfully');
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 return res.data;
             }
         } catch (error) {
@@ -55,6 +65,15 @@ const useTeamStore = create((set, get) => ({
                     teams: state.teams.map((t) => (t._id === teamId ? res.data : t)),
                     loading: false,
                 }));
+<<<<<<< HEAD
+=======
+                get().fetchTeams();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 toast.success('Team updated successfully');
             }
         } catch (error) {
@@ -72,6 +91,15 @@ const useTeamStore = create((set, get) => ({
                 set((state) => ({
                     teams: state.teams.filter((t) => t._id !== teamId),
                 }));
+<<<<<<< HEAD
+=======
+                get().fetchTeams();
+
+                // Background re-fetch for global state synchronization
+                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                    .catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 toast.success('Team deleted successfully');
             }
         } catch (error) {

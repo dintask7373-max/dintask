@@ -42,16 +42,20 @@ const ProjectApprovals = () => {
   const { pendingProjects, fetchPendingProjects, approveProject } = useCRMStore();
   const { managers, fetchManagers } = useManagerStore();
 
+<<<<<<< HEAD
   React.useEffect(() => {
     fetchPendingProjects();
     fetchManagers();
   }, []);
 
+=======
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedManager, setSelectedManager] = useState('');
   const [parent] = useAutoAnimate();
 
+<<<<<<< HEAD
   // Ensure pendingProjects is an array (state initialization checks)
   const projectsList = Array.isArray(pendingProjects) ? pendingProjects : [];
 
@@ -59,6 +63,22 @@ const ProjectApprovals = () => {
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     project.company?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+=======
+  React.useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchPendingProjects(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, fetchPendingProjects]);
+
+  React.useEffect(() => {
+    fetchManagers();
+  }, []);
+
+  // Ensure pendingProjects is an array
+  const filteredProjects = Array.isArray(pendingProjects) ? pendingProjects : [];
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
   const handleApprove = async () => {
     if (!selectedManager) {

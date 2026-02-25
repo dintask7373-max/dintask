@@ -14,7 +14,12 @@ import {
     ChevronUp,
     ExternalLink,
     MessageSquare,
+<<<<<<< HEAD
     Loader2
+=======
+    Loader2,
+    TrendingUp
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 } from 'lucide-react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { utils, writeFile } from 'xlsx';
@@ -46,6 +51,10 @@ const ManagerManagement = () => {
         managers,
         fetchManagers,
         addManager,
+<<<<<<< HEAD
+=======
+        updateManager,
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         deleteManager,
         managerPagination,
         loading: managerLoading
@@ -143,12 +152,33 @@ const ManagerManagement = () => {
         setIsEditModalOpen(true);
     };
 
+<<<<<<< HEAD
     const handleUpdateManager = (e) => {
         e.preventDefault();
         if (editingManager) {
             setIsEditModalOpen(false);
             setEditingManager(null);
             toast.info("Update functionality coming soon");
+=======
+    const handleUpdateManager = async (e) => {
+        e.preventDefault();
+        if (editingManager) {
+            try {
+                const success = await updateManager(editingManager._id, {
+                    name: editingManager.name,
+                    email: editingManager.email,
+                    status: editingManager.status
+                });
+                if (success) {
+                    setIsEditModalOpen(false);
+                    setEditingManager(null);
+                    // Refresh current page
+                    fetchManagers({ page, limit, search: searchTerm });
+                }
+            } catch (error) {
+                console.error("Update Manager Error:", error);
+            }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         }
     };
 
@@ -198,19 +228,45 @@ const ManagerManagement = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
                 {[
+<<<<<<< HEAD
                     { label: 'Total Managers', value: managerPagination.total, icon: Shield, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10' },
                     { label: 'Active', value: managerPagination.total, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/20' }, // Approximation
                     { label: 'Total Staff', value: allEmployees.length, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/10' },
                     { label: 'Page', value: `${page}/${managerPagination.pages}`, icon: CheckCircle2, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10' }
+=======
+                    { label: 'Total Managers', value: managerPagination.total?.toString(), icon: Shield, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-100 dark:border-blue-900', shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20', trend: "Managers" },
+                    { label: 'Active Status', value: managerPagination.total?.toString(), icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-emerald-100 dark:border-emerald-900', shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20', trend: "Active" },
+                    { label: 'Total Staff', value: allEmployees.length?.toString(), icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-100 dark:border-purple-900', shadow: 'shadow-lg shadow-purple-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-purple-50 dark:from-slate-900 dark:to-purple-900/20', trend: "Employees" },
+                    { label: 'System Health', value: `${page}/${managerPagination.pages}`, icon: CheckCircle2, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-100 dark:border-amber-900', shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20', trend: "Operational" }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 ].map((stat, i) => (
-                    <Card key={i} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
-                        <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-                            <div className={cn("p-2 sm:p-3 rounded-xl sm:rounded-2xl shrink-0", stat.bg)}>
-                                <stat.icon size={16} className={cn("sm:w-5 sm:h-5", stat.color)} />
+                    <Card key={i} className={cn(
+                        "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        stat.gradient
+                    )}>
+                        <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                            <div className="space-y-3 sm:space-y-4">
+                                <div className={cn(
+                                    "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
+                                    stat.bg
+                                )}>
+                                    <stat.icon className={cn("size-4.5 sm:size-5", stat.color)} />
+                                </div>
+                                <div className="space-y-0.5 sm:space-y-1 text-left">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                    <p className={cn("text-lg sm:text-2xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
+                                    <div className="flex items-center gap-1 pt-1">
+                                        <div className={cn("flex items-center justify-center size-3.5 rounded-full", stat.bg)}>
+                                            <TrendingUp size={10} className={stat.color} />
+                                        </div>
+                                        <span className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="text-left min-w-0">
-                                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{stat.label}</p>
-                                <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-tight">{stat.value}</p>
+                            <div className={cn("hidden sm:block size-16 -mr-2 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
+                                <stat.icon size={64} />
                             </div>
                         </CardContent>
                     </Card>
@@ -563,6 +619,30 @@ const ManagerManagement = () => {
                                     required
                                 />
                             </div>
+<<<<<<< HEAD
+=======
+                            <div className="grid gap-2 text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Email Address</label>
+                                <Input
+                                    type="email"
+                                    value={editingManager.email}
+                                    onChange={(e) => setEditingManager({ ...editingManager, email: e.target.value })}
+                                    className="rounded-xl h-11"
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2 text-left">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Account Status</label>
+                                <select
+                                    className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
+                                    value={editingManager.status || 'active'}
+                                    onChange={(e) => setEditingManager({ ...editingManager, status: e.target.value })}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             {/* ... */}
                             <DialogFooter className="pt-4">
                                 <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl h-11 px-6">Cancel</Button>

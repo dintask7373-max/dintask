@@ -53,12 +53,38 @@ const AdminSchema = new mongoose.Schema({
   subscriptionExpiry: {
     type: Date
   },
+<<<<<<< HEAD
+=======
+  fcmToken: {
+    app: {
+      type: String,
+      default: ''
+    },
+    web: {
+      type: String,
+      default: ''
+    }
+  },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   status: {
     type: String,
     enum: ['active', 'inactive'],
     default: 'inactive'
+<<<<<<< HEAD
+=======
+  },
+  fcmToken: {
+    app: {
+      type: String,
+      default: ''
+    },
+    web: {
+      type: String,
+      default: ''
+    }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
   }
 }, { timestamps: true });
 

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const BASE_URL = 'http://localhost:5000/api/v1';
+=======
+const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1`;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 const apiRequest = async (endpoint, options = {}) => {
   // Read token from localStorage (matching authStore configuration)
@@ -28,7 +32,14 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   try {
+<<<<<<< HEAD
     const response = await fetch(`${BASE_URL}${endpoint}`, config);
+=======
+    const fullUrl = `${BASE_URL}${endpoint}`;
+    console.log(`[API Request] ${config.method || 'GET'} ${fullUrl}`);
+    const response = await fetch(fullUrl, config);
+    console.log(`[API Response] ${response.status} ${fullUrl}`);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const data = await response.json();
 
     if (!response.ok) {

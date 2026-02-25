@@ -73,6 +73,7 @@ const SuperAdminRegister = () => {
             {/* Register Side */}
             <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 overflow-y-auto no-scrollbar">
                 <div className="w-full max-w-md space-y-8">
+<<<<<<< HEAD
                     <div className="text-center md:text-left">
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Initialize Root</h2>
                         <p className="text-slate-500 dark:text-slate-400 mt-2">Master Identity Creation Protocol</p>
@@ -89,10 +90,31 @@ const SuperAdminRegister = () => {
                                         value={formData.fullName}
                                         onChange={handleChange}
                                         className="h-11 rounded-lg"
+=======
+                    <div className="text-center md:text-left space-y-2">
+                        <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
+                            Initialize <span className="text-primary-600">Root</span>
+                        </h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Master Identity Creation Protocol</p>
+                    </div>
+
+                    <Card className="border-2 border-slate-100 shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
+                        <CardContent className="pt-10 pb-10 px-8 space-y-8">
+                            <form onSubmit={handleRegister} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">System Architect Name</Label>
+                                    <Input
+                                        id="fullName"
+                                        placeholder="EX: ROOT OPERATOR"
+                                        value={formData.fullName}
+                                        onChange={handleChange}
+                                        className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     />
                                 </div>
 
                                 <div className="space-y-2">
+<<<<<<< HEAD
                                     <Label htmlFor="email">Email Address</Label>
                                     <Input
                                         id="email"
@@ -101,51 +123,92 @@ const SuperAdminRegister = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         className="h-11 rounded-lg"
+=======
+                                    <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Protocol Email Address</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="ROOT@DINTASK.EXE"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     />
                                 </div>
 
                                 <div className="space-y-2">
+<<<<<<< HEAD
                                     <Label htmlFor="masterKey">System Master Key</Label>
+=======
+                                    <Label htmlFor="masterKey" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">System Master Key</Label>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     <Input
                                         id="masterKey"
                                         placeholder="MASTER-KEY-XXXX"
                                         value={formData.masterKey}
                                         onChange={handleChange}
+<<<<<<< HEAD
                                         className="h-11 rounded-lg"
+=======
+                                        className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
+<<<<<<< HEAD
                                         <Label htmlFor="password">Password</Label>
+=======
+                                        <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Password</Label>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         <Input
                                             id="password"
                                             type="password"
                                             placeholder="••••••••"
                                             value={formData.password}
                                             onChange={handleChange}
+<<<<<<< HEAD
                                             className="h-11 rounded-lg"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="confirmPassword">Confirm</Label>
+=======
+                                            className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Confirm</Label>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         <Input
                                             id="confirmPassword"
                                             type="password"
                                             placeholder="••••••••"
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
+<<<<<<< HEAD
                                             className="h-11 rounded-lg"
+=======
+                                            className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                         />
                                     </div>
                                 </div>
 
                                 <Button
                                     type="submit"
+<<<<<<< HEAD
                                     className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20 mt-2"
                                     disabled={loading}
                                 >
                                     {loading ? 'Initializing...' : 'Initialize Profile'}
+=======
+                                    className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 text-white shadow-xl shadow-primary-900/20 rounded-2xl active:scale-95 transition-all mt-4"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'INITIALIZING PROTOCOL...' : 'COMMENCE IDENTITY CREATION'}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                 </Button>
                             </form>
 

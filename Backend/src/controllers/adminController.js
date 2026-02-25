@@ -298,8 +298,12 @@ exports.getSalesExecutives = async (req, res, next) => {
     }
 
     const matchQuery = {
+<<<<<<< HEAD
       adminId: new mongoose.Types.ObjectId(adminId),
       role: 'sales_executive'
+=======
+      adminId: new mongoose.Types.ObjectId(adminId)
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     };
 
     if (search) {
@@ -520,8 +524,29 @@ exports.deleteUser = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized to delete this user - different workspace', 403));
     }
 
+<<<<<<< HEAD
     await models[role].findByIdAndDelete(id);
 
+=======
+    const deletedUserName = user.name;
+    await models[role].findByIdAndDelete(id);
+
+    // Notify Admin about user deletion
+    try {
+      await Notification.create({
+        recipient: req.user.id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'security_alert',
+        title: 'User Access Terminated',
+        message: `Security Alert: ${role.replace('_', ' ')} "${deletedUserName}" has been deleted from the workspace.`,
+        link: '/hr/directory'
+      });
+    } catch (notifyErr) {
+      console.error('User Delete Notification Error:', notifyErr);
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     res.status(200).json({
       success: true,
       data: {}
@@ -531,6 +556,179 @@ exports.deleteUser = async (req, res, next) => {
   }
 };
 
+<<<<<<< HEAD
+=======
+// @desc    Update a user (Role, Status, etc. with Notifications)
+// @route   PUT /api/v1/admin/users/:id
+// @access  Private (Admin)
+exports.updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { originRole, role, status, isActive, name, email, phoneNumber, managerId } = req.body;
+
+    if (!originRole) return next(new ErrorResponse('Please provide current user role as originRole', 400));
+
+    const models = {
+      employee: Employee,
+      sales_executive: SalesExecutive,
+      manager: Manager
+    };
+
+    if (!models[originRole]) return next(new ErrorResponse(`Invalid role: ${originRole}`, 400));
+
+    let user = await models[originRole].findById(id);
+    if (!user) return next(new ErrorResponse('User not found', 404));
+
+    if (user.adminId.toString() !== req.user.id) {
+      return next(new ErrorResponse('Not authorized to update this user', 403));
+    }
+
+    const Notification = require('../models/Notification');
+
+    // Handle Role Change (Collection Migration)
+    if (role && role !== originRole) {
+      if (!models[role]) return next(new ErrorResponse('Invalid new role', 400));
+
+      const userData = user.toObject();
+      delete userData._id;
+      userData.role = role;
+      if (managerId) userData.managerId = managerId;
+
+      const newUser = await models[role].create(userData);
+      await models[originRole].findByIdAndDelete(id);
+      user = newUser;
+
+      // Notify User about Role Change (Security Alert)
+      try {
+        await Notification.create({
+          recipient: user._id,
+          sender: req.user.id,
+          adminId: req.user.id,
+          type: 'security_alert',
+          title: 'Role Updated',
+          message: `Your role has been upgraded to ${role.replace('_', ' ')} by the Administrator.`,
+          link: '/profile'
+        });
+      } catch (err) { console.error('Role Change Notification Error:', err); }
+    } else {
+      // Standard Update
+      const oldStatus = user.status;
+      const oldIsActive = user.isActive;
+
+      user = await models[originRole].findByIdAndUpdate(id, req.body, {
+        new: true,
+        runValidators: true
+      });
+
+      // Notification for Account Deactivation
+      const isNowInactive = (status === 'inactive' && oldStatus !== 'inactive') || (isActive === false && oldIsActive === true);
+      const isNowActive = (status === 'active' && oldStatus === 'pending');
+
+      if (isNowInactive) {
+        try {
+          await Notification.create({
+            recipient: user._id,
+            sender: req.user.id,
+            adminId: req.user.id,
+            type: 'security_alert',
+            title: 'Account Deactivated',
+            message: 'Your account access has been deactivated by the Admin. Please contact your workspace administrator.',
+            link: '/login'
+          });
+        } catch (err) { console.error('Deactivation Notification Error:', err); }
+      } else if (isNowActive) {
+        try {
+          await Notification.create({
+            recipient: user._id,
+            sender: req.user.id,
+            adminId: req.user.id,
+            type: 'general',
+            title: 'Account Approved!',
+            message: `Welcome aboard! Your ${originRole.replace('_', ' ')} account has been approved by the Administrator.`,
+            link: originRole === 'manager' ? '/manager' : originRole === 'sales_executive' ? '/sales' : '/employee'
+          });
+        } catch (err) { console.error('Approval Notification Error:', err); }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Send Workspace Announcement to all active members
+// @route   POST /api/v1/admin/announcements
+// @access  Private (Admin)
+exports.sendAnnouncement = async (req, res, next) => {
+  try {
+    const { title, message } = req.body;
+    const adminId = req.user.id;
+
+    if (!title || !message) {
+      return next(new ErrorResponse('Please provide both title and announcement message', 400));
+    }
+
+    // Get all active members
+    const [employees, sales, managers] = await Promise.all([
+      Employee.find({ adminId, status: 'active' }).select('_id'),
+      SalesExecutive.find({ adminId, status: 'active' }).select('_id'),
+      Manager.find({ adminId, status: 'active' }).select('_id')
+    ]);
+
+    const allMembers = [...employees, ...sales, ...managers];
+    const Notification = require('../models/Notification');
+
+    // Create notifications for all members with role-aware links
+    const notifications = [
+      ...employees.map(member => ({
+        recipient: member._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: `Announcement: ${title}`,
+        message: message,
+        link: '/employee'
+      })),
+      ...sales.map(member => ({
+        recipient: member._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: `Announcement: ${title}`,
+        message: message,
+        link: '/sales'
+      })),
+      ...managers.map(member => ({
+        recipient: member._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: `Announcement: ${title}`,
+        message: message,
+        link: '/manager'
+      }))
+    ];
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Announcement successfully broadcast to ${notifications.length} members.`,
+      count: notifications.length
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 // @desc    Forgot Password (Admin)
 // @route   POST /api/v1/admin/forgotpassword
 // @access  Public
@@ -616,6 +814,13 @@ exports.resetPassword = async (req, res, next) => {
 exports.getJoinRequests = async (req, res, next) => {
   try {
     const adminId = req.user.id;
+<<<<<<< HEAD
+=======
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const search = req.query.search || '';
+    const startIndex = (page - 1) * limit;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const [employees, sales, managers] = await Promise.all([
       Employee.find({ adminId, status: 'pending' }),
@@ -623,12 +828,39 @@ exports.getJoinRequests = async (req, res, next) => {
       Manager.find({ adminId, status: 'pending' })
     ]);
 
+<<<<<<< HEAD
     const requests = [...employees, ...sales, ...managers].sort((a, b) => b.createdAt - a.createdAt);
     console.log(`[DEBUG] Join Requests for Admin ${adminId}: Found ${requests.length} requests`);
+=======
+    let allRequests = [...employees, ...sales, ...managers].sort((a, b) => b.createdAt - a.createdAt);
+
+    // Apply search filter if provided
+    if (search) {
+      const searchLower = search.toLowerCase();
+      allRequests = allRequests.filter(req =>
+        (req.name && req.name.toLowerCase().includes(searchLower)) ||
+        (req.email && req.email.toLowerCase().includes(searchLower))
+      );
+    }
+
+    const total = allRequests.length;
+    const requests = allRequests.slice(startIndex, startIndex + limit);
+
+    console.log(`[DEBUG] Join Requests for Admin ${adminId}: Found ${total} total after search "${search}", returning ${requests.length} for page ${page}`);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     res.status(200).json({
       success: true,
       count: requests.length,
+<<<<<<< HEAD
+=======
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      },
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
       data: requests
     });
   } catch (err) {
@@ -678,6 +910,24 @@ exports.approveJoinRequest = async (req, res, next) => {
     user.status = 'active';
     await user.save();
 
+<<<<<<< HEAD
+=======
+    // Notify User about Approval
+    try {
+      await Notification.create({
+        recipient: user._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: 'Access Granted!',
+        message: `Your request to join ${req.user.companyName || 'the workspace'} has been approved. Welcome aboard!`,
+        link: '/login'
+      });
+    } catch (err) {
+      console.error('Approval Notification Error:', err);
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     res.status(200).json({
       success: true,
       data: user
@@ -711,9 +961,28 @@ exports.rejectJoinRequest = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized', 403));
     }
 
+<<<<<<< HEAD
     // Determine whether to delete or just mark rejected
     // Usually rejected requests are deleted or kept for record.
     // Deleting for now to keep it clean.
+=======
+    // Notify user about rejection BEFORE deleting
+    try {
+      await Notification.create({
+        recipient: user._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'security_alert',
+        title: 'Join Request Rejected',
+        message: `Your request to join ${req.user.companyName || 'the workspace'} as ${role.replace('_', ' ')} has been rejected by the Admin. Please contact your administrator for more information.`,
+        link: '/login'
+      });
+    } catch (err) {
+      console.error('Rejection Notification Error:', err);
+    }
+
+    // Delete the user record after notifying
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     await models[role].findByIdAndDelete(id);
 
     res.status(200).json({
@@ -731,7 +1000,11 @@ exports.rejectJoinRequest = async (req, res, next) => {
 exports.addTeamMember = async (req, res, next) => {
   try {
     const { name, email, password, role, phoneNumber } = req.body;
+<<<<<<< HEAD
     const adminId = req.user.id;
+=======
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     // Check Limit
     const checkUserLimit = require('../utils/checkUserLimit'); // Ensure imported at top
@@ -757,10 +1030,32 @@ exports.addTeamMember = async (req, res, next) => {
       adminId,
       managerId: req.body.managerId,
       phoneNumber,
+<<<<<<< HEAD
       status: 'active', // Direct add is active
       isActive: true
     });
 
+=======
+      status: 'active',
+      isActive: true
+    });
+
+    // Notify the member about being added directly
+    try {
+      await Notification.create({
+        recipient: user._id,
+        sender: req.user.id,
+        adminId: req.user.id,
+        type: 'general',
+        title: 'Welcome to DinTask!',
+        message: `Admin has added you to ${req.user.companyName || 'the workspace'}. You can now login with your credentials.`,
+        link: '/login'
+      });
+    } catch (err) {
+      console.error('Member Add Notification Error:', err);
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     res.status(201).json({
       success: true,
       data: user
@@ -797,12 +1092,23 @@ exports.getSubscriptionLimitStatus = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.getDashboardStats = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     // Ensure user is authenticated and has admin role
     if (!req.user || req.user.role !== 'admin') {
       return next(new ErrorResponse('Not authorized to access dashboard stats', 403));
     }
 
     const adminId = req.user.id;
+=======
+    // Dashboard stats are accessible by admin, manager and superadmin (via adminRoutes middleware)
+    // For Managers, we use their associated adminId
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+
+    if (!adminId && req.user.role !== 'superadmin_global') { // Standard check
+      return next(new ErrorResponse('Workspace ID not found for this user', 400));
+    }
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const adminObjectId = new mongoose.Types.ObjectId(adminId);
 
     // Get Total Revenue from all Sales (Won deals) + Completed Projects
@@ -909,11 +1215,17 @@ exports.getDashboardStats = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.getRevenueChart = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     if (!req.user || req.user.role !== 'admin') {
       return next(new ErrorResponse('Not authorized to access revenue chart', 403));
     }
 
     const adminId = req.user.id;
+=======
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+    if (!adminId) return next(new ErrorResponse('Workspace ID not found', 400));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const adminObjectId = new mongoose.Types.ObjectId(adminId);
 
     // Get period from query, default to 6 months
@@ -1016,11 +1328,16 @@ exports.getRevenueChart = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.getSalesPipelineChart = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     if (!req.user || req.user.role !== 'admin') {
       return next(new ErrorResponse('Not authorized to access pipeline chart', 403));
     }
 
     const adminId = req.user.id;
+=======
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+    if (!adminId) return next(new ErrorResponse('Workspace ID not found', 400));
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const adminObjectId = new mongoose.Types.ObjectId(adminId);
 
     const Lead = require('../models/Lead');
@@ -1067,11 +1384,16 @@ exports.getSalesPipelineChart = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.getProjectHealthChart = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     if (!req.user || req.user.role !== 'admin') {
       return next(new ErrorResponse('Not authorized to access project chart', 403));
     }
 
     const adminId = req.user.id;
+=======
+    const adminId = req.user.role === 'admin' ? req.user.id : req.user.adminId;
+    if (!adminId) return next(new ErrorResponse('Workspace ID not found', 400));
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const adminObjectId = new mongoose.Types.ObjectId(adminId);
 
     const Project = require('../models/Project');
@@ -1181,6 +1503,188 @@ exports.getActionableLists = async (req, res, next) => {
   }
 };
 
+<<<<<<< HEAD
+=======
+// @desc    Get reports statistics and performance data
+// @route   GET /api/v1/admin/reports/stats
+// @access  Private (Admin only)
+exports.getReportsStats = async (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return next(new ErrorResponse('Not authorized to access reports statistics', 403));
+    }
+
+    const { days, memberId, status, search } = req.query;
+    const adminId = req.user.id;
+    const adminObjectId = new mongoose.Types.ObjectId(adminId);
+
+    // Build Task Match Query
+    const taskMatch = { adminId: adminObjectId };
+
+    // Period Filter
+    if (days && days !== 'all') {
+      const dateLimit = new Date();
+      dateLimit.setDate(dateLimit.getDate() - parseInt(days));
+      taskMatch.createdAt = { $gte: dateLimit };
+    }
+
+    // Status Filter
+    if (status && status !== 'all') {
+      taskMatch.status = status;
+    }
+
+    // Search Filter
+    if (search) {
+      taskMatch.title = { $regex: search, $options: 'i' };
+    }
+
+    // Member Filter
+    if (memberId && memberId !== 'all') {
+      const memberObjectId = new mongoose.Types.ObjectId(memberId);
+      taskMatch.$or = [
+        { assignedTo: memberObjectId },
+        { assignedBy: memberObjectId }
+      ];
+    }
+
+    const Task = require('../models/Task');
+    const Employee = require('../models/Employee');
+    const Manager = require('../models/Manager');
+
+    // Parallel execution
+    const [taskStats, employeePerformance, managerPerformance] = await Promise.all([
+      // 1. Overall Task Stats (Applying filters)
+      Task.aggregate([
+        { $match: taskMatch },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            completed: {
+              $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
+            }
+          }
+        }
+      ]),
+
+      // 2. Employee Performance (Always fetch all employees but calculate metrics for filtered tasks)
+      Employee.aggregate([
+        { $match: { adminId: adminObjectId, status: 'active' } },
+        {
+          $lookup: {
+            from: 'tasks',
+            let: { empId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$adminId', adminObjectId] },
+                      { $in: ['$$empId', '$assignedTo'] },
+                      // Period filter in sub-pipeline
+                      days && days !== 'all' ? { $gte: ['$createdAt', new Date(new Date().setDate(new Date().getDate() - parseInt(days)))] } : {},
+                      // Status filter in sub-pipeline
+                      status && status !== 'all' ? { $eq: ['$status', status] } : {},
+                      // Search filter in sub-pipeline
+                      search ? { $regexMatch: { input: '$title', regex: search, options: 'i' } } : {}
+                    ].filter(cond => Object.keys(cond).length > 0)
+                  }
+                }
+              }
+            ],
+            as: 'empTasks'
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            email: 1,
+            role: 1,
+            department: 1,
+            avatar: 1,
+            totalTasks: { $size: '$empTasks' },
+            completedTasks: {
+              $size: {
+                $filter: {
+                  input: '$empTasks',
+                  as: 'task',
+                  cond: { $eq: ['$$task.status', 'completed'] }
+                }
+              }
+            }
+          }
+        }
+      ]),
+
+      // 3. Manager Performance (Always fetch all managers but calculate metrics for filtered tasks)
+      Manager.aggregate([
+        { $match: { adminId: adminObjectId, status: 'active' } },
+        {
+          $lookup: {
+            from: 'tasks',
+            let: { mId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$adminId', adminObjectId] },
+                      { $eq: ['$assignedBy', '$$mId'] },
+                      // Period filter in sub-pipeline
+                      days && days !== 'all' ? { $gte: ['$createdAt', new Date(new Date().setDate(new Date().getDate() - parseInt(days)))] } : {},
+                      // Status filter in sub-pipeline
+                      status && status !== 'all' ? { $eq: ['$status', status] } : {},
+                      // Search filter in sub-pipeline
+                      search ? { $regexMatch: { input: '$title', regex: search, options: 'i' } } : {}
+                    ].filter(cond => Object.keys(cond).length > 0)
+                  }
+                }
+              }
+            ],
+            as: 'mgrTasks'
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            email: 1,
+            role: 1,
+            department: 1,
+            avatar: 1,
+            totalTasks: { $size: '$mgrTasks' },
+            completedTasks: {
+              $size: {
+                $filter: {
+                  input: '$mgrTasks',
+                  as: 'task',
+                  cond: { $eq: ['$$task.status', 'completed'] }
+                }
+              }
+            }
+          }
+        }
+      ])
+    ]);
+
+    const stats = taskStats[0] || { total: 0, completed: 0 };
+    const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalTasks: stats.total,
+        completedTasks: stats.completed,
+        completionRate,
+        employeePerformance: employeePerformance.map(e => ({ ...e, id: e._id, completionRate: e.totalTasks > 0 ? Math.round((e.completedTasks / e.totalTasks) * 100) : 0 })),
+        managerPerformance: managerPerformance.map(m => ({ ...m, id: m._id, completionRate: m.totalTasks > 0 ? Math.round((m.completedTasks / m.totalTasks) * 100) : 0 }))
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token

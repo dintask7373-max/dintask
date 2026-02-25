@@ -33,6 +33,10 @@ import {
     SelectValue,
 } from "@/shared/components/ui/select";
 import useSuperAdminStore from '@/store/superAdminStore';
+<<<<<<< HEAD
+=======
+import { cn } from '@/shared/utils/cn';
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
 const GlobalUsersOverview = () => {
     const {
@@ -84,11 +88,23 @@ const GlobalUsersOverview = () => {
             {/* Tactical Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
+<<<<<<< HEAD
                     { label: 'Total Users', value: stats.totalUsers || 0, icon: Users, trend: `${stats.monthlyGrowthPercentage > 0 ? '+' : ''}${stats.monthlyGrowthPercentage}%`, color: 'from-blue-600 to-indigo-600' },
                     { label: 'Active Now', value: stats.activeUsers || 0, icon: Activity, trend: 'Live', color: 'from-emerald-500 to-teal-600' }, // Now reflects real Active Users (status='active')
                     { label: 'Growth', value: `${stats.monthlyGrowthPercentage || 0}%`, icon: TrendingUp, trend: 'Monthly', color: 'from-amber-500 to-orange-600' }
                 ].map((stat, i) => (
                     <Card key={i} className="border-none shadow-xl shadow-slate-200/50 overflow-hidden group">
+=======
+                    { label: 'Total Users', value: stats.totalUsers || 0, icon: Users, trend: `${stats.monthlyGrowthPercentage > 0 ? '+' : ''}${stats.monthlyGrowthPercentage}%`, color: 'from-blue-600 to-indigo-600', border: 'border-blue-100', shadow: 'shadow-blue-200/50' },
+                    { label: 'Active Now', value: stats.activeUsers || 0, icon: Activity, trend: 'Live', color: 'from-emerald-500 to-teal-600', border: 'border-emerald-100', shadow: 'shadow-emerald-200/50' },
+                    { label: 'Growth', value: `${stats.monthlyGrowthPercentage || 0}%`, icon: TrendingUp, trend: 'Monthly', color: 'from-amber-500 to-orange-600', border: 'border-amber-100', shadow: 'shadow-amber-200/50' }
+                ].map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-2 shadow-lg rounded-[2rem] overflow-hidden group transition-all duration-300 hover:-translate-y-1 bg-white dark:bg-slate-900",
+                        stat.border,
+                        stat.shadow
+                    )}>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         <CardContent className="p-0">
                             <div className={`h-1.5 bg-gradient-to-r ${stat.color}`} />
                             <div className="p-6">
@@ -113,7 +129,11 @@ const GlobalUsersOverview = () => {
             {/* Role Distribution & Growth Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Role Breakdown */}
+<<<<<<< HEAD
                 <Card className="lg:col-span-1 border-none shadow-xl shadow-slate-200/50">
+=======
+                <Card className="lg:col-span-1 border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem]">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     <CardHeader className="border-b border-slate-50">
                         <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                             <Shield size={14} className="text-primary-600" />
@@ -162,7 +182,11 @@ const GlobalUsersOverview = () => {
                 </Card>
 
                 {/* Growth Chart */}
+<<<<<<< HEAD
                 <Card className="lg:col-span-2 border-none shadow-xl shadow-slate-200/50">
+=======
+                <Card className="lg:col-span-2 border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 rounded-[2rem]">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                     <CardHeader className="border-b border-slate-50 flex flex-row items-center justify-between">
                         <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                             <TrendingUp size={14} className="text-primary-600" />

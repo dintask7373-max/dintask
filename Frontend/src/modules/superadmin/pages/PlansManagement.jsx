@@ -84,6 +84,7 @@ const PlansManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+<<<<<<< HEAD
         if (!planForm.name || planForm.price === '' || planForm.userLimit === '' || planForm.duration === '') {
             toast.error("Please fill in all required parameters");
             return;
@@ -93,6 +94,39 @@ const PlansManagement = () => {
         if (Number(planForm.price) === 0) {
             const existingFreePlan = plans.find(p => (p.price === 0 || p.price === '0'));
 
+=======
+        const { name, price, userLimit, duration } = planForm;
+
+        if (!name.trim()) {
+            toast.error("Plan Name is required");
+            return;
+        }
+
+        if (price === '' || userLimit === '' || duration === '') {
+            toast.error("Please fill in all required parameters");
+            return;
+        }
+
+        if (Number(price) < 0) {
+            toast.error("Price must be a non-negative number");
+            return;
+        }
+
+        if (Number(userLimit) < 1) {
+            toast.error("Node Capacity must be at least 1");
+            return;
+        }
+
+        if (Number(duration) < 1) {
+            toast.error("Validity must be at least 1 day");
+            return;
+        }
+
+        // Validate Free Plan Limit (Amount 0)
+        if (Number(planForm.price) === 0) {
+            const existingFreePlan = plans.find(p => (p.price === 0 || p.price === '0'));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             // Case 1: Creating a new plan
             if (!isEditMode && existingFreePlan) {
                 toast.error("System only supports one Free Tier (Amount 0). Please edit the existing one.");
@@ -173,7 +207,11 @@ const PlansManagement = () => {
             </div>
 
             {/* Tactical Search Toolbar */}
+<<<<<<< HEAD
             <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-5 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl flex flex-col md:flex-row gap-5 items-center">
+=======
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-5 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800/50 shadow-xl shadow-slate-200/30 flex flex-col md:flex-row gap-5 items-center">
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                 <div className="relative flex-1 group w-full">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={20} />
                     <Input
@@ -202,9 +240,15 @@ const PlansManagement = () => {
                             transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
                         >
                             <Card className={cn(
+<<<<<<< HEAD
                                 "overflow-hidden border-2 transition-all duration-500 rounded-[3rem] group relative",
                                 plan.isActive
                                     ? "border-slate-200/50 dark:border-slate-800/50 hover:border-primary-500/50 hover:shadow-2xl hover:shadow-primary-500/10"
+=======
+                                "overflow-hidden border-2 transition-all duration-500 rounded-[3rem] group relative hover:-translate-y-1",
+                                plan.isActive
+                                    ? "border-slate-200 shadow-lg shadow-slate-200/40 hover:border-primary-500/50 hover:shadow-2xl hover:shadow-primary-500/10"
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                     : "border-slate-100 dark:border-slate-900 opacity-60 grayscale scale-95"
                             )}>
                                 <CardHeader className="p-8 pb-4">

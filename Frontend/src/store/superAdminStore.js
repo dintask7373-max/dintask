@@ -72,8 +72,337 @@ const useSuperAdminStore = create(
                 churnRate: 0
             },
             systemIntel: [],
+<<<<<<< HEAD
             loading: false,
 
+=======
+            landingPageContent: null,
+            privacyContent: null,
+            termsContent: null,
+            cookieContent: null,
+            loading: false,
+
+            fetchLandingPageContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/hero');
+                    if (response.success) {
+                        set({ landingPageContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch landing page content:', err);
+                }
+            },
+
+            updateLandingPageContent: async (data) => {
+                try {
+                    const response = await apiRequest('/landing-page/hero', {
+                        method: 'PUT',
+                        body: data
+                    });
+                    if (response.success) {
+                        get().fetchLandingPageContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update landing page content:', err);
+                }
+                return false;
+            },
+
+            platformContent: null,
+            fetchPlatformContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/platform');
+                    if (response.success) {
+                        set({ platformContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch platform content:', err);
+                }
+            },
+
+            updatePlatformContent: async (dataOrFormData) => {
+                try {
+                    // Check if dataOrFormData is FormData
+                    const isFormData = dataOrFormData instanceof FormData;
+
+                    const response = await apiRequest('/landing-page/platform', {
+                        method: 'PUT',
+                        body: isFormData ? dataOrFormData : dataOrFormData
+                    });
+
+                    if (response.success) {
+                        get().fetchPlatformContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update platform content:', err);
+                }
+                return false;
+            },
+
+            faqsContent: [],
+            fetchFaqsContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/faqs');
+                    if (response.success) {
+                        set({ faqsContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch FAQs content:', err);
+                }
+            },
+
+            updateFaqsContent: async (faqsData) => {
+                try {
+                    const response = await apiRequest('/landing-page/faqs', {
+                        method: 'PUT',
+                        body: { faqs: faqsData }
+                    });
+                    if (response.success) {
+                        get().fetchFaqsContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update FAQs content:', err);
+                }
+                return false;
+            },
+
+            fetchPrivacyContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/privacy_policy');
+                    if (response.success) {
+                        set({ privacyContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch Privacy Policy:', err);
+                }
+            },
+
+            updatePrivacyPolicy: async (policySections) => {
+                try {
+                    const response = await apiRequest('/landing-page/privacy_policy', {
+                        method: 'PUT',
+                        body: { policySections }
+                    });
+                    if (response.success) {
+                        get().fetchPrivacyContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update Privacy Policy:', err);
+                }
+                return false;
+            },
+
+            fetchTermsContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/terms_service');
+                    if (response.success) {
+                        set({ termsContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch Terms:', err);
+                }
+            },
+
+            updateTermsService: async (policySections) => {
+                try {
+                    const response = await apiRequest('/landing-page/terms_service', {
+                        method: 'PUT',
+                        body: { policySections }
+                    });
+                    if (response.success) {
+                        get().fetchTermsContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update Terms:', err);
+                }
+                return false;
+            },
+
+            fetchCookieContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/cookie_policy');
+                    if (response.success) {
+                        set({ cookieContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch Cookie Policy:', err);
+                }
+            },
+
+            updateCookiePolicy: async (policySections) => {
+                try {
+                    const response = await apiRequest('/landing-page/cookie_policy', {
+                        method: 'PUT',
+                        body: { policySections }
+                    });
+                    if (response.success) {
+                        get().fetchCookieContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update Cookie Policy:', err);
+                }
+                return false;
+            },
+
+            tacticalContent: null,
+            fetchTacticalContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/tactical');
+                    if (response.success) {
+                        set({ tacticalContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch tactical content:', err);
+                }
+            },
+
+            updateTacticalContent: async (formData) => {
+                try {
+                    const response = await apiRequest('/landing-page/tactical', {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.success) {
+                        get().fetchTacticalContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update tactical content:', err);
+                }
+                return false;
+            },
+
+            tacticalModules: [],
+            fetchTacticalModules: async () => {
+                try {
+                    const response = await apiRequest('/tactical-modules');
+                    if (response.success) {
+                        set({ tacticalModules: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch tactical modules:', err);
+                }
+            },
+
+            updateTacticalModule: async (moduleId, formData) => {
+                try {
+                    const response = await apiRequest(`/tactical-modules/${moduleId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.success) {
+                        set((state) => ({
+                            tacticalModules: state.tacticalModules.map((mod) =>
+                                mod.moduleId === moduleId ? response.data : mod
+                            )
+                        }));
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update tactical module:', err);
+                }
+                return false;
+            },
+
+            footerCtaContent: null,
+            fetchFooterCtaContent: async () => {
+                try {
+                    const response = await apiRequest('/landing-page/footer-cta');
+                    if (response.success) {
+                        set({ footerCtaContent: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch footer CTA content:', err);
+                }
+            },
+
+            updateFooterCtaContent: async (formData) => {
+                try {
+                    const response = await apiRequest('/landing-page/footer-cta', {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.success) {
+                        get().fetchFooterCtaContent();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update footer CTA content:', err);
+                }
+                return false;
+            },
+
+            pricingPlans: [],
+            fetchPricingPlans: async () => {
+                try {
+                    const response = await apiRequest('/landing-page-plans');
+                    if (response.success) {
+                        set({ pricingPlans: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch pricing plans:', err);
+                }
+            },
+
+            createPricingPlan: async (planData) => {
+                try {
+                    const response = await apiRequest('/landing-page-plans', {
+                        method: 'POST',
+                        body: JSON.stringify(planData),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (response.success) {
+                        get().fetchPricingPlans();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to create pricing plan:', err);
+                }
+                return false;
+            },
+
+            updatePricingPlan: async (id, planData) => {
+                try {
+                    const response = await apiRequest(`/landing-page-plans/${id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(planData),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (response.success) {
+                        get().fetchPricingPlans();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update pricing plan:', err);
+                }
+                return false;
+            },
+
+            deletePricingPlan: async (id) => {
+                try {
+                    const response = await apiRequest(`/landing-page-plans/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.success) {
+                        get().fetchPricingPlans();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to delete pricing plan:', err);
+                }
+                return false;
+            },
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             fetchSystemIntel: async () => {
                 try {
                     const response = await apiRequest('/system-intel');
@@ -92,11 +421,15 @@ const useSuperAdminStore = create(
                         body: data
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             systemIntel: state.systemIntel.map(item =>
                                 item.role === role ? response.data : item
                             )
                         }));
+=======
+                        get().fetchSystemIntel();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -109,7 +442,11 @@ const useSuperAdminStore = create(
                 try {
                     const response = await apiRequest('/system-intel/seed', { method: 'POST' });
                     if (response.success) {
+<<<<<<< HEAD
                         set({ systemIntel: response.data });
+=======
+                        get().fetchSystemIntel();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -205,11 +542,15 @@ const useSuperAdminStore = create(
                     });
 
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             supportTickets: state.supportTickets.map((t) =>
                                 t._id === id ? response.data : t
                             )
                         }));
+=======
+                        get().fetchSupportTickets();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -225,11 +566,15 @@ const useSuperAdminStore = create(
                         body: { status }
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             supportTickets: state.supportTickets.map((t) =>
                                 t._id === id ? response.data : t
                             )
                         }));
+=======
+                        get().fetchSupportTickets();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -294,11 +639,23 @@ const useSuperAdminStore = create(
                         body: { subscriptionStatus: status }
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             admins: state.admins.map((adm) =>
                                 adm._id === id ? response.data : adm
                             ),
                         }));
+=======
+                        get().fetchAdmins();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -311,9 +668,21 @@ const useSuperAdminStore = create(
                 try {
                     const response = await apiRequest(`/superadmin/admins/${id}`, { method: 'DELETE' });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             admins: state.admins.filter((adm) => adm._id !== id),
                         }));
+=======
+                        get().fetchAdmins();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -335,9 +704,21 @@ const useSuperAdminStore = create(
                         }
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             admins: [response.data, ...state.admins]
                         }));
+=======
+                        get().fetchAdmins();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return { success: true };
                     }
                 } catch (err) {
@@ -367,9 +748,21 @@ const useSuperAdminStore = create(
                         body: newPlan
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             plans: [...state.plans, response.data]
                         }));
+=======
+                        get().fetchPlans();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -385,11 +778,23 @@ const useSuperAdminStore = create(
                         body: updatedPlan
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             plans: state.plans.map((p) =>
                                 p._id === id ? response.data : p
                             ),
                         }));
+=======
+                        get().fetchPlans();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -402,9 +807,21 @@ const useSuperAdminStore = create(
                 try {
                     const response = await apiRequest(`/superadmin/plans/${id}`, { method: 'DELETE' });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             plans: state.plans.filter((p) => p._id !== id),
                         }));
+=======
+                        get().fetchPlans();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -420,11 +837,23 @@ const useSuperAdminStore = create(
                         body: { planId, planName }
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             admins: state.admins.map(adm =>
                                 adm._id === adminId ? response.data : adm
                             )
                         }));
+=======
+                        get().fetchAdmins();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -450,11 +879,23 @@ const useSuperAdminStore = create(
                     });
 
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             inquiries: state.inquiries.map((inq) =>
                                 (inq._id === id || inq.id === id) ? { ...inq, status } : inq
                             ),
                         }));
+=======
+                        get().fetchInquiries();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -605,6 +1046,7 @@ const useSuperAdminStore = create(
                         body: staffData
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             staffMembers: [response.data, ...state.staffMembers],
                             staffPagination: {
@@ -612,6 +1054,15 @@ const useSuperAdminStore = create(
                                 total: state.staffPagination.total + 1
                             }
                         }));
+=======
+                        get().fetchStaff();
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -627,9 +1078,21 @@ const useSuperAdminStore = create(
                         body: staffData
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             staffMembers: state.staffMembers.map(s => s._id === id ? response.data : s)
                         }));
+=======
+                        get().fetchStaff();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {
@@ -644,6 +1107,7 @@ const useSuperAdminStore = create(
                         method: 'DELETE'
                     });
                     if (response.success) {
+<<<<<<< HEAD
                         set((state) => ({
                             staffMembers: state.staffMembers.filter(s => s._id !== id),
                             staffPagination: {
@@ -651,6 +1115,17 @@ const useSuperAdminStore = create(
                                 total: Math.max(0, state.staffPagination.total - 1)
                             }
                         }));
+=======
+                        get().fetchStaff();
+
+                        // Background re-fetches for global state synchronization
+                        Promise.all([
+                            get().fetchDashboardStats(),
+                            get().fetchRoleDistribution(),
+                            get().fetchUserGrowth()
+                        ]).catch(err => console.error("Background sync error:", err));
+
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                         return true;
                     }
                 } catch (err) {

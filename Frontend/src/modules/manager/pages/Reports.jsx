@@ -111,10 +111,61 @@ const ManagerReports = () => {
         const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
         return [
+<<<<<<< HEAD
             { title: 'Total Vol', value: total, icon: BarChart3, color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/20', trend: '+12%', isPositive: true },
             { title: 'Yield Rate', value: `${completionRate}%`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', trend: 'OPTIMAL', isPositive: true },
             { title: 'Queue', value: pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', trend: '-2 units', isPositive: true },
             { title: 'Priority', value: highPriority, icon: Zap, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', trend: 'CRITICAL', isWarning: true }
+=======
+            {
+                title: 'Total Vol',
+                value: total.toString(),
+                icon: BarChart3,
+                color: 'text-blue-600',
+                bg: 'bg-blue-100',
+                border: 'border-blue-100 dark:border-blue-900',
+                shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20',
+                trend: '+12%',
+                label: 'TOTAL OPERATIONS'
+            },
+            {
+                title: 'Yield Rate',
+                value: `${completionRate}%`,
+                icon: TrendingUp,
+                color: 'text-emerald-600',
+                bg: 'bg-emerald-100',
+                border: 'border-emerald-100 dark:border-emerald-900',
+                shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20',
+                trend: 'OPTIMAL',
+                label: 'SUCCESS YIELD'
+            },
+            {
+                title: 'Queue',
+                value: pending.toString(),
+                icon: Clock,
+                color: 'text-amber-600',
+                bg: 'bg-amber-100',
+                border: 'border-amber-100 dark:border-amber-900',
+                shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20',
+                trend: '-2 units',
+                label: 'PENDING ACTION'
+            },
+            {
+                title: 'Priority',
+                value: highPriority.toString(),
+                icon: Zap,
+                color: 'text-rose-600',
+                bg: 'bg-rose-100',
+                border: 'border-rose-100 dark:border-rose-900',
+                shadow: 'shadow-lg shadow-rose-200/50 dark:shadow-none',
+                gradient: 'bg-gradient-to-br from-white to-rose-50 dark:from-slate-900 dark:to-rose-900/20',
+                trend: 'CRITICAL',
+                label: 'HIGH PRIORITY'
+            }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         ];
     }, [teamTasks]);
 
@@ -255,6 +306,7 @@ const ManagerReports = () => {
 
             {/* Stats Grid - High Density */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+<<<<<<< HEAD
                 {stats.map((stat, idx) => (
                     <Card key={idx} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden group">
                         <CardContent className="p-4">
@@ -272,6 +324,36 @@ const ManagerReports = () => {
                             <div className="space-y-0.5">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.title}</p>
                                 <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{stat.value}</p>
+=======
+                {stats.map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        stat.gradient
+                    )}>
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div className="space-y-3">
+                                <div className={cn(
+                                    "size-8 rounded-lg flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
+                                    stat.bg
+                                )}>
+                                    <stat.icon className={cn("size-4", stat.color)} />
+                                </div>
+                                <div className="space-y-0.5 text-left">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                    <p className={cn("text-xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
+                                    <div className="flex items-center gap-1 pt-1">
+                                        <div className={cn("flex items-center justify-center size-3 rounded-full", stat.bg)}>
+                                            <TrendingUp size={8} className={stat.color} />
+                                        </div>
+                                        <span className={cn("text-[8px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={cn("hidden sm:block size-12 -mr-1 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
+                                <stat.icon size={48} />
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             </div>
                         </CardContent>
                     </Card>

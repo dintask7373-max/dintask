@@ -1,5 +1,9 @@
 {
     "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
             "@/*": [
@@ -17,6 +21,14 @@
             "@data/*": [
                 "./src/data/*"
             ]
-        }
-    }
+        },
+        "allowJs": true,
+        "checkJs": false,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true
+    },
+    "include": [
+        "src"
+    ]
 }

@@ -12,11 +12,23 @@ import { Label } from '@/shared/components/ui/label';
 const SalesLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+<<<<<<< HEAD
     const { login, loading, error, isAuthenticated, role } = useAuthStore();
+=======
+
+    // OTP State
+    const [loginMethod, setLoginMethod] = useState('password'); // 'password' or 'otp'
+    const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+
+    const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role } = useAuthStore();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
         if (!email || !password) {
             toast.error('Tactical credentials required');
             return;
@@ -31,6 +43,57 @@ const SalesLogin = () => {
                 navigate('/pending-approval');
             } else {
                 toast.error(result.error || 'Authentication failure');
+=======
+
+        if (loginMethod === 'password') {
+            if (!email || !password) {
+                toast.error('Tactical credentials required');
+                return;
+            }
+
+            const result = await login(email, password, 'sales');
+            if (result.success) {
+                toast.success('Sales access verified');
+                navigate('/sales');
+            } else {
+                if (result.error && result.error.includes('pending approval')) {
+                    navigate('/pending-approval');
+                } else {
+                    toast.error(result.error || 'Authentication failure');
+                }
+            }
+        } else {
+            // OTP Flow
+            if (!phone) {
+                toast.error('Tactical comms required');
+                return;
+            }
+
+            if (!otpSent) {
+                const result = await sendOtp(phone, 'sales');
+                if (result && result.success) {
+                    setOtpSent(true);
+                    toast.success('Signal established. Enter code.');
+                } else {
+                    toast.error(result?.error || 'Signal lost');
+                }
+            } else {
+                if (!otp) {
+                    toast.error('Enter access code');
+                    return;
+                }
+                const result = await verifyOtp(phone, otp, 'sales');
+                if (result && result.success) {
+                    toast.success('Access Granted');
+                    navigate('/sales');
+                } else {
+                    if (result?.error && result.error.includes('pending approval')) {
+                        navigate('/pending-approval');
+                    } else {
+                        toast.error(result?.error || 'Access Denied');
+                    }
+                }
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             }
         }
     };
@@ -46,6 +109,7 @@ const SalesLogin = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
             </div>
+<<<<<<< HEAD
 
             {/* Premium Sign In Card */}
             <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
@@ -86,6 +150,120 @@ const SalesLogin = () => {
                                 className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
                             />
                         </div>
+=======
+
+            {/* Premium Sign In Card */}
+            <div className="w-full max-w-[440px] -mt-24 px-4 relative z-10 pb-20">
+                <div className="bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-[2.5rem] shadow-xl shadow-primary-500/20 p-10 md:p-12 border-2 border-primary-100 dark:border-primary-900">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Sales Portal</h1>
+                        <p className="text-slate-400 text-xs font-medium italic">Strategic CRM Infrastructure</p>
+                    </div>
+
+                    {/* Method Toggle */}
+                    <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+                        <button
+                            type="button"
+                            onClick={() => setLoginMethod('password')}
+                            className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${loginMethod === 'password' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            Credentials
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setLoginMethod('otp')}
+                            className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${loginMethod === 'otp' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            Secure Link
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {loginMethod === 'password' ? (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Access Identifier</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="sales@dintask.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        autoComplete="email"
+                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-1">
+                                        <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Security Key</Label>
+                                        <a href="/sales/forgot-password" size="sm" className="text-[11px] font-bold text-primary-600 hover:underline uppercase tracking-wide">
+                                            Lost?
+                                        </a>
+                                    </div>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        autoComplete="current-password"
+                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                    />
+                                </div>
+
+                                <div className="flex items-center px-1">
+                                    <label className="flex items-center group cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            id="remember"
+                                            className="size-4 rounded border-slate-200 text-primary-600 focus:ring-primary-600 transition-all cursor-pointer"
+                                        />
+                                        <span className="ml-2.5 text-[11px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors uppercase tracking-wide">Maintain Link</span>
+                                    </label>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Uplink Number</Label>
+                                    <Input
+                                        id="phone"
+                                        type="text"
+                                        placeholder="9876543210"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        disabled={otpSent}
+                                        className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                    />
+                                </div>
+                                {otpSent && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <Label htmlFor="otp" className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider">Access Code</Label>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setOtpSent(false); setOtp(''); }}
+                                                className="text-[10px] text-primary-600 font-bold uppercase hover:underline"
+                                            >
+                                                Resync
+                                            </button>
+                                        </div>
+                                        <Input
+                                            id="otp"
+                                            type="text"
+                                            placeholder="XXXXXX"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            className="h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 tracking-widest text-center text-lg"
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
                         <div className="flex items-center px-1">
                             <label className="flex items-center group cursor-pointer">
@@ -106,10 +284,17 @@ const SalesLogin = () => {
                             {loading ? (
                                 <div className="flex items-center gap-2">
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+<<<<<<< HEAD
                                     <span>Decrypting...</span>
                                 </div>
                             ) : (
                                 <><LogIn size={18} className="mr-2 group-hover:translate-x-1 transition-transform" /> Verify Access</>
+=======
+                                    <span>{loginMethod === 'otp' && !otpSent ? 'Establishing...' : 'Decrypting...'}</span>
+                                </div>
+                            ) : (
+                                <><LogIn size={18} className="mr-2 group-hover:translate-x-1 transition-transform" /> {loginMethod === 'password' ? 'Verify Access' : (otpSent ? 'Confirm Uplink' : 'Request Uplink')}</>
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                             )}
                         </Button>
                     </form>

@@ -19,7 +19,8 @@ import {
     ChevronDown,
     ChevronUp,
     Check,
-    MessageSquare
+    MessageSquare,
+    TrendingUp
 } from 'lucide-react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 
@@ -43,6 +44,7 @@ import {
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import useEmployeeStore from '@/store/employeeStore';
 import useTaskStore from '@/store/taskStore';
 import useManagerStore from '@/store/managerStore';
@@ -57,7 +59,11 @@ import api from '@/lib/api';
 
 const EmployeeManagement = () => {
     const navigate = useNavigate();
+<<<<<<< HEAD
     const { employees, deleteEmployee, addEmployee, employeePagination, fetchEmployees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
+=======
+    const { employees, deleteEmployee, addEmployee, updateEmployee, employeePagination, fetchEmployees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
     const { user } = useAuthStore();
     const { tasks } = useTaskStore();
     const { allManagers, fetchAllManagers } = useManagerStore();
@@ -68,8 +74,15 @@ const EmployeeManagement = () => {
     const [limit, setLimit] = useState(10);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [expandedEmployee, setExpandedEmployee] = useState(null);
+<<<<<<< HEAD
     const [newEmployee, setNewEmployee] = useState({ name: '', email: '', role: '', managerId: '' });
+=======
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [newEmployee, setNewEmployee] = useState({ name: '', email: '', password: '', phoneNumber: '', role: '', managerId: '' });
+    const [editEmployeeData, setEditEmployeeData] = useState({ name: '', email: '', phoneNumber: '', role: '', status: 'active', managerId: '' });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
 
     const [parent] = useAutoAnimate();
 
@@ -130,7 +143,11 @@ const EmployeeManagement = () => {
                 status: 'active',
                 joinedDate: new Date().toLocaleDateString()
             });
+<<<<<<< HEAD
             setNewEmployee({ name: '', email: '', role: '', managerId: '' });
+=======
+            setNewEmployee({ name: '', email: '', password: '', phoneNumber: '', role: '', managerId: '' });
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
             setIsAddModalOpen(false);
             // Refresh list and limit
             fetchEmployees({ page, limit, search: searchTerm });
@@ -147,6 +164,38 @@ const EmployeeManagement = () => {
             await deleteEmployee(id, 'employee');
             // Refresh list
             fetchEmployees({ page, limit, search: searchTerm });
+<<<<<<< HEAD
+=======
+        }
+    };
+
+    const openEditModal = (emp) => {
+        setSelectedEmployee(emp);
+        setEditEmployeeData({
+            name: emp.name,
+            email: emp.email,
+            phoneNumber: emp.phoneNumber || '',
+            role: emp.role,
+            status: emp.status || 'active',
+            managerId: emp.managerId || ''
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditEmployee = async (e) => {
+        e.preventDefault();
+        try {
+            const success = await updateEmployee(selectedEmployee._id || selectedEmployee.id, editEmployeeData, 'employee');
+            if (success) {
+                setIsEditModalOpen(false);
+                setSelectedEmployee(null);
+                // List refresh is already handled in store background re-fetch, 
+                // but we explicitly call it here too for UI consistency if needed.
+                fetchEmployees({ page, limit, search: searchTerm });
+            }
+        } catch (error) {
+            console.error("Edit Error:", error);
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
         }
     };
 
@@ -180,6 +229,46 @@ const EmployeeManagement = () => {
                     {isLimitReached && <span className="ml-2 text-red-500 animate-pulse">Limit reached!</span>}
                 </AlertDescription>
             </Alert>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                {[
+                    { label: 'Total Employees', value: employeePagination.total?.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-100 dark:border-blue-900', shadow: 'shadow-lg shadow-blue-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/20', trend: "Staff" },
+                    { label: 'Active Status', value: employees.filter(e => e.status === 'active').length?.toString(), icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-emerald-100 dark:border-emerald-900', shadow: 'shadow-lg shadow-emerald-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-emerald-50 dark:from-slate-900 dark:to-emerald-900/20', trend: "Online" },
+                    { label: 'Department Coverage', value: (new Set(employees.map(e => e.role)).size)?.toString(), icon: Shield, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-100 dark:border-purple-900', shadow: 'shadow-lg shadow-purple-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-purple-50 dark:from-slate-900 dark:to-purple-900/20', trend: "Roles" },
+                    { label: 'System Health', value: `${page}/${employeePagination.pages}`, icon: CheckCircle2, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-100 dark:border-amber-900', shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-none', gradient: 'bg-gradient-to-br from-white to-amber-50 dark:from-slate-900 dark:to-amber-900/20', trend: "Operational" }
+                ].map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-2 rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        stat.gradient
+                    )}>
+                        <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                            <div className="space-y-3 sm:space-y-4">
+                                <div className={cn(
+                                    "size-9 sm:size-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 duration-500 shadow-inner",
+                                    stat.bg
+                                )}>
+                                    <stat.icon className={cn("size-4.5 sm:size-5", stat.color)} />
+                                </div>
+                                <div className="space-y-0.5 sm:space-y-1 text-left">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                    <p className={cn("text-lg sm:text-2xl font-black tracking-tight leading-none", stat.color)}>{stat.value}</p>
+                                    <div className="flex items-center gap-1 pt-1">
+                                        <div className={cn("flex items-center justify-center size-3.5 rounded-full", stat.bg)}>
+                                            <TrendingUp size={10} className={stat.color} />
+                                        </div>
+                                        <span className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-tighter", stat.color)}>{stat.trend}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={cn("hidden sm:block size-16 -mr-2 opacity-10 transform rotate-12 transition-transform group-hover:rotate-0 duration-700", stat.color)}>
+                                <stat.icon size={64} />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
 
             {/* Toolbar */}
             <Card className="border-none shadow-sm shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl">
@@ -290,7 +379,16 @@ const EmployeeManagement = () => {
                                                 </td>
                                                 <td className="p-5 text-right">
                                                     <div className="flex justify-end gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+<<<<<<< HEAD
                                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg">
+=======
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"
+                                                            onClick={() => openEditModal(emp)}
+                                                        >
+>>>>>>> 10a9f42c3551230e4fe982ac2d6c00a53eac9b94
                                                             <Edit2 size={14} />
                                                         </Button>
                                                         <Button
@@ -504,15 +602,37 @@ const EmployeeManagement = () => {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label htmlFor="role" className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <label htmlFor="password" className="text-xs font-bold text-slate-500 uppercase">Password</label>
                             <Input
-                                id="role"
-                                value={newEmployee.role}
-                                onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
-                                placeholder="Software Engineer"
+                                id="password"
+                                type="password"
+                                value={newEmployee.password}
+                                onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                                placeholder="••••••••"
                                 className="rounded-xl h-11"
                                 required
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="phoneNumber" className="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
+                            <Input
+                                id="phoneNumber"
+                                value={newEmployee.phoneNumber}
+                                onChange={(e) => setNewEmployee({ ...newEmployee, phoneNumber: e.target.value })}
+                                placeholder="+1 234 567 8900"
+                                className="rounded-xl h-11"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="role" className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <Select value={newEmployee.role} onValueChange={(val) => setNewEmployee({ ...newEmployee, role: val })}>
+                                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Select Role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="employee">Employee</SelectItem>
+                                    <SelectItem value="sales_executive">Sales Executive</SelectItem>
+                                    <SelectItem value="manager">Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid gap-2">
                             <label htmlFor="manager" className="text-xs font-bold text-slate-500 uppercase">Assign Manager</label>
@@ -535,7 +655,89 @@ const EmployeeManagement = () => {
                     </form>
                 </DialogContent>
             </Dialog>
-        </div>
+            {/* Edit Employee Dialog */}
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent className="sm:max-w-md rounded-3xl duration-200">
+                    <DialogHeader>
+                        <DialogTitle>Edit Employee Details</DialogTitle>
+                        <DialogDescription>Modify employee information and platform access.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEditEmployee} className="space-y-4 py-4">
+                        <div className="grid gap-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
+                            <Input
+                                value={editEmployeeData.name}
+                                onChange={(e) => setEditEmployeeData({ ...editEmployeeData, name: e.target.value })}
+                                placeholder="Chirag J"
+                                className="rounded-xl h-11"
+                                required
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Email Address</label>
+                            <Input
+                                type="email"
+                                value={editEmployeeData.email}
+                                onChange={(e) => setEditEmployeeData({ ...editEmployeeData, email: e.target.value })}
+                                placeholder="chirag.j@example.com"
+                                className="rounded-xl h-11"
+                                required
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
+                            <Input
+                                value={editEmployeeData.phoneNumber}
+                                onChange={(e) => setEditEmployeeData({ ...editEmployeeData, phoneNumber: e.target.value })}
+                                placeholder="+1 234 567 8900"
+                                className="rounded-xl h-11"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                            <Select value={editEmployeeData.role} onValueChange={(val) => setEditEmployeeData({ ...editEmployeeData, role: val })}>
+                                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Select Role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="employee">Employee</SelectItem>
+                                    <SelectItem value="sales_executive">Sales Executive</SelectItem>
+                                    <SelectItem value="manager">Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Assign Manager</label>
+                                <select
+                                    className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
+                                    value={editEmployeeData.managerId}
+                                    onChange={(e) => setEditEmployeeData({ ...editEmployeeData, managerId: e.target.value })}
+                                >
+                                    <option value="">No Manager (Unassigned)</option>
+                                    {allManagers.map(mgr => (
+                                        <option key={mgr._id} value={mgr._id}>{mgr.name} ({mgr.department || 'No Dept'})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="grid gap-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase">Account Status</label>
+                                <select
+                                    className="w-full h-11 rounded-xl bg-slate-50 border-slate-200 px-3 text-sm focus:ring-2 focus:ring-primary-500/10 outline-none transition-all cursor-pointer"
+                                    value={editEmployeeData.status}
+                                    onChange={(e) => setEditEmployeeData({ ...editEmployeeData, status: e.target.value })}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <DialogFooter className="pt-4 gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl h-11 px-6 flex-1 sm:flex-none">Cancel</Button>
+                            <Button type="submit" className="rounded-xl h-11 px-6 bg-primary-600 hover:bg-primary-700 flex-1 sm:flex-none">Save Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </div >
     );
 };
 
