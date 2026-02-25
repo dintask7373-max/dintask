@@ -152,21 +152,46 @@ exports.getManagers = async (req, res, next) => {
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: limit },
-            // Lookup for teams/project counts or other related info can be added here if needed
             {
               $lookup: {
-                from: 'teams',
+                from: 'projects',
                 localField: '_id',
-                foreignField: 'managerId',
-                as: 'managedTeams'
+                foreignField: 'manager',
+                as: 'managedProjects'
+              }
+            },
+            {
+              $lookup: {
+                from: 'tasks',
+                localField: '_id',
+                foreignField: 'assignedBy',
+                as: 'assignedTasks'
               }
             },
             {
               $addFields: {
-                activeTeamsCount: { $size: '$managedTeams' }
+                activeProjectsCount: {
+                  $size: {
+                    $filter: {
+                      input: '$managedProjects',
+                      as: 'project',
+                      cond: { $eq: ['$$project.status', 'active'] }
+                    }
+                  }
+                },
+                totalTasksCount: { $size: '$assignedTasks' },
+                completedTasksCount: {
+                  $size: {
+                    $filter: {
+                      input: '$assignedTasks',
+                      as: 'task',
+                      cond: { $eq: ['$$task.status', 'completed'] }
+                    }
+                  }
+                }
               }
             },
-            { $project: { password: 0, managedTeams: 0 } }
+            { $project: { password: 0, managedProjects: 0, assignedTasks: 0 } }
           ]
         }
       }

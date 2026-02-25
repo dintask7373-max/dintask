@@ -288,7 +288,7 @@ const TeamManagement = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-2 mb-6 text-left">
+                                            <div className="space-y-2 text-left">
                                                 <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase">
                                                     <Mail size={12} className="text-slate-300 shrink-0" />
                                                     <span className="truncate">{member.email}</span>
@@ -297,25 +297,6 @@ const TeamManagement = () => {
                                                     <Shield size={12} className="text-primary-400 shrink-0" />
                                                     <span>Workload Status: <span className={cn(activeTasks > 5 ? 'text-red-500' : 'text-emerald-500')}>{activeTasks > 5 ? 'Critical' : 'Balanced'}</span></span>
                                                 </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-9 rounded-xl gap-2 font-black text-[9px] uppercase tracking-[0.1em] border-slate-200"
-                                                    onClick={() => handleOpenMessageModal(member)}
-                                                >
-                                                    <MessageSquare size={14} className="text-primary-500" /> Link
-                                                </Button>
-                                                <Button
-                                                    variant="default"
-                                                    size="sm"
-                                                    className="h-9 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 gap-2 font-black text-[9px] uppercase tracking-[0.1em] text-white"
-                                                    onClick={() => navigate('/manager/progress')}
-                                                >
-                                                    <TrendingUp size={14} className="text-primary-500" /> Trace
-                                                </Button>
                                             </div>
                                         </CardContent>
                                     </Card>

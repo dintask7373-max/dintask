@@ -65,7 +65,7 @@ const ManagerManagement = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [expandedManager, setExpandedManager] = useState(null);
-    const [newManager, setNewManager] = useState({ name: '', email: '', department: '' });
+    const [newManager, setNewManager] = useState({ name: '', email: '' });
     const [editingManager, setEditingManager] = useState(null);
     const [parent] = useAutoAnimate();
 
@@ -108,7 +108,7 @@ const ManagerManagement = () => {
                 ...newManager,
                 phoneNumber: '0000000000'
             });
-            setNewManager({ name: '', email: '', department: '' });
+            setNewManager({ name: '', email: '' });
             setIsAddModalOpen(false);
             await fetchSubscriptionLimit();
             // Refetch current page to show new manager if applicable
@@ -125,8 +125,10 @@ const ManagerManagement = () => {
             'Manager ID': mgr._id,
             'Name': mgr.name,
             'Email': mgr.email,
-            'Department': mgr.department || 'N/A',
-            'Team Size': teamMembersList.filter(e => e.managerId === mgr._id).length,
+            'Active Projects': mgr.activeProjectsCount || 0,
+            'Total Tasks': mgr.totalTasksCount || 0,
+            'Completed Tasks': mgr.completedTasksCount || 0,
+            'Performance': mgr.totalTasksCount > 0 ? `${Math.round((mgr.completedTasksCount / mgr.totalTasksCount) * 100)}%` : '0%',
             'Status': (mgr.status || 'active').toUpperCase(),
         }));
 
@@ -246,8 +248,9 @@ const ManagerManagement = () => {
                                 <tr className="border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                                     <th className="p-5 w-10"></th>
                                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Manager</th>
-                                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Department</th>
+                                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Projects</th>
                                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Team Size</th>
+                                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance</th>
                                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                 </tr>
@@ -290,14 +293,28 @@ const ManagerManagement = () => {
                                                         </div>
                                                     </td>
                                                     <td className="p-5">
-                                                        <Badge variant="outline" className="rounded-lg font-bold text-[10px] bg-slate-50 text-slate-600 tracking-wider">
-                                                            {mgr.department || 'N/A'}
-                                                        </Badge>
+                                                        <div className="flex items-center gap-2">
+                                                            <Briefcase size={14} className="text-primary-600" />
+                                                            <span className="text-sm font-bold text-slate-900">{mgr.activeProjectsCount || 0} Projects</span>
+                                                        </div>
                                                     </td>
                                                     <td className="p-5">
                                                         <div className="flex items-center gap-2">
                                                             <Users size={14} className="text-slate-400" />
                                                             <span className="text-sm font-bold text-slate-700">{teamCount} Members</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-5">
+                                                        <div className="flex flex-col gap-1.5 w-24">
+                                                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                                                <span>{mgr.totalTasksCount > 0 ? Math.round((mgr.completedTasksCount / mgr.totalTasksCount) * 100) : 0}%</span>
+                                                            </div>
+                                                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className="h-full bg-primary-600 rounded-full transition-all duration-500"
+                                                                    style={{ width: `${mgr.totalTasksCount > 0 ? (mgr.completedTasksCount / mgr.totalTasksCount) * 100 : 0}%` }}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="p-5">
@@ -515,16 +532,6 @@ const ManagerManagement = () => {
                                 value={newManager.email}
                                 onChange={(e) => setNewManager({ ...newManager, email: e.target.value })}
                                 placeholder="manager@dintask.com"
-                                className="rounded-xl h-11"
-                                required
-                            />
-                        </div>
-                        <div className="grid gap-2 text-left">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Department</label>
-                            <Input
-                                value={newManager.department}
-                                onChange={(e) => setNewManager({ ...newManager, department: e.target.value })}
-                                placeholder="Engineering, Operations, etc."
                                 className="rounded-xl h-11"
                                 required
                             />

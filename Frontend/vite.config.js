@@ -20,6 +20,8 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, './src/shared'),
       '@store': path.resolve(__dirname, './src/store'),
       '@data': path.resolve(__dirname, './src/data'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
     },
   },
   base: '/',

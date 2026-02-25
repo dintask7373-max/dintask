@@ -159,6 +159,13 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
 
 
 
+    const managerSettingsSubItems = isManager
+        ? [
+            { name: 'Profile', path: '/manager/settings?tab=profile', icon: User, tab: 'profile' },
+            { name: 'Security', path: '/manager/settings?tab=security', icon: Shield, tab: 'security' },
+        ]
+        : [];
+
     const adminSettingsSubItems = isAdmin
         ? [
             { name: 'Profile', path: '/admin/settings?tab=profile', icon: User, tab: 'profile' },
