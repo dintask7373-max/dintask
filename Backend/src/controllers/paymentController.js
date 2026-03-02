@@ -5,11 +5,56 @@ const Admin = require('../models/Admin');
 const Plan = require('../models/Plan');
 const Notification = require('../models/Notification');
 const SuperAdmin = require('../models/SuperAdmin');
+const Partner = require('../models/Partner');
+const PartnerCommission = require('../models/PartnerCommission');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+
+// Helper to calculate and record partner commission
+const calculatePartnerCommission = async (adminId, paymentId, amount) => {
+  try {
+    const admin = await Admin.findById(adminId);
+    if (!admin || !admin.partnerId) return;
+
+    const partner = await Partner.findById(admin.partnerId);
+    if (!partner || partner.status !== 'active' || partner.agreementStatus !== 'accepted') return;
+
+    // Check if this payment already has a commission record to avoid duplicates
+    const existingCommission = await PartnerCommission.findOne({ paymentId });
+    if (existingCommission) return;
+
+    let commissionAmount = 0;
+    if (partner.commissionType === 'Percentage') {
+      commissionAmount = (amount * partner.commissionValue) / 100;
+    } else {
+      // For Fixed/Recurring, we use the value directly
+      commissionAmount = partner.commissionValue;
+    }
+
+    if (commissionAmount > 0) {
+      await PartnerCommission.create({
+        partnerId: partner._id,
+        adminId: admin._id,
+        paymentId,
+        amount: commissionAmount,
+        type: partner.commissionType,
+        status: 'pending'
+      });
+
+      // Update partner stats
+      partner.totalEarnings += commissionAmount;
+      partner.pendingCommission += commissionAmount;
+      await partner.save();
+
+      console.log(`[COMMISSION] Recorded ₹${commissionAmount} for Partner ${partner.referralCode}`);
+    }
+  } catch (err) {
+    console.error('Partner Commission Calculation Error:', err);
+  }
+};
 
 // @desc    Create Razorpay Order
 // @route   POST /api/v1/payments/create-order
@@ -140,19 +185,22 @@ exports.verifyPayment = async (req, res, next) => {
           if (superAdmins.length > 0) {
             const notifications = superAdmins.map(sa => ({
               recipient: sa._id,
-              sender: admin._id, // The Admin who PAID is the sender
-              type: 'payment',
-              title: 'Payment Received',
-              message: `Received ₹${payment.amount} from ${admin.companyName || admin.name} for ${plan.name} plan`,
-              link: `/superadmin/billing`
+              sender: admin._id,
+              type: 'general',
+              title: 'New Subscription Payment',
+              message: `Admin "${admin.name}" has paid for the ${plan.name} plan.`,
+              link: '/superadmin/admins'
             }));
-
             await Notification.insertMany(notifications);
           }
         } catch (notifyErr) {
           console.error('Payment Notification Error:', notifyErr);
         }
         // --- NOTIFICATION LOGIC END ---
+
+        // --- PARTNER COMMISSION LOGIC START ---
+        await calculatePartnerCommission(admin._id, payment._id, payment.amount);
+        // --- PARTNER COMMISSION LOGIC END ---
       }
 
       res.status(200).json({
@@ -267,5 +315,55 @@ exports.downloadInvoice = async (req, res, next) => {
 
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Razorpay Webhook Handler
+// @route   POST /api/v1/payments/webhook
+// @access  Public
+exports.handleRazorpayWebhook = async (req, res, next) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const signature = req.headers['x-razorpay-signature'];
+
+    if (!secret || !signature) {
+      console.warn('[WEBHOOK] Missing secret or signature');
+      return res.status(200).json({ success: true }); // Acknowledge to stop retries
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (signature !== expectedSignature) {
+      console.error('[WEBHOOK] Invalid signature');
+      return res.status(200).json({ success: true });
+    }
+
+    const { event, payload } = req.body;
+    console.log(`[WEBHOOK] Event received: ${event}`);
+
+    if (event === 'payment.captured' || event === 'order.paid') {
+      const paymentEntity = payload.payment.entity;
+      const razorpayOrderId = paymentEntity.order_id;
+      const razorpayPaymentId = paymentEntity.id;
+      const amount = paymentEntity.amount / 100;
+
+      const payment = await Payment.findOne({ razorpayOrderId });
+      if (payment && payment.status !== 'paid') {
+        payment.status = 'paid';
+        payment.razorpayPaymentId = razorpayPaymentId;
+        await payment.save();
+
+        // Trigger commission logic
+        await calculatePartnerCommission(payment.adminId, payment._id, amount);
+      }
+    }
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Webhook Error:', err);
+    res.status(200).json({ success: true }); // Always return 200 to Razorpay
   }
 };

@@ -79,6 +79,10 @@ const AdminSchema = new mongoose.Schema({
       type: String,
       default: ''
     }
+  },
+  partnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Partner'
   }
 }, { timestamps: true });
 

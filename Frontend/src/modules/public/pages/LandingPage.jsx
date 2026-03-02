@@ -450,6 +450,12 @@ const LandingPage = () => {
                                 {item}
                             </button>
                         ))}
+                        <button
+                            onClick={() => navigate('/partner/register')}
+                            className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest"
+                        >
+                            Partners
+                        </button>
                     </div>
 
                     <div className="hidden lg:flex items-center gap-4">
@@ -552,6 +558,9 @@ const LandingPage = () => {
                         </Button>
                         <Button variant="outline" onClick={() => document.getElementById('tactical').scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-lg sm:rounded-full border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-bold text-sm sm:text-base hover:bg-transparent transition-all">
                             {heroContent.heroCtaSecondary}
+                        </Button>
+                        <Button variant="ghost" onClick={() => navigate('/partner/register')} className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-lg text-primary-600 font-bold text-sm sm:text-base hover:bg-primary-50 transition-all flex items-center justify-center gap-2">
+                            Become a Partner <ArrowRight size={18} />
                         </Button>
                     </motion.div>
                 </div>
@@ -733,6 +742,91 @@ const LandingPage = () => {
                                     />
                                 ))}
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Strategic Partnership Section */}
+                <section className="py-24 bg-white dark:bg-slate-950 overflow-hidden">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="grid lg:grid-cols-2 gap-16 items-center">
+                            <motion.div
+                                initial={{ opacity: 0, x: -50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8 }}
+                                className="relative"
+                            >
+                                <div className="absolute -top-20 -left-20 size-80 bg-primary-500/10 rounded-full blur-[100px] -z-10" />
+                                <div className="p-1.5 rounded-[2.5rem] bg-gradient-to-br from-primary-500 to-indigo-600 shadow-2xl">
+                                    <div className="bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-[2.2rem] space-y-8">
+                                        <div className="size-16 rounded-2xl bg-primary-100 flex items-center justify-center text-primary-600">
+                                            <Briefcase size={32} />
+                                        </div>
+                                        <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight italic">
+                                            Strategic <span className="text-primary-600">Partnership</span>
+                                        </h3>
+                                        <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                                            Grow your business by referring others to DinTask. Our partner program offers recurring commissions, dedicated support, and transparent tracking for agencies and independent consultants.
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            {[
+                                                { label: 'Commission', value: 'Upto 20%' },
+                                                { label: 'Payouts', value: 'Monthly' },
+                                                { label: 'Tracking', value: 'Real-time' },
+                                                { label: 'Support', value: '24/7' }
+                                            ].map((item, i) => (
+                                                <div key={i} className="space-y-1">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
+                                                    <p className="text-lg font-black text-slate-900 dark:text-white">{item.value}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, x: 50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8 }}
+                                className="space-y-8"
+                            >
+                                <Badge className="bg-primary-50 text-primary-600 border-none px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-widest">
+                                    Partner Program
+                                </Badge>
+                                <h2 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white leading-[1.1] uppercase tracking-tight italic">
+                                    Refer Clients. <br />
+                                    <span className="text-primary-600">Earn Commissions.</span>
+                                </h2>
+                                <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
+                                    Join the DinTask ecosystem and help businesses transform their digital operations. Whether you're a company or an individual professional, we have a plan for you.
+                                </p>
+                                <div className="space-y-4">
+                                    {[
+                                        'Generous recurring commissions for every paid client',
+                                        'Personalized referral dashboard & link tracking',
+                                        'Marketing resources & professional support',
+                                        'Automatic monthly payouts with transparency'
+                                    ].map((text, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="size-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                                <CheckCircle2 size={14} />
+                                            </div>
+                                            <span className="text-slate-700 dark:text-slate-300 font-bold text-sm tracking-tight">{text}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="pt-6">
+                                    <Button
+                                        onClick={() => navigate('/partner/register')}
+                                        className="h-14 px-10 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest shadow-xl shadow-primary-500/20 group"
+                                    >
+                                        Apply for Partnership <ArrowRight className="ml-3 group-hover:translate-x-2 transition-transform" />
+                                    </Button>
+                                </div>
+                            </motion.div>
                         </div>
                     </div>
                 </section>

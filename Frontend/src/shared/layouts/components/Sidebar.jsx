@@ -141,6 +141,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                 { name: 'Dashboard', path: '/superadmin', icon: LayoutDashboard },
                 { name: 'Inquiries', path: '/superadmin/inquiries', icon: ListChecks },
                 { name: 'Admins', path: '/superadmin/admins', icon: Users },
+                { name: 'Partners', path: '/superadmin/partners', icon: ShieldCheck },
                 { name: 'Global Users', path: '/superadmin/users', icon: Activity },
                 { name: 'Notifications', path: '/superadmin/notifications', icon: Bell, badge: unreadCount },
                 ...(isSuperAdminRoot ? [
@@ -156,6 +157,16 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                     { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
                     { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
                 ] : []),
+            ]
+            : []),
+        ...(role === 'partner'
+            ? [
+                { name: 'Dashboard', path: '/partner', icon: LayoutDashboard },
+                { name: 'Referral Link', path: '/partner/referral', icon: Globe },
+                { name: 'Commissions', path: '/partner/commissions', icon: TrendingUp },
+                { name: 'Payouts', path: '/partner/payouts', icon: Receipt },
+                { name: 'Notifications', path: '/partner/notifications', icon: Bell, badge: unreadCount },
+                { name: 'Settings', path: '/partner/settings', icon: SettingsIcon },
             ]
             : []),
     ];

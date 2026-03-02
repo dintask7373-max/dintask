@@ -33,7 +33,25 @@ app.set('io', io);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
+  console.error('[UNHANDLED REJECTION] Error details:', err);
+  if (err.stack) console.error(err.stack);
+
+  // Don't kill the server for network-related errors (DNS/Timeout)
+  if (err.code === 'ENOTFOUND' || err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED') {
+    console.warn('⚠️  Non-fatal network error detected. Server will NOT restart.');
+    return;
+  }
+
+  // Close server & exit process for other fatal errors
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION] Error details:', err);
+  if (err.stack) console.error(err.stack);
+  process.exit(1);
 });

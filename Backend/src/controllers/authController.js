@@ -14,6 +14,8 @@ const Plan = require('../models/Plan');
 const Notification = require('../models/Notification');
 const Otp = require('../models/Otp');
 const smsService = require('../utils/smsService');
+const Partner = require('../models/Partner');
+const PartnerDocument = require('../models/PartnerDocument');
 
 const models = {
   employee: Employee,
@@ -23,50 +25,60 @@ const models = {
   admin: Admin,
   superadmin: SuperAdmin,
   super_admin: SuperAdmin,
-  superadmin_staff: SuperAdmin
+  superadmin_staff: SuperAdmin,
+  partner: Partner
 };
 
 // Helper to get token from model, create cookie and send response
 const sendTokenResponse = async (user, statusCode, res) => {
-  // Normalize role for frontend consistency
-  let normalizedRole = user.role;
-  if (user.role === 'sales_executive') normalizedRole = 'sales';
-  if (user.role === 'super_admin') normalizedRole = 'superadmin';
+  try {
+    console.log('[TOKEN DEBUG] sendTokenResponse started');
+    // Normalize role for frontend consistency
+    let normalizedRole = user.role;
+    if (user.role === 'sales_executive') normalizedRole = 'sales';
+    if (user.role === 'super_admin') normalizedRole = 'superadmin';
 
-  // Create token with normalized role
-  const token = jwt.sign({ id: user._id, role: normalizedRole }, process.env.JWT_SECRET, {
-    expiresIn: '30d'
-  });
+    console.log('[TOKEN DEBUG] Generating JWT...');
+    const token = jwt.sign({ id: user._id, role: normalizedRole }, process.env.JWT_SECRET, {
+      expiresIn: '30d'
+    });
+    console.log('[TOKEN DEBUG] JWT generated');
 
-  let userData = {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: normalizedRole,
-    adminId: user.adminId
-  };
+    let userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: normalizedRole,
+      adminId: user.adminId
+    };
 
-  // Include plan details for Admins
-  if (user.role === 'admin') {
-    // We need to populate it if not already
-    await user.populate('subscriptionPlanId');
-    userData.subscriptionPlan = user.subscriptionPlan;
-    userData.subscriptionPlanId = user.subscriptionPlanId?._id;
-    userData.planDetails = user.subscriptionPlanId;
-    userData.subscriptionStatus = user.subscriptionStatus;
-    userData.subscriptionExpiry = user.subscriptionExpiry;
+    // Include plan details for Admins
+    if (user.role === 'admin') {
+      // We need to populate it if not already
+      await user.populate('subscriptionPlanId');
+      userData.subscriptionPlan = user.subscriptionPlan;
+      userData.subscriptionPlanId = user.subscriptionPlanId?._id;
+      userData.planDetails = user.subscriptionPlanId;
+      userData.subscriptionStatus = user.subscriptionStatus;
+      userData.subscriptionExpiry = user.subscriptionExpiry;
 
-    // Check if subscription has expired
-    const now = new Date();
-    const expiryDate = new Date(user.subscriptionExpiry);
-    userData.subscriptionExpired = expiryDate < now;
+      // Check if subscription has expired
+      const now = new Date();
+      const expiryDate = new Date(user.subscriptionExpiry);
+      userData.subscriptionExpired = expiryDate < now;
+    }
+
+    console.log('[TOKEN DEBUG] Sending response...');
+    res.status(statusCode).json({
+      success: true,
+      token,
+      user: userData
+    });
+    console.log('[TOKEN DEBUG] Response sent');
+  } catch (err) {
+    console.error('[TOKEN ERROR] Error in sendTokenResponse:', err);
+    throw err; // Re-throw to be caught by login's catch
   }
-
-  res.status(statusCode).json({
-    success: true,
-    token,
-    user: userData
-  });
 };
 
 // @desc    Register user
@@ -74,7 +86,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role, adminId, companyName } = req.body;
+    const { name, email, password, role, adminId, companyName, referralCode, partnerType, ...partnerData } = req.body;
 
     if (!role || !models[role]) {
       return next(new ErrorResponse('Please provide a valid role', 400));
@@ -109,11 +121,33 @@ exports.register = async (req, res, next) => {
           subscriptionExpiry: expiryDate
         };
       }
+
+      // Referral Logic: Link Partner if ref code provided
+      if (referralCode) {
+        const partner = await Partner.findOne({ referralCode, status: 'active' });
+        if (partner) {
+          extraData.partnerId = partner._id;
+        }
+      }
+    }
+
+    // Partner Registration Logic
+    if (role === 'partner') {
+      if (!partnerType) {
+        return next(new ErrorResponse('Please provide partner type (Individual/Company)', 400));
+      }
+      extraData = {
+        partnerType,
+        ...partnerData,
+        name: partnerType === 'Individual' ? (partnerData.fullName || partnerData.name) : (partnerData.companyName || partnerData.name),
+        status: 'pending' // Wait for admin approval
+      };
     }
 
     // Check if phone number is already taken (if provided)
-    if (req.body.phoneNumber) {
-      const phoneExists = await UserModel.findOne({ phoneNumber: req.body.phoneNumber });
+    if (req.body.phoneNumber || req.body.phone) {
+      const phone = req.body.phoneNumber || req.body.phone;
+      const phoneExists = await UserModel.findOne({ $or: [{ phoneNumber: phone }, { phone: phone }] });
       if (phoneExists) {
         return next(new ErrorResponse('Phone number already exists', 400));
       }
@@ -121,21 +155,20 @@ exports.register = async (req, res, next) => {
 
     // Create user in specific collection
     const user = await UserModel.create({
-      name,
+      name: role === 'partner' ? (partnerType === 'Individual' ? req.body.fullName : req.body.companyName) : name,
       email,
       password,
-      phoneNumber: req.body.phoneNumber,
+      phoneNumber: req.body.phoneNumber || req.body.phone,
       role,
-      adminId: role !== 'admin' && role !== 'superadmin' ? adminId : undefined,
-      companyName: role === 'admin' ? companyName : undefined,
+      adminId: role !== 'admin' && role !== 'superadmin' && role !== 'partner' ? adminId : undefined,
+      companyName: role === 'admin' ? companyName : (role === 'partner' && partnerType === 'Company' ? req.body.companyName : undefined),
       ...extraData
     });
 
-    // Notify Superadmins about new Admin registration
-    if (role === 'admin') {
+    // Notify Superadmins about new Admin or Partner registration
+    if (role === 'admin' || role === 'partner') {
       try {
         const superAdmins = await SuperAdmin.find({ role: { $in: ['superadmin', 'superadmin_staff', 'super_admin'] } });
-
 
         const uniqueRecipients = new Map();
         superAdmins.forEach(sa => uniqueRecipients.set(sa._id.toString(), sa._id));
@@ -144,15 +177,34 @@ exports.register = async (req, res, next) => {
           recipient: recipientId,
           sender: user._id,
           type: 'general',
-          title: 'New Admin Registered',
-          message: `A new company "${companyName}" has registered with admin ${name}`,
-          link: '/superadmin/admins'
+          title: role === 'admin' ? 'New Admin Registered' : 'New Partner Registered',
+          message: role === 'admin'
+            ? `A new company "${companyName}" has registered with admin ${name}`
+            : `A new partner "${user.name}" (${partnerType}) has registered and is pending approval.`,
+          link: role === 'admin' ? '/superadmin/admins' : '/superadmin/partners'
         }));
         if (notifications.length > 0) {
           await Notification.insertMany(notifications);
         }
       } catch (notifyErr) {
         console.error('Superadmin Notification Error:', notifyErr);
+      }
+
+      // [NEW] Handle Partner Documents if provided
+      if (role === 'partner' && req.body.documents && Array.isArray(req.body.documents)) {
+        try {
+          const docPromises = req.body.documents.map(doc => {
+            return PartnerDocument.create({
+              partnerId: user._id,
+              documentType: doc.type,
+              fileUrl: doc.url,
+              status: 'pending'
+            });
+          });
+          await Promise.all(docPromises);
+        } catch (docErr) {
+          console.error('Partner Document Creation Error:', docErr);
+        }
       }
     }
 
@@ -246,16 +298,21 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Check if user is active
-    console.log(`[LOGIN DEBUG] Checking status for ${user.email}. Role: ${user.role}, Status: '${user.status}'`);
+    // Check if user is active (Case-insensitive)
+    const normalizedStatus = user.status?.toLowerCase() || 'pending';
+    console.log(`[LOGIN DEBUG] Checking status for ${user.email}. Role: ${user.role}, Status: '${user.status}' (normalized: ${normalizedStatus})`);
 
-    if (user.status === 'pending') {
+    if (normalizedStatus === 'pending') {
       console.log('[LOGIN DEBUG] Blocking pending user');
-      return res.status(403).json({ success: false, error: 'Your account is pending approval from your administrator.' });
+      return res.status(403).json({ success: false, error: 'Your account is pending approval.' });
     }
-    if (user.status === 'rejected') {
+    if (normalizedStatus === 'rejected') {
       console.log('[LOGIN DEBUG] Blocking rejected user');
       return res.status(403).json({ success: false, error: 'Your account request has been rejected.' });
+    }
+    if (normalizedStatus === 'disabled') {
+      console.log('[LOGIN DEBUG] Blocking disabled user');
+      return res.status(403).json({ success: false, error: 'Your account has been disabled. Please contact support.' });
     }
 
     // Check admin subscription for team members
@@ -295,9 +352,9 @@ exports.login = async (req, res, next) => {
       }
     }
 
-    // Set status to active on login
-    user.status = 'active';
-    await user.save();
+    // DO NOT overwrite account status with 'active' session status
+    // user.status = 'active';
+    // await user.save();
 
     await sendTokenResponse(user, 200, res);
   } catch (err) {
@@ -310,10 +367,11 @@ exports.login = async (req, res, next) => {
 // @access  Private
 exports.logout = async (req, res, next) => {
   try {
-    if (req.user) {
-      req.user.status = 'inactive';
-      await req.user.save();
-    }
+    // DO NOT overwrite account status with 'inactive' session status
+    // if (req.user) {
+    //   req.user.status = 'inactive';
+    //   await req.user.save();
+    // }
 
     res.status(200).json({
       success: true,
@@ -704,12 +762,16 @@ exports.sendOtp = async (req, res, next) => {
       });
     }
 
-    // Check status
-    if (user.status === 'pending') {
+    // Check status (Normalized)
+    const normalizedStatus = user.status?.toLowerCase() || 'pending';
+    if (normalizedStatus === 'pending') {
       return res.status(403).json({ success: false, error: 'Your account is pending approval.' });
     }
-    if (user.status === 'rejected') {
+    if (normalizedStatus === 'rejected') {
       return res.status(403).json({ success: false, error: 'Your account has been rejected.' });
+    }
+    if (normalizedStatus === 'disabled') {
+      return res.status(403).json({ success: false, error: 'Your account has been disabled. Please contact support.' });
     }
 
     // Test numbers logic (from RukkooIn)
@@ -792,12 +854,16 @@ exports.verifyOtp = async (req, res, next) => {
       return next(new ErrorResponse('User not found', 404));
     }
 
-    // Reuse login checks logic
-    if (user.status === 'pending') {
+    // Reuse login checks logic (Normalized)
+    const normalizedStatus = user.status?.toLowerCase() || 'pending';
+    if (normalizedStatus === 'pending') {
       return res.status(403).json({ success: false, error: 'Your account is pending approval.' });
     }
-    if (user.status === 'rejected') {
+    if (normalizedStatus === 'rejected') {
       return res.status(403).json({ success: false, error: 'Your account has been rejected.' });
+    }
+    if (normalizedStatus === 'disabled') {
+      return res.status(403).json({ success: false, error: 'Your account has been disabled. Please contact support.' });
     }
 
     // Check subscription for team members

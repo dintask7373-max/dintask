@@ -345,6 +345,7 @@ const AdminAccounts = () => {
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[90px]">Team Size</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Status</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[120px]">Expiry Node</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[120px]">Referred By</TableHead>
                                         <TableHead className="text-right pr-8 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[50px]">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -444,6 +445,20 @@ const AdminAccounts = () => {
                                                                 </p>
                                                             )}
                                                         </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {adm.referredBy ? (
+                                                            <div className="space-y-0.5">
+                                                                <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                                    {adm.referredBy.companyName || adm.referredBy.fullName || adm.referredBy.name}
+                                                                </p>
+                                                                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-[0.1em] border-none bg-emerald-50 text-emerald-600 px-1.5 py-0 rounded">
+                                                                    {adm.referredBy.referralCode}
+                                                                </Badge>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-slate-400 italic">DIRECT SIGNUP</span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-right pr-8">
                                                         <DropdownMenu>

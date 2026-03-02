@@ -99,6 +99,11 @@ app.use('/api/v1/notes', require('./routes/noteRoutes'));
 app.use('/api/v1/landing-page', require('./routes/landingPageRoutes'));
 app.use('/api/v1/tactical-modules', require('./routes/tacticalModuleRoutes'));
 app.use('/api/v1/landing-page-plans', require('./routes/pricingRoutes'));
+app.use('/api/v1/partners', require('./routes/partnerRoutes'));
+
+// Public Payment Webhook
+const { handleRazorpayWebhook } = require('./controllers/paymentController');
+app.post('/api/v1/payments/webhook', handleRazorpayWebhook);
 
 app.use(errorHandler);
 

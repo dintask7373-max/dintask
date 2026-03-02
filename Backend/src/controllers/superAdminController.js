@@ -110,6 +110,15 @@ exports.getAdmins = async (req, res, next) => {
                 password: 0
               }
             },
+            {
+              $lookup: {
+                from: 'partners',
+                localField: 'partnerId',
+                foreignField: '_id',
+                as: 'referredBy'
+              }
+            },
+            { $unwind: { path: '$referredBy', preserveNullAndEmptyArrays: true } },
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: limit }

@@ -18,7 +18,9 @@ const NotFoundRedirect = () => {
                 ? '/manager'
                 : role === 'sales'
                     ? '/sales'
-                    : '/employee';
+                    : role === 'partner'
+                        ? '/partner'
+                        : '/employee';
 
     return <Navigate to={defaultRoute} replace />;
 };
@@ -146,6 +148,19 @@ const Cookies = lazy(() => import('@/modules/public/pages/Cookies'));
 const Welcome = lazy(() => import('@/modules/public/pages/Welcome'));
 const ClientTestimonial = lazy(() => import('@/modules/public/pages/ClientTestimonial'));
 
+// Partner Pages
+const PartnerLogin = lazy(() => import('@/modules/partner/pages/PartnerLogin'));
+const PartnerRegister = lazy(() => import('@/modules/partner/pages/PartnerRegister'));
+const PartnerDashboard = lazy(() => import('@/modules/partner/pages/Dashboard'));
+const PartnerReferral = lazy(() => import('@/modules/partner/pages/ReferralLink'));
+const PartnerCommissions = lazy(() => import('@/modules/partner/pages/Commissions'));
+const PartnerPayouts = lazy(() => import('@/modules/partner/pages/PayoutHistory'));
+const PartnerSettings = lazy(() => import('@/modules/partner/pages/Settings'));
+const PartnerNotifications = lazy(() => import('@/modules/partner/pages/Notifications'));
+
+// SuperAdmin Partner Management
+const PartnerManagement = lazy(() => import('@/modules/superadmin/pages/PartnerManagement'));
+
 // Layouts
 const CRMLayout = lazy(() => import('@/shared/layouts/CRMLayout'));
 
@@ -183,6 +198,12 @@ const AppRouter = () => {
                 <Route path="/sales/login" element={<SalesLogin />} />
                 <Route path="/sales/register" element={<SalesRegister />} />
                 <Route path="/sales/forgot-password" element={<ForgotPassword returnPath="/sales/login" />} />
+
+                {/* Partner Auth Routes */}
+                <Route path="/partner/login" element={<PartnerLogin />} />
+                <Route path="/partner/register" element={<PartnerRegister />} />
+                <Route path="/partner/forgot-password" element={<ForgotPassword returnPath="/partner/login" />} />
+
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
 
                 {/* --- ADMIN ROUTES --- */}
@@ -262,6 +283,7 @@ const AppRouter = () => {
                     <Route path="system-intel" element={<IntelManager />} />
                     <Route path="landing-page" element={<LandingPageManager />} />
                     <Route path="testimonials" element={<TestimonialsManager />} />
+                    <Route path="partners" element={<PartnerManagement />} />
 
                     {/* Restricted Routes for Root SuperAdmin Only */}
                     <Route element={<ProtectedRoute allowedRoles={['superadmin']}><Outlet /></ProtectedRoute>}>
@@ -311,6 +333,17 @@ const AppRouter = () => {
                     <Route path="leads" element={<LeadsManagement />} />
                     <Route path="pipeline" element={<SalesPipeline />} />
                     <Route path="follow-ups" element={<FollowUps />} />
+                </Route>
+
+                {/* --- PARTNER ROUTES --- */}
+                <Route path="/partner" element={<ProtectedRoute allowedRoles={['partner']}><AdminLayout role="partner" /></ProtectedRoute>}>
+                    <Route index element={<PartnerDashboard />} />
+                    <Route path="referral" element={<PartnerReferral />} />
+                    <Route path="commissions" element={<PartnerCommissions />} />
+                    <Route path="payouts" element={<PartnerPayouts />} />
+                    <Route path="settings" element={<PartnerSettings />} />
+                    <Route path="notifications" element={<PartnerNotifications />} />
+                    <Route path="support" element={<SupportCenter />} />
                 </Route>
 
                 {/* Default Redirection */}

@@ -4,6 +4,7 @@ const SalesExecutive = require('../models/SalesExecutive');
 const Manager = require('../models/Manager');
 const Admin = require('../models/Admin');
 const SuperAdmin = require('../models/SuperAdmin');
+const Partner = require('../models/Partner');
 
 const models = {
   employee: Employee,
@@ -11,6 +12,7 @@ const models = {
   sales: SalesExecutive, // Support normalized frontend role
   manager: Manager,
   admin: Admin,
+  partner: Partner,
   super_admin: SuperAdmin, // Support legacy/db role
   superadmin: SuperAdmin,
   superadmin_staff: SuperAdmin

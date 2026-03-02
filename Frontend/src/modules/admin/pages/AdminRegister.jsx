@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { Building2, UserPlus, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,6 +22,8 @@ const AdminRegister = () => {
         confirmPassword: ''
     });
 
+    const [searchParams] = useSearchParams();
+    const referralCode = searchParams.get('ref') || '';
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -56,7 +58,8 @@ const AdminRegister = () => {
                 email,
                 password,
                 role: 'admin',
-                companyName
+                companyName,
+                referralCode
             };
 
             const success = await register(payload);
