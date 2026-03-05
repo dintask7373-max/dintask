@@ -166,7 +166,6 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
             ? [
                 { name: 'Dashboard', path: '/partner', icon: LayoutDashboard },
                 ...(isApprovedPartner ? [
-                    { name: 'Referral Link', path: '/partner/referral', icon: Globe },
                     { name: 'Commissions', path: '/partner/commissions', icon: TrendingUp },
                     { name: 'Payouts', path: '/partner/payouts', icon: Receipt },
                     { name: 'Notifications', path: '/partner/notifications', icon: Bell, badge: unreadCount },

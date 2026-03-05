@@ -15,6 +15,12 @@ const useCRMStore = create(
       reportData: null, // Sales report data
       loading: false,
       error: null,
+      pagination: {
+        total: 0,
+        pages: 0,
+        currentPage: 1,
+        limit: 10
+      },
 
       // Sales Pipeline Stages (Configurable)
       pipelineStages: ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'],
@@ -37,7 +43,17 @@ const useCRMStore = create(
 
           const res = await api(url);
           if (res.success) {
-            set({ leads: res.data, loading: false, error: null });
+            set({
+              leads: res.data,
+              pagination: res.pagination || {
+                total: res.data.length,
+                pages: 1,
+                currentPage: 1,
+                limit: options.limit || 100
+              },
+              loading: false,
+              error: null
+            });
           }
         } catch (error) {
           set({ error: error.message, loading: false });

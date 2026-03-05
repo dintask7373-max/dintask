@@ -13,9 +13,11 @@ import {
     Phone,
     Mail,
     Building,
+    Trash2,
+    ChevronLeft,
+    ChevronRight,
     ArrowRight,
-    Edit2,
-    Trash2
+    Edit2
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useNavigate } from 'react-router-dom';
@@ -45,13 +47,15 @@ const Deals = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { salesReps, getSalesRepByEmail } = useSalesStore();
-    const { leads, fetchLeads, addLead, editLead, deleteLead, pipelineStages, requestProjectConversion } = useCRMStore();
+    const { leads, pagination, fetchLeads, addLead, editLead, deleteLead, pipelineStages, requestProjectConversion } = useCRMStore();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStage, setSelectedStage] = useState('all');
     const [selectedPriority, setSelectedPriority] = useState('all');
     const [sortBy, setSortBy] = useState('deadline');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
 
     // Dialog state
     const [isViewOpen, setIsViewOpen] = useState(false);
@@ -84,9 +88,11 @@ const Deals = () => {
         fetchLeads({
             search: debouncedSearch,
             status: selectedStage,
-            priority: selectedPriority
+            priority: selectedPriority,
+            page,
+            limit
         });
-    }, [debouncedSearch, selectedStage, selectedPriority]);
+    }, [debouncedSearch, selectedStage, selectedPriority, page, limit]);
 
     // Get current sales rep data
     const salesRep = useMemo(() => {
@@ -547,6 +553,70 @@ const Deals = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Pagination Controls */}
+            {pagination && pagination.pages > 1 && (
+                <div className="flex items-center justify-between px-2 py-4">
+                    <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Showing {Math.min(pagination.total, (pagination.currentPage - 1) * pagination.limit + 1)} to {Math.min(pagination.total, pagination.currentPage * pagination.limit)} of {pagination.total} assets
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={pagination.currentPage === 1}
+                            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                            className="h-8 w-8 p-0 rounded-lg border-slate-200"
+                        >
+                            <ChevronLeft size={14} />
+                        </Button>
+
+                        {[...Array(pagination.pages)].map((_, i) => {
+                            const pageNum = i + 1;
+                            if (
+                                pageNum === 1 ||
+                                pageNum === pagination.pages ||
+                                (pageNum >= pagination.currentPage - 1 && pageNum <= pagination.currentPage + 1)
+                            ) {
+                                return (
+                                    <Button
+                                        key={pageNum}
+                                        variant={pagination.currentPage === pageNum ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => setPage(pageNum)}
+                                        className={cn(
+                                            "h-8 w-8 p-0 rounded-lg text-[10px] font-black",
+                                            pagination.currentPage === pageNum
+                                                ? "bg-primary-600 text-white shadow-lg shadow-primary-500/20"
+                                                : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        )}
+                                    >
+                                        {pageNum}
+                                    </Button>
+                                );
+                            } else if (
+                                pageNum === pagination.currentPage - 2 ||
+                                pageNum === pagination.currentPage + 2
+                            ) {
+                                return <span key={pageNum} className="px-1 text-slate-400 text-xs text-[10px] font-black">...</span>;
+                            }
+                            return null;
+                        })}
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={pagination.currentPage === pagination.pages}
+                            onClick={() => setPage(prev => Math.min(pagination.pages, prev + 1))}
+                            className="h-8 w-8 p-0 rounded-lg border-slate-200"
+                        >
+                            <ChevronRight size={14} />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Dialogs */}
             {/* View Deal Dialog */}

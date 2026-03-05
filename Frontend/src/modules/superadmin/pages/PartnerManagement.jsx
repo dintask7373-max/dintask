@@ -84,6 +84,7 @@ const PartnerManagement = () => {
     const [commissionsLoading, setCommissionsLoading] = useState(false);
     const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
     const [approving, setApproving] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
     const [commissionData, setCommissionData] = useState({
         commissionType: 'Percentage',
@@ -279,23 +280,23 @@ const PartnerManagement = () => {
                     <Table>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent border-slate-50">
-                                <TableHead className="pl-8 text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Details</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Type</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Earnings</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Commission</TableHead>
-                                <TableHead className="text-right pr-8 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</TableHead>
+                                <TableHead className="pl-8 text-[11px] font-black uppercase tracking-widest text-slate-400">Partner Details</TableHead>
+                                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Type</TableHead>
+                                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
+                                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Earnings</TableHead>
+                                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Commission</TableHead>
+                                <TableHead className="text-right pr-8 text-[11px] font-black uppercase tracking-widest text-slate-400">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredPartners.length > 0 ? filteredPartners.map((partner) => (
                                 <TableRow key={partner._id} className="border-slate-50 group hover:bg-slate-50/50 transition-colors">
                                     <TableCell className="pl-8">
-                                        <div className="space-y-0.5 py-1">
-                                            <p className="font-black text-slate-900 leading-tight text-[13px] tracking-tight">
+                                        <div className="space-y-1 py-2">
+                                            <p className="font-extrabold text-slate-900 leading-tight text-[15px] tracking-tight hover:text-primary-600 transition-colors cursor-pointer" onClick={() => { setSelectedPartner(partner); setIsProfileModalOpen(true); }}>
                                                 {partner.partnerType === 'Individual' ? partner.fullName : partner.companyName}
                                             </p>
-                                            <p className="text-[9px] text-slate-400 flex items-center gap-1 font-bold">
+                                            <p className="text-[11px] text-slate-500 flex items-center gap-1 font-semibold">
                                                 {partner.email} • {partner.referralCode || 'NO CODE'}
                                             </p>
                                         </div>
@@ -307,31 +308,31 @@ const PartnerManagement = () => {
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={cn(
-                                            "text-[9px] h-6 font-black uppercase tracking-widest gap-1.5 border px-2.5 rounded-full shadow-sm",
+                                            "text-[10px] h-7 font-black uppercase tracking-widest gap-1.5 border px-3 rounded-full shadow-sm",
                                             partner.status === 'active' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                                                 partner.status === 'pending' ? "bg-amber-50 text-amber-600 border-amber-100" :
                                                     "bg-red-50 text-red-600 border-red-100"
                                         )}>
-                                            {partner.status === 'active' ? <CheckCircle2 size={12} /> : partner.status === 'pending' ? <Clock size={12} /> : <XOctagon size={12} />}
+                                            {partner.status === 'active' ? <CheckCircle2 size={13} /> : partner.status === 'pending' ? <Clock size={13} /> : <XOctagon size={13} />}
                                             {partner.status}
                                         </Badge>
                                         {partner.agreementStatus === 'submitted' && (
-                                            <div className="flex items-center gap-1 mt-1">
+                                            <div className="flex items-center gap-1.5 mt-1.5 pl-1">
                                                 <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                                <span className="text-[8px] font-black text-amber-600 uppercase">Wait Approval</span>
+                                                <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter">Needs Review</span>
                                             </div>
                                         )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="text-sm font-black text-slate-900 italic tracking-tighter text-primary-600">₹{partner.totalEarnings}</span>
-                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pending: ₹{partner.pendingCommission}</span>
+                                            <span className="text-base font-black text-slate-900 tracking-tight text-primary-600">₹{partner.totalEarnings}</span>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending: ₹{partner.pendingCommission}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-black text-slate-700 uppercase">{partner.commissionType}</span>
-                                            <span className="text-[10px] font-bold text-slate-400">{partner.commissionValue}{partner.commissionType === 'Percentage' ? '%' : ' Fixed'}</span>
+                                        <div className="flex flex-col leading-tight">
+                                            <span className="text-[12px] font-extrabold text-slate-800 uppercase">{partner.commissionType}</span>
+                                            <span className="text-[11px] font-bold text-slate-400">{partner.commissionValue}{partner.commissionType === 'Percentage' ? '%' : ' Fixed'}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right pr-8">
@@ -343,6 +344,10 @@ const PartnerManagement = () => {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-52 rounded-2xl p-2 shadow-2xl border-none">
                                                 <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 px-2 py-1.5">Quick Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-primary-600 focus:text-primary-700 focus:bg-primary-50" onClick={() => { setSelectedPartner(partner); setIsProfileModalOpen(true); }}>
+                                                    <Eye size={16} /> View Full Profile
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator className="my-1 opacity-50" />
                                                 {partner.status !== 'active' && (
                                                     <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50" onClick={() => handleStatusChange(partner._id, 'active')}>
                                                         <CheckCircle2 size={16} /> Approve Partner
@@ -404,6 +409,159 @@ const PartnerManagement = () => {
                 </CardContent>
             </Card>
 
+            {/* Partner Profile Modal (Comprehensive View) */}
+            <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
+                <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 max-w-4xl overflow-hidden bg-slate-50">
+                    <div className="flex flex-col h-[90vh]">
+                        {/* Header Section */}
+                        <div className="bg-white p-8 border-b border-slate-100 shrink-0">
+                            <div className="flex items-start justify-between">
+                                <div className="space-y-1">
+                                    <Badge className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border mb-2",
+                                        selectedPartner?.status === 'active' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"
+                                    )}>
+                                        {selectedPartner?.status} Profile
+                                    </Badge>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none italic uppercase">
+                                        {selectedPartner?.partnerType === 'Individual' ? selectedPartner?.fullName : selectedPartner?.companyName}
+                                    </h2>
+                                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2 mt-2">
+                                        <Building2 size={16} className="text-primary-600" /> {selectedPartner?.partnerType} Partner • {selectedPartner?.email}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Impact</p>
+                                    <h3 className="text-4xl font-black text-primary-600 italic tracking-tighter">₹{selectedPartner?.totalEarnings || 0}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content Section - Scrollable */}
+                        <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {/* Payout Stats */}
+                                <Card className="border-none shadow-sm rounded-3xl bg-emerald-600 text-white p-6">
+                                    <Wallet className="mb-4 opacity-50" size={24} />
+                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Pending Payout</p>
+                                    <h4 className="text-2xl font-black italic tracking-tight">₹{selectedPartner?.pendingCommission || 0}</h4>
+                                </Card>
+                                <Card className="border-none shadow-sm rounded-3xl bg-white p-6">
+                                    <Banknote className="mb-4 text-primary-600" size={24} />
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Commission Rate</p>
+                                    <h4 className="text-2xl font-black text-slate-900 italic tracking-tight">{selectedPartner?.commissionValue}{selectedPartner?.commissionType === 'Percentage' ? '%' : ' Fixed'}</h4>
+                                </Card>
+                                <Card className="border-none shadow-sm rounded-3xl bg-white p-6">
+                                    <TrendingUp className="mb-4 text-blue-600" size={24} />
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Referral Code</p>
+                                    <h4 className="text-2xl font-black text-slate-900 italic tracking-tight">{selectedPartner?.referralCode || 'N/A'}</h4>
+                                </Card>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {/* Bank Details */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                        <Landmark size={14} /> Bank Settlements
+                                    </h4>
+                                    <div className="bg-white rounded-[2rem] p-6 border border-slate-100 space-y-4 shadow-sm">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">Account Holder</Label>
+                                                <p className="text-sm font-black text-slate-900">{selectedPartner?.bankDetails?.accountHolderName || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">Bank Name</Label>
+                                                <p className="text-sm font-black text-slate-900">{selectedPartner?.bankDetails?.bankName || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">Account number</Label>
+                                                <p className="text-sm font-black text-slate-900 tracking-wider">{selectedPartner?.bankDetails?.accountNumber || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">IFSC Code</Label>
+                                                <p className="text-sm font-black text-primary-600 uppercase italic">{selectedPartner?.bankDetails?.ifscCode || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Kyc / Individual Details */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                        <ShieldCheck size={14} /> KYC & Identity
+                                    </h4>
+                                    <div className="bg-white rounded-[2rem] p-6 border border-slate-100 space-y-4 shadow-sm">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">PAN Number</Label>
+                                                <p className="text-sm font-black text-slate-900 uppercase tracking-widest">{selectedPartner?.panNumber || selectedPartner?.companyPan || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">Contact Phone</Label>
+                                                <p className="text-sm font-black text-slate-900">{selectedPartner?.phone || 'N/A'}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <Label className="text-[9px] font-bold text-slate-400 uppercase">Address / Registered location</Label>
+                                                <p className="text-sm font-black text-slate-900 leading-tight">{selectedPartner?.address || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Signal / Agreement Section */}
+                            <div className="space-y-4">
+                                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                    <FileText size={14} /> Partnership Agreement
+                                </h4>
+                                <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row gap-8 items-center">
+                                    <div className="flex-1 space-y-4 text-center md:text-left">
+                                        <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase tracking-widest mb-2">
+                                            {selectedPartner?.agreementStatus || 'pending'} agreement
+                                        </Badge>
+                                        <p className="text-sm text-slate-500 font-medium italic">
+                                            "Agreement terms include {selectedPartner?.commissionValue}{selectedPartner?.commissionType === 'Percentage' ? '%' : ' Fixed'} commission on all successful referrals. Payouts are released upon reaches threshold."
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 font-black uppercase">Signed on: {selectedPartner?.agreementAcceptedAt ? new Date(selectedPartner.agreementAcceptedAt).toLocaleString() : 'N/A'}</p>
+                                    </div>
+                                    <div className="w-full md:w-64">
+                                        <Label className="text-[9px] font-bold text-slate-400 uppercase block mb-3 text-center">Digital Signature</Label>
+                                        {selectedPartner?.signatureImage ? (
+                                            <div className="h-32 bg-slate-50 rounded-2xl border border-slate-100 p-4 flex items-center justify-center">
+                                                <img src={selectedPartner.signatureImage} alt="Signature" className="max-h-full max-w-full object-contain mix-blend-multiply" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-32 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-slate-300">
+                                                <FileText size={24} />
+                                                <p className="text-[9px] font-black uppercase">No signature</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Section */}
+                        <div className="bg-white p-6 border-t border-slate-100 shrink-0 flex gap-4">
+                            <Button onClick={() => setIsProfileModalOpen(false)} variant="outline" className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[11px]">
+                                Close Profile
+                            </Button>
+                            {selectedPartner?.status === 'pending' && (
+                                <Button onClick={() => handleStatusChange(selectedPartner._id, 'active')} className="flex-[2] h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-500/20">
+                                    Approve & Activate Partner
+                                </Button>
+                            )}
+                            {selectedPartner?.status === 'active' && (
+                                <Button onClick={() => { setIsProfileModalOpen(false); setIsPayoutModalOpen(true); }} className="flex-[2] h-12 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary-500/20">
+                                    Manage Commissions
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Commission Modal */}
             <Dialog open={isCommissionModalOpen} onOpenChange={setIsCommissionModalOpen}>
                 <DialogContent className="rounded-[2rem] border-none shadow-2xl p-8 max-w-sm">
@@ -452,14 +610,25 @@ const PartnerManagement = () => {
                             <h3 className="text-3xl font-black text-emerald-900 tracking-tighter mt-1">₹{selectedPartner?.pendingCommission || 0}</h3>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Amount to Pay</Label>
-                            <Input
-                                type="number"
-                                placeholder="0.00"
-                                value={payoutData.amount}
-                                onChange={(e) => setPayoutData({ ...payoutData, amount: e.target.value })}
-                                className="h-12 rounded-xl bg-slate-50 border-none font-bold text-xs uppercase"
-                            />
+                            <div className="flex items-center justify-between">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Amount to Pay</Label>
+                                <button
+                                    onClick={() => setPayoutData({ ...payoutData, amount: selectedPartner?.pendingCommission || 0 })}
+                                    className="text-[9px] font-black uppercase text-primary-600 hover:text-primary-700 transition-colors"
+                                >
+                                    Use Full Balance
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                                <Input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={payoutData.amount}
+                                    onChange={(e) => setPayoutData({ ...payoutData, amount: e.target.value })}
+                                    className="h-12 rounded-xl bg-slate-50 border-none font-bold text-xs uppercase pl-8"
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Transaction ID / Reference</Label>

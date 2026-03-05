@@ -9,11 +9,12 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/shared/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Badge } from '@/shared/components/ui/badge';
 import { Label } from '@/shared/components/ui/label';
-import { Plus, Edit, Trash2, Search, FileUp, User, Mail, Phone, X, IndianRupee } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileUp, User, Mail, Phone, X, IndianRupee, ChevronLeft, ChevronRight } from 'lucide-react';
 import useCRMStore from '@/store/crmStore';
 import { cn } from '@/shared/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
+import { useDebounce } from '@/shared/hooks/use-debounce';
 
 const LeadsManagement = () => {
   const { role } = useAuthStore();
@@ -27,17 +28,26 @@ const LeadsManagement = () => {
     deleteLead,
     bulkDeleteLeads,
     assignLead,
+    pagination
   } = useCRMStore();
-
-  React.useEffect(() => {
-    fetchLeads();
-    fetchSalesExecutives();
-  }, []);
 
   const fileInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  React.useEffect(() => {
+    fetchLeads({
+      search: debouncedSearch,
+      status: filterStatus === 'all' ? '' : filterStatus,
+      page,
+      limit
+    });
+    fetchSalesExecutives();
+  }, [debouncedSearch, filterStatus, page, limit]);
   const [open, setOpen] = useState(false);
 
   // Import Assignment State
@@ -66,17 +76,8 @@ const LeadsManagement = () => {
   const leadStatuses = ['New', 'Contacted', 'Follow-Up', 'Interested', 'Closed', 'Won', 'Lost'];
   const leadSources = ['Call', 'Website', 'WhatsApp', 'Referral', 'Manual'];
 
-  const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
-      const matchesSearch =
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.mobile?.includes(searchTerm);
-      const matchesStatus = filterStatus === 'all' || lead.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
-  }, [leads, searchTerm, filterStatus]);
+  // Use leads directly from store as backend handles filtering and pagination
+  const filteredLeads = leads;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -541,7 +542,7 @@ const LeadsManagement = () => {
       < div className="grid grid-cols-2 md:grid-cols-4 gap-3" >
         {
           [
-            { label: 'Total Pool', value: leads.length, color: 'primary' },
+            { label: 'Total Pool', value: pagination.total, color: 'primary' },
             { label: 'Interested', value: leads.filter(l => l.status === 'Interested').length, color: 'amber' },
             { label: 'Strategic', value: leads.filter(l => l.status === 'Closed').length, color: 'emerald' },
             { label: 'Lost Flow', value: leads.filter(l => l.status === 'Lost').length, color: 'slate' }
@@ -682,6 +683,70 @@ const LeadsManagement = () => {
             </Table>
           </div>
 
+          {/* Pagination Controls - Desktop */}
+          {pagination && pagination.pages > 1 && (
+            <div className="hidden lg:flex items-center justify-between px-2 py-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Showing {Math.min(pagination.total, (pagination.currentPage - 1) * pagination.limit + 1)} to {Math.min(pagination.total, pagination.currentPage * pagination.limit)} of {pagination.total} assets
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.currentPage === 1}
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                  className="h-8 w-8 p-0 rounded-lg border-slate-200"
+                >
+                  <ChevronLeft size={14} />
+                </Button>
+
+                {[...Array(pagination.pages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (
+                    pageNum === 1 ||
+                    pageNum === pagination.pages ||
+                    (pageNum >= pagination.currentPage - 1 && pageNum <= pagination.currentPage + 1)
+                  ) {
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pagination.currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPage(pageNum)}
+                        className={cn(
+                          "h-8 w-8 p-0 rounded-lg text-[10px] font-black",
+                          pagination.currentPage === pageNum
+                            ? "bg-primary-600 text-white shadow-lg shadow-primary-500/20"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                        )}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  } else if (
+                    pageNum === pagination.currentPage - 2 ||
+                    pageNum === pagination.currentPage + 2
+                  ) {
+                    return <span key={pageNum} className="px-1 text-slate-400 text-[10px] font-black">...</span>;
+                  }
+                  return null;
+                })}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.currentPage === pagination.pages}
+                  onClick={() => setPage(prev => Math.min(pagination.pages, prev + 1))}
+                  className="h-8 w-8 p-0 rounded-lg border-slate-200"
+                >
+                  <ChevronRight size={14} />
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Mobile Card List */}
           <div className="lg:hidden space-y-3">
             <AnimatePresence mode="popLayout">
@@ -768,6 +833,35 @@ const LeadsManagement = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
+
+            {/* Pagination Controls - Mobile */}
+            {pagination && pagination.pages > 1 && (
+              <div className="flex items-center justify-between px-2 py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.currentPage === 1}
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                  className="h-9 px-4 rounded-xl border-slate-200 text-[9px] font-black uppercase tracking-widest"
+                >
+                  <ChevronLeft size={14} className="mr-2" />
+                  Prev
+                </Button>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Page {pagination.currentPage} of {pagination.pages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.currentPage === pagination.pages}
+                  onClick={() => setPage(prev => Math.min(pagination.pages, prev + 1))}
+                  className="h-9 px-4 rounded-xl border-slate-200 text-[9px] font-black uppercase tracking-widest"
+                >
+                  Next
+                  <ChevronRight size={14} className="ml-2" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Lead Details Dialog for Mobile */}

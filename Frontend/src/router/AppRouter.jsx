@@ -152,7 +152,6 @@ const ClientTestimonial = lazy(() => import('@/modules/public/pages/ClientTestim
 const PartnerLogin = lazy(() => import('@/modules/partner/pages/PartnerLogin'));
 const PartnerRegister = lazy(() => import('@/modules/partner/pages/PartnerRegister'));
 const PartnerDashboard = lazy(() => import('@/modules/partner/pages/Dashboard'));
-const PartnerReferral = lazy(() => import('@/modules/partner/pages/ReferralLink'));
 const PartnerCommissions = lazy(() => import('@/modules/partner/pages/Commissions'));
 const PartnerPayouts = lazy(() => import('@/modules/partner/pages/PayoutHistory'));
 const PartnerSettings = lazy(() => import('@/modules/partner/pages/Settings'));
@@ -341,7 +340,6 @@ const AppRouter = () => {
                 {/* --- PARTNER ROUTES --- */}
                 <Route path="/partner" element={<ProtectedRoute allowedRoles={['partner']}><AdminLayout role="partner" /></ProtectedRoute>}>
                     <Route index element={<PartnerDashboard />} />
-                    <Route path="referral" element={<PartnerReferral />} />
                     <Route path="commissions" element={<PartnerCommissions />} />
                     <Route path="payouts" element={<PartnerPayouts />} />
                     <Route path="settings" element={<PartnerSettings />} />
