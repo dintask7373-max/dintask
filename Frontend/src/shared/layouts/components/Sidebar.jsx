@@ -78,6 +78,9 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         else navigate('/employee/login');
     };
 
+    const user = useAuthStore(state => state.user);
+    const isApprovedPartner = role === 'partner' && user?.agreementStatus === 'approved' && user?.status === 'active';
+
     const navItems = [
         ...(role === 'manager'
             ? [
@@ -113,7 +116,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         ...(role === 'admin'
             ? [
                 { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-                // { name: 'Tasks', path: `/${role}/tasks`, icon: CheckSquare }, // REMOVED as per user request
+                { name: 'Task Assignment', path: '/admin/tasks', icon: ListChecks },
                 { name: 'CRM', path: '/admin/crm', icon: Briefcase },
                 { name: 'Managers', path: '/admin/managers', icon: ShieldCheck },
                 { name: 'Employees', path: '/admin/employees', icon: Users },
@@ -162,10 +165,15 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         ...(role === 'partner'
             ? [
                 { name: 'Dashboard', path: '/partner', icon: LayoutDashboard },
-                { name: 'Referral Link', path: '/partner/referral', icon: Globe },
-                { name: 'Commissions', path: '/partner/commissions', icon: TrendingUp },
-                { name: 'Payouts', path: '/partner/payouts', icon: Receipt },
-                { name: 'Notifications', path: '/partner/notifications', icon: Bell, badge: unreadCount },
+                ...(isApprovedPartner ? [
+                    { name: 'Referral Link', path: '/partner/referral', icon: Globe },
+                    { name: 'Commissions', path: '/partner/commissions', icon: TrendingUp },
+                    { name: 'Payouts', path: '/partner/payouts', icon: Receipt },
+                    { name: 'Notifications', path: '/partner/notifications', icon: Bell, badge: unreadCount },
+                    { name: 'Support', path: '/partner/support', icon: LifeBuoy },
+                ] : [
+                    { name: 'Agreement', path: '/partner/agreement', icon: FileEdit },
+                ]),
                 { name: 'Settings', path: '/partner/settings', icon: SettingsIcon },
             ]
             : []),

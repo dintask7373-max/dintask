@@ -44,6 +44,11 @@ const SupportTicketSchema = new mongoose.Schema({
         ref: 'Admin',
         required: true // Links ticket to a specific company/admin
     },
+    assignedPartnerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Partner',
+        default: null
+    },
     isEscalatedToSuperAdmin: {
         type: Boolean,
         default: false
@@ -58,7 +63,7 @@ const SupportTicketSchema = new mongoose.Schema({
         },
         responderModel: {
             type: String,
-            enum: ['Admin', 'SuperAdmin', 'Employee', 'Manager', 'SalesExecutive']
+            enum: ['Admin', 'SuperAdmin', 'Employee', 'Manager', 'SalesExecutive', 'Partner']
         },
         message: String,
         createdAt: {

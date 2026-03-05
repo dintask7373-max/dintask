@@ -49,7 +49,9 @@ const sendTokenResponse = async (user, statusCode, res) => {
       name: user.name,
       email: user.email,
       role: normalizedRole,
-      adminId: user.adminId
+      adminId: user.adminId,
+      status: user.status,
+      agreementStatus: user.agreementStatus
     };
 
     // Include plan details for Admins
@@ -136,9 +138,20 @@ exports.register = async (req, res, next) => {
       if (!partnerType) {
         return next(new ErrorResponse('Please provide partner type (Individual/Company)', 400));
       }
+
+      // Extract and nest bank details
+      const bankDetails = {
+        accountHolderName: partnerData.accountHolderName,
+        accountNumber: partnerData.accountNumber,
+        ifscCode: partnerData.ifscCode,
+        bankName: partnerData.bankName,
+        branchName: partnerData.branchName
+      };
+
       extraData = {
         partnerType,
         ...partnerData,
+        bankDetails,
         name: partnerType === 'Individual' ? (partnerData.fullName || partnerData.name) : (partnerData.companyName || partnerData.name),
         status: 'pending' // Wait for admin approval
       };
@@ -302,7 +315,7 @@ exports.login = async (req, res, next) => {
     const normalizedStatus = user.status?.toLowerCase() || 'pending';
     console.log(`[LOGIN DEBUG] Checking status for ${user.email}. Role: ${user.role}, Status: '${user.status}' (normalized: ${normalizedStatus})`);
 
-    if (normalizedStatus === 'pending') {
+    if (normalizedStatus === 'pending' && user.role !== 'partner') {
       console.log('[LOGIN DEBUG] Blocking pending user');
       return res.status(403).json({ success: false, error: 'Your account is pending approval.' });
     }
@@ -399,7 +412,9 @@ exports.getMe = async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      adminId: user.adminId
+      adminId: user.adminId,
+      status: user.status,
+      agreementStatus: user.agreementStatus
     };
 
     if (user.role === 'admin') {

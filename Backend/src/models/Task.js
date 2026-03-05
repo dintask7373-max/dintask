@@ -10,22 +10,32 @@ const TaskSchema = new mongoose.Schema({
   },
   project: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Project',
-    required: [true, 'Tasks must be linked to a Mission Project']
+    ref: 'Project'
   },
   assignedTo: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee'
+    refPath: 'assignedToModel'
   }],
+  assignedToModel: {
+    type: String,
+    enum: ['Employee', 'Manager'],
+    default: 'Employee'
+  },
   subTasks: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
+    user: { type: mongoose.Schema.Types.ObjectId, refPath: 'subTasks.userModel' },
+    userModel: { type: String, enum: ['Employee', 'Manager'], default: 'Employee' },
     status: { type: String, enum: ['pending', 'in_progress', 'completed', 'review'], default: 'pending' },
     progress: { type: Number, default: 0 }
   }],
   statusNotes: { type: String },
   assignedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Manager'
+    refPath: 'assignedByModel'
+  },
+  assignedByModel: {
+    type: String,
+    enum: ['Admin', 'Manager'],
+    default: 'Manager'
   },
   team: {
     type: mongoose.Schema.Types.ObjectId,
@@ -86,6 +96,10 @@ const TaskSchema = new mongoose.Schema({
     default: Date.now
   },
   overdueNotified: {
+    type: Boolean,
+    default: false
+  },
+  reminderSent: {
     type: Boolean,
     default: false
   }

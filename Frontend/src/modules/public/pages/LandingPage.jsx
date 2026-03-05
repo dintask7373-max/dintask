@@ -71,6 +71,14 @@ const LandingPage = () => {
     });
 
     useEffect(() => {
+        // Capture Referral Code
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
+        if (ref) {
+            localStorage.setItem('referralCode', ref);
+            console.log('Referral code captured from Landing Page:', ref);
+        }
+
         const fetchContent = async () => {
             try {
                 // Fetch Hero

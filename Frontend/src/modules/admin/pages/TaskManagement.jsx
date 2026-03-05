@@ -69,14 +69,25 @@ import {
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
 import useManagerStore from '@/store/managerStore';
+import useProjectStore from '@/store/projectStore';
 import useNotificationStore from '@/store/notificationStore';
+import { useEffect } from 'react';
 import { cn } from '@/shared/utils/cn';
 import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
 
 const TaskManagement = () => {
-    const { tasks, addTask, updateTask, deleteTask, addComment } = useTaskStore();
-    const { employees } = useEmployeeStore();
+    const { tasks, addTask, updateTask, deleteTask, addComment, fetchTasks } = useTaskStore();
+    const { employees, fetchEmployees } = useEmployeeStore();
+    const { allManagers, fetchAllManagers } = useManagerStore();
+    const { projects, fetchProjects } = useProjectStore();
     const addNotification = useNotificationStore(state => state.addNotification);
+
+    useEffect(() => {
+        fetchTasks();
+        fetchEmployees();
+        fetchAllManagers();
+        fetchProjects();
+    }, []);
 
     const [activeTab, setActiveTab] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -88,15 +99,14 @@ const TaskManagement = () => {
     const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
     const [activeTaskForDiscussion, setActiveTaskForDiscussion] = useState(null);
     const [newMessage, setNewMessage] = useState('');
-
-    const { managers } = useManagerStore();
-    const [assignType, setAssignType] = useState('employee'); // 'employee' or 'manager'
+    const [assignType, setAssignType] = useState('manager'); // Restrict to manager only as per user request
 
     const [newTask, setNewTask] = useState({
         title: '',
         description: '',
         priority: 'medium',
         deadline: '',
+        project: '',
         assignedTo: [],
         assignedToManager: '',
         collaborationEnabled: false
@@ -122,7 +132,7 @@ const TaskManagement = () => {
     const handleCreateTask = (e) => {
         e.preventDefault();
         if (!newTask.title || !newTask.deadline) {
-            toast.error('Please fill in required fields');
+            toast.error('Please fill in required fields (Title, Deadline)');
             return;
         }
 
@@ -134,7 +144,9 @@ const TaskManagement = () => {
 
         const taskRecord = {
             ...newTask,
-            id: Date.now(),
+            project: newTask.project === 'none' ? undefined : newTask.project,
+            assignedTo: assignType === 'manager' ? [newTask.assignedToManager] : newTask.assignedTo,
+            assignedToModel: assignType === 'manager' ? 'Manager' : 'Employee',
             status: 'pending',
             progress: 0,
             assignedBy: 'admin',
@@ -169,6 +181,7 @@ const TaskManagement = () => {
             description: '',
             priority: 'medium',
             deadline: '',
+            project: '',
             assignedTo: [],
             assignedToManager: '',
             collaborationEnabled: false
@@ -263,6 +276,23 @@ const TaskManagement = () => {
                                     className="min-h-[100px] rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"
                                 />
                             </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="project" className="text-xs font-bold uppercase tracking-widest text-slate-400">Mission Project (Optional)</Label>
+                                <Select
+                                    value={newTask.project}
+                                    onValueChange={(val) => setNewTask({ ...newTask, project: val })}
+                                >
+                                    <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800">
+                                        <SelectValue placeholder="Select Mission Project (Optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                        <SelectItem value="none">None</SelectItem>
+                                        {projects.map(proj => (
+                                            <SelectItem key={proj._id} value={proj._id}>{proj.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Priority</Label>
@@ -295,147 +325,58 @@ const TaskManagement = () => {
                             </div>
 
                             <div className="grid gap-4">
-                                <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200/60 dark:border-slate-700/50 shadow-inner relative">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => setAssignType('employee')}
-                                        className={cn(
-                                            "flex-1 rounded-xl h-10 text-[10px] font-black uppercase tracking-widest transition-all duration-500 z-10",
-                                            assignType === 'employee'
-                                                ? "bg-white dark:bg-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.08)] text-primary-600 dark:text-primary-400 border border-slate-100 dark:border-slate-600"
-                                                : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                                <div className="grid gap-3">
+                                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Assign to Manager</Label>
+                                    <div className="relative mb-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                                        <Input
+                                            placeholder="Search managers..."
+                                            value={mgrSearchTerm}
+                                            onChange={(e) => setMgrSearchTerm(e.target.value)}
+                                            className="h-9 pl-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto p-3 border rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 custom-scrollbar">
+                                        {allManagers
+                                            .filter(mgr =>
+                                                mgr.name.toLowerCase().includes(mgrSearchTerm.toLowerCase()) ||
+                                                mgr.department?.toLowerCase().includes(mgrSearchTerm.toLowerCase())
+                                            )
+                                            .map(mgr => (
+                                                <motion.div
+                                                    key={mgr.id}
+                                                    whileHover={{ x: 3 }}
+                                                    className={cn(
+                                                        "flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer",
+                                                        newTask.assignedToManager === mgr.id || newTask.assignedToManager === mgr._id
+                                                            ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30"
+                                                            : "bg-white dark:bg-slate-900 border-transparent hover:border-slate-200"
+                                                    )}
+                                                    onClick={() => setNewTask({ ...newTask, assignedToManager: mgr._id || mgr.id, assignedTo: [] })}
+                                                >
+                                                    <Avatar className="h-8 w-8 border border-white dark:border-slate-800 shadow-sm shrink-0">
+                                                        <AvatarImage src={mgr.avatar} />
+                                                        <AvatarFallback className="text-[10px] font-black">{mgr.name.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-bold leading-none mb-1">{mgr.name}</p>
+                                                        <p className="text-[10px] text-slate-500 font-medium">{mgr.department}</p>
+                                                    </div>
+                                                    {(newTask.assignedToManager === mgr.id || newTask.assignedToManager === mgr._id) && (
+                                                        <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                                                    )}
+                                                </motion.div>
+                                            ))}
+                                        {allManagers.filter(mgr => mgr.name.toLowerCase().includes(mgrSearchTerm.toLowerCase())).length === 0 && (
+                                            <div className="py-6 text-center text-[10px] text-slate-400 font-bold italic">
+                                                No managers found matching "{mgrSearchTerm}"
+                                            </div>
                                         )}
-                                    >
-                                        Direct Employees
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => setAssignType('manager')}
-                                        className={cn(
-                                            "flex-1 rounded-xl h-10 text-[10px] font-black uppercase tracking-widest transition-all duration-500 z-10",
-                                            assignType === 'manager'
-                                                ? "bg-white dark:bg-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.08)] text-primary-600 dark:text-primary-400 border border-slate-100 dark:border-slate-600"
-                                                : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                        )}
-                                    >
-                                        Via Manager
-                                    </Button>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 font-medium px-1 italic">
+                                        The manager will receive this task and delegate it to their team members.
+                                    </p>
                                 </div>
-
-                                {assignType === 'employee' ? (
-                                    <div className="grid gap-3">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Assign Employees</Label>
-                                            <span className="text-[10px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded-full">
-                                                {newTask.assignedTo.length} Selected
-                                            </span>
-                                        </div>
-                                        <div className="relative mb-1">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                                            <Input
-                                                placeholder="Search by name or department..."
-                                                value={empSearchTerm}
-                                                onChange={(e) => setEmpSearchTerm(e.target.value)}
-                                                className="h-9 pl-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto p-3 border rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 custom-scrollbar">
-                                            {employees
-                                                .filter(emp =>
-                                                    emp.name.toLowerCase().includes(empSearchTerm.toLowerCase()) ||
-                                                    emp.department?.toLowerCase().includes(empSearchTerm.toLowerCase())
-                                                )
-                                                .map(emp => (
-                                                    <motion.div
-                                                        key={emp.id}
-                                                        whileHover={{ x: 3 }}
-                                                        className={cn(
-                                                            "flex items-center space-x-2 p-2 rounded-xl border transition-all cursor-pointer",
-                                                            newTask.assignedTo.includes(emp.id)
-                                                                ? "bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-900/30"
-                                                                : "bg-white dark:bg-slate-900 border-transparent hover:border-slate-200"
-                                                        )}
-                                                        onClick={() => toggleEmployeeAssignment(emp.id)}
-                                                    >
-                                                        <Checkbox
-                                                            id={`emp-${emp.id}`}
-                                                            checked={newTask.assignedTo.includes(emp.id)}
-                                                            onCheckedChange={() => toggleEmployeeAssignment(emp.id)}
-                                                            className="rounded-md border-slate-300"
-                                                        />
-                                                        <Avatar className="h-7 w-7 border border-white dark:border-slate-800 shadow-sm shrink-0">
-                                                            <AvatarImage src={emp.avatar} />
-                                                            <AvatarFallback className="bg-primary-50 text-primary-600 text-[9px]">{emp.name.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="min-w-0">
-                                                            <p className="text-[11px] font-bold truncate leading-none mb-0.5">{emp.name}</p>
-                                                            <p className="text-[9px] text-slate-400 font-medium truncate italic">{emp.role}</p>
-                                                        </div>
-                                                    </motion.div>
-                                                ))}
-                                            {employees.filter(emp => emp.name.toLowerCase().includes(empSearchTerm.toLowerCase())).length === 0 && (
-                                                <div className="col-span-full py-6 text-center text-[10px] text-slate-400 font-bold italic">
-                                                    No employees found matching "{empSearchTerm}"
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="grid gap-3">
-                                        <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Assign to Manager</Label>
-                                        <div className="relative mb-1">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                                            <Input
-                                                placeholder="Search managers..."
-                                                value={mgrSearchTerm}
-                                                onChange={(e) => setMgrSearchTerm(e.target.value)}
-                                                className="h-9 pl-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto p-3 border rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 custom-scrollbar">
-                                            {managers
-                                                .filter(mgr =>
-                                                    mgr.name.toLowerCase().includes(mgrSearchTerm.toLowerCase()) ||
-                                                    mgr.department?.toLowerCase().includes(mgrSearchTerm.toLowerCase())
-                                                )
-                                                .map(mgr => (
-                                                    <motion.div
-                                                        key={mgr.id}
-                                                        whileHover={{ x: 3 }}
-                                                        className={cn(
-                                                            "flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer",
-                                                            newTask.assignedToManager === mgr.id
-                                                                ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30"
-                                                                : "bg-white dark:bg-slate-900 border-transparent hover:border-slate-200"
-                                                        )}
-                                                        onClick={() => setNewTask({ ...newTask, assignedToManager: mgr.id, assignedTo: [] })}
-                                                    >
-                                                        <Avatar className="h-8 w-8 border border-white dark:border-slate-800 shadow-sm shrink-0">
-                                                            <AvatarImage src={mgr.avatar} />
-                                                            <AvatarFallback className="text-[10px] font-black">{mgr.name.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-bold leading-none mb-1">{mgr.name}</p>
-                                                            <p className="text-[10px] text-slate-500 font-medium">{mgr.department}</p>
-                                                        </div>
-                                                        {newTask.assignedToManager === mgr.id && (
-                                                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
-                                                        )}
-                                                    </motion.div>
-                                                ))}
-                                            {managers.filter(mgr => mgr.name.toLowerCase().includes(mgrSearchTerm.toLowerCase())).length === 0 && (
-                                                <div className="py-6 text-center text-[10px] text-slate-400 font-bold italic">
-                                                    No managers found matching "{mgrSearchTerm}"
-                                                </div>
-                                            )}
-                                        </div>
-                                        <p className="text-[10px] text-slate-500 font-medium px-1 italic">
-                                            The manager will receive this task and delegate it to their team members.
-                                        </p>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="flex items-center space-x-3 bg-primary-50/50 dark:bg-primary-900/10 p-4 rounded-2xl border border-primary-100/50 dark:border-primary-900/20">

@@ -41,7 +41,7 @@ exports.protect = async (req, res, next) => {
 
       // Normalize role
       if (role) {
-        role = role.toLowerCase();
+        role = role.toLowerCase().trim();
         if (role === 'super_admin') role = 'superadmin';
         if (role === 'sales') role = 'sales_executive';
       }
@@ -72,6 +72,7 @@ exports.protect = async (req, res, next) => {
       }
 
       // Normalize role on req.user for downstream consistency
+      if (req.user.role) req.user.role = req.user.role.trim();
       let userRole = req.user.role;
       if (userRole === 'super_admin') req.user.role = 'superadmin';
       if (userRole === 'sales_executive') req.user.role = 'sales';

@@ -66,12 +66,12 @@ const emitSocketNotification = (doc) => {
 
 // Post-save hook to send push notification and socket update
 NotificationSchema.post('save', async function (doc) {
-    const { sendPushToUser } = require('../utils/pushNotification');
-
-    // Send Socket.io notification
-    emitSocketNotification(doc);
-
     try {
+        const { sendPushToUser } = require('../utils/pushNotification');
+
+        // Send Socket.io notification
+        emitSocketNotification(doc);
+
         await sendPushToUser(doc.recipient, {
             title: doc.title,
             body: doc.message,
@@ -82,14 +82,14 @@ NotificationSchema.post('save', async function (doc) {
             }
         });
     } catch (err) {
-        console.error('Error sending push notification from hook:', err);
+        console.error('[Notification Hook ERROR] Error in post-save:', err);
     }
 });
 
 // Post-insertMany hook to send push notifications and socket updates
 NotificationSchema.post('insertMany', async function (docs) {
-    const { sendPushToUser } = require('../utils/pushNotification');
     try {
+        const { sendPushToUser } = require('../utils/pushNotification');
         for (const doc of docs) {
             // Send Socket.io notification
             emitSocketNotification(doc);
@@ -105,7 +105,7 @@ NotificationSchema.post('insertMany', async function (docs) {
             });
         }
     } catch (err) {
-        console.error('Error sending batch push notifications from hook:', err);
+        console.error('[Notification Hook ERROR] Error in post-insertMany:', err);
     }
 });
 

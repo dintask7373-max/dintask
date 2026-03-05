@@ -157,6 +157,8 @@ const PartnerCommissions = lazy(() => import('@/modules/partner/pages/Commission
 const PartnerPayouts = lazy(() => import('@/modules/partner/pages/PayoutHistory'));
 const PartnerSettings = lazy(() => import('@/modules/partner/pages/Settings'));
 const PartnerNotifications = lazy(() => import('@/modules/partner/pages/Notifications'));
+const PartnerSupport = lazy(() => import('@/modules/partner/pages/Support'));
+const PartnerAgreement = lazy(() => import('@/modules/partner/pages/Agreement'));
 
 // SuperAdmin Partner Management
 const PartnerManagement = lazy(() => import('@/modules/superadmin/pages/PartnerManagement'));
@@ -212,6 +214,7 @@ const AppRouter = () => {
                     <Route index element={<AdminDashboard />} />
                     <Route path="managers" element={<ManagerManagement />} />
                     <Route path="employees" element={<EmployeeManagement />} />
+                    <Route path="tasks" element={<TaskManagement />} />
                     <Route path="sales" element={<SalesManagement />} />
                     <Route path="projects" element={<AdminProjects />} />
                     <Route path="projects/approvals" element={<ProjectApprovals />} />
@@ -343,7 +346,8 @@ const AppRouter = () => {
                     <Route path="payouts" element={<PartnerPayouts />} />
                     <Route path="settings" element={<PartnerSettings />} />
                     <Route path="notifications" element={<PartnerNotifications />} />
-                    <Route path="support" element={<SupportCenter />} />
+                    <Route path="support" element={<PartnerSupport />} />
+                    <Route path="agreement" element={<PartnerAgreement />} />
                 </Route>
 
                 {/* Default Redirection */}

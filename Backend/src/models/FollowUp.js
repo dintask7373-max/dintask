@@ -33,6 +33,10 @@ const FollowUpSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin',
         required: true
+    },
+    reminderSent: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

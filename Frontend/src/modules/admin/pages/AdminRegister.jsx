@@ -23,7 +23,7 @@ const AdminRegister = () => {
     });
 
     const [searchParams] = useSearchParams();
-    const referralCode = searchParams.get('ref') || '';
+    const referralCode = searchParams.get('ref') || localStorage.getItem('referralCode') || '';
     const navigate = useNavigate();
 
     const handleChange = (e) => {

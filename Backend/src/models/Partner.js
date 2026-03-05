@@ -89,9 +89,13 @@ const PartnerSchema = new mongoose.Schema({
     type: String,
     default: 'partner'
   },
+  signatureImage: {
+    type: String,
+    default: ''
+  },
   agreementStatus: {
     type: String,
-    enum: ['pending', 'accepted'],
+    enum: ['pending', 'submitted', 'approved'],
     default: 'pending'
   },
   agreementAcceptedAt: {

@@ -145,6 +145,7 @@ exports.getTasks = async (req, res) => {
       .populate('assignedTo', 'name')
       .populate('subTasks.user', 'name profileImage') // Populate user details in subTasks
       .populate('team', 'name')
+      .populate('assignedBy', 'name')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
@@ -216,18 +217,19 @@ exports.createTask = async (req, res) => {
     // Prepare assignment list (individuals only)
     let finalAssignedTo = Array.isArray(assignedTo) ? [...assignedTo] : (assignedTo ? [assignedTo] : []);
 
-    // If project specified, verify ownership and same workspace (NOW MANDATORY)
-    if (!project) return res.status(400).json({ success: false, error: 'Tactical deployment requires a valid Project Mission ID' });
-
-    const proj = await Project.findById(project);
-    if (!proj) return res.status(404).json({ success: false, error: 'Project not found' });
-    if (proj.adminId.toString() !== adminId.toString()) {
-      return res.status(403).json({ success: false, error: 'Project belongs to different workspace' });
+    // If project specified, verify ownership and same workspace (OPTIONAL)
+    if (project) {
+      const proj = await Project.findById(project);
+      if (!proj) return res.status(404).json({ success: false, error: 'Project not found' });
+      if (proj.adminId.toString() !== adminId.toString()) {
+        return res.status(403).json({ success: false, error: 'Project belongs to different workspace' });
+      }
     }
 
     // Initialize subTasks for per-employee tracking
     const subTasksInit = finalAssignedTo.map(userId => ({
       user: userId,
+      userModel: req.body.assignedToModel || 'Employee',
       status: 'pending',
       progress: 0
     }));
@@ -236,7 +238,9 @@ exports.createTask = async (req, res) => {
       ...req.body,
       project: project, // Ensure explicitly passed
       assignedBy: req.user.id,
+      assignedByModel: req.user.role === 'admin' ? 'Admin' : 'Manager',
       assignedTo: finalAssignedTo,
+      assignedToModel: req.body.assignedToModel || 'Employee',
       subTasks: subTasksInit,
       team: team || undefined,
       adminId: adminId,

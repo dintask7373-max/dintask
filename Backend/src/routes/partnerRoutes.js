@@ -11,7 +11,7 @@ const {
     getPartnerReferrals,
     getPartnerTransactions,
     getPartnerAnalytics,
-    acceptAgreement,
+    submitAgreement,
     shareReferralLink
 } = require('../controllers/partnerController');
 const { protect, authorize } = require('../middleware/auth');
@@ -33,7 +33,7 @@ router.get('/health-check', (req, res) => {
 // 2. Partner Specific Routes (Auth)
 router.get('/dashboard/stats', protect, authorize('partner'), getPartnerDashboard);
 router.get('/my-payouts', protect, authorize('partner'), getPartnerPayouts);
-router.put('/agreement/accept', protect, authorize('partner'), acceptAgreement);
+router.put('/agreement/submit', protect, authorize('partner'), submitAgreement);
 router.post('/share-link', protect, authorize('partner'), shareReferralLink);
 
 // 3. SuperAdmin Specific Routes (Auth)

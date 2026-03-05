@@ -180,6 +180,11 @@ const MyTasks = () => {
                                                                 TEAM: {task.team.name}
                                                             </Badge>
                                                         )}
+                                                        {task.assignedByModel === 'Admin' && (
+                                                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[8px] font-black uppercase tracking-widest px-2 h-4 animate-pulse">
+                                                                ADMIN ASSIGNED
+                                                            </Badge>
+                                                        )}
                                                         {task.status === 'completed' && (
                                                             <Badge className="bg-emerald-50 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest px-2 h-4">
                                                                 FULFILLED

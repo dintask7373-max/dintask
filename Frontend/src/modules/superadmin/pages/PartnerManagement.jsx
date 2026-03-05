@@ -15,7 +15,8 @@ import {
     User,
     Settings2,
     Banknote,
-    FileText
+    FileText,
+    Landmark
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -75,11 +76,14 @@ const PartnerManagement = () => {
     const [docsLoading, setDocsLoading] = useState(false);
     const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
     const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+    const [isBankModalOpen, setIsBankModalOpen] = useState(false);
     const [partnerReferrals, setPartnerReferrals] = useState([]);
     const [referralsLoading, setReferralsLoading] = useState(false);
     const [isCommissionsModalOpen, setIsCommissionsModalOpen] = useState(false);
     const [partnerCommissions, setPartnerCommissions] = useState([]);
     const [commissionsLoading, setCommissionsLoading] = useState(false);
+    const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
+    const [approving, setApproving] = useState(false);
 
     const [commissionData, setCommissionData] = useState({
         commissionType: 'Percentage',
@@ -136,6 +140,25 @@ const PartnerManagement = () => {
             }
         } catch (err) {
             toast.error('Failed to update commission');
+        }
+    };
+
+    const handleApproveAgreement = async () => {
+        setApproving(true);
+        try {
+            const res = await apiRequest(`/partners/${selectedPartner._id}/status`, {
+                method: 'PUT',
+                body: { agreementStatus: 'approved' }
+            });
+            if (res.success) {
+                toast.success('Agreement approved and partner activated!');
+                setIsAgreementModalOpen(false);
+                fetchPartners();
+            }
+        } catch (err) {
+            toast.error('Failed to approve agreement');
+        } finally {
+            setApproving(false);
         }
     };
 
@@ -292,6 +315,12 @@ const PartnerManagement = () => {
                                             {partner.status === 'active' ? <CheckCircle2 size={12} /> : partner.status === 'pending' ? <Clock size={12} /> : <XOctagon size={12} />}
                                             {partner.status}
                                         </Badge>
+                                        {partner.agreementStatus === 'submitted' && (
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                <span className="text-[8px] font-black text-amber-600 uppercase">Wait Approval</span>
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
@@ -341,6 +370,9 @@ const PartnerManagement = () => {
                                                     <XOctagon size={16} /> Reject / Disable
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="my-1 opacity-50" />
+                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-blue-600 focus:text-blue-700 focus:bg-blue-50" onClick={() => { setSelectedPartner(partner); setIsAgreementModalOpen(true); }}>
+                                                    <FileText size={16} /> View Agreement & Signature
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-slate-600 focus:text-slate-700 focus:bg-slate-50" onClick={() => fetchPartnerDocs(partner)}>
                                                     <FileText size={16} /> View Documents
                                                 </DropdownMenuItem>
@@ -349,6 +381,9 @@ const PartnerManagement = () => {
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-blue-600 focus:text-blue-700 focus:bg-blue-50" onClick={() => { setSelectedPartner(partner); setIsAnalyticsModalOpen(true); }}>
                                                     <TrendingUp size={16} /> View Analytics & Reports
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50" onClick={() => { setSelectedPartner(partner); setIsBankModalOpen(true); }}>
+                                                    <Landmark size={16} /> View Bank Details
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-slate-800 focus:text-slate-900 focus:bg-slate-50" onClick={() => fetchPartnerReferrals(partner)}>
                                                     <User size={16} /> View Referrals
@@ -633,6 +668,110 @@ const PartnerManagement = () => {
                 onClose={() => setIsAnalyticsModalOpen(false)}
                 partner={selectedPartner}
             />
+
+            {/* Bank Details Modal */}
+            <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
+                <DialogContent className="rounded-[2rem] border-none shadow-2xl p-8 max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight italic flex items-center gap-2">
+                            Bank <span className="text-primary-600">Details</span> <Landmark className="text-primary-600" size={20} />
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        <div className="space-y-4">
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Account Holder</Label>
+                                <p className="font-bold text-slate-900">{selectedPartner?.bankDetails?.accountHolderName || selectedPartner?.accountHolderName || 'N/A'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Account Number</Label>
+                                <p className="font-bold text-slate-900 tracking-wider">{selectedPartner?.bankDetails?.accountNumber || selectedPartner?.accountNumber || 'N/A'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">IFSC Code</Label>
+                                <p className="font-bold text-primary-600 uppercase tracking-widest">{selectedPartner?.bankDetails?.ifscCode || selectedPartner?.ifscCode || 'N/A'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Bank / Branch</Label>
+                                <p className="font-bold text-slate-900">
+                                    {selectedPartner?.bankDetails?.bankName || selectedPartner?.bankName || 'N/A'}
+                                    <span className="text-slate-400 font-medium ml-2">({selectedPartner?.bankDetails?.branchName || selectedPartner?.branchName || 'N/A'})</span>
+                                </p>
+                            </div>
+                        </div>
+                        <Button onClick={() => setIsBankModalOpen(false)} className="w-full h-12 rounded-xl font-black uppercase tracking-widest shadow-xl mt-4">
+                            Close details
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Agreement Review Modal */}
+            <Dialog open={isAgreementModalOpen} onOpenChange={setIsAgreementModalOpen}>
+                <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 max-w-2xl overflow-hidden bg-white">
+                    <div className="p-8 space-y-8">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                                Review <span className="text-primary-600">Agreement</span>
+                            </DialogTitle>
+                            <p className="text-slate-500 text-sm font-medium">Verify the partner's signature before activation.</p>
+                        </DialogHeader>
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Details</Label>
+                                <div className="space-y-2">
+                                    <p className="text-sm font-black text-slate-800 uppercase tracking-tight">{selectedPartner?.partnerType === 'Individual' ? selectedPartner?.fullName : selectedPartner?.companyName}</p>
+                                    <p className="text-xs text-slate-500 font-bold tracking-widest">{selectedPartner?.email}</p>
+                                    <div className="pt-2">
+                                        <Badge className="bg-slate-100 text-slate-600 border-none font-black text-[9px] uppercase tracking-widest">
+                                            {selectedPartner?.agreementStatus || 'pending'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Digital Signature</Label>
+                                {selectedPartner?.signatureImage ? (
+                                    <div className="h-40 rounded-2xl border border-slate-100 bg-slate-50 p-4 flex items-center justify-center">
+                                        <img src={selectedPartner.signatureImage} alt="Signature" className="max-h-full max-w-full object-contain" />
+                                    </div>
+                                ) : (
+                                    <div className="h-40 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-slate-400">
+                                        <FileText size={32} />
+                                        <p className="text-[10px] font-black uppercase">No signature uploaded</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium italic">
+                                "The partner acknowledges that by submitting this signature, they agree to the DinTask Partnership terms and conditions, including commission structures and confidentiality clauses."
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-2 font-black uppercase tracking-widest">
+                                Accepted At: {selectedPartner?.agreementAcceptedAt ? new Date(selectedPartner.agreementAcceptedAt).toLocaleString() : 'N/A'}
+                            </p>
+                        </div>
+
+                        <DialogFooter className="gap-3">
+                            <Button variant="outline" onClick={() => setIsAgreementModalOpen(false)} className="h-12 flex-1 rounded-xl font-black uppercase tracking-widest text-[10px]">
+                                Close
+                            </Button>
+                            {selectedPartner?.agreementStatus === 'submitted' && (
+                                <Button
+                                    onClick={handleApproveAgreement}
+                                    disabled={approving}
+                                    className="h-12 flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20"
+                                >
+                                    {approving ? 'Activating...' : 'Approve & Activate Partner'}
+                                </Button>
+                            )}
+                        </DialogFooter>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

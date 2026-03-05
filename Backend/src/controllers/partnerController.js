@@ -40,14 +40,25 @@ exports.getPartner = async (req, res, next) => {
 // @access  Private/SuperAdmin
 exports.updatePartnerStatus = async (req, res, next) => {
     try {
-        const { status } = req.body;
+        const { status, agreementStatus } = req.body;
         let partner = await Partner.findById(req.params.id);
 
         if (!partner) {
             return next(new ErrorResponse(`Partner not found with id of ${req.params.id}`, 404));
         }
 
-        if (status === 'active' && !partner.referralCode) {
+        if (agreementStatus === 'approved') {
+            partner.agreementStatus = 'approved';
+            partner.status = 'active'; // Auto-activate partner when agreement is approved
+        } else if (agreementStatus) {
+            partner.agreementStatus = agreementStatus;
+        }
+
+        if (status && agreementStatus !== 'approved') {
+            partner.status = status;
+        }
+
+        if (partner.status === 'active' && !partner.referralCode) {
             // Generate sequential referral code
             const lastPartner = await Partner.findOne({ referralCode: { $exists: true } }).sort('-createdAt');
             let nextNum = 1;
@@ -58,7 +69,6 @@ exports.updatePartnerStatus = async (req, res, next) => {
             partner.referralCode = 'CP' + nextNum.toString().padStart(3, '0');
         }
 
-        partner.status = status;
         await partner.save();
 
         res.status(200).json({ success: true, data: partner });
@@ -89,15 +99,22 @@ exports.updatePartnerCommission = async (req, res, next) => {
     }
 };
 
-// @desc    Accept Partner Agreement
-// @route   PUT /api/v1/partners/agreement/accept
+// @desc    Submit Partner Agreement with Signature
+// @route   PUT /api/v1/partners/agreement/submit
 // @access  Private/Partner
-exports.acceptAgreement = async (req, res, next) => {
+exports.submitAgreement = async (req, res, next) => {
     try {
+        const { signatureImage } = req.body;
+
+        if (!signatureImage) {
+            return next(new ErrorResponse('Please provide a signature image', 400));
+        }
+
         const partner = await Partner.findById(req.user.id);
         if (!partner) return next(new ErrorResponse('Partner not found', 404));
 
-        partner.agreementStatus = 'accepted';
+        partner.signatureImage = signatureImage;
+        partner.agreementStatus = 'submitted';
         partner.agreementAcceptedAt = Date.now();
         await partner.save();
 
@@ -222,7 +239,7 @@ exports.shareReferralLink = async (req, res, next) => {
         const partner = await Partner.findById(req.user.id);
 
         if (!partner) return next(new ErrorResponse('Partner not found', 404));
-        if (partner.agreementStatus !== 'accepted') {
+        if (partner.agreementStatus !== 'approved') {
             return next(new ErrorResponse('Please accept the agreement before sharing links', 400));
         }
 

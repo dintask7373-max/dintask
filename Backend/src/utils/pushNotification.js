@@ -48,8 +48,9 @@ const sendPushNotification = async (tokens, payload) => {
             return response;
         }
     } catch (error) {
-        console.error('Error sending push notification:', error);
-        return { error };
+        console.error('[Push ERROR] Failed to send notification:', error.message || error);
+        // Ensure we don't return an object that might be misinterpreted as a rejection if re-thrown
+        return { success: false, error: error.message || 'Push failed' };
     }
 };
 

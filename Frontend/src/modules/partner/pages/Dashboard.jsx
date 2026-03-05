@@ -8,16 +8,21 @@ import {
     ExternalLink,
     Crown,
     Copy,
-    ChevronRight,
-    Lock,
+    Share2,
+    CheckCircle2,
+    ShieldCheck,
+    FileEdit,
+    AlertCircle,
     Mail,
-    Send,
-    Share2
+    Send
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import useAuthStore from '@/store/authStore';
 import {
     Dialog,
     DialogContent,
@@ -29,6 +34,8 @@ import { toast } from 'sonner';
 import apiRequest from '@/lib/api';
 
 const PartnerDashboard = () => {
+    const { user, fetchProfile } = useAuthStore();
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalEarnings: 0,
         pendingCommission: 0,
@@ -39,7 +46,6 @@ const PartnerDashboard = () => {
         agreementStatus: 'pending'
     });
     const [loading, setLoading] = useState(true);
-    const [accepting, setAccepting] = useState(false);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [clientEmail, setClientEmail] = useState('');
     const [sharing, setSharing] = useState(false);
@@ -53,26 +59,15 @@ const PartnerDashboard = () => {
             const res = await apiRequest('/partners/dashboard/stats');
             if (res.success) {
                 setStats(res.data);
+                // Also check if user object in store needs update (to sync status)
+                if (res.data.agreementStatus !== user?.agreementStatus) {
+                    fetchProfile();
+                }
             }
         } catch (err) {
             toast.error('Failed to fetch dashboard stats');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleAcceptAgreement = async () => {
-        setAccepting(true);
-        try {
-            const res = await apiRequest('/partners/agreement/accept', { method: 'PUT' });
-            if (res.success) {
-                toast.success('Agreement accepted!');
-                fetchStats();
-            }
-        } catch (err) {
-            toast.error('Failed to accept agreement');
-        } finally {
-            setAccepting(false);
         }
     };
 
@@ -101,6 +96,7 @@ const PartnerDashboard = () => {
     };
 
     const referralLink = `${window.location.protocol}//${window.location.host}/admin/register?ref=${stats?.referralCode || ''}`;
+    const landingReferralLink = `${window.location.protocol}//${window.location.host}/?ref=${stats?.referralCode || ''}`;
 
     const statCards = [
         { label: 'Total Earnings', value: `₹${stats?.totalEarnings || 0}`, icon: Wallet, color: 'primary', trend: '+12%' },
@@ -111,34 +107,101 @@ const PartnerDashboard = () => {
 
     if (loading) return <div className="p-8">Loading dashboard...</div>;
 
+    const isApprovedPartner = stats?.agreementStatus === 'approved' && user?.status === 'active';
+
+    if (!isApprovedPartner) {
+        return (
+            <div className="flex-1 p-8 bg-slate-50 min-h-screen">
+                <div className="max-w-4xl mx-auto space-y-12 pb-20">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-3">
+                            <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tight leading-none">Partner Onboarding</h1>
+                            <p className="text-slate-500 font-medium text-lg">Your dashboard will be fully unlocked once your agreement is approved.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <Card className="rounded-[2.5rem] border-none shadow-2xl p-8 bg-white space-y-6 flex flex-col justify-between">
+                            <div className="space-y-6">
+                                <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${stats?.agreementStatus === 'pending' ? 'bg-primary-100 text-primary-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                    {stats?.agreementStatus === 'pending' ? <FileEdit size={32} /> : <CheckCircle2 size={32} />}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">1. Partnership Agreement</h3>
+                                    <p className="text-slate-500 text-sm font-medium mt-1">
+                                        {stats?.agreementStatus === 'pending'
+                                            ? 'Review and sign our partnership agreement with your digital signature.'
+                                            : 'Agreement has been signed and submitted for review.'}
+                                    </p>
+                                </div>
+                            </div>
+                            {stats?.agreementStatus === 'pending' && (
+                                <Button onClick={() => navigate('/partner/agreement')} className="w-full h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-500/20">
+                                    Continue to Sign Agreement
+                                </Button>
+                            )}
+                            {stats?.agreementStatus !== 'pending' && (
+                                <div className="h-14 rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 text-emerald-600 bg-emerald-50 border border-emerald-100">
+                                    <CheckCircle2 size={16} /> Completed
+                                </div>
+                            )}
+                        </Card>
+
+                        <Card className="rounded-[2.5rem] border-none shadow-2xl p-8 bg-white space-y-6 flex flex-col justify-between">
+                            <div className="space-y-6">
+                                <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${stats?.agreementStatus === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                    <ShieldCheck size={32} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">2. SuperAdmin Approval</h3>
+                                    <p className="text-slate-500 text-sm font-medium mt-1">
+                                        {stats?.agreementStatus === 'submitted'
+                                            ? 'Our team is currently reviewing your signature and agreement.'
+                                            : 'Activate your account by signing the agreement first.'}
+                                    </p>
+                                </div>
+                            </div>
+                            {stats?.agreementStatus === 'submitted' && (
+                                <div className="h-14 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center gap-3 border border-amber-100">
+                                    <Clock size={18} className="animate-pulse" />
+                                    <span className="text-xs font-black uppercase tracking-widest">Waiting for Approval</span>
+                                </div>
+                            )}
+                            {stats?.agreementStatus === 'pending' && (
+                                <div className="h-14 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center gap-3 grayscale">
+                                    <Clock size={18} />
+                                    <span className="text-xs font-black uppercase tracking-widest">Not Started</span>
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+
+                    {/* Restricted Features Overlay */}
+                    <div className="relative pt-12">
+                        <div className="absolute inset-0 bg-slate-50/70 backdrop-blur-sm z-10 rounded-[3rem] -mx-4 -mt-4 mb-4 flex flex-col items-center justify-center gap-6">
+                            <div className="bg-white/90 shadow-2xl p-8 rounded-3xl flex flex-col items-center gap-4 border border-white max-w-sm text-center">
+                                <TrendingUp className="text-slate-300 w-16 h-16" />
+                                <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-loose">Dashboard is Locked</h4>
+                                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Commissions, Referrals, and Payouts will appear here after approval.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 opacity-30 grayscale pointer-events-none blur-[1px]">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="h-32 bg-white rounded-3xl shadow-lg border border-slate-100"></div>
+                            ))}
+                        </div>
+                        <div className="mt-8 h-80 bg-white rounded-[2.5rem] shadow-lg border border-slate-100 opacity-20 grayscale pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full">
             <div className="space-y-8 pb-10">
-                {/* Agreement Banner */}
-                {stats?.agreementStatus === 'pending' && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-amber-50 border-2 border-dashed border-amber-200 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-amber-900/5"
-                    >
-                        <div className="flex gap-4">
-                            <div className="h-12 w-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shrink-0">
-                                <Clock size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Activate Your Partner Account</h3>
-                                <p className="text-slate-500 text-sm font-medium mt-1">Please accept our partnership agreement to activate your referral link and start earning commissions.</p>
-                            </div>
-                        </div>
-                        <Button
-                            onClick={handleAcceptAgreement}
-                            disabled={accepting}
-                            className="bg-amber-500 hover:bg-amber-600 text-white h-12 px-8 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-amber-900/20"
-                        >
-                            {accepting ? 'Activating...' : 'Accept Agreement'}
-                        </Button>
-                    </motion.div>
-                )}
 
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -221,8 +284,8 @@ const PartnerDashboard = () => {
                     {/* Referral Engine */}
                     <div className="space-y-4">
                         <h3 className="font-black text-slate-900 uppercase tracking-tight px-2">Referral Engine</h3>
-                        <div className={`rounded-[2rem] p-8 relative overflow-hidden shadow-2xl transition-all duration-500 ${stats?.agreementStatus === 'accepted' ? 'bg-primary-900 text-white shadow-primary-900/40' : 'bg-slate-100 text-slate-400 grayscale'}`}>
-                            {stats?.agreementStatus === 'accepted' ? (
+                        <div className={`rounded-[2rem] p-8 relative overflow-hidden shadow-2xl transition-all duration-500 ${stats?.agreementStatus === 'approved' ? 'bg-primary-900 text-white shadow-primary-900/40' : 'bg-slate-100 text-slate-400 grayscale'}`}>
+                            {stats?.agreementStatus === 'approved' ? (
                                 <>
                                     <div className="absolute top-0 right-0 p-4 opacity-10">
                                         <Share2 size={120} />
@@ -235,18 +298,38 @@ const PartnerDashboard = () => {
                                         <p className="text-primary-200/70 text-sm mt-3 font-medium">Share this link with your network and earn commissions on every successful signup.</p>
 
                                         <div className="mt-8 space-y-4">
-                                            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-lg">
-                                                <span className="text-[10px] font-mono font-bold text-primary-100 truncate w-full">{referralLink}</span>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(referralLink);
-                                                        toast.success('Link copied!');
-                                                    }}
-                                                    className="h-8 w-8 bg-primary-500 hover:bg-primary-400 rounded-lg flex items-center justify-center shrink-0 transition-colors shadow-lg"
-                                                >
-                                                    <Copy size={16} className="text-white" />
-                                                </button>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary-300">Direct Registration Link</Label>
+                                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-lg">
+                                                    <span className="text-[10px] font-mono font-bold text-primary-100 truncate w-full">{referralLink}</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(referralLink);
+                                                            toast.success('Registration link copied!');
+                                                        }}
+                                                        className="h-8 w-8 bg-primary-500 hover:bg-primary-400 rounded-lg flex items-center justify-center shrink-0 transition-colors shadow-lg"
+                                                    >
+                                                        <Copy size={16} className="text-white" />
+                                                    </button>
+                                                </div>
                                             </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary-300">Landing Page Referral Link</Label>
+                                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 backdrop-blur-lg">
+                                                    <span className="text-[10px] font-mono font-bold text-primary-100 truncate w-full">{landingReferralLink}</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(landingReferralLink);
+                                                            toast.success('Landing page link copied!');
+                                                        }}
+                                                        className="h-8 w-8 bg-emerald-500 hover:bg-emerald-400 rounded-lg flex items-center justify-center shrink-0 transition-colors shadow-lg"
+                                                    >
+                                                        <Copy size={16} className="text-white" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
                                             <Button
                                                 onClick={() => setIsEmailModalOpen(true)}
                                                 className="w-full h-12 bg-white text-primary-900 hover:bg-primary-50 rounded-xl font-black uppercase tracking-widest text-xs"

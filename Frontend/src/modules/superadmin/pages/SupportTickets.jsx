@@ -12,6 +12,7 @@ import {
     CreditCard,
     ArrowUpRight,
     Users,
+    Phone,
     ChevronRight,
     X,
     Send,
@@ -183,7 +184,17 @@ const SuperAdminSupport = () => {
                     </div>
                     <div>
                         <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{ticket.creator?.name}</p>
-                        <p className="text-[10px] text-slate-500 font-bold">{ticket.creator?.companyName}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-[10px] text-slate-500 font-bold">{ticket.creator?.companyName}</p>
+                            {ticket.creator?.phoneNumber && (
+                                <>
+                                    <span className="text-slate-300">•</span>
+                                    <p className="text-[10px] text-indigo-500 font-bold flex items-center gap-1">
+                                        <Phone size={10} /> {ticket.creator.phoneNumber}
+                                    </p>
+                                </>
+                            )}
+                        </div>
                     </div>
                     <span className="ml-auto text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase">
                         {format(new Date(ticket.createdAt), 'MMM dd, HH:mm')}
@@ -361,6 +372,12 @@ const SuperAdminSupport = () => {
                                                             <Users size={12} />
                                                             <span className="font-bold uppercase tracking-tighter whitespace-nowrap truncate max-w-[100px]">{ticket.companyId?.companyName || 'Unknown Company'}</span>
                                                         </div>
+                                                        {ticket.creator?.phoneNumber && (
+                                                            <div className="flex items-center gap-1.5 text-indigo-500">
+                                                                <Phone size={12} />
+                                                                <span className="font-black tracking-tighter">{ticket.creator.phoneNumber}</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
