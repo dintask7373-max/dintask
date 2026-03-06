@@ -137,9 +137,12 @@ exports.getPartnerDashboard = async (req, res, next) => {
 
         // Commission Stats
         const commissions = await PartnerCommission.find({ partnerId });
-        const totalCommissionEarned = commissions.reduce((acc, curr) => acc + curr.amount, 0);
-        const pendingCommission = commissions.filter(c => c.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0);
-        const paidCommission = commissions.filter(c => c.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0);
+        
+        // Use the fields directly from the partner model for accurate tracking including manual payouts/adjustments
+        const totalCommissionEarned = partner.totalEarnings || 0;
+        const pendingCommission = partner.pendingCommission || 0;
+        const paidCommission = partner.paidCommission || 0;
+
 
         // Recent Commissions
         const recentCommissions = await PartnerCommission.find({ partnerId })
@@ -243,8 +246,11 @@ exports.shareReferralLink = async (req, res, next) => {
             return next(new ErrorResponse('Please accept the agreement before sharing links', 400));
         }
 
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        // Take the first URL if multiple are provided via comma
+        const frontendUrl = rawFrontendUrl.split(',')[0].trim();
         const referralLink = `${frontendUrl}/admin/register?ref=${partner.referralCode}`;
+
 
         const message = `Hello,\n\nYou have been invited to join DinTask by ${partner.fullName || partner.companyName}.\n\nDinTask is a powerful SaaS platform designed to streamline your business operations.\n\nClick the link below to register and get started with your account:\n${referralLink}\n\nBest regards,\nDinTask Team`;
 

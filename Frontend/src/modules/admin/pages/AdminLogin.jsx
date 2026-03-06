@@ -78,15 +78,7 @@ const AdminLogin = () => {
             </form>
 
             <div className="text-center pt-2 space-y-4">
-                <div className="inline-block p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-left w-full">
-                    <div className="flex items-center gap-3 text-xs">
-                        <KeyRound className="shrink-0 text-slate-400" size={16} />
-                        <div>
-                            <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-tight">Demo Admin Access</span>
-                            <span className="font-mono text-slate-700 dark:text-slate-300">admin@dintask.com / admin123</span>
-                        </div>
-                    </div>
-                </div>
+
 
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-2">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Need a platform for your team?</span>

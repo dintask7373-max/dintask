@@ -101,14 +101,7 @@ const ManagerLogin = () => {
             </form>
 
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 mb-4">
-                    <div className="flex items-center gap-3">
-                        <Shield size={16} className="text-slate-400" />
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
-                            Demo: <span className="text-slate-700 dark:text-slate-300 font-mono">manager@dintask.com / manager123</span>
-                        </div>
-                    </div>
-                </div>
+
 
                 <div className="flex items-center justify-center gap-2">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Not registered?</span>

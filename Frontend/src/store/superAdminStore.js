@@ -50,7 +50,9 @@ const useSuperAdminStore = create(
             roleDistribution: [],
             growthData: [],
             staffMembers: [],
+            partners: [],
             staffPagination: {
+
                 page: 1,
                 pages: 1,
                 total: 0,
@@ -644,6 +646,19 @@ const useSuperAdminStore = create(
                 return false;
             },
 
+            fetchPartners: async () => {
+                set({ loading: true });
+                try {
+                    const response = await apiRequest('/partners');
+                    if (response.success) {
+                        set({ partners: response.data, loading: false });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch partners:', err);
+                    set({ loading: false });
+                }
+            },
+
             addAdmin: async (adminData) => {
                 try {
                     const response = await apiRequest('/superadmin/admins', {
@@ -653,9 +668,11 @@ const useSuperAdminStore = create(
                             name: adminData.owner,
                             email: adminData.email,
                             subscriptionPlan: adminData.plan,
-                            subscriptionPlanId: adminData.planId
+                            subscriptionPlanId: adminData.planId,
+                            partnerId: adminData.partnerId // Link to partner if provided
                         }
                     });
+
                     if (response.success) {
                         get().fetchAdmins();
 

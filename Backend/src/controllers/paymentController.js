@@ -20,7 +20,8 @@ const calculatePartnerCommission = async (adminId, paymentId, amount) => {
     if (!admin || !admin.partnerId) return;
 
     const partner = await Partner.findById(admin.partnerId);
-    if (!partner || partner.status !== 'active' || partner.agreementStatus !== 'accepted') return;
+    if (!partner || partner.status !== 'active' || partner.agreementStatus !== 'approved') return;
+
 
     // Check if this payment already has a commission record to avoid duplicates
     const existingCommission = await PartnerCommission.findOne({ paymentId });

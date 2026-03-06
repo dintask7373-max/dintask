@@ -14,8 +14,11 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { toast } from 'sonner';
 import apiRequest from '@/lib/api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const PayoutHistory = () => {
+
     const [payouts, setPayouts] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -27,6 +30,7 @@ const PayoutHistory = () => {
         try {
             const res = await apiRequest('/partners/my-payouts');
             if (res.success) {
+
                 setPayouts(res.data);
             }
         } catch (err) {
@@ -35,6 +39,63 @@ const PayoutHistory = () => {
             setLoading(false);
         }
     };
+
+    const handleDownloadReceipt = (payout) => {
+        try {
+            const doc = new jsPDF();
+            const date = new Date(payout.createdAt).toLocaleDateString();
+
+            // Header
+            doc.setFontSize(22);
+            doc.setTextColor(30, 41, 59); // slate-800
+            doc.text('DIN TASK', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(16);
+            doc.text('PAYOUT RECEIPT', 105, 35, { align: 'center' });
+            
+            // Divider
+            doc.setDrawColor(226, 232, 240); // slate-200
+            doc.line(20, 45, 190, 45);
+
+            // Details
+            doc.setFontSize(12);
+            doc.setTextColor(100, 116, 139); // slate-500
+            doc.text('Transaction Details:', 20, 60);
+            
+            doc.setTextColor(30, 41, 59);
+            const details = [
+                ['Transaction ID', payout.transactionRef || 'N/A'],
+                ['Date', date],
+                ['Status', payout.status.toUpperCase()],
+                ['Type', 'Bank Transfer'],
+                ['Amount', `INR ${payout.amount.toLocaleString()}`]
+            ];
+
+            autoTable(doc, {
+                startY: 70,
+                head: [['Label', 'Value']],
+                body: details,
+                theme: 'striped',
+                headStyles: { fillColor: [79, 70, 229] }, // primary-600
+                margin: { left: 20, right: 20 }
+            });
+
+
+            // Footer
+            const finalY = doc.lastAutoTable.finalY + 30;
+            doc.setFontSize(10);
+            doc.setTextColor(148, 163, 184); // slate-400
+            doc.text('This is a computer-generated receipt.', 105, finalY, { align: 'center' });
+            doc.text('DinTask - Team Management Platform', 105, finalY + 7, { align: 'center' });
+
+            doc.save(`Payout_Receipt_${payout.transactionRef}.pdf`);
+            toast.success('Receipt downloaded successfully');
+        } catch (error) {
+            console.error('PDF Generation Error:', error);
+            toast.error('Failed to generate PDF');
+        }
+    };
+
 
     return (
         <div className="max-w-5xl space-y-8 pb-10">
@@ -95,9 +156,15 @@ const PayoutHistory = () => {
                                     <span className="text-xs font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">Completed</span>
                                     <div className="text-2xl font-black text-slate-900 mt-1 tracking-tighter">₹{payout.amount}</div>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl bg-slate-50 hover:bg-primary-50 hover:text-primary-600 transition-all">
+                                <Button 
+                                    onClick={() => handleDownloadReceipt(payout)}
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-12 w-12 rounded-2xl bg-slate-50 hover:bg-primary-50 hover:text-primary-600 transition-all"
+                                >
                                     <ArrowDownToLine size={24} />
                                 </Button>
+
                             </div>
                         </div>
                     )) : (

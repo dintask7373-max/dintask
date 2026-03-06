@@ -191,10 +191,12 @@ exports.createAdmin = async (req, res, next) => {
       email,
       subscriptionPlan,
       subscriptionPlanId: req.body.subscriptionPlanId,
+      partnerId: req.body.partnerId,
       password: adminPassword,
       subscriptionStatus: 'active',
       subscriptionExpiry
     });
+
 
     // Send email to new admin
     const message = `Hello ${name},\n\nYour company account for ${companyName} has been provisioned at DinTask.\n\nLogin Credentials:\nEmail: ${email}\nPassword: ${adminPassword}\n\nPlease login at ${process.env.FRONTEND_URL || 'http://localhost:5173'} and change your password immediately.\n\nRegards,\nDinTask Team`;

@@ -7,10 +7,21 @@ const upload = require('../middleware/fileUpload');
 const router = express.Router();
 
 router.post('/register', register);
-router.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, error: 'Please upload a file' });
-    res.status(200).json({ success: true, url: req.file.path || req.file.secure_url });
+router.post('/upload', (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            console.error('[UPLOAD ERROR] Multer/Cloudinary Error:', err);
+            return res.status(400).json({ success: false, error: err.message || 'File upload failed' });
+        }
+        if (!req.file) {
+            console.error('[UPLOAD ERROR] No file in request');
+            return res.status(400).json({ success: false, error: 'Please upload a file' });
+        }
+        console.log('[UPLOAD SUCCESS] File uploaded to Cloudinary:', req.file.path || req.file.secure_url);
+        res.status(200).json({ success: true, url: req.file.path || req.file.secure_url });
+    });
 });
+
 router.post('/login', login);
 router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);

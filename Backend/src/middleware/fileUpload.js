@@ -13,25 +13,22 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => {
-        let resource_type = 'image';
-        if (file.mimetype.startsWith('video')) {
-            resource_type = 'video';
-        }
         return {
             folder: 'dintask-uploads',
-            resource_type: resource_type,
-            allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'avi']
+            resource_type: 'auto',
+            allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'webm', 'mov', 'avi', 'pdf']
         };
     },
 });
 
 const fileFilter = (req, file, cb) => {
-    // Accept images and videos
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|mov|avi)$/)) {
-        return cb(new Error('Only image and video files are allowed!'), false);
+    // Accept images, videos, and PDFs
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|mov|avi|pdf)$/)) {
+        return cb(new Error('Only image, video, and PDF files are allowed!'), false);
     }
     cb(null, true);
 };
+
 
 const upload = multer({
     storage: storage,

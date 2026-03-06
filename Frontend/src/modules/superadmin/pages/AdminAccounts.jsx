@@ -78,8 +78,11 @@ const AdminAccounts = () => {
         deleteAdmin,
         plans,
         fetchPlans,
+        partners,
+        fetchPartners,
         updateAdminPlan
     } = useSuperAdminStore();
+
     const { role } = useAuthStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -87,7 +90,9 @@ const AdminAccounts = () => {
 
     React.useEffect(() => {
         fetchPlans();
-    }, [fetchPlans]);
+        fetchPartners();
+    }, [fetchPlans, fetchPartners]);
+
 
     // Debounced search and pagination effect
     React.useEffect(() => {
@@ -144,8 +149,10 @@ const AdminAccounts = () => {
         email: '',
         plan: 'Starter',
         planId: '',
+        partnerId: '',
         status: 'active'
     });
+
 
     const handleDeleteAdmin = async (id) => {
         if (window.confirm("Are you sure you want to terminate this account? This action is irreversible.")) {
@@ -191,8 +198,10 @@ const AdminAccounts = () => {
                 email: '',
                 plan: 'Starter',
                 planId: '',
+                partnerId: '',
                 status: 'active'
             });
+
         } else {
             toast.error(result.error || "Failed to provision account");
         }
@@ -289,6 +298,28 @@ const AdminAccounts = () => {
                                     onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Referral Partner (Optional)</Label>
+                                <Select
+                                    value={newAdmin.partnerId}
+                                    onValueChange={(val) => setNewAdmin({ ...newAdmin, partnerId: val })}
+                                >
+                                    <SelectTrigger className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs">
+                                        <SelectValue placeholder="Select a partner..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        <SelectItem value="none" className="text-xs font-bold rounded-lg px-3 py-2 text-slate-400">
+                                            No Partner / Direct
+                                        </SelectItem>
+                                        {partners.map(partner => (
+                                            <SelectItem key={partner._id} value={partner._id} className="text-xs font-bold rounded-lg px-3 py-2">
+                                                {partner.partnerType === 'Individual' ? partner.fullName : partner.companyName} ({partner.referralCode})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <div className="pt-2">
                                 <Button type="submit" className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all">
                                     PROVISION ACCOUNT <ArrowUpRight className="ml-2" size={16} />
