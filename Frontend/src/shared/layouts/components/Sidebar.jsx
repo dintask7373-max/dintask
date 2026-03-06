@@ -72,10 +72,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
 
     const handleLogout = () => {
         logout();
-        if (role === 'superadmin') navigate('/superadmin/login');
-        else if (role === 'admin') navigate('/admin/login');
-        else if (role === 'manager') navigate('/manager/login');
-        else navigate('/employee/login');
+        navigate('/init');
     };
 
     const user = useAuthStore(state => state.user);

@@ -92,7 +92,7 @@ const EmployeeProfile = () => {
     const handleLogout = async () => {
         try {
             await logout();
-            navigate('/login');
+            navigate('/init');
             toast.success("Identity session terminated");
         } catch (error) {
             toast.error("Logout protocol failed");
