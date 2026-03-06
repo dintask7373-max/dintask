@@ -1,0 +1,38 @@
+{
+    "superadmin": {
+        "email": "superadmin@dintask.com",
+        "password": "super123",
+        "role": "superadmin",
+        "name": "Super Admin"
+    },
+    "admin": {
+        "email": "admin@dintask.com",
+        "password": "admin123",
+        "role": "admin",
+        "name": "Boss Admin"
+    },
+    "employee": {
+        "email": "employee@dintask.com",
+        "password": "emp123",
+        "role": "employee",
+        "name": "Chirag J"
+    },
+    "manager": {
+        "email": "manager@dintask.com",
+        "password": "manager123",
+        "role": "manager",
+        "name": "Sarah Manager"
+    },
+    "sales": {
+        "email": "sales@dintask.com",
+        "password": "sales123",
+        "role": "sales",
+        "name": "John Sales"
+    },
+    "superadmin_employee": {
+        "email": "staff@dintask.com",
+        "password": "staff123",
+        "role": "superadmin_employee",
+        "name": "System Staff"
+    }
+}

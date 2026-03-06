@@ -1,0 +1,658 @@
+import React, { useState } from 'react';
+import {
+    Building2,
+    Search,
+    Filter,
+    MoreVertical,
+    ShieldAlert,
+    CheckCircle2,
+    Clock,
+    XOctagon,
+    Eye,
+    Trash2,
+    ChevronRight,
+    UserPlus,
+    Plus,
+    ArrowUpRight,
+    Calendar
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription
+} from '@/shared/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
+} from '@/shared/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/shared/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/shared/components/ui/select";
+import { Label } from "@/shared/components/ui/label";
+
+import useSuperAdminStore from '@/store/superAdminStore';
+import useAuthStore from '@/store/authStore';
+import { cn } from '@/shared/utils/cn';
+import { fadeInUp, staggerContainer, scaleOnTap } from '@/shared/utils/animations';
+
+const AdminAccounts = () => {
+    const {
+        admins,
+        fetchAdmins,
+        adminPagination,
+        updateAdminStatus,
+        deleteAdmin,
+        plans,
+        fetchPlans,
+        updateAdminPlan
+    } = useSuperAdminStore();
+    const { role } = useAuthStore();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    React.useEffect(() => {
+        fetchPlans();
+    }, [fetchPlans]);
+
+    // Debounced search and pagination effect
+    React.useEffect(() => {
+        const handler = setTimeout(() => {
+            fetchAdmins({
+                page: currentPage,
+                limit: pageSize,
+                search: searchTerm.trim()
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [fetchAdmins, currentPage, pageSize, searchTerm]);
+
+    // Reset to page 1 when search or limit changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, pageSize]);
+    // Filtered logic is now handled server-side, using admins from store directly
+    const displayAdmins = admins || [];
+
+    const handleStatusChange = async (id, newStatus) => {
+        const success = await updateAdminStatus(id, newStatus);
+        if (success) {
+            toast.success(`Account status updated to ${newStatus}`);
+        } else {
+            toast.error("Failed to update status");
+        }
+    };
+
+    const handlePlanChange = async (adminId, planId, planName) => {
+        const success = await updateAdminPlan(adminId, planId, planName);
+        if (success) {
+            toast.success(`Subscription updated to ${planName}`);
+        } else {
+            toast.error("Failed to update plan");
+        }
+    };
+
+    const statusIcons = {
+        active: <CheckCircle2 size={14} className="text-emerald-500" />,
+        suspended: <XOctagon size={14} className="text-red-500" />
+    };
+
+    const statusColors = {
+        active: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        suspended: "bg-red-50 text-red-600 border-red-100"
+    };
+
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newAdmin, setNewAdmin] = useState({
+        name: '',
+        owner: '',
+        email: '',
+        plan: 'Starter',
+        planId: '',
+        status: 'active'
+    });
+
+    const handleDeleteAdmin = async (id) => {
+        if (window.confirm("Are you sure you want to terminate this account? This action is irreversible.")) {
+            const success = await deleteAdmin(id);
+            if (success) {
+                toast.success("Account terminated successfully");
+            } else {
+                toast.error("Failed to delete account");
+            }
+        }
+    };
+
+    const handleAddAdmin = async (e) => {
+        e.preventDefault();
+
+        // Client-side validation
+        if (!newAdmin.name) {
+            toast.error("Company Name is required");
+            return;
+        }
+        if (!newAdmin.owner) {
+            toast.error("Owner Name is required");
+            return;
+        }
+        if (!newAdmin.email) {
+            toast.error("Email Address is required");
+            return;
+        }
+
+        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        if (!emailRegex.test(newAdmin.email)) {
+            toast.error("Please provide a valid email address");
+            return;
+        }
+
+        const result = await useSuperAdminStore.getState().addAdmin(newAdmin);
+        if (result.success) {
+            toast.success("Company account provisioned successfully");
+            setIsAddModalOpen(false);
+            setNewAdmin({
+                name: '',
+                owner: '',
+                email: '',
+                plan: 'Starter',
+                planId: '',
+                status: 'active'
+            });
+        } else {
+            toast.error(result.error || "Failed to provision account");
+        }
+    };
+
+    return (
+        <motion.div
+            initial="initial"
+            animate="animate"
+            variants={staggerContainer}
+            className="space-y-6 pb-12"
+        >
+            <motion.div variants={fadeInUp} className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        Admin Accounts <Building2 className="text-primary-600" size={24} />
+                    </h1>
+                    <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">
+                        Manage client companies & access
+                    </p>
+                </div>
+
+                <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="h-11 px-6 bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center gap-2">
+                            <Plus size={18} /> ADD COMPANY
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-8 border-none bg-white dark:bg-slate-900 shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase leading-tight">
+                                Create <span className="text-primary-600">New Admin</span>
+                            </DialogTitle>
+                            <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                Manually provision a new company account
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleAddAdmin} className="space-y-5 pt-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Company Name</Label>
+                                <Input
+                                    placeholder="Enter company name..."
+                                    className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                    value={newAdmin.name}
+                                    onChange={(e) => setNewAdmin({ ...newAdmin, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
+                                    <Input
+                                        placeholder="Full name..."
+                                        className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                        value={newAdmin.owner}
+                                        onChange={(e) => setNewAdmin({ ...newAdmin, owner: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Subscription Plan</Label>
+                                    <Select
+                                        value={newAdmin.plan}
+                                        onValueChange={(val) => {
+                                            const selectedPlan = plans.find(p => p.name === val);
+                                            setNewAdmin({
+                                                ...newAdmin,
+                                                plan: val,
+                                                planId: selectedPlan?._id || ''
+                                            });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-xl">
+                                            {plans.map(plan => (
+                                                <SelectItem key={plan._id} value={plan.name} className="text-xs font-bold rounded-lg px-3 py-2">
+                                                    <div className="flex flex-col">
+                                                        <span>{plan.name}</span>
+                                                        <span className="text-[10px] text-slate-400">₹{plan.price.toLocaleString()} for {plan.duration} days</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</Label>
+                                <Input
+                                    type="email"
+                                    placeholder="admin@company.com"
+                                    className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                    value={newAdmin.email}
+                                    onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                                />
+                            </div>
+                            <div className="pt-2">
+                                <Button type="submit" className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all">
+                                    PROVISION ACCOUNT <ArrowUpRight className="ml-2" size={16} />
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </motion.div>
+
+            <motion.div variants={fadeInUp}>
+                <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem]">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 border-b border-slate-50 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-sm font-extrabold uppercase tracking-widest text-slate-400 italic">Company Directory</h2>
+                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
+                                {adminPagination?.total || 0} Companies
+                            </Badge>
+                        </div>
+                        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Show</span>
+                                <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(parseInt(val))}>
+                                    <SelectTrigger className="w-[80px] h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold text-xs shadow-none">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        {[5, 10, 20, 50].map(size => (
+                                            <SelectItem key={size} value={size.toString()} className="text-xs font-bold rounded-xl">{size}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="relative w-full md:w-72">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                <Input
+                                    placeholder="Search companies or admins..."
+                                    className="pl-11 h-11 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl text-[12px] font-bold focus-visible:ring-primary-500/10 transition-all placeholder:text-slate-300 shadow-none"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <CardContent className="p-0">
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="hover:bg-transparent border-slate-50 dark:border-slate-800">
+                                        <TableHead className="pl-8 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[200px]">Company & Owner</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Current Plan</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[90px]">Team Size</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[100px]">Status</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[120px]">Expiry Node</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[120px]">Referred By</TableHead>
+                                        <TableHead className="text-right pr-8 text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[50px]">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <AnimatePresence mode="popLayout">
+                                        {displayAdmins.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-64 text-center">
+                                                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
+                                                            <Building2 size={48} className="text-slate-300 dark:text-slate-700" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                                                                {searchTerm ? `No matches for "${searchTerm}"` : "No accounts found"}
+                                                            </p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose max-w-[200px] mx-auto">
+                                                                {searchTerm
+                                                                    ? "Try adjusting your search query to find the company you're looking for."
+                                                                    : "There are currently no administrative accounts in the system."}
+                                                            </p>
+                                                        </div>
+                                                        {searchTerm && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setSearchTerm('')}
+                                                                className="rounded-xl border-slate-200 dark:border-slate-800 font-black text-[10px] uppercase tracking-widest h-9"
+                                                            >
+                                                                Clear Search
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            displayAdmins.map((adm) => (
+                                                <motion.tr
+                                                    key={adm._id}
+                                                    variants={fadeInUp}
+                                                    initial="initial"
+                                                    animate="animate"
+                                                    exit="exit"
+                                                    layout
+                                                    className="border-slate-50 dark:border-slate-800 group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                                                >
+                                                    <TableCell className="pl-8">
+                                                        <div className="space-y-0.5 py-0.5">
+                                                            <p className="font-black text-slate-900 dark:text-white leading-tight text-[13px] tracking-tight">{adm.companyName}</p>
+                                                            <p className="text-[9px] text-slate-400 flex items-center gap-1 font-bold">
+                                                                {adm.name} <span className="text-slate-200 dark:text-slate-700 md:inline hidden">•</span> <span className="hidden md:inline">{adm.email}</span>
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-none bg-primary-50 dark:bg-primary-900/10 text-primary-600 px-2.5 py-1 rounded-lg">
+                                                                {adm.subscriptionPlan || 'No Plan'}
+                                                            </Badge>
+                                                            <p className="text-[10px] text-slate-400 font-bold ml-1">
+                                                                {role === 'superadmin'
+                                                                    ? `₹${plans.find(p => p.name === adm.subscriptionPlan)?.price.toLocaleString('en-IN') || '0'} / ${plans.find(p => p.name === adm.subscriptionPlan)?.duration || 30}d`
+                                                                    : 'Locked Price'
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[13px] font-black text-slate-900 dark:text-white tracking-tighter italic">
+                                                                {adm.totalUsers || 0} / {adm.userLimit || '∞'}
+                                                            </span>
+                                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Active Nodes</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge className={cn(
+                                                            "text-[9px] h-6 font-black uppercase tracking-widest gap-1.5 border px-2.5 rounded-full shadow-sm",
+                                                            statusColors[adm.subscriptionStatus || 'active']
+                                                        )}>
+                                                            {statusIcons[adm.subscriptionStatus || 'active']}
+                                                            {adm.subscriptionStatus}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                                <Calendar size={12} className="text-primary-500" />
+                                                                {adm.subscriptionExpiry ? format(new Date(adm.subscriptionExpiry), 'MMM dd, yyyy') : 'PERMANENT'}
+                                                            </div>
+                                                            {adm.subscriptionExpiry && (
+                                                                <p className={cn(
+                                                                    "text-[8px] font-bold uppercase tracking-widest ml-4",
+                                                                    new Date(adm.subscriptionExpiry) < new Date() ? "text-red-500" : "text-slate-400"
+                                                                )}>
+                                                                    {new Date(adm.subscriptionExpiry) < new Date() ? 'DECOMMISSIONED' : 'OPERATIONAL'}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {adm.referredBy ? (
+                                                            <div className="space-y-0.5">
+                                                                <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                                    {adm.referredBy.companyName || adm.referredBy.fullName || adm.referredBy.name}
+                                                                </p>
+                                                                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-[0.1em] border-none bg-emerald-50 text-emerald-600 px-1.5 py-0 rounded">
+                                                                    {adm.referredBy.referralCode}
+                                                                </Badge>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-slate-400 italic">DIRECT SIGNUP</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-8">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800">
+                                                                    <MoreVertical size={18} />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-52 rounded-2xl p-2">
+
+                                                                <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 px-2 py-1.5">Set Status</DropdownMenuLabel>
+                                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 dark:focus:bg-emerald-900/10" onClick={() => handleStatusChange(adm._id, 'active')}>
+                                                                    <CheckCircle2 size={16} /> Mark Active
+                                                                </DropdownMenuItem>
+
+                                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-900/10" onClick={() => handleStatusChange(adm._id, 'suspended')}>
+                                                                    <XOctagon size={16} /> Suspend Account
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator className="my-2" />
+                                                                <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 px-2 py-1.5">Change Plan</DropdownMenuLabel>
+                                                                {plans.map(plan => (
+                                                                    <DropdownMenuItem
+                                                                        key={plan._id}
+                                                                        className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5"
+                                                                        onClick={() => handlePlanChange(adm._id, plan._id, plan.name)}
+                                                                    >
+                                                                        Upgrade to {plan.name}
+                                                                    </DropdownMenuItem>
+                                                                ))}
+                                                                <DropdownMenuSeparator className="my-2" />
+                                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-black text-xs py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-900/10" onClick={() => handleDeleteAdmin(adm._id)}>
+                                                                    <Trash2 size={16} /> Delete Company
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </motion.tr>
+                                            ))
+                                        )}
+                                    </AnimatePresence>
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        {/* Pagination UI - Matched with Inquiries.jsx */}
+                        {adminPagination.total > 0 && (
+                            <div className="flex items-center justify-center gap-2 mt-8">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(prev => prev - 1)}
+                                    className="rounded-xl border-slate-200 dark:border-slate-800"
+                                >
+                                    Previous
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                    {[...Array(adminPagination?.pages || 0)].map((_, i) => (
+                                        <Button
+                                            key={i + 1}
+                                            variant={currentPage === i + 1 ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={cn(
+                                                "w-9 h-9 p-0 rounded-xl",
+                                                currentPage === i + 1 ? "" : "border-slate-200 dark:border-slate-800"
+                                            )}
+                                        >
+                                            {i + 1}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === adminPagination?.pages}
+                                    onClick={() => setCurrentPage(prev => prev + 1)}
+                                    className="rounded-xl border-slate-200 dark:border-slate-800"
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden divide-y divide-slate-50 dark:divide-slate-800">
+                            {displayAdmins.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center space-y-4 py-20 px-6 text-center">
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
+                                        <Building2 size={40} className="text-slate-300 dark:text-slate-700" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                                            {searchTerm ? `No results for "${searchTerm}"` : "No accounts found"}
+                                        </p>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed max-w-[180px] mx-auto">
+                                            {searchTerm
+                                                ? "Adjust your search to find client companies."
+                                                : "No administrative accounts are present."}
+                                        </p>
+                                    </div>
+                                    {searchTerm && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setSearchTerm('')}
+                                            className="rounded-xl h-8 px-4 font-black text-[9px] uppercase tracking-widest"
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </div>
+                            ) : (
+                                displayAdmins.map((adm) => (
+                                    <div key={adm._id} className="p-3 sm:p-4 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-0.5">
+                                                <h4 className="font-black text-slate-900 dark:text-white text-sm">{adm.companyName}</h4>
+                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">{adm.name}</p>
+                                                <p className="text-[9px] text-slate-400 font-medium truncate max-w-[150px]">{adm.email}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1.5">
+                                                <Badge className={cn(
+                                                    "text-[8px] h-5 px-2 font-black uppercase tracking-widest gap-1 border rounded-full",
+                                                    statusColors[adm.subscriptionStatus || 'active']
+                                                )}>
+                                                    {adm.subscriptionStatus}
+                                                </Badge>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <MoreVertical size={12} />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                                                        <DropdownMenuItem className="gap-2 font-bold text-xs py-2" onClick={() => handleStatusChange(adm._id, 'active')}>
+                                                            <CheckCircle2 size={14} className="text-emerald-500" /> Active
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="gap-2 font-bold text-xs py-2" onClick={() => handleStatusChange(adm._id, 'suspended')}>
+                                                            <XOctagon size={14} className="text-red-500" /> Suspend
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                                            <div className="space-y-0.5">
+                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Plan</p>
+                                                <p className="text-[10px] font-black text-primary-600 uppercase tracking-tight">{adm.subscriptionPlan || 'No Plan'}</p>
+                                            </div>
+                                            <div className="space-y-0.5 text-center">
+                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Team Size</p>
+                                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                    {adm.totalUsers || 0}/{adm.userLimit || '∞'}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-0.5 text-right">
+                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Expiration</p>
+                                                <p className="text-[10px] font-bold text-slate-900 dark:text-white">
+                                                    {adm.subscriptionExpiry ? format(new Date(adm.subscriptionExpiry), 'MMM dd, yyyy') : 'Permanent'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
+
+            <div className="grid grid-cols-2 gap-4 px-1 md:px-0">
+                <motion.div variants={fadeInUp} className="p-4 md:p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-emerald-100 shadow-lg shadow-emerald-200/30 flex items-center gap-1.5 md:gap-4 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="p-2 md:p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl shadow-inner shadow-emerald-100 transition-transform group-hover:scale-110 shrink-0">
+                        <CheckCircle2 className="text-emerald-600 h-4 w-4 md:h-6 md:w-6" />
+                    </div>
+                    <div className="min-w-0 overflow-hidden">
+                        <h4 className="text-sm md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'active').length}</h4>
+                        <p className="text-[7px] md:text-[10px] font-black text-emerald-600 dark:text-emerald-500/70 uppercase tracking-widest mt-1 truncate">Operational</p>
+                    </div>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="p-4 md:p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-red-100 shadow-lg shadow-red-200/30 flex items-center gap-1.5 md:gap-4 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="p-2 md:p-3 bg-red-50 dark:bg-red-900/20 rounded-2xl shadow-inner shadow-red-100 transition-transform group-hover:scale-110 shrink-0">
+                        <XOctagon className="text-red-600 h-4 w-4 md:h-6 md:w-6" />
+                    </div>
+                    <div className="min-w-0 overflow-hidden">
+                        <h4 className="text-sm md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic">{(displayAdmins || []).filter(a => a.subscriptionStatus === 'suspended').length}</h4>
+                        <p className="text-[7px] md:text-[10px] font-black text-red-600 dark:text-red-500/70 uppercase tracking-widest mt-1 truncate">Decommissioned</p>
+                    </div>
+                </motion.div>
+            </div>
+        </motion.div >
+    );
+};
+
+export default AdminAccounts;

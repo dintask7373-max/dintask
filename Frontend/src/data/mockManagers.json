@@ -1,0 +1,29 @@
+[
+    {
+        "id": "M001",
+        "name": "Sarah Lee",
+        "role": "Product Manager",
+        "email": "sarah.l@company.com",
+        "avatar": "https://i.pravatar.cc/150?u=sarah",
+        "status": "active",
+        "department": "Engineering",
+        "teamMembers": [
+            "101",
+            "102",
+            "103",
+            "105"
+        ]
+    },
+    {
+        "id": "M002",
+        "name": "John Smith",
+        "role": "Marketing Manager",
+        "email": "john.s@company.com",
+        "avatar": "https://i.pravatar.cc/150?u=john",
+        "status": "active",
+        "department": "Marketing",
+        "teamMembers": [
+            "104"
+        ]
+    }
+]

@@ -1,0 +1,408 @@
+import React, { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import {
+    LayoutDashboard,
+    CheckSquare,
+    Users,
+    BarChart3,
+    Calendar as CalendarIcon,
+    CreditCard,
+    Settings as SettingsIcon,
+    LogOut,
+    ChevronLeft,
+    ChevronRight,
+    ShieldCheck,
+    Menu,
+    User,
+    Bell,
+    Shield,
+    Palette,
+    Globe,
+    ChevronDown,
+    Briefcase,
+    ListChecks,
+    TrendingUp,
+    UserPlus,
+    MessageSquare,
+    Lock,
+    LifeBuoy,
+    History,
+    Receipt,
+    Activity,
+    FileEdit,
+    ClipboardCheck // New icon for Project Approvals
+} from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+import { Button } from '@/shared/components/ui/button';
+import useAuthStore from '@/store/authStore';
+import useSuperAdminStore from '@/store/superAdminStore';
+import useCRMStore from '@/store/crmStore'; // To show pending count
+import useNotificationStore from '@/store/notificationStore';
+
+const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
+    const logout = useAuthStore(state => state.logout);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const authRole = useAuthStore(state => state.role);
+    const inquiries = useSuperAdminStore(state => state.inquiries);
+    const leads = useCRMStore(state => state.leads);
+    const unreadCount = useNotificationStore(state => state.unreadCount);
+
+    // Counts
+    const newInquiriesCount = inquiries.filter(inq => inq.status === 'new').length;
+    // Count pending project approvals for Admin
+    const pendingProjectsCount = leads.filter(l => l.status === 'Won' && l.approvalStatus === 'pending_project').length;
+
+
+    const isSuperAdmin = role === 'superadmin' || role === 'superadmin_staff';
+    // Fix: Check authRole to differentiate between root and staff when role prop is generic
+    const isSuperAdminRoot = (role === 'superadmin' || role === 'superadmin_staff') && authRole === 'superadmin';
+    const isSuperAdminStaff = (role === 'superadmin' || role === 'superadmin_staff') && authRole === 'superadmin_staff';
+    const isManager = role === 'manager';
+    const isAdmin = role === 'admin';
+
+    const [isSettingsOpen, setIsSettingsOpen] = useState(
+        (isSuperAdmin && location.pathname.startsWith('/superadmin/settings')) ||
+        (isManager && location.pathname.startsWith('/manager/settings')) ||
+        (isAdmin && location.pathname.startsWith('/admin/settings'))
+    );
+
+    const sidebarSearchParams = new URLSearchParams(location.search);
+    const activeTab = sidebarSearchParams.get('tab') || 'profile';
+
+    const handleLogout = () => {
+        logout();
+        if (role === 'superadmin') navigate('/superadmin/login');
+        else if (role === 'admin') navigate('/admin/login');
+        else if (role === 'manager') navigate('/manager/login');
+        else navigate('/employee/login');
+    };
+
+    const user = useAuthStore(state => state.user);
+    const isApprovedPartner = role === 'partner' && user?.agreementStatus === 'approved' && user?.status === 'active';
+
+    const navItems = [
+        ...(role === 'manager'
+            ? [
+                { name: 'Dashboard', path: '/manager', icon: LayoutDashboard },
+                { name: 'My Projects', path: '/manager/projects', icon: ClipboardCheck }, // New Projects Link
+                { name: 'Assign Task', path: '/manager/assign-task', icon: CheckSquare },
+                { name: 'My Tasks', path: '/manager/my-tasks', icon: ListChecks },
+
+                { name: 'Team', path: '/manager/team', icon: Users },
+                { name: 'Progress', path: '/manager/progress', icon: BarChart3 },
+                { name: 'Chat', path: '/manager/chat', icon: MessageSquare },
+                { name: 'Schedule', path: '/manager/schedule', icon: CalendarIcon },
+                { name: 'Notifications', path: '/manager/notifications', icon: Bell, badge: unreadCount },
+                { name: 'Settings', path: '/manager/settings', icon: SettingsIcon },
+                { name: 'Reports', path: '/manager/reports', icon: BarChart3 },
+                { name: 'Support', path: '/manager/support', icon: LifeBuoy },
+            ]
+            : []),
+        ...(role === 'sales'
+            ? [
+                { name: 'Dashboard', path: '/sales', icon: LayoutDashboard },
+                { name: 'CRM', path: '/sales/crm', icon: Briefcase },
+                { name: 'Deals', path: '/sales/deals', icon: CheckSquare },
+                { name: 'Clients', path: '/sales/clients', icon: Users },
+                { name: 'Reports', path: '/sales/reports', icon: BarChart3 },
+                { name: 'Chat', path: '/sales/chat', icon: MessageSquare },
+                { name: 'Schedule', path: '/sales/schedule', icon: CalendarIcon },
+                { name: 'Notifications', path: '/sales/notifications', icon: Bell, badge: unreadCount },
+                { name: 'Settings', path: '/sales/settings', icon: SettingsIcon },
+                { name: 'Support', path: '/sales/support', icon: LifeBuoy },
+            ]
+            : []),
+        ...(role === 'admin'
+            ? [
+                { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+                { name: 'Task Assignment', path: '/admin/tasks', icon: ListChecks },
+                { name: 'CRM', path: '/admin/crm', icon: Briefcase },
+                { name: 'Managers', path: '/admin/managers', icon: ShieldCheck },
+                { name: 'Employees', path: '/admin/employees', icon: Users },
+                { name: 'Sales', path: '/admin/sales', icon: TrendingUp },
+                { name: 'Projects', path: '/admin/projects', icon: Briefcase, end: true },
+                // Added Project Approvals
+                {
+                    name: 'Project Approvals',
+                    path: '/admin/projects/approvals',
+                    icon: ClipboardCheck,
+                    badge: pendingProjectsCount
+                },
+                { name: 'Join Requests', path: '/admin/requests', icon: UserPlus },
+                { name: 'Notifications', path: '/admin/notifications', icon: Bell, badge: unreadCount },
+                { name: 'Reports', path: `/${role}/reports`, icon: BarChart3 },
+                { name: 'Chat', path: '/admin/chat', icon: MessageSquare },
+                { name: 'Calendar', path: `/${role}/calendar`, icon: CalendarIcon },
+                { name: 'Subscription', path: '/admin/subscription', icon: CreditCard },
+                { name: 'Support', path: '/admin/support', icon: LifeBuoy },
+                { name: 'Settings', path: `/${role}/settings`, icon: SettingsIcon },
+            ]
+            : []),
+        ...(isSuperAdmin
+            ? [
+                { name: 'Dashboard', path: '/superadmin', icon: LayoutDashboard },
+                { name: 'Inquiries', path: '/superadmin/inquiries', icon: ListChecks },
+                { name: 'Admins', path: '/superadmin/admins', icon: Users },
+                { name: 'Partners', path: '/superadmin/partners', icon: ShieldCheck },
+                { name: 'Global Users', path: '/superadmin/users', icon: Activity },
+                { name: 'Notifications', path: '/superadmin/notifications', icon: Bell, badge: unreadCount },
+                ...(isSuperAdminRoot ? [
+                    { name: 'Staff', path: '/superadmin/staff', icon: ShieldCheck },
+                    { name: 'Billing', path: '/superadmin/billing', icon: Receipt },
+                    { name: 'History', path: '/superadmin/history', icon: History },
+                    { name: 'Plans', path: '/superadmin/plans', icon: CreditCard },
+                ] : []),
+                { name: 'Support', path: '/superadmin/support', icon: LifeBuoy },
+                ...(isSuperAdminRoot ? [
+                    { name: 'Landing Page', path: '/superadmin/landing-page', icon: FileEdit },
+                    { name: 'Testimonials', path: '/superadmin/testimonials', icon: MessageSquare },
+                    { name: 'System Intel', path: '/superadmin/system-intel', icon: ShieldCheck },
+                    { name: 'Settings', path: '/superadmin/settings', icon: SettingsIcon },
+                ] : []),
+            ]
+            : []),
+        ...(role === 'partner'
+            ? [
+                { name: 'Dashboard', path: '/partner', icon: LayoutDashboard },
+                ...(isApprovedPartner ? [
+                    { name: 'Commissions', path: '/partner/commissions', icon: TrendingUp },
+                    { name: 'Payouts', path: '/partner/payouts', icon: Receipt },
+                    { name: 'Notifications', path: '/partner/notifications', icon: Bell, badge: unreadCount },
+                    { name: 'Support', path: '/partner/support', icon: LifeBuoy },
+                ] : [
+                    { name: 'Agreement', path: '/partner/agreement', icon: FileEdit },
+                ]),
+                { name: 'Settings', path: '/partner/settings', icon: SettingsIcon },
+            ]
+            : []),
+    ];
+
+
+
+    const managerSettingsSubItems = isManager
+        ? [
+            { name: 'Profile', path: '/manager/settings?tab=profile', icon: User, tab: 'profile' },
+            { name: 'Security', path: '/manager/settings?tab=security', icon: Shield, tab: 'security' },
+        ]
+        : [];
+
+    const adminSettingsSubItems = isAdmin
+        ? [
+            { name: 'Profile', path: '/admin/settings?tab=profile', icon: User, tab: 'profile' },
+            { name: 'Security', path: '/admin/settings?tab=security', icon: Shield, tab: 'security' },
+            { name: 'Appearance', path: '/admin/settings?tab=appearance', icon: Palette, tab: 'appearance' },
+        ]
+        : [];
+
+    const superAdminSettingsSubItems = isSuperAdmin
+        ? [
+            { name: 'Account', path: '/superadmin/settings?tab=profile', icon: User, tab: 'profile' },
+            { name: 'Security', path: '/superadmin/settings?tab=security', icon: Lock, tab: 'security' },
+            { name: 'Platform', path: '/superadmin/settings?tab=platform', icon: SettingsIcon, tab: 'platform' },
+        ]
+        : [];
+
+    return (
+        <aside
+            className={cn(
+                "fixed left-0 top-0 h-full border-r transition-all duration-300 z-[100] overflow-hidden",
+                (role === 'sales' || isSuperAdmin || isAdmin || isManager) ? "bg-[#3063a0] border-[#3063a0]/20 shadow-xl" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-900",
+                isCollapsed ? "w-20" : "w-64",
+                isOpen ? "translate-x-0" : "-translate-x-full",
+                "lg:translate-x-0"
+            )}
+        >
+            <div className="flex flex-col h-full">
+                <div className={cn(
+                    "flex items-center justify-between p-4 mb-4 border-b h-16 shrink-0",
+                    (role === 'sales' || isSuperAdmin || isAdmin || isManager) ? "border-white/10" : "border-slate-100 dark:border-slate-900"
+                )}>
+                    {(role === 'sales' || isSuperAdmin || isAdmin || isManager) ? (
+                        /* Sales & Superadmin Role: Left Aligned Text Logo */
+                        !isCollapsed ? (
+                            <div className="flex items-center justify-start w-full gap-2 -ml-3 -my-2">
+                                <div className="h-16 w-16 flex-shrink-0">
+                                    <img src="/dintask-logo.png" alt="" className="h-full w-full object-contain" />
+                                </div>
+                                <h1 className="text-4xl font-black text-white tracking-tighter">DinTask</h1>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center w-full">
+                                <div className="h-14 w-14">
+                                    <img src="/dintask-logo.png" alt="DT" className="h-full w-full object-contain" />
+                                </div>
+                            </div>
+                        )
+                    ) : (
+                        /* Default Role: Centered Image Logo */
+                        <>
+                            {!isCollapsed && (
+                                <div className="flex items-center justify-center w-full">
+                                    <div className="h-16 w-40 flex items-center justify-center overflow-hidden">
+                                        <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-150" />
+                                    </div>
+                                </div>
+                            )}
+                            {isCollapsed && (
+                                <div className="h-24 w-24 -my-4 mx-auto flex items-center justify-center">
+                                    <img src="/dintask-logo.png" alt="DinTask" className="h-full w-full object-contain scale-125" />
+                                </div>
+                            )}
+                        </>
+                    )}
+
+
+
+
+                    {!isCollapsed && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            className="text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/10 rounded-xl hidden lg:flex"
+                        >
+                            <ChevronLeft size={20} />
+                        </Button>
+                    )}
+                    {isCollapsed && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            className="text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/10 rounded-xl hidden lg:flex mt-2"
+                        >
+                            <ChevronRight size={20} />
+                        </Button>
+                    )}
+                </div>
+
+                <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto no-scrollbar py-2">
+                    {navItems.map((item) => {
+                        const isSettingsItem = (isAdmin || isSuperAdmin) && item.name === 'Settings';
+                        const badgeCount = item.name === 'Inquiries' ? newInquiriesCount : item.badge;
+
+                        if (isSettingsItem) {
+                            return (
+                                <div key={item.path}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSettingsOpen(prev => !prev)}
+                                        className={cn(
+                                            "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold group w-full text-left",
+                                            "text-slate-500 hover:bg-slate-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-slate-900"
+                                        )}
+                                    >
+                                        <item.icon size={20} className={cn(
+                                            "min-w-[20px]",
+                                            isCollapsed ? "mx-auto" : ""
+                                        )} />
+                                        {!isCollapsed && (
+                                            <>
+                                                <span className="truncate flex-1 ml-3 text-xs uppercase tracking-widest">{item.name}</span>
+                                                <ChevronDown
+                                                    size={14}
+                                                    className={cn(
+                                                        "transition-transform",
+                                                        !isSettingsOpen && "-rotate-90"
+                                                    )}
+                                                />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {!isCollapsed && isSettingsOpen && (
+                                        <div className="mt-1 ml-4 border-l border-slate-100 dark:border-slate-800 space-y-1">
+                                            {(isManager
+                                                ? managerSettingsSubItems
+                                                : isAdmin
+                                                    ? adminSettingsSubItems
+                                                    : superAdminSettingsSubItems
+                                            ).map((subItem) => {
+                                                const isActiveSub = isManager
+                                                    ? location.pathname === subItem.path
+                                                    : activeTab === subItem.tab;
+
+                                                return (
+                                                    <NavLink
+                                                        key={subItem.name}
+                                                        to={subItem.path}
+                                                        onClick={() => setIsOpen(false)}
+                                                        className={cn(
+                                                            "flex items-center gap-3 px-4 py-2 rounded-lg transition-all text-[11px] font-black uppercase tracking-widest group ml-4",
+                                                            isActiveSub
+                                                                ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
+                                                                : "text-slate-500 hover:text-primary-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-900"
+                                                        )}
+                                                    >
+                                                        <subItem.icon size={14} className="min-w-[14px]" />
+                                                        <span className="truncate">{subItem.name}</span>
+                                                    </NavLink>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                end={item.end || item.path === `/${role}`}
+                                onClick={() => setIsOpen(false)}
+                                className={({ isActive }) => cn(
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold group border border-transparent",
+                                    (role === 'sales' || isSuperAdmin || isAdmin || isManager)
+                                        ? isActive
+                                            ? "bg-white/20 text-white shadow-lg backdrop-blur-md border-white/20"
+                                            : "text-blue-50 hover:text-white hover:bg-white/10 transition-all duration-300"
+                                        : isActive
+                                            ? "bg-primary-600 text-white shadow-lg shadow-primary-900/30"
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-slate-900"
+                                )}
+                            >
+                                <item.icon size={20} className={cn(
+                                    "min-w-[20px]",
+                                    isCollapsed ? "mx-auto" : ""
+                                )} />
+                                {!isCollapsed && <span className="truncate ml-3 text-xs uppercase tracking-widest">{item.name}</span>}
+                                {!isCollapsed && badgeCount > 0 && (
+                                    <span className={cn(
+                                        "ml-auto flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black shadow-sm",
+                                        "bg-primary-600 text-white"
+                                    )}>
+                                        {badgeCount}
+                                    </span>
+                                )}
+                            </NavLink>
+                        );
+                    })}
+                </nav>
+
+                <div className={cn(
+                    "p-3 border-t",
+                    (role === 'sales' || isSuperAdmin || isAdmin || isManager) ? "border-white/10" : "border-slate-100 dark:border-slate-800"
+                )}>
+                    <Button
+                        variant="ghost"
+                        className={cn(
+                            "w-full justify-start font-bold",
+                            isCollapsed && "justify-center",
+                            (role === 'sales' || isSuperAdmin || isAdmin || isManager)
+                                ? "text-blue-50 hover:text-white hover:bg-white/10"
+                                : "text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                        )}
+                        onClick={handleLogout}
+                    >
+                        <LogOut size={20} />
+                        {!isCollapsed && <span className="ml-3 text-xs uppercase tracking-widest">Logout</span>}
+                    </Button>
+                </div>
+            </div>
+        </aside >
+    );
+};
+
+export default Sidebar;

@@ -1,0 +1,463 @@
+[
+    {
+        "id": "1",
+        "title": "Quarterly Client Review - Acme Corp",
+        "description": "Prepare the comprehensive quarterly business review for Acme Corp. Focus on the Q3 retention metrics and the expansion of the 'Enterprise Cloud' tier. We need to address the recent support latency concerns raised by their CTO.",
+        "deadline": "2026-01-30T14:30:00",
+        "priority": "urgent",
+        "status": "pending",
+        "assignedTo": [
+            "101",
+            "102",
+            "103"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "delegatedBy": "M001",
+        "createdAt": "2026-01-28T09:00:00",
+        "progress": 65,
+        "labels": [
+            "Strategy",
+            "Client"
+        ],
+        "activity": [
+            {
+                "type": "comment",
+                "user": "Sarah L.",
+                "avatar": "https://i.pravatar.cc/150?u=sarah",
+                "content": "I've uploaded the latest report. Please review the financial projection section on page 4.",
+                "time": "2 hours ago"
+            },
+            {
+                "type": "system",
+                "user": "Chirag J.",
+                "content": "changed status to In Progress",
+                "time": "Yesterday at 4:15 PM"
+            }
+        ]
+    },
+    {
+        "id": "2",
+        "title": "Update Employee Handbook",
+        "description": "Revise the remote work policy section to reflect the new hybrid model guidelines effectively immediately.",
+        "deadline": "2026-02-03T10:00:00",
+        "priority": "medium",
+        "status": "pending",
+        "assignedTo": [
+            "104",
+            "101"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M002",
+        "delegatedBy": "M002",
+        "createdAt": "2026-01-25T10:30:00",
+        "progress": 20,
+        "labels": [
+            "HR",
+            "Internal"
+        ],
+        "activity": []
+    },
+    {
+        "id": "3",
+        "title": "Fix Navigation Bug on Mobile",
+        "description": "The sidebar menu is not collapsing correctly on iOS Safari when in landscape mode.",
+        "deadline": "2026-01-30T17:00:00",
+        "priority": "high",
+        "status": "pending",
+        "assignedTo": [
+            "101",
+            "105"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "delegatedBy": "M001",
+        "createdAt": "2026-01-29T08:15:00",
+        "progress": 40,
+        "labels": [
+            "Bug",
+            "Engineering"
+        ],
+        "activity": []
+    },
+    {
+        "id": "4",
+        "title": "Prepare Marketing Assets for Q1 Launch",
+        "description": "Design social media banners and email templates for the new product launch.",
+        "deadline": "2026-02-10T17:00:00",
+        "priority": "low",
+        "status": "pending",
+        "assignedTo": [
+            "102",
+            "101"
+        ],
+        "createdAt": "2026-01-20T14:00:00",
+        "progress": 10,
+        "labels": [
+            "Marketing",
+            "Design"
+        ],
+        "activity": []
+    },
+    {
+        "id": "5",
+        "title": "Server Maintenance & Security Patch",
+        "description": "Apply the critical security patch to the production database and restart services.",
+        "deadline": "2026-01-28T11:00:00",
+        "priority": "urgent",
+        "status": "completed",
+        "completedAt": "2026-01-28T10:45:00",
+        "assignedTo": [
+            "105",
+            "103",
+            "101"
+        ],
+        "createdAt": "2026-01-25T09:00:00",
+        "progress": 100,
+        "labels": [
+            "DevOps",
+            "Security"
+        ],
+        "activity": []
+    },
+    {
+        "id": "6",
+        "title": "Conduct User Interviews - Batch 2",
+        "description": "Interview 5 beta users to gather feedback on the new potential feature set.",
+        "deadline": "2026-02-05T15:00:00",
+        "priority": "medium",
+        "status": "pending",
+        "assignedTo": [
+            "101",
+            "104"
+        ],
+        "createdAt": "2026-01-26T11:20:00",
+        "progress": 0,
+        "labels": [
+            "Product",
+            "Research"
+        ],
+        "activity": []
+    },
+    {
+        "id": "7",
+        "title": "Finalize Q3 Budget Proposal",
+        "description": "Review department expenses and propose budget allocation for Q3.",
+        "deadline": "2026-01-29T16:00:00",
+        "priority": "high",
+        "status": "completed",
+        "completedAt": "2026-01-29T15:30:00",
+        "assignedTo": [
+            "101"
+        ],
+        "createdAt": "2026-01-27T10:00:00",
+        "progress": 100,
+        "labels": [
+            "Finance"
+        ],
+        "activity": []
+    },
+    {
+        "id": "8",
+        "title": "Create Onboarding Documentation",
+        "description": "Write documentation for new hires joining the engineering team.",
+        "deadline": "2026-02-01T12:00:00",
+        "priority": "low",
+        "status": "pending",
+        "assignedTo": [
+            "105",
+            "101"
+        ],
+        "createdAt": "2026-01-26T13:00:00",
+        "progress": 5,
+        "labels": [
+            "HR",
+            "Engineering"
+        ],
+        "activity": []
+    },
+    {
+        "id": "1001",
+        "title": "Submit Weekly Progress Report",
+        "description": "Compile the weekly development and marketing metrics for the team meeting. Ensure all KPIs are up to date.",
+        "deadline": "2026-01-30T18:00:00",
+        "priority": "high",
+        "status": "pending",
+        "assignedTo": [
+            "103",
+            "101"
+        ],
+        "createdAt": "2026-01-29T09:00:00",
+        "progress": 0,
+        "labels": [
+            "Internal",
+            "Reporting"
+        ],
+        "activity": []
+    },
+    {
+        "id": "1002",
+        "title": "Review Design Mockups",
+        "description": "Review the new Figma screens for the profile flow and leave comments for the design team.",
+        "deadline": "2026-01-30T11:00:00",
+        "priority": "medium",
+        "status": "pending",
+        "assignedTo": [
+            "103",
+            "101"
+        ],
+        "createdAt": "2026-01-28T14:00:00",
+        "progress": 30,
+        "labels": [
+            "Design",
+            "Mobile"
+        ],
+        "activity": []
+    },
+    {
+        "id": "1003",
+        "title": "System Architecture Update",
+        "description": "Update the diagrams to reflect the new microservices added last sprint.",
+        "deadline": "2026-02-04T12:00:00",
+        "priority": "low",
+        "status": "pending",
+        "assignedTo": [
+            "103"
+        ],
+        "createdAt": "2026-01-25T11:00:00",
+        "progress": 15,
+        "labels": [
+            "Engineering",
+            "Docs"
+        ],
+        "activity": []
+    },
+    {
+        "id": "1004",
+        "title": "Onboard New Junior Developer",
+        "description": "Walk through the codebase and setup the dev environment for the new hire.",
+        "deadline": "2026-01-28T16:00:00",
+        "priority": "high",
+        "status": "completed",
+        "completedAt": "2026-01-28T16:00:00",
+        "assignedTo": [
+            "103"
+        ],
+        "createdAt": "2026-01-26T09:00:00",
+        "progress": 100,
+        "labels": [
+            "HR",
+            "Mentorship"
+        ],
+        "activity": []
+    },
+    {
+        "id": "2001",
+        "title": "Review Department Budget",
+        "description": "Analyze the Q1 expenses and prepare a forecast for Q2 resource allocation.",
+        "deadline": "2026-02-05T17:00:00",
+        "priority": "high",
+        "status": "pending",
+        "assignedTo": [
+            "M001"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "createdAt": "2026-01-29T10:00:00",
+        "progress": 25,
+        "labels": [
+            "Finance",
+            "Internal"
+        ],
+        "activity": []
+    },
+    {
+        "id": "2002",
+        "title": "Approve Vacation Requests",
+        "description": "Review and approve pending time-off requests for the engineering team.",
+        "deadline": "2026-01-31T12:00:00",
+        "priority": "medium",
+        "status": "pending",
+        "assignedTo": [
+            "M001"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "createdAt": "2026-01-30T09:00:00",
+        "progress": 0,
+        "labels": [
+            "HR",
+            "Management"
+        ],
+        "activity": []
+    },
+    {
+        "id": "2003",
+        "title": "Strategy Meeting Preparation",
+        "description": "Prepare slides for the monthly strategy alignment meeting with the executive board.",
+        "deadline": "2026-02-02T14:00:00",
+        "priority": "urgent",
+        "status": "pending",
+        "assignedTo": [
+            "M001"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "createdAt": "2026-01-28T15:00:00",
+        "progress": 50,
+        "labels": [
+            "Strategy",
+            "Executive"
+        ],
+        "activity": []
+    },
+    {
+        "id": "4001",
+        "title": "Team Performance Review",
+        "description": "Analyze the productivity metrics for all team members and prepare feedback for one-on-ones.",
+        "deadline": "2026-02-10T11:00:00",
+        "priority": "high",
+        "status": "pending",
+        "assignedTo": [
+            "M001"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "createdAt": "2026-02-01T09:00:00",
+        "progress": 10,
+        "labels": [
+            "Management",
+            "Reporting"
+        ],
+        "activity": []
+    },
+    {
+        "id": "4002",
+        "title": "New Project Roadmap",
+        "description": "Outline the milestones and resource requirements for the upcoming Q3 Expansion project.",
+        "deadline": "2026-02-15T17:00:00",
+        "priority": "medium",
+        "status": "pending",
+        "assignedTo": [
+            "M001"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "createdAt": "2026-02-02T11:00:00",
+        "progress": 0,
+        "labels": [
+            "Planning",
+            "Strategy"
+        ],
+        "activity": []
+    },
+    {
+        "id": "4003",
+        "title": "Quarterly Budget Approval",
+        "description": "Review and sign off on the final budget proposal from the finance department.",
+        "deadline": "2026-02-03T18:00:00",
+        "priority": "urgent",
+        "status": "pending",
+        "assignedTo": [
+            "M001"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "createdAt": "2026-02-02T14:00:00",
+        "progress": 75,
+        "labels": [
+            "Finance",
+            "Urgent"
+        ],
+        "activity": []
+    },
+    {
+        "id": "3001",
+        "title": "Website Performance Audit",
+        "description": "Run a full lighthouse audit on the production site and identify bottlenecks in the checkout flow.",
+        "deadline": "2026-02-04T18:00:00",
+        "priority": "high",
+        "status": "pending",
+        "assignedTo": [
+            "103"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M001",
+        "delegatedBy": "M001",
+        "createdAt": "2026-02-01T10:00:00",
+        "progress": 15,
+        "labels": [
+            "Engineering",
+            "Performance"
+        ],
+        "activity": []
+    },
+    {
+        "id": "3002",
+        "title": "User Feedback Analysis",
+        "description": "Analyze the last 50 support tickets to identify the most requested feature for the next sprint.",
+        "deadline": "2026-02-05T12:00:00",
+        "priority": "medium",
+        "status": "pending",
+        "assignedTo": [
+            "103",
+            "102"
+        ],
+        "assignedBy": "admin",
+        "assignedToManager": "M002",
+        "delegatedBy": "M002",
+        "createdAt": "2026-02-01T14:30:00",
+        "progress": 0,
+        "labels": [
+            "Product",
+            "Support"
+        ],
+        "activity": []
+    },
+    {
+        "id": "3003",
+        "title": "Emergency Security Patch",
+        "description": "Critical vulnerability found in the auth middleware. Patch immediately and rotate secrets.",
+        "deadline": "2026-02-03T23:59:00",
+        "priority": "urgent",
+        "status": "pending",
+        "assignedTo": [
+            "103",
+            "105"
+        ],
+        "assignedBy": "admin",
+        "createdAt": "2026-02-03T09:15:00",
+        "progress": 45,
+        "labels": [
+            "Security",
+            "Urgent"
+        ],
+        "activity": [
+            {
+                "type": "system",
+                "user": "Admin",
+                "content": "assigned this urgent task to you",
+                "time": "1 hour ago"
+            }
+        ]
+    },
+    {
+        "id": "3004",
+        "title": "Client Presentation Prep",
+        "description": "Draft the technical architecture slides for the upcoming meeting with Fortune 500 prospect.",
+        "deadline": "2026-02-04T09:00:00",
+        "priority": "high",
+        "status": "pending",
+        "assignedTo": [
+            "103"
+        ],
+        "delegatedBy": "M001",
+        "createdAt": "2026-02-02T16:00:00",
+        "progress": 60,
+        "labels": [
+            "Sales",
+            "Design"
+        ],
+        "activity": []
+    }
+]

@@ -1,0 +1,437 @@
+﻿import React, { useState, useMemo } from 'react';
+import { BarChart3, PieChart, LineChart, Download, Filter, Search, TrendingUp, TrendingDown, Target, Users, FileText, Clock, IndianRupee } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Input } from '@/shared/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Badge } from '@/shared/components/ui/badge';
+import { Progress } from '@/shared/components/ui/progress';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart as ReLineChart, Line, PieChart as RePieChart, Pie, Cell } from 'recharts';
+import useAuthStore from '@/store/authStore';
+import useSalesStore from '@/store/salesStore';
+import useSalesTargetsStore from '@/store/salesTargetsStore';
+
+import useCRMStore from '@/store/crmStore';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+const SalesReports = () => {
+    const { user } = useAuthStore();
+    const { salesReps, getSalesRepByEmail } = useSalesStore();
+    const { reportData, fetchSalesReport, loading } = useCRMStore();
+    const {
+        individualTargets,
+        teamTargets,
+        actualPerformance,
+        calculateIndividualProgress,
+        calculateTeamProgress,
+        getIndividualTargetsByPeriod,
+        getTeamTargetsByPeriod,
+        getActualPerformanceByPeriod
+    } = useSalesTargetsStore();
+
+    const [selectedPeriod, setSelectedPeriod] = useState('month');
+    const [filters, setFilters] = useState({ status: 'all', type: 'all' });
+    const [targetPeriod, setTargetPeriod] = useState('monthly');
+    const [activeTab, setActiveTab] = useState('revenue');
+
+    // Fetch report data on period change
+    React.useEffect(() => {
+        fetchSalesReport(selectedPeriod);
+    }, [selectedPeriod]);
+
+    const salesRep = useMemo(() => {
+        return getSalesRepByEmail(user?.email);
+    }, [user?.email, getSalesRepByEmail]);
+
+    const reportingToTargetPeriod = {
+        week: 'monthly',
+        month: 'monthly',
+        quarter: 'quarterly',
+        year: 'yearly'
+    };
+
+    const targetReportData = useMemo(() => {
+        const mappedPeriod = reportingToTargetPeriod[selectedPeriod] || 'monthly';
+        return {
+            individual: {
+                revenue: calculateIndividualProgress(mappedPeriod, 'revenue'),
+                deals: calculateIndividualProgress(mappedPeriod, 'deals'),
+                clients: calculateIndividualProgress(mappedPeriod, 'clients')
+            },
+            team: {
+                revenue: calculateTeamProgress(mappedPeriod, 'revenue'),
+                deals: calculateTeamProgress(mappedPeriod, 'deals'),
+                clients: calculateTeamProgress(mappedPeriod, 'clients')
+            },
+            individualTarget: getIndividualTargetsByPeriod(mappedPeriod),
+            teamTarget: getTeamTargetsByPeriod(mappedPeriod),
+            actual: getActualPerformanceByPeriod(mappedPeriod)
+        };
+    }, [selectedPeriod, calculateIndividualProgress, calculateTeamProgress, getIndividualTargetsByPeriod, getTeamTargetsByPeriod, getActualPerformanceByPeriod]);
+
+    const reportMetrics = useMemo(() => {
+        if (!reportData?.metrics) {
+            return {
+                totalRevenue: 0,
+                totalDeals: 0,
+                avgDealValue: 0,
+                revenueChange: '0%',
+                dealsChange: '0%',
+                avgValueChange: '0%'
+            };
+        }
+
+        return reportData.metrics;
+    }, [reportData]);
+
+    const handleExport = () => {
+        const rows = [
+            ["ID", "Name", "Company", "Amount", "Status", "Created At"],
+            ...leads.map(l => [
+                l.id,
+                `"${l.name}"`,
+                `"${l.company}"`,
+                l.amount || 0,
+                l.status,
+                l.createdAt ? l.createdAt.split('T')[0] : ''
+            ])
+        ];
+
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + rows.map(e => e.join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `sales_report_${selectedPeriod}_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Intelligence report exported");
+    };
+
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    return (
+        <div className="space-y-4 sm:space-y-6 pb-10">
+            {/* Header section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 mb-2">
+                <div className="flex items-center gap-3">
+                    <div>
+                        <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                            Sales <span className="text-primary-600">Analytics</span>
+                        </h1>
+                        <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">
+                            Track performance and revenue trends
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                        <SelectTrigger className="flex-1 sm:w-[130px] h-9 bg-white dark:bg-slate-900 border-none rounded-xl font-black text-[9px] uppercase tracking-widest px-3 shadow-sm ring-offset-0 focus:ring-0">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-none shadow-2xl">
+                            <SelectItem value="week" className="text-[10px] font-bold">Week</SelectItem>
+                            <SelectItem value="month" className="text-[10px] font-bold">Month</SelectItem>
+                            <SelectItem value="quarter" className="text-[10px] font-bold">Quarter</SelectItem>
+                            <SelectItem value="year" className="text-[10px] font-bold">Annual</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button
+                        variant="default"
+                        className="h-9 px-4 gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 rounded-xl font-black text-[9px] uppercase tracking-widest text-white transition-all transform active:scale-95"
+                        onClick={handleExport}
+                    >
+                        <Download size={14} />
+                        <span className="hidden sm:inline">Export Report</span>
+                        <span className="sm:hidden">Export</span>
+                    </Button>
+                </div>
+            </div>
+
+            {/* Summary Grid - Premium Look */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                {[
+                    { label: 'Total Revenue', value: `₹${reportMetrics.totalRevenue.toLocaleString()}`, change: reportMetrics.revenueChange, icon: <IndianRupee size={16} />, color: 'primary', border: 'border-primary-200', bg: 'bg-primary-50', shadow: 'shadow-primary-200/50' },
+                    { label: 'Deals Won', value: reportMetrics.wonDealsCount, change: reportMetrics.dealsChange, icon: <Target size={16} />, color: 'emerald', border: 'border-emerald-200', bg: 'bg-emerald-50', shadow: 'shadow-emerald-200/50' },
+                    { label: 'Avg Deal Value', value: `₹${reportMetrics.avgDealValue.toLocaleString()}`, change: reportMetrics.avgValueChange, icon: <TrendingUp size={16} />, color: 'blue', border: 'border-blue-200', bg: 'bg-blue-50', shadow: 'shadow-blue-200/50' }
+                ].map((stat, i) => (
+                    <Card key={i} className={cn(
+                        "border-2 shadow-lg rounded-2xl overflow-hidden group transition-all hover:-translate-y-1",
+                        stat.border,
+                        stat.shadow,
+                        "bg-white dark:bg-slate-900",
+                        i === 2 ? "col-span-2 sm:col-span-1" : ""
+                    )}>
+                        <CardContent className={cn("p-3 sm:p-5 flex items-center justify-between bg-gradient-to-br from-white to-transparent dark:from-slate-900", stat.bg.replace('bg-', 'to-') + '/20')}>
+                            <div className="space-y-2.5 sm:space-y-3">
+                                <div className={cn(
+                                    "size-8 sm:size-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0",
+                                    stat.color === 'primary' ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20" :
+                                        stat.color === 'emerald' ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" :
+                                            "bg-blue-50 text-blue-600 dark:bg-blue-900/20"
+                                )}>
+                                    {React.cloneElement(stat.icon, { size: 14, className: "sm:size-4" })}
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[8px] sm:text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                                    <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{stat.value}</p>
+                                    <div className="flex items-center gap-1.5 pt-1">
+                                        <div className="flex items-center justify-center size-3 sm:size-3.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
+                                            <TrendingUp size={7} className="sm:size-2" />
+                                        </div>
+                                        <span className="text-[7px] sm:text-[8px] font-black text-emerald-600 uppercase tracking-widest">{stat.change} Growth</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="hidden sm:block size-16 -mr-4 opacity-[0.03] dark:opacity-[0.07] transform rotate-12 transition-transform group-hover:rotate-0">
+                                {React.cloneElement(stat.icon, { size: 64 })}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            <Tabs defaultValue="revenue" className="w-full" onValueChange={setActiveTab}>
+                <div className="mb-4 px-1 overflow-x-auto scrollbar-hide">
+                    <TabsList className="bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-xl h-10 border border-slate-100 dark:border-slate-800 w-fit sm:w-auto">
+                        {['revenue', 'deals', 'clients', 'targets'].map((tab) => (
+                            <TabsTrigger
+                                key={tab}
+                                value={tab}
+                                className="px-4 sm:px-5 h-8 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm whitespace-nowrap"
+                            >
+                                {tab}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </div>
+
+                <TabsContent value="revenue" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                    <Card className="border-2 border-primary-100 shadow-xl shadow-primary-100/50 dark:border-primary-900 dark:shadow-none bg-gradient-to-br from-white to-primary-50/30 dark:from-slate-900 dark:to-primary-900/10 rounded-2xl overflow-hidden">
+                        <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="space-y-0.5">
+                                    <CardTitle className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Revenue Growth</CardTitle>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic pl-0.5">Monthly revenue overview</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100/50 dark:border-emerald-800/50">
+                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest text-center leading-none mb-0.5">Won Rate</p>
+                                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 text-center uppercase">{reportData?.metrics?.conversionRate || 0}%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            <div className="h-[280px] sm:h-[350px] w-full">
+                                {reportData?.trajectory?.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={reportData.trajectory}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                            <XAxis
+                                                dataKey="date"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#94a3b8', fontSize: 10 }}
+                                                tickFormatter={(str) => {
+                                                    try {
+                                                        const date = new Date(str);
+                                                        if (selectedPeriod === 'year') return format(date, 'MMM');
+                                                        if (selectedPeriod === 'week') return format(date, 'EEE');
+                                                        return format(date, 'MMM d');
+                                                    } catch (e) { return str; }
+                                                }}
+                                            />
+                                            <YAxis
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#94a3b8', fontSize: 10 }}
+                                                tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(value) => [`₹${Number(value).toLocaleString()}`, 'Revenue']}
+                                            />
+                                            <Bar
+                                                dataKey="revenue"
+                                                fill="#4f46e5"
+                                                radius={[6, 6, 0, 0]}
+                                                maxBarSize={40}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
+                                        <div className="text-center z-10 p-6">
+                                            <div className="size-16 rounded-[1.5rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center mx-auto mb-4">
+                                                <IndianRupee className="size-8 text-primary-600" />
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">No Intelligence Data</p>
+                                            <p className="text-[8px] text-slate-400 font-black mt-2 max-w-[200px] leading-relaxed uppercase tracking-wider">Historical revenue flows will appear as deals are secured.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="targets" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        {/* Individual Targets - Refined */}
+                        <Card className="border-2 border-blue-100 shadow-xl shadow-blue-100/50 dark:border-blue-900 dark:shadow-none bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-900 dark:to-blue-900/10 rounded-2xl overflow-hidden">
+                            <CardHeader className="py-2.5 sm:py-3 px-3 sm:px-6 border-b border-slate-50 dark:border-slate-800">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="hidden sm:flex size-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 items-center justify-center text-primary-600">
+                                            <Target size={14} />
+                                        </div>
+                                        <CardTitle className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Individual Goals</CardTitle>
+                                    </div>
+                                    <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-400 border-none rounded-lg font-black text-[7px] sm:text-[8px] uppercase tracking-widest px-1.5 sm:px-2 py-0.5 whitespace-nowrap">
+                                        {targetPeriod}
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+                                {['revenue', 'deals', 'clients'].map((metric) => {
+                                    const progress = calculateIndividualProgress(targetPeriod, metric);
+                                    const target = getIndividualTargetsByPeriod(targetPeriod)[metric];
+                                    const actual = getActualPerformanceByPeriod(targetPeriod)[metric];
+
+                                    return (
+                                        <div key={metric} className="space-y-1.5 sm:space-y-2">
+                                            <div className="flex items-end justify-between px-0.5">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">{metric}</p>
+                                                    <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">
+                                                        {metric === 'revenue' ? `₹${(actual / 1000).toFixed(1)}k` : actual}
+                                                    </p>
+                                                </div>
+                                                <p className="hidden sm:block text-[8px] font-black text-slate-400 uppercase tracking-widest">of {metric === 'revenue' ? `₹${target?.toLocaleString()}` : target}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Progress value={progress} className="h-1 sm:h-1.5 bg-slate-50 dark:bg-slate-800" />
+                                                <div className="flex justify-between items-center px-0.5">
+                                                    <span className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">Comp.</span>
+                                                    <span className="text-[8px] sm:text-[9px] font-black text-primary-600 uppercase tracking-widest">{progress}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
+
+                        {/* Team Progress - Modernized */}
+                        <Card className="border-2 border-emerald-100 shadow-xl shadow-emerald-100/50 dark:border-emerald-900 dark:shadow-none bg-gradient-to-br from-white to-emerald-50/30 dark:from-slate-900 dark:to-emerald-900/10 rounded-2xl overflow-hidden">
+                            <CardHeader className="py-2.5 sm:py-3 px-3 sm:px-6 border-b border-slate-50 dark:border-slate-800">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="hidden sm:flex size-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 items-center justify-center text-emerald-600">
+                                            <Users size={14} />
+                                        </div>
+                                        <CardTitle className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Team Goals</CardTitle>
+                                    </div>
+                                    <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-400 border-none rounded-lg font-black text-[7px] sm:text-[8px] uppercase tracking-widest px-1.5 sm:px-2 py-0.5 whitespace-nowrap">
+                                        Sector Avg
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+                                {['revenue', 'deals', 'clients'].map((metric) => {
+                                    const progress = calculateTeamProgress(targetPeriod, metric);
+                                    const target = getTeamTargetsByPeriod(targetPeriod)[metric];
+                                    const actual = getActualPerformanceByPeriod(targetPeriod)[metric];
+
+                                    return (
+                                        <div key={metric} className="space-y-1.5 sm:space-y-2">
+                                            <div className="flex items-end justify-between px-0.5">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">{metric}</p>
+                                                    <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">
+                                                        {metric === 'revenue' ? `₹${(actual / 1000).toFixed(1)}k` : actual}
+                                                    </p>
+                                                </div>
+                                                <p className="hidden sm:block text-[8px] font-black text-slate-400 uppercase tracking-widest">of {metric === 'revenue' ? `₹${target?.toLocaleString()}` : target}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Progress value={progress} indicatorClassName="bg-emerald-500" className="h-1 sm:h-1.5 bg-slate-50 dark:bg-slate-800" />
+                                                <div className="flex justify-between items-center px-0.5">
+                                                    <span className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">Deploy.</span>
+                                                    <span className="text-[8px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-widest">{progress}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+
+                {/* Deals (Distribution) Tab */}
+                {activeTab === 'deals' && (
+                    <TabsContent value="deals" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                        <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden">
+                            <CardHeader className="py-4 px-6 border-b border-slate-50 dark:border-slate-800">
+                                <CardTitle className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Lead Distribution</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 h-[400px]">
+                                {reportData?.distribution?.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <RePieChart>
+                                            <Pie
+                                                data={reportData.distribution}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {reportData.distribution.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#6366f1'][index % 5]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                            <XAxis hide />
+                                        </RePieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center">
+                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Gathering deal data...</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
+
+                {/* Clients fallback */}
+                {activeTab === 'clients' && (
+                    <TabsContent value="clients" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                        <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:shadow-none bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden">
+                            <CardContent className="p-16 text-center">
+                                <div className="size-16 rounded-[1.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                                    <Clock className="size-8 text-slate-400" />
+                                </div>
+                                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Analytics processing</h3>
+                                <p className="text-[9px] text-slate-400 font-black mt-2 uppercase tracking-widest">Connecting to live database for real-time updates...</p>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
+            </Tabs>
+        </div>
+    );
+};
+
+export default SalesReports;

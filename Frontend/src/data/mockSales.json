@@ -1,0 +1,27 @@
+[
+  {
+    "id": "S001",
+    "name": "John Sales",
+    "email": "sales@dintask.com",
+    "status": "active",
+    "totalSales": 24560,
+    "activeDeals": 18,
+    "conversionRate": 28,
+    "clients": 42,
+    "performance": [
+      { "month": "Jan", "revenue": 18000 },
+      { "month": "Feb", "revenue": 22000 },
+      { "month": "Mar", "revenue": 25000 },
+      { "month": "Apr", "revenue": 20000 },
+      { "month": "May", "revenue": 24000 },
+      { "month": "Jun", "revenue": 26000 }
+    ],
+    "recentSales": [
+      { "id": 1001, "client": "ABC Corp", "amount": 2500, "status": "completed", "progress": 100 },
+      { "id": 1002, "client": "XYZ Ltd", "amount": 3000, "status": "in-progress", "progress": 80 },
+      { "id": 1003, "client": "123 Industries", "amount": 4500, "status": "in-progress", "progress": 60 },
+      { "id": 1004, "client": "Acme Inc", "amount": 2000, "status": "in-progress", "progress": 40 },
+      { "id": 1005, "client": "Global Tech", "amount": 5000, "status": "new", "progress": 20 }
+    ]
+  }
+]
