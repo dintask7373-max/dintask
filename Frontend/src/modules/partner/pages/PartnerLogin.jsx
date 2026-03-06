@@ -8,18 +8,19 @@ import {
     Briefcase,
     ArrowRight,
     ShieldCheck,
-    AlertCircle
+    AlertCircle,
+    LogIn
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import useAuthStore from '@/store/authStore';
 import { toast } from 'sonner';
-import apiRequest from '@/lib/api';
+import AuthLayout from '@/shared/components/layout/AuthLayout';
 
 const PartnerLogin = () => {
     const navigate = useNavigate();
-    const setAuth = useAuthStore(state => state.setAuth);
+    const login = useAuthStore(state => state.login);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
@@ -29,8 +30,6 @@ const PartnerLogin = () => {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
-
-    const login = useAuthStore(state => state.login);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -53,88 +52,77 @@ const PartnerLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full">
-                {/* Logo Section */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="h-12 w-12 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-900/20">
-                        <Briefcase size={24} />
+        <AuthLayout
+            brandTitle="Partner Ecosystem"
+            brandSubtitle="Grow your business with DinTask. Manage referrals, track commissions, and access exclusive partner resources."
+            formTitle="Partner Login"
+            formSubtitle="Authentication required for secure partner dashboard access."
+            bgImage="/WLCOMPAGE .png"
+        >
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Partner Email</Label>
+                    <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <Input
+                            name="email"
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={handleChange}
+                            className="pl-11 h-12 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            placeholder="name@company.com"
+                        />
                     </div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tighter">DinTask <span className="text-primary-600">Partners</span></h1>
                 </div>
 
-                {/* Login Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 p-8 border border-white"
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center px-1">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Security Key</Label>
+                        <Link to="/partner/forgot-password" size="sm" className="text-[10px] font-black text-primary-600 hover:underline uppercase tracking-wide">
+                            Lost?
+                        </Link>
+                    </div>
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <Input
+                            name="password"
+                            type="password"
+                            required
+                            value={formData.password}
+                            onChange={handleChange}
+                            className="pl-11 h-12 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            placeholder="••••••••"
+                        />
+                    </div>
+                </div>
+
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 text-[10px] font-black uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-xl shadow-primary-600/20 active:scale-95 transition-all mt-2 group"
                 >
-                    <div className="mb-8 text-center">
-                        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Partner Login</h2>
-                        <p className="text-slate-500 mt-2">Manage your referrals and commissions</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-slate-500">Email Address</Label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-slate-400" size={18} />
-                                <Input
-                                    name="email"
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-100 focus:bg-white transition-all"
-                                    placeholder="name@company.com"
-                                />
-                            </div>
+                    {loading ? (
+                        <div className="flex items-center gap-2">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            <span>Authenticating...</span>
                         </div>
+                    ) : (
+                        <><LogIn size={16} className="mr-2 group-hover:translate-x-1 transition-transform" /> Sign In</>
+                    )}
+                </Button>
+            </form>
 
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <Label className="text-xs font-black uppercase tracking-widest text-slate-500">Password</Label>
-                                <Link to="/partner/forgot-password" size="sm" className="text-xs font-bold text-primary-600 hover:underline">
-                                    Forgot?
-                                </Link>
-                            </div>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
-                                <Input
-                                    name="password"
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-100 focus:bg-white transition-all"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full h-12 rounded-xl font-bold uppercase tracking-widest bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-900/20"
-                        >
-                            {loading ? 'Authenticating...' : 'Sign In'} <ArrowRight size={18} className="ml-2" />
-                        </Button>
-                    </form>
-
-                    <div className="mt-8 pt-6 border-t border-slate-100">
-                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl text-[11px] text-slate-500 leading-relaxed">
-                            <ShieldCheck className="text-primary-500 shrink-0" size={18} />
-                            <span>Partner portal is secure. Only authorized partners with approved applications can access the dashboard.</span>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Footer */}
-                <p className="text-center mt-8 text-slate-400 font-bold text-xs uppercase tracking-widest">
-                    Not a partner yet? <Link to="/partner/register" className="text-primary-600 hover:underline">Apply Now</Link>
+            <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-wider">
+                    <ShieldCheck className="text-primary-500 shrink-0" size={18} />
+                    <span>Secure Partner Terminal. Unauthorized access is strictly prohibited and monitored.</span>
+                </div>
+                <p className="text-center mt-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Not a partner yet? <Link to="/partner/register" className="text-primary-600 hover:underline ml-1 font-bold">Apply Now</Link>
                 </p>
             </div>
-        </div>
+        </AuthLayout>
     );
 };
 

@@ -526,41 +526,39 @@ const TaskDetail = () => {
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* Manager/Owner Controls */}
+                            {((user?.role === 'manager' && (task.assignedBy === user.id || task.assignedBy?._id === user.id)) || user?.role === 'admin') && (
+                                <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800">
+                                    <CardContent className="p-4 md:p-5 text-left space-y-4">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Command Controls</h4>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => navigate(`/manager/assign-task?edit=${task.id}`)}
+                                                className="h-9 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase tracking-widest rounded-lg"
+                                            >
+                                                Edit Directive
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    if (confirm("Confirm deletion of this directive? This action is irreversible.")) {
+                                                        useTaskStore.getState().deleteTask(task.id);
+                                                        navigate(-1);
+                                                    }
+                                                }}
+                                                className="h-9 border-rose-100 dark:border-rose-900/30 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-bold text-[10px] uppercase tracking-widest rounded-lg"
+                                            >
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     </div>
-
-                    {/* Manager/Owner Controls */}
-                    {((user?.role === 'manager' && (task.assignedBy === user.id || task.assignedBy?._id === user.id)) || user?.role === 'admin') && (
-                        <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800">
-                            <CardContent className="p-4 md:p-5 text-left space-y-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Command Controls</h4>
-
-
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => navigate(`/manager/assign-task?edit=${task.id}`)}
-                                        className="h-9 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase tracking-widest rounded-lg"
-                                    >
-                                        Edit Directive
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => {
-                                            if (confirm("Confirm deletion of this directive? This action is irreversible.")) {
-                                                useTaskStore.getState().deleteTask(task.id);
-                                                navigate(-1);
-                                            }
-                                        }}
-                                        className="h-9 border-rose-100 dark:border-rose-900/30 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-bold text-[10px] uppercase tracking-widest rounded-lg"
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
                 </div>
             </div>
 

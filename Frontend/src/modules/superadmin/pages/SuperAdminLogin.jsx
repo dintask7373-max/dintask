@@ -10,6 +10,8 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs';
 
+import AuthLayout from '@/shared/components/layout/AuthLayout';
+
 const SuperAdminLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -39,134 +41,108 @@ const SuperAdminLogin = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
-            {/* Brand Side - Exact match with Admin Login */}
-            <div className="hidden md:flex md:w-1/2 bg-slate-900 relative items-center justify-center p-12 overflow-hidden">
-                <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
-                <div className="relative z-10 text-white space-y-6 max-w-md">
-                    <div className="h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mb-6 shadow-xl shadow-primary-900/30">
-                        <img src="/dintask-logo.png" alt="DinTask" className="h-9 w-9 object-contain" />
-                    </div>
-                    <h1 className="text-4xl font-bold tracking-tight">Master control for your enterprise.</h1>
-                    <p className="text-slate-400 text-lg">Oversee all organizations, manage subscriptions, and monitor system health with the Master Control Platform.</p>
-                </div>
-            </div>
+        <AuthLayout
+            brandTitle="Master Control Platform"
+            brandSubtitle="Oversee all organizations, manage subscriptions, and monitor system health with the Master Control Platform."
+            formTitle="System Portal"
+            formSubtitle="Authenticating Root Protocol Access"
+            bgImage="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop"
+        >
+            <Tabs defaultValue="admin" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-8">
+                    <TabsTrigger value="admin" className="rounded-lg h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-sm">Super Admin</TabsTrigger>
+                    <TabsTrigger value="employee" className="rounded-lg h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-sm">Operations Staff</TabsTrigger>
+                </TabsList>
 
-            {/* Login Side */}
-            <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
-                <div className="w-full max-w-md space-y-8">
-                    <div className="text-center md:text-left space-y-2">
-                        <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">
-                            System <span className="text-primary-600">Portal</span>
-                        </h2>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Authenticating Root Protocol Access</p>
-                    </div>
-
-                    <Card className="border-2 border-slate-100 shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-                        <CardContent className="pt-10 pb-10 px-8 space-y-8">
-                            <Tabs defaultValue="admin" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl p-1.5 mb-8">
-                                    <TabsTrigger value="admin" className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Super Admin</TabsTrigger>
-                                    <TabsTrigger value="employee" className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Operations Staff</TabsTrigger>
-                                </TabsList>
-
-                                <TabsContent value="admin">
-                                    <form onSubmit={(e) => handleLogin(e, 'admin')} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Administrator Protocol ID</Label>
-                                            <Input
-                                                id="admin-email"
-                                                type="email"
-                                                placeholder="ROOT@DINTASK.EXE"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                className="h-14 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="admin-password">Secure Password</Label>
-                                                <Link to="/superadmin/forgot-password" size="sm" className="text-xs font-bold text-primary-600 hover:text-primary-500 uppercase tracking-tight">
-                                                    Forgot?
-                                                </Link>
-                                            </div>
-                                            <Input
-                                                id="admin-password"
-                                                type="password"
-                                                placeholder="••••••••"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                className="h-11 rounded-lg"
-                                            />
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 text-white shadow-xl shadow-primary-900/20 rounded-2xl active:scale-95 transition-all"
-                                            disabled={loading}
-                                        >
-                                            {loading ? 'MODULATING...' : 'ESTABLISH SECURE LINK'}
-                                        </Button>
-                                    </form>
-                                </TabsContent>
-
-                                <TabsContent value="employee">
-                                    <form onSubmit={(e) => handleLogin(e, 'employee')} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="emp-email">Staff Email</Label>
-                                            <Input
-                                                id="emp-email"
-                                                type="email"
-                                                placeholder="staff@dintask.com"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                className="h-11 rounded-lg"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="emp-password">Access Code</Label>
-                                                <Link to="/superadmin/forgot-password" size="sm" className="text-xs font-bold text-primary-600 hover:text-primary-500 uppercase tracking-tight">
-                                                    Forgot?
-                                                </Link>
-                                            </div>
-                                            <Input
-                                                id="emp-password"
-                                                type="password"
-                                                placeholder="••••••••"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                className="h-11 rounded-lg"
-                                            />
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em] bg-slate-900 hover:bg-black text-white shadow-xl shadow-slate-900/20 rounded-2xl active:scale-95 transition-all"
-                                            disabled={loading}
-                                        >
-                                            {loading ? 'MODULATING...' : 'ESTABLISH SECURE LINK'}
-                                        </Button>
-                                    </form>
-                                </TabsContent>
-                            </Tabs>
-
-                            <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-2">
-                                <span className="text-xs text-slate-500">New Administrator?</span>
-                                <Link to="/superadmin/register" className="text-xs font-bold text-primary-600 hover:text-primary-500 uppercase tracking-tight underline decoration-2 underline-offset-4">
-                                    Initialize Root
+                <TabsContent value="admin">
+                    <form onSubmit={(e) => handleLogin(e, 'admin')} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="admin-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Administrator Protocol ID</Label>
+                            <Input
+                                id="admin-email"
+                                type="email"
+                                placeholder="ROOT@DINTASK.EXE"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between px-1">
+                                <Label htmlFor="admin-password" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Secure Password</Label>
+                                <Link to="/superadmin/forgot-password" size="sm" className="text-[10px] font-black text-primary-600 hover:underline uppercase tracking-wide">
+                                    Lost?
                                 </Link>
                             </div>
-                        </CardContent>
-                    </Card>
+                            <Input
+                                id="admin-password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            className="w-full h-12 text-[10px] font-black uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-xl shadow-primary-600/20 active:scale-95 transition-all mt-2 group"
+                            disabled={loading}
+                        >
+                            {loading ? 'MODULATING...' : 'ESTABLISH SECURE LINK'}
+                        </Button>
+                    </form>
+                </TabsContent>
 
-                    <div className="space-y-4 text-center">
+                <TabsContent value="employee">
+                    <form onSubmit={(e) => handleLogin(e, 'employee')} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="emp-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Staff Access Code</Label>
+                            <Input
+                                id="emp-email"
+                                type="email"
+                                placeholder="STAFF@DINTASK.COM"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between px-1">
+                                <Label htmlFor="emp-password" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Access Key</Label>
+                                <Link to="/superadmin/forgot-password" size="sm" className="text-[10px] font-black text-primary-600 hover:underline uppercase tracking-wide">
+                                    Lost?
+                                </Link>
+                            </div>
+                            <Input
+                                id="emp-password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            className="w-full h-12 text-[10px] font-black uppercase tracking-[0.2em] bg-slate-900 hover:bg-black text-white rounded-xl shadow-xl shadow-slate-900/20 active:scale-95 transition-all mt-2 group"
+                            disabled={loading}
+                        >
+                            {loading ? 'MODULATING...' : 'ESTABLISH SECURE LINK'}
+                        </Button>
+                    </form>
+                </TabsContent>
+            </Tabs>
 
-                        <p className="text-xs text-slate-400 font-mono">
-                            SECURE SYSTEM CONNECTION // 2026 DINTASK
-                        </p>
-                    </div>
-                </div>
+            <div className="text-center mt-10 space-y-4">
+                <div className="h-px w-full bg-slate-100 dark:bg-slate-800" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    New Administrator? <Link to="/superadmin/register" className="text-primary-600 hover:underline ml-1 font-bold">Initialize Root</Link>
+                </p>
+                <p className="text-[8px] font-bold text-slate-300 uppercase tracking-[0.2em]">
+                    SECURE SYSTEM CONNECTION // 2026 DINTASK
+                </p>
             </div>
-        </div>
+        </AuthLayout>
     );
 };
 

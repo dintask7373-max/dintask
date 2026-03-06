@@ -77,9 +77,16 @@ exports.createFollowUp = async (req, res) => {
                 return res.status(403).json({ success: false, error: 'Not authorized to create follow-up for this lead' });
             }
             req.body.salesRepId = req.user.id;
+            req.body.adminId = lead.adminId;
         }
         // If Admin, allow assigning to specific sales rep, else default to self
         else if (req.user.role === 'admin') {
+            const lead = await Lead.findById(leadId);
+            if (!lead) {
+                return res.status(404).json({ success: false, error: 'Lead not found' });
+            }
+            req.body.adminId = lead.adminId || req.user.id;
+
             if (req.body.salesRepId) {
                 // Optional: Validate salesRepId exists and is part of the workspace
             } else {
@@ -87,6 +94,10 @@ exports.createFollowUp = async (req, res) => {
             }
         } else {
             // Fallback for other roles if any
+            const lead = await Lead.findById(leadId);
+            if (lead) {
+                req.body.adminId = lead.adminId;
+            }
             req.body.salesRepId = req.user.id;
         }
 

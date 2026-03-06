@@ -49,17 +49,20 @@ function App() {
         <AppRouter />
         <Toaster richColors position="top-right" />
 
-        {/* Team Member: Subscription Expiry Modal (Forces Logout) */}
-        <SubscriptionExpiredModal
-          isOpen={showTeamExpiredModal}
-          onLogout={handleTeamLogout}
-        />
+        {/* Subscription Modals (Only if authenticated) */}
+        {isAuthenticated && (
+          <>
+            <SubscriptionExpiredModal
+              isOpen={showTeamExpiredModal}
+              onLogout={handleTeamLogout}
+            />
 
-        {/* Admin: Subscription Expiry Modal (Restricts Access) */}
-        <AdminSubscriptionExpiredModal
-          isOpen={showAdminExpiredModal}
-          expiryDate={adminExpiryDate}
-        />
+            <AdminSubscriptionExpiredModal
+              isOpen={showAdminExpiredModal}
+              expiryDate={adminExpiryDate}
+            />
+          </>
+        )}
       </div>
     </BrowserRouter>
   );

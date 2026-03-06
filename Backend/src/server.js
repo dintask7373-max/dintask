@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 5000;
 
 // Initialize Cron Jobs
 initSubscriptionCron();
+console.log('Starting Reminder Service...');
 initReminderCron();
 
 const server = app.listen(PORT, () => {

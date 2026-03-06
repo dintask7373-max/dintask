@@ -99,9 +99,9 @@ const TaskSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  reminderSent: {
-    type: Boolean,
-    default: false
+  sentReminders: {
+    type: [String],
+    default: []
   }
 }, { timestamps: true });
 

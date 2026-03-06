@@ -61,6 +61,12 @@ const useSubscriptionMonitor = () => {
     // Check immediately on mount
     checkSubscription();
 
+    // Reset modals on logout
+    if (!role || !user) {
+      setShowTeamExpiredModal(false);
+      setShowAdminExpiredModal(false);
+    }
+
     // For team members: check every 5 minutes
     // For admins: check every 2 minutes (more frequent)
     const interval = role === 'admin' ? 2 * 60 * 1000 : 5 * 60 * 1000;

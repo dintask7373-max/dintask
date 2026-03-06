@@ -3,93 +3,132 @@ const Task = require('../models/Task');
 const FollowUp = require('../models/FollowUp');
 const Notification = require('../models/Notification');
 
-const sendDeadlineReminders = async () => {
-    console.log('Running automated deadline reminders check...');
+const REMINDER_STAGES = [
+    { label: '2_days', hours: 48 },
+    { label: '1_day', hours: 24 },
+    { label: 'same_day', hours: 12 }, // Used to trigger if on same day
+    { label: '1_hour', minutes: 60 },
+    { label: '5_mins', minutes: 5 }
+];
+
+const checkAndSendReminders = async () => {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        console.log(`[Reminder Heartbeat] Cron active at ${now.toLocaleString()}`);
 
-        const twoDaysFromNow = new Date(today);
-        twoDaysFromNow.setDate(today.getDate() + 2);
-
-        const twoDaysRangeStart = new Date(twoDaysFromNow);
-        const twoDaysRangeEnd = new Date(twoDaysFromNow);
-        twoDaysRangeEnd.setHours(23, 59, 59, 999);
-
-        // 1. Task Reminders
-        const tasksToRemind = await Task.find({
-            deadline: {
-                $gte: twoDaysRangeStart,
-                $lte: twoDaysRangeEnd
-            },
+        // 1. Process Tasks
+        const tasks = await Task.find({
             status: { $nin: ['completed', 'overdue'] },
-            reminderSent: { $ne: true }
+            deadline: { $gt: oneHourAgo }
         });
 
-        console.log(`Found ${tasksToRemind.length} tasks due in 2 days.`);
-
-        for (const task of tasksToRemind) {
-            const notificationPromises = task.assignedTo.map(userId =>
-                Notification.create({
-                    recipient: userId,
-                    sender: task.assignedBy, // Could be Admin or Manager
-                    adminId: task.adminId,
-                    type: 'task_assigned', // Reusing existing type for simplicity or create 'task_reminder'
-                    category: 'task',
-                    title: 'Upcoming Task Deadline',
-                    message: `Reminder: The task "${task.title}" is due in 2 days.`,
-                    link: task.assignedToModel === 'Manager' ? '/manager/my-tasks' : `/employee/tasks/${task._id}`
-                })
-            );
-
-            await Promise.all(notificationPromises);
-            task.reminderSent = true;
-            await task.save();
+        if (tasks.length > 0) {
+            console.log(`[Reminder] Processing ${tasks.length} tasks...`);
+            await Promise.all(tasks.map(task => processItemReminders(task, 'Task').catch(e => console.error(`Error in task ${task._id}:`, e))));
         }
 
-        // 2. Sales Follow-up Reminders
-        const followUpsToRemind = await FollowUp.find({
-            scheduledAt: {
-                $gte: twoDaysRangeStart,
-                $lte: twoDaysRangeEnd
-            },
+        // 2. Process Follow-ups
+        const followUps = await FollowUp.find({
             status: 'Scheduled',
-            reminderSent: { $ne: true }
+            scheduledAt: { $gt: oneHourAgo }
         });
 
-        console.log(`Found ${followUpsToRemind.length} sales follow-ups due in 2 days.`);
-
-        for (const followUp of followUpsToRemind) {
-            await Notification.create({
-                recipient: followUp.salesRepId,
-                sender: followUp.adminId, // Typically Admin or System
-                adminId: followUp.adminId,
-                type: 'general',
-                category: 'task',
-                title: 'Upcoming Sales Follow-up',
-                message: `Reminder: You have a ${followUp.type} follow-up scheduled for 2 days from now.`,
-                link: '/sales/follow-ups'
-            });
-
-            followUp.reminderSent = true;
-            await followUp.save();
+        if (followUps.length > 0) {
+            console.log(`[Reminder] Processing ${followUps.length} follow-ups...`);
+            await Promise.all(followUps.map(fu => processItemReminders(fu, 'FollowUp').catch(e => console.error(`Error in follow-up ${fu._id}:`, e))));
         }
 
-        console.log('Automated reminders check completed.');
     } catch (err) {
-        console.error('Error in deadline reminders cron job:', err);
+        console.error('Error in reminders check:', err);
+    }
+};
+
+const processItemReminders = async (item, modelName) => {
+    const now = new Date();
+    const deadline = modelName === 'Task' ? item.deadline : item.scheduledAt;
+    const diffMs = deadline - now;
+    const diffMins = diffMs / (1000 * 60);
+
+    // Calculate Stage Eligibility
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deadlineDay = new Date(deadline);
+    deadlineDay.setHours(0, 0, 0, 0);
+    const daysDiff = Math.round((deadlineDay - today) / (1000 * 60 * 60 * 24));
+
+    const eligibleStages = [];
+
+    // 1. Check Day-based stages
+    if (daysDiff === 2) eligibleStages.push('2_days');
+    if (daysDiff === 1) eligibleStages.push('1_day');
+    if (daysDiff <= 0) eligibleStages.push('same_day'); // Includes passed items for today
+
+    // 2. Check Minute-based stages (Higher precision)
+    if (diffMins <= 60 && diffMins > 0) eligibleStages.push('1_hour');
+    if (diffMins <= 5 && diffMins > 0) eligibleStages.push('5_mins');
+
+    // 3. Trigger any that haven't been sent
+    let modified = false;
+    for (const stage of eligibleStages) {
+        if (!item.sentReminders.includes(stage)) {
+            // Check if we should really send same_day if it's already very close to deadline
+            // (e.g. if item created at 17:33, send both same_day and 1_hour immediately)
+            console.log(`[Reminder Stage Match] ${modelName} ${item._id} matches stage ${stage} (DiffMins: ${diffMins.toFixed(1)}, DaysDiff: ${daysDiff})`);
+
+            await triggerNotification(item, modelName, stage);
+            item.sentReminders.push(stage);
+            modified = true;
+        }
+    }
+
+    if (modified) {
+        item.markModified('sentReminders');
+        await item.save();
+    }
+};
+
+const triggerNotification = async (item, modelName, stage) => {
+    try {
+        const recipients = modelName === 'Task' ? item.assignedTo : [item.salesRepId];
+        const sender = modelName === 'Task' ? item.assignedBy : item.adminId;
+        const urgency = (stage === '5_mins' || stage === '1_hour') ? 'URGENT: ' : '';
+        const title = `${urgency}Reminder for ${modelName}`;
+
+        const timeText = stage.replace('_', ' ');
+        const message = `Reminder (${timeText}): "${item.title || (modelName === 'FollowUp' ? item.type + ' Follow-up' : '')}" is scheduled for ${new Date(modelName === 'Task' ? item.deadline : item.scheduledAt).toLocaleString()}.`;
+
+        const link = modelName === 'Task'
+            ? (item.assignedToModel === 'Manager' ? '/manager/my-tasks' : `/employee/tasks/${item._id}`)
+            : '/sales/deals';
+
+        const notifPromises = recipients.map(recipient =>
+            Notification.create({
+                recipient,
+                sender,
+                adminId: item.adminId,
+                type: modelName === 'Task' ? 'task_assigned' : 'general',
+                category: 'task',
+                title,
+                message,
+                link
+            })
+        );
+
+        await Promise.all(notifPromises);
+        console.log(`[Reminder] Successfully sent ${stage} reminder for ${modelName} ID: ${item._id}`);
+    } catch (e) {
+        console.error(`[Reminder Error] Failed to trigger notification for ${modelName} ${item._id}:`, e.message);
     }
 };
 
 const initReminderCron = () => {
-    // Run every day at 00:01 (1 minute past midnight) to avoid clash with subscription cron
-    cron.schedule('1 0 * * *', () => {
-        sendDeadlineReminders();
+    console.log('[Reminder Cron] Initializing multi-stage reminder system...');
+    // Run every minute
+    cron.schedule('* * * * *', () => {
+        checkAndSendReminders();
     });
-
-    // For debugging/initial run when server starts (Optional)
-    // sendDeadlineReminders();
 };
 
 module.exports = initReminderCron;
