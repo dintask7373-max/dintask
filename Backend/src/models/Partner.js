@@ -53,7 +53,11 @@ const PartnerSchema = new mongoose.Schema({
 
   bankDetails: {
     accountHolderName: String,
-    accountNumber: String,
+    accountNumber: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
     ifscCode: String,
     bankName: String,
     branchName: String

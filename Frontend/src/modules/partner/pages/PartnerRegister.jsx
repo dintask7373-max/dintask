@@ -69,12 +69,129 @@ const PartnerRegister = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleNext = () => {
-        if (step === 1 && !partnerType) {
-            toast.error('Please select a registration type');
-            return;
+    const validateEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const validateStep = () => {
+        if (step === 1) {
+            if (!partnerType) {
+                toast.error('Please select a registration type');
+                return false;
+            }
         }
-        setStep(step + 1);
+
+        if (step === 2) {
+            if (partnerType === 'Individual') {
+                if (!formData.fullName.trim()) {
+                    toast.error('Full Name is required');
+                    return false;
+                }
+                if (!/^[a-zA-Z\s]+$/.test(formData.fullName)) {
+                    toast.error('Full Name should only contain letters and spaces');
+                    return false;
+                }
+                if (!formData.panNumber.trim()) {
+                    toast.error('PAN Number is required');
+                    return false;
+                }
+                if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.panNumber)) {
+                    toast.error('Invalid PAN Number format (e.g. ABCDE1234F)');
+                    return false;
+                }
+            } else {
+                if (!formData.companyName.trim()) {
+                    toast.error('Company Name is required');
+                    return false;
+                }
+                if (!formData.companyPan.trim()) {
+                    toast.error('Company PAN is required');
+                    return false;
+                }
+                if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.companyPan)) {
+                    toast.error('Invalid Company PAN format');
+                    return false;
+                }
+                if (!formData.authorizedPersonName.trim()) {
+                    toast.error('Authorized Person Name is required');
+                    return false;
+                }
+                if (!/^[a-zA-Z\s]+$/.test(formData.authorizedPersonName)) {
+                    toast.error('Authorized Person Name should only contain letters and spaces');
+                    return false;
+                }
+            }
+            if (!formData.address.trim()) {
+                toast.error('Address is required');
+                return false;
+            }
+        }
+
+        if (step === 3) {
+            if (!formData.email.trim() || !validateEmail(formData.email)) {
+                toast.error('Please enter a valid email address');
+                return false;
+            }
+            if (!formData.phone.trim() || !/^\d{10}$/.test(formData.phone)) {
+                toast.error('Phone number must be exactly 10 digits');
+                return false;
+            }
+            if (!formData.password || formData.password.length < 6) {
+                toast.error('Password must be at least 6 characters');
+                return false;
+            }
+            if (formData.password !== formData.confirmPassword) {
+                toast.error('Passwords do not match');
+                return false;
+            }
+
+            // Bank Details Validation
+            if (!formData.accountHolderName.trim()) {
+                toast.error('Account Holder Name is required');
+                return false;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(formData.accountHolderName)) {
+                toast.error('Account Holder Name should only contain letters and spaces');
+                return false;
+            }
+            if (!formData.accountNumber.trim()) {
+                toast.error('Account Number is required');
+                return false;
+            }
+            if (!/^\d{9,18}$/.test(formData.accountNumber)) {
+                toast.error('Invalid Account Number (9-18 digits)');
+                return false;
+            }
+            if (!formData.ifscCode.trim()) {
+                toast.error('IFSC Code is required');
+                return false;
+            }
+            if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifscCode)) {
+                toast.error('Invalid IFSC Code format (e.g. SBIN0001234)');
+                return false;
+            }
+            if (!formData.bankName.trim()) {
+                toast.error('Bank Name is required');
+                return false;
+            }
+        }
+
+        if (step === 4) {
+            const hasPan = formData.documents.find(d => d.type === 'PAN Card');
+            const hasId = formData.documents.find(d => d.type === 'Aadhar/Identity');
+            if (!hasPan || !hasId) {
+                toast.error('Please upload all required documents');
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    const handleNext = () => {
+        if (validateStep()) {
+            setStep(step + 1);
+        }
     };
 
     const handleBack = () => {
@@ -210,11 +327,27 @@ const PartnerRegister = () => {
                     <>
                         <div className="space-y-2">
                             <Label>Full Name</Label>
-                            <Input name="fullName" value={formData.fullName} onChange={handleChange} placeholder="As per PAN" />
+                            <Input
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={(e) => {
+                                    if (/^[a-zA-Z\s]*$/.test(e.target.value)) handleChange(e);
+                                }}
+                                placeholder="As per PAN"
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label>PAN Number</Label>
-                            <Input name="panNumber" value={formData.panNumber} onChange={handleChange} placeholder="ABCDE1234F" />
+                            <Input
+                                name="panNumber"
+                                value={formData.panNumber}
+                                onChange={(e) => {
+                                    e.target.value = e.target.value.toUpperCase();
+                                    handleChange(e);
+                                }}
+                                maxLength={10}
+                                placeholder="ABCDE1234F"
+                            />
                         </div>
                     </>
                 ) : (
@@ -229,11 +362,27 @@ const PartnerRegister = () => {
                         </div>
                         <div className="space-y-2">
                             <Label>Company PAN</Label>
-                            <Input name="companyPan" value={formData.companyPan} onChange={handleChange} placeholder="ABCDE1234F" />
+                            <Input
+                                name="companyPan"
+                                value={formData.companyPan}
+                                onChange={(e) => {
+                                    e.target.value = e.target.value.toUpperCase();
+                                    handleChange(e);
+                                }}
+                                maxLength={10}
+                                placeholder="ABCDE1234F"
+                            />
                         </div>
                         <div className="space-y-2 col-span-2">
                             <Label>Authorized Person Name</Label>
-                            <Input name="authorizedPersonName" value={formData.authorizedPersonName} onChange={handleChange} placeholder="Full Name" />
+                            <Input
+                                name="authorizedPersonName"
+                                value={formData.authorizedPersonName}
+                                onChange={(e) => {
+                                    if (/^[a-zA-Z\s]*$/.test(e.target.value)) handleChange(e);
+                                }}
+                                placeholder="Full Name"
+                            />
                         </div>
                     </>
                 )}
@@ -268,7 +417,15 @@ const PartnerRegister = () => {
                 </div>
                 <div className="space-y-2">
                     <Label>Phone Number</Label>
-                    <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="+91 00000 00000" />
+                    <Input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) handleChange(e);
+                        }}
+                        maxLength={10}
+                        placeholder="0000000000"
+                    />
                 </div>
                 <div className="space-y-2">
                     <Label>Password</Label>
@@ -319,15 +476,38 @@ const PartnerRegister = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                         <Label className="text-[10px] uppercase">Account Holder Name</Label>
-                        <Input name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} className="h-9 text-xs" />
+                        <Input
+                            name="accountHolderName"
+                            value={formData.accountHolderName}
+                            onChange={(e) => {
+                                if (/^[a-zA-Z\s]*$/.test(e.target.value)) handleChange(e);
+                            }}
+                            className="h-9 text-xs"
+                        />
                     </div>
                     <div className="space-y-1">
                         <Label className="text-[10px] uppercase">Account Number</Label>
-                        <Input name="accountNumber" value={formData.accountNumber} onChange={handleChange} className="h-9 text-xs" />
+                        <Input
+                            name="accountNumber"
+                            value={formData.accountNumber}
+                            onChange={(e) => {
+                                if (/^\d*$/.test(e.target.value)) handleChange(e);
+                            }}
+                            className="h-9 text-xs"
+                        />
                     </div>
                     <div className="space-y-1">
                         <Label className="text-[10px] uppercase">IFSC Code</Label>
-                        <Input name="ifscCode" value={formData.ifscCode} onChange={handleChange} className="h-9 text-xs" />
+                        <Input
+                            name="ifscCode"
+                            value={formData.ifscCode}
+                            onChange={(e) => {
+                                e.target.value = e.target.value.toUpperCase();
+                                handleChange(e);
+                            }}
+                            maxLength={11}
+                            className="h-9 text-xs"
+                        />
                     </div>
                     <div className="space-y-1">
                         <Label className="text-[10px] uppercase">Bank Name</Label>

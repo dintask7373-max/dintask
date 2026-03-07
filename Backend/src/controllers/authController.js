@@ -139,6 +139,31 @@ exports.register = async (req, res, next) => {
         return next(new ErrorResponse('Please provide partner type (Individual/Company)', 400));
       }
 
+      // Mandatory fields check
+      if (partnerType === 'Individual') {
+        if (!partnerData.fullName || !partnerData.panNumber) {
+          return next(new ErrorResponse('Full Name and PAN Number are required for individual partners', 400));
+        }
+      } else {
+        if (!partnerData.companyName || !partnerData.companyPan || !partnerData.authorizedPersonName) {
+          return next(new ErrorResponse('Company Name, PAN and Authorized Person Name are required for company partners', 400));
+        }
+      }
+
+      if (!partnerData.address) {
+        return next(new ErrorResponse('Address is required', 400));
+      }
+
+      if (!partnerData.accountNumber || !partnerData.ifscCode || !partnerData.accountHolderName) {
+        return next(new ErrorResponse('Bank details (Account Holder, Number, IFSC) are required', 400));
+      }
+
+      // Check if bank account number already exists
+      const accountExists = await Partner.findOne({ 'bankDetails.accountNumber': partnerData.accountNumber });
+      if (accountExists) {
+        return next(new ErrorResponse('Bank account number already registered with another partner', 400));
+      }
+
       // Extract and nest bank details
       const bankDetails = {
         accountHolderName: partnerData.accountHolderName,
@@ -152,7 +177,7 @@ exports.register = async (req, res, next) => {
         partnerType,
         ...partnerData,
         bankDetails,
-        name: partnerType === 'Individual' ? (partnerData.fullName || partnerData.name) : (partnerData.companyName || partnerData.name),
+        name: partnerType === 'Individual' ? (partnerData.fullName || req.body.name) : (partnerData.companyName || req.body.name),
         status: 'pending' // Wait for admin approval
       };
     }
