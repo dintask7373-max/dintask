@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
-import { Building2, UserPlus, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
+import { Building2, UserPlus, ShieldCheck, ArrowLeft, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
@@ -21,6 +21,9 @@ const AdminRegister = () => {
         password: '',
         confirmPassword: ''
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [searchParams] = useSearchParams();
     const referralCode = searchParams.get('ref') || localStorage.getItem('referralCode') || '';
@@ -152,25 +155,43 @@ const AdminRegister = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="password">Password</Label>
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            placeholder="••••••••"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            className="h-11 rounded-lg"
-                                        />
+                                        <div className="relative group/pass">
+                                            <Input
+                                                id="password"
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder="••••••••"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                className="h-11 rounded-lg pr-10"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                                            >
+                                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="confirmPassword">Confirm</Label>
-                                        <Input
-                                            id="confirmPassword"
-                                            type="password"
-                                            placeholder="••••••••"
-                                            value={formData.confirmPassword}
-                                            onChange={handleChange}
-                                            className="h-11 rounded-lg"
-                                        />
+                                        <div className="relative group/pass">
+                                            <Input
+                                                id="confirmPassword"
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                placeholder="••••••••"
+                                                value={formData.confirmPassword}
+                                                onChange={handleChange}
+                                                className="h-11 rounded-lg pr-10"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                                            >
+                                                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 

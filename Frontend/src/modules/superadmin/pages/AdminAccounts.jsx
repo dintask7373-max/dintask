@@ -143,6 +143,9 @@ const AdminAccounts = () => {
     };
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingAdmin, setEditingAdmin] = useState(null);
+
     const [newAdmin, setNewAdmin] = useState({
         name: '',
         owner: '',
@@ -151,6 +154,12 @@ const AdminAccounts = () => {
         planId: '',
         partnerId: '',
         status: 'active'
+    });
+
+    const [editFormData, setEditFormData] = useState({
+        companyName: '',
+        name: '',
+        email: ''
     });
 
 
@@ -182,9 +191,9 @@ const AdminAccounts = () => {
             return;
         }
 
-        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(newAdmin.email)) {
-            toast.error("Please provide a valid email address");
+            toast.error("Please provide a valid enterprise email address format");
             return;
         }
 
@@ -205,6 +214,40 @@ const AdminAccounts = () => {
         } else {
             toast.error(result.error || "Failed to provision account");
         }
+    };
+
+    const handleEditAdmin = async (e) => {
+        e.preventDefault();
+
+        if (!editFormData.companyName || !editFormData.name || !editFormData.email) {
+            toast.error("All fields are required");
+            return;
+        }
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(editFormData.email)) {
+            toast.error("Please provide a valid email format");
+            return;
+        }
+
+        const success = await useSuperAdminStore.getState().updateAdminDetails(editingAdmin._id, editFormData);
+        if (success) {
+            toast.success("Account details updated successfully");
+            setIsEditModalOpen(false);
+            setEditingAdmin(null);
+        } else {
+            toast.error("Failed to update account details");
+        }
+    };
+
+    const openEditModal = (admin) => {
+        setEditingAdmin(admin);
+        setEditFormData({
+            companyName: admin.companyName,
+            name: admin.name,
+            email: admin.email
+        });
+        setIsEditModalOpen(true);
     };
 
     return (
@@ -256,7 +299,11 @@ const AdminAccounts = () => {
                                         placeholder="Full name..."
                                         className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
                                         value={newAdmin.owner}
-                                        onChange={(e) => setNewAdmin({ ...newAdmin, owner: e.target.value })}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+                                            setNewAdmin({ ...newAdmin, owner: sanitizedValue });
+                                        }}
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -498,7 +545,12 @@ const AdminAccounts = () => {
                                                                     <MoreVertical size={18} />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-52 rounded-2xl p-2">
+                                                            <DropdownMenuContent align="end" side="bottom" sideOffset={8} avoidCollisions={false} className="w-52 rounded-2xl p-2 shadow-2xl bg-white dark:bg-slate-900 border-none font-sans">
+                                                                <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 px-2 py-1.5">Administrative</DropdownMenuLabel>
+                                                                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-primary-600 focus:text-primary-700 focus:bg-primary-50 dark:focus:bg-primary-900/10" onClick={() => openEditModal(adm)}>
+                                                                    <Eye size={16} /> Edit Details
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator className="my-2" />
 
                                                                 <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 px-2 py-1.5">Set Status</DropdownMenuLabel>
                                                                 <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5 text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 dark:focus:bg-emerald-900/10" onClick={() => handleStatusChange(adm._id, 'active')}>
@@ -682,6 +734,59 @@ const AdminAccounts = () => {
                     </div>
                 </motion.div>
             </div>
+
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-8 border-none bg-white dark:bg-slate-900 shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase leading-tight">
+                            Edit <span className="text-primary-600">Admin Details</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Update company and owner information
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEditAdmin} className="space-y-5 pt-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Company Name</Label>
+                            <Input
+                                placeholder="Enter company name..."
+                                className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                value={editFormData.companyName}
+                                onChange={(e) => setEditFormData({ ...editFormData, companyName: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
+                            <Input
+                                placeholder="Full name..."
+                                className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                value={editFormData.name}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+                                    setEditFormData({ ...editFormData, name: sanitizedValue });
+                                }}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</Label>
+                            <Input
+                                type="email"
+                                placeholder="admin@company.com"
+                                className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                value={editFormData.email}
+                                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="pt-2">
+                            <Button type="submit" className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all">
+                                SAVE CHANGES <CheckCircle2 className="ml-2" size={16} />
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </motion.div >
     );
 };

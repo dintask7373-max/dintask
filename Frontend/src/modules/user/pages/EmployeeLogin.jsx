@@ -23,6 +23,20 @@ const EmployeeLogin = () => {
 
     const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
+ 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('status') === 'suspended') {
+            toast.error("Account suspended by Superadmin", {
+                duration: 6000
+            });
+        }
+    }, []);
+
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -30,6 +44,11 @@ const EmployeeLogin = () => {
         if (loginMethod === 'password') {
             if (!email || !password) {
                 toast.error('Tactical credentials required');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                toast.error('Please enter a valid personnel email');
                 return;
             }
 

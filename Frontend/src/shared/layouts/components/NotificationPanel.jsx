@@ -129,21 +129,31 @@ const NotificationPanel = ({ isOpen, onClose }) => {
                             </div>
                             <div className="flex items-center gap-1">
                                 {notifications.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={cn(
-                                            "h-8 w-8 rounded-xl transition-all",
-                                            isSelectionMode ? "bg-primary-50 text-primary-600" : "text-slate-400 hover:text-primary-600"
-                                        )}
-                                        onClick={() => {
-                                            setIsSelectionMode(!isSelectionMode);
-                                            setSelectedIds([]);
-                                        }}
-                                        title="Selection Mode"
-                                    >
-                                        <History size={16} />
-                                    </Button>
+                                    <>
+                                        <Button
+                                            variant="ghost"
+                                            className="h-8 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/10"
+                                            onClick={markAllAsRead}
+                                        >
+                                            <CheckCircle2 size={14} className="mr-1.5" />
+                                            Clear All
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn(
+                                                "h-8 w-8 rounded-xl transition-all",
+                                                isSelectionMode ? "bg-primary-50 text-primary-600" : "text-slate-400 hover:text-primary-600"
+                                            )}
+                                            onClick={() => {
+                                                setIsSelectionMode(!isSelectionMode);
+                                                setSelectedIds([]);
+                                            }}
+                                            title="Selection Mode"
+                                        >
+                                            <History size={16} />
+                                        </Button>
+                                    </>
                                 )}
                                 <Button
                                     variant="ghost"
@@ -231,7 +241,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
                                                                 {getCategory(notification.type)}
                                                             </span>
                                                             <span className="text-[8px] font-bold text-slate-400 tabular-nums">
-                                                                {format(new Date(notification.createdAt), 'HH:mm')}
+                                                                {format(new Date(notification.createdAt), 'dd MMM, HH:mm')}
                                                             </span>
                                                         </div>
                                                         <h4 className={cn(

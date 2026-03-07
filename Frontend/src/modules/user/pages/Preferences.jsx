@@ -26,6 +26,7 @@ const Preferences = () => {
         const isDark = !settings.darkMode;
         setSettings({ ...settings, darkMode: isDark });
         document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
         toast.info(`${isDark ? 'Dark' : 'Light'} mode enabled`);
     };
 

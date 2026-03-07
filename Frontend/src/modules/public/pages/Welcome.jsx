@@ -27,7 +27,18 @@ const Welcome = () => {
 
     useEffect(() => {
         fetchSystemIntel();
-    }, []);
+
+        // Check for suspension status
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('status') === 'suspended') {
+            import('sonner').then(({ toast }) => {
+                toast.error("Account suspended by Superadmin", {
+                    description: "Please contact support for further information.",
+                    duration: 10000
+                });
+            });
+        }
+    }, [fetchSystemIntel]);
 
     const baseModuleDetails = [
         {

@@ -367,7 +367,7 @@ const InquiryActions = ({ inq, updateStatus, onView, fullWidth = false }) => (
                     <MoreHorizontal size={12} />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 font-sans">
+            <DropdownMenuContent align="end" side="bottom" sideOffset={8} avoidCollisions={false} className="w-56 font-sans rounded-2xl p-2 shadow-2xl border-none bg-white dark:bg-slate-900">
                 <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => updateStatus(inq._id || inq.id, 'replied')} className="flex items-center gap-2 py-2.5">

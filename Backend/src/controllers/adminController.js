@@ -877,6 +877,19 @@ exports.approveJoinRequest = async (req, res, next) => {
       return next(new ErrorResponse('Not authorized to approve this request', 403));
     }
 
+    // [MODIFIED] Ensure user doesn't already exist with another role
+    const email = user.email;
+    const [existingAdmin, existingManager, existingEmployee, existingSales] = await Promise.all([
+      Admin.findOne({ email }),
+      Manager.findOne({ email, status: 'active' }),
+      Employee.findOne({ email, status: 'active' }),
+      SalesExecutive.findOne({ email, status: 'active' })
+    ]);
+
+    if (existingAdmin || existingManager || existingEmployee || existingSales) {
+      return next(new ErrorResponse('User already exists in the system with another role', 400));
+    }
+
     // Check plan limits before approval
     const limitCheck = await checkUserLimit(req.user.id);
     if (!limitCheck.allowed) {
@@ -982,8 +995,17 @@ exports.addTeamMember = async (req, res, next) => {
 
     if (!models[role]) return next(new ErrorResponse('Invalid role', 400));
 
-    const userExists = await models[role].findOne({ email });
-    if (userExists) return next(new ErrorResponse('User already exists', 400));
+    // Cross-collection email check
+    const [managerExists, employeeExists, salesExists, adminExists] = await Promise.all([
+      Manager.findOne({ email }),
+      Employee.findOne({ email }),
+      SalesExecutive.findOne({ email }),
+      Admin.findOne({ email })
+    ]);
+
+    if (managerExists || employeeExists || salesExists || adminExists) {
+      return next(new ErrorResponse('User with this email already exists in the system', 400));
+    }
 
     const user = await models[role].create({
       name,

@@ -19,7 +19,7 @@ import { cn } from '@/shared/utils/cn';
 const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
     const { user, logout, role } = useAuthStore();
     const { unreadCount, fetchNotifications } = useNotificationStore();
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -28,8 +28,10 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
     }, [fetchNotifications]);
 
     const toggleDarkMode = () => {
-        setIsDarkMode(!isDarkMode);
+        const newMode = !isDarkMode;
+        setIsDarkMode(newMode);
         document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', newMode ? 'dark' : 'light');
     };
 
     const handleLogout = () => {
@@ -104,11 +106,11 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
                         <DropdownMenuContent align="end" className="w-56 mt-2">
                             <DropdownMenuLabel>My Account</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer">
+                            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate(`/${role}/settings`)}>
                                 <UserIcon className="mr-2 h-4 w-4" />
                                 <span>Profile Settings</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
+                            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate(`/${role}/notifications`)}>
                                 <Bell className="mr-2 h-4 w-4" />
                                 <span>Notifications</span>
                             </DropdownMenuItem>

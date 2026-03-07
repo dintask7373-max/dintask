@@ -46,6 +46,33 @@ const apiRequest = async (endpoint, options = {}) => {
         }));
       }
 
+      if (data.isSuspended) {
+        let role = data.role || '';
+        
+        // Fallback to storage if not in response
+        if (!role) {
+          try {
+            const storage = JSON.parse(localStorage.getItem('dintask-auth-storage'));
+            role = storage?.state?.user?.role || '';
+          } catch (e) {
+            console.error('Error getting role from storage:', e);
+          }
+        }
+
+        const getLoginPath = (r) => {
+          switch(r) {
+            case 'admin': return '/admin/login';
+            case 'manager': return '/manager/login';
+            case 'sales': return '/sales/login';
+            case 'partner': return '/partner/login';
+            default: return '/employee/login';
+          }
+        };
+
+        localStorage.removeItem('dintask-auth-storage');
+        window.location.href = `${getLoginPath(role)}?status=suspended`;
+      }
+
       throw new Error(data.error || data.message || 'Something went wrong');
     }
 

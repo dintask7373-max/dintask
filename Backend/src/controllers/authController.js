@@ -363,6 +363,26 @@ exports.login = async (req, res, next) => {
           expiryDate: admin.subscriptionExpiry
         });
       }
+
+      // Check if admin/company is suspended
+      if (admin.subscriptionStatus === 'suspended') {
+        return res.status(403).json({
+          success: false,
+          isSuspended: true,
+          role: user.role === 'sales_executive' ? 'sales' : user.role,
+          error: 'Account suspended by Superadmin'
+        });
+      }
+    }
+
+    // Check if user is an Admin and if they are suspended
+    if (user.role === 'admin' && user.subscriptionStatus === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        isSuspended: true,
+        role: 'admin',
+        error: 'Account suspended by Superadmin'
+      });
     }
 
     // DO NOT overwrite account status with 'active' session status

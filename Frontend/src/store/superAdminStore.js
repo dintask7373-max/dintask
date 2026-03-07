@@ -625,6 +625,22 @@ const useSuperAdminStore = create(
                 return false;
             },
 
+            updateAdminDetails: async (id, adminData) => {
+                try {
+                    const response = await apiRequest(`/superadmin/admins/${id}`, {
+                        method: 'PUT',
+                        body: adminData
+                    });
+                    if (response.success) {
+                        get().fetchAdmins();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update admin details:', err);
+                }
+                return false;
+            },
+
             deleteAdmin: async (id) => {
                 try {
                     const response = await apiRequest(`/superadmin/admins/${id}`, { method: 'DELETE' });

@@ -276,7 +276,7 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
 
                 <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto no-scrollbar py-2">
                     {navItems.map((item) => {
-                        const isSettingsItem = (isAdmin || isSuperAdmin) && item.name === 'Settings';
+                        const isSettingsItem = isAdmin && item.name === 'Settings';
                         const badgeCount = item.name === 'Inquiries' ? newInquiriesCount : item.badge;
 
                         if (isSettingsItem) {
@@ -287,7 +287,9 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
                                         onClick={() => setIsSettingsOpen(prev => !prev)}
                                         className={cn(
                                             "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold group w-full text-left",
-                                            "text-slate-500 hover:bg-slate-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-slate-900"
+                                            (role === 'sales' || isSuperAdmin || isAdmin || isManager)
+                                                ? "text-blue-50 hover:text-white hover:bg-white/10"
+                                                : "text-slate-500 hover:bg-slate-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-slate-900"
                                         )}
                                     >
                                         <item.icon size={20} className={cn(

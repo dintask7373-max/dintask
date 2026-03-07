@@ -12,6 +12,10 @@ const sendEmail = require('../utils/sendEmail');
 const Plan = require('../models/Plan');
 const Payment = require('../models/Payment');
 const Notification = require('../models/Notification');
+const Lead = require('../models/Lead');
+const Project = require('../models/Project');
+const Task = require('../models/Task');
+const Team = require('../models/Team');
 
 // @desc    Get system stats
 // @route   GET /api/v1/superadmin/stats
@@ -130,6 +134,8 @@ exports.getAdmins = async (req, res, next) => {
     const admins = result[0].data;
     const total = result[0].metadata[0]?.total || 0;
 
+    console.log('Admins fetched:', admins.map(a => ({ id: a._id, email: a.email, company: a.companyName })));
+
     res.status(200).json({
       success: true,
       count: admins.length,
@@ -225,6 +231,7 @@ exports.createAdmin = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.updateAdmin = async (req, res, next) => {
   try {
+    console.log('Update Admin Request:', { id: req.params.id, body: req.body });
     const { companyName, name, email, subscriptionStatus } = req.body;
 
     const admin = await Admin.findByIdAndUpdate(
@@ -239,23 +246,14 @@ exports.updateAdmin = async (req, res, next) => {
     );
 
     if (!admin) {
+      console.error(`[Admin Update] NOT FOUND: id ${req.params.id}`);
       return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
     }
 
-    // Notify Admin of Status Change
-    if (subscriptionStatus && subscriptionStatus !== admin.subscriptionStatus) {
-      try {
-        await Notification.create({
-          recipient: admin._id,
-          sender: req.user.id,
-          type: 'general',
-          title: 'Account Status Update',
-          message: `Your account status has been updated to: ${subscriptionStatus}`,
-          link: '/billing'
-        });
-      } catch (error) {
-        console.error('Notification Error:', error);
-      }
+    // Force logout if suspended
+    if (subscriptionStatus === 'suspended' && global.io) {
+      console.log(`[Socket] Emitting forceLogout for company: ${req.params.id}`);
+      global.io.emit('forceLogout', { adminId: req.params.id.toString() });
     }
 
     res.status(200).json({
@@ -263,6 +261,7 @@ exports.updateAdmin = async (req, res, next) => {
       data: admin
     });
   } catch (err) {
+    console.error('Update Admin Error:', err);
     next(err);
   }
 };
@@ -272,21 +271,51 @@ exports.updateAdmin = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.deleteAdmin = async (req, res, next) => {
   try {
-    const admin = await Admin.findById(req.params.id);
+    const adminId = req.params.id;
+    const admin = await Admin.findById(adminId);
 
     if (!admin) {
-      return next(new ErrorResponse(`Admin not found with id of ${req.params.id}`, 404));
+      return next(new ErrorResponse(`Admin not found with id of ${adminId}`, 404));
     }
 
-    // Optionally: Delete related managers, employees, etc. 
-    // For now just delete the admin account
-    await Admin.findByIdAndDelete(req.params.id);
+    // 1. Force logout all users associated with this admin via Socket.io
+    if (global.io) {
+      console.log(`[Socket] Emitting forceLogout for cascading deletion of company: ${adminId}`);
+      global.io.emit('forceLogout', { adminId: adminId.toString() });
+    }
+
+    // 2. Cascading deletion across all related collections
+    // We collect all user IDs first to clean up LoginActivity records
+    const [managerIds, employeeIds, salesIds] = await Promise.all([
+      Manager.find({ adminId }).distinct('_id'),
+      Employee.find({ adminId }).distinct('_id'),
+      SalesExecutive.find({ adminId }).distinct('_id')
+    ]);
+
+    const allUserIds = [adminId, ...managerIds, ...employeeIds, ...salesIds];
+
+    // We use Promise.all to delete data from all related tables in parallel
+    await Promise.all([
+      Manager.deleteMany({ adminId }),
+      Employee.deleteMany({ adminId }),
+      SalesExecutive.deleteMany({ adminId }),
+      Notification.deleteMany({ adminId }),
+      Lead.deleteMany({ adminId }),
+      Project.deleteMany({ adminId }),
+      Task.deleteMany({ adminId }),
+      Team.deleteMany({ adminId }),
+      Payment.deleteMany({ adminId }),
+      LoginActivity.deleteMany({ userId: { $in: allUserIds } }),
+      Admin.findByIdAndDelete(adminId)
+    ]);
 
     res.status(200).json({
       success: true,
+      message: 'Company and all associated data (Managers, Employees, Leads, Projects, etc.) have been permanently deleted',
       data: {}
     });
   } catch (err) {
+    console.error('Cascading Delete Admin Error:', err);
     next(err);
   }
 };
@@ -868,6 +897,7 @@ exports.getBillingStats = async (req, res, next) => {
     // Get period from query, default to 6 months
     const period = parseInt(req.query.period) || 6;
 
+    // Calculate date range
     // Calculate date range
     const endDate = new Date();
     const startDate = new Date();

@@ -7,7 +7,19 @@ const InitialSplash = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            navigate('/welcome');
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('status');
+            const role = params.get('role');
+
+            if (status === 'suspended' && role) {
+                const loginPath = role === 'admin' ? '/admin/login' :
+                    role === 'manager' ? '/manager/login' :
+                        role === 'sales' ? '/sales/login' :
+                            role === 'partner' ? '/partner/login' : '/employee/login';
+                navigate(`${loginPath}${window.location.search}`);
+            } else {
+                navigate('/welcome' + window.location.search);
+            }
         }, 3000);
 
         return () => clearTimeout(timer);

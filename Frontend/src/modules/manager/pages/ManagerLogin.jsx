@@ -19,6 +19,15 @@ const ManagerLogin = () => {
     const { login, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('status') === 'suspended') {
+            toast.error("Account suspended by Superadmin", {
+                duration: 6000
+            });
+        }
+    }, []);
+
     // Auto-redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated && role === 'manager') {
@@ -26,10 +35,20 @@ const ManagerLogin = () => {
         }
     }, [isAuthenticated, role, navigate]);
 
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
         if (!email || !password) {
             toast.error('Parameters incomplete');
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            toast.error('Please enter a valid work email');
             return;
         }
 

@@ -115,6 +115,12 @@ class SocketService {
             this.socket.on('new_notification', callback);
         }
     }
+
+    onForceLogout(callback) {
+        if (this.socket) {
+            this.socket.on('forceLogout', callback);
+        }
+    }
 }
 
 const socketService = new SocketService();

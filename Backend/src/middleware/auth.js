@@ -77,6 +77,22 @@ exports.protect = async (req, res, next) => {
       if (userRole === 'super_admin') req.user.role = 'superadmin';
       if (userRole === 'sales_executive') req.user.role = 'sales';
 
+      // Check if Admin/Company is suspended
+      if (role !== 'superadmin' && role !== 'superadmin_staff' && role !== 'partner') {
+        const adminId = role === 'admin' ? req.user._id : req.user.adminId;
+        if (adminId) {
+          const admin = await Admin.findById(adminId);
+          if (admin && admin.subscriptionStatus === 'suspended') {
+            return res.status(403).json({
+              success: false,
+              message: 'Account suspended by Superadmin',
+              isSuspended: true,
+              role: req.user.role
+            });
+          }
+        }
+      }
+
       next();
     } catch (err) {
       console.error('Auth Middleware Error:', err.message);

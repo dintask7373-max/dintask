@@ -23,7 +23,7 @@ import { Label } from '@/shared/components/ui/label';
 import { cn } from '@/shared/utils/cn';
 import apiRequest from '@/lib/api';
 import { toast } from 'sonner';
-import { Upload, X, FileCheck, AlertCircle } from 'lucide-react';
+import { Upload, X, FileCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const PartnerRegister = () => {
     const navigate = useNavigate();
@@ -59,6 +59,9 @@ const PartnerRegister = () => {
         // Documents
         documents: [] // { type: 'PAN', url: '', fileName: '' }
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [uploading, setUploading] = useState({}); // { 'PAN': true }
 
@@ -269,11 +272,43 @@ const PartnerRegister = () => {
                 </div>
                 <div className="space-y-2">
                     <Label>Password</Label>
-                    <Input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="••••••••" />
+                    <div className="relative">
+                        <Input
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            value={formData.password}
+                            onChange={handleChange}
+                            placeholder="••••••••"
+                            className="pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                        >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label>Confirm Password</Label>
-                    <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" />
+                    <div className="relative">
+                        <Input
+                            name="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            placeholder="••••••••"
+                            className="pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                        >
+                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -22,12 +22,31 @@ const SalesLogin = () => {
     const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role } = useAuthStore();
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('status') === 'suspended') {
+            toast.error("Account suspended by Superadmin", {
+                duration: 6000
+            });
+        }
+    }, []);
+
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (loginMethod === 'password') {
             if (!email || !password) {
                 toast.error('Tactical credentials required');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                toast.error('Please enter a valid operator ID (email)');
                 return;
             }
 

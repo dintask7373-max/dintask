@@ -39,6 +39,7 @@ const Settings = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'profile';
     const [isSaving, setIsSaving] = useState(false);
+    const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
     // Form States
     const [profileForm, setProfileForm] = useState({ name: '', email: '', phoneNumber: '' });
@@ -286,10 +287,14 @@ const Settings = () => {
                             <CardContent className="p-4 sm:p-8 pt-0">
                                 <div className="grid grid-cols-2 gap-3 sm:gap-6">
                                     <div
-                                        onClick={() => document.documentElement.classList.remove('dark')}
+                                        onClick={() => {
+                                            document.documentElement.classList.remove('dark');
+                                            localStorage.setItem('theme', 'light');
+                                            setTheme('light');
+                                        }}
                                         className={cn(
                                             "p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 sm:border-4 cursor-pointer transition-all group relative",
-                                            !document.documentElement.classList.contains('dark')
+                                            theme === 'light'
                                                 ? "border-primary-500 bg-primary-50/30 dark:bg-primary-900/10"
                                                 : "border-slate-50 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
                                         )}
@@ -299,7 +304,7 @@ const Settings = () => {
                                             <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white shadow-sm z-10 flex items-center justify-center">
                                                 <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-slate-100" />
                                             </div>
-                                            {!document.documentElement.classList.contains('dark') && (
+                                            {theme === 'light' && (
                                                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-4 h-4 sm:w-6 sm:h-6 bg-primary-500 rounded-full flex items-center justify-center text-white shadow-lg">
                                                     <Check size={10} strokeWidth={4} className="sm:size-3.5" />
                                                 </div>
@@ -308,10 +313,14 @@ const Settings = () => {
                                         <p className="text-center font-black uppercase tracking-[0.1em] text-[8px] sm:text-xs text-slate-500 dark:text-slate-400">Light Mode</p>
                                     </div>
                                     <div
-                                        onClick={() => document.documentElement.classList.add('dark')}
+                                        onClick={() => {
+                                            document.documentElement.classList.add('dark');
+                                            localStorage.setItem('theme', 'dark');
+                                            setTheme('dark');
+                                        }}
                                         className={cn(
                                             "p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border-2 sm:border-4 cursor-pointer transition-all group relative",
-                                            document.documentElement.classList.contains('dark')
+                                            theme === 'dark'
                                                 ? "border-primary-500 bg-primary-900/10"
                                                 : "border-slate-50 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
                                         )}
@@ -321,7 +330,7 @@ const Settings = () => {
                                             <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-slate-900 shadow-sm z-10 flex items-center justify-center border border-slate-700">
                                                 <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-slate-800" />
                                             </div>
-                                            {document.documentElement.classList.contains('dark') && (
+                                            {theme === 'dark' && (
                                                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-4 h-4 sm:w-6 sm:h-6 bg-primary-500 rounded-full flex items-center justify-center text-white shadow-lg">
                                                     <Check size={10} strokeWidth={4} className="sm:size-3.5" />
                                                 </div>

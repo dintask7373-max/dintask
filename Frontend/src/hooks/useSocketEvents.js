@@ -48,8 +48,21 @@ const useSocketEvents = () => {
                 }
             });
 
-            // Set up support ticket listeners globally
-            initializeSocket(user._id || user.id);
+            // Set up force logout listener
+            socketService.onForceLogout((data) => {
+                const userAdminId = user.role === 'admin' ? (user._id || user.id) : user.adminId;
+                if (data.adminId === userAdminId?.toString()) {
+                    console.log('Force logout received for company:', data.adminId);
+                    const role = user.role;
+                    const loginPath = role === 'admin' ? '/admin/login' :
+                        role === 'manager' ? '/manager/login' :
+                            role === 'sales' ? '/sales/login' :
+                                role === 'partner' ? '/partner/login' : '/employee/login';
+                    
+                    localStorage.removeItem('dintask-auth-storage');
+                    window.location.href = `${loginPath}?status=suspended`;
+                }
+            });
 
             return () => {
                 // Cleanup handled inside service for some events, 
