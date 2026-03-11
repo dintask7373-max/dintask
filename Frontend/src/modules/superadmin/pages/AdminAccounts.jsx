@@ -567,6 +567,7 @@ const AdminAccounts = () => {
                                                                         key={plan._id}
                                                                         className="gap-3 cursor-pointer rounded-xl font-bold text-xs py-2.5"
                                                                         onClick={() => handlePlanChange(adm._id, plan._id, plan.name)}
+                                                                     
                                                                     >
                                                                         Upgrade to {plan.name}
                                                                     </DropdownMenuItem>
