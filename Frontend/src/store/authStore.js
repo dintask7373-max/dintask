@@ -298,7 +298,25 @@ const useAuthStore = create(
         }),
         {
             name: 'dintask-auth-storage',
-            storage: createJSONStorage(() => localStorage),
+            storage: createJSONStorage(() => {
+                try {
+                    // Test if localStorage is available and accessible
+                    const testKey = '__storage_test__';
+                    localStorage.setItem(testKey, testKey);
+                    localStorage.removeItem(testKey);
+                    return localStorage;
+                } catch (e) {
+                    console.warn('LocalStorage is not available, using memory storage fallback:', e);
+                    // Memory-based storage fallback for environments where localStorage is blocked
+                    const memoryStorage = new Map();
+                    return {
+                        getItem: (name) => memoryStorage.get(name) || null,
+                        setItem: (name, value) => memoryStorage.set(name, value),
+                        removeItem: (name) => memoryStorage.delete(name),
+                        clear: () => memoryStorage.clear(),
+                    };
+                }
+            }),
         }
     )
 );

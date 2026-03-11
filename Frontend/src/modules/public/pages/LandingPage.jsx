@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -75,7 +75,11 @@ const LandingPage = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const ref = urlParams.get('ref');
         if (ref) {
-            localStorage.setItem('referralCode', ref);
+            try {
+                localStorage.setItem('referralCode', ref);
+            } catch (e) {
+                console.warn('Failed to store referral code:', e);
+            }
             console.log('Referral code captured from Landing Page:', ref);
         }
 

@@ -1,9 +1,19 @@
 const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1`;
 
+const getLocalStorageItem = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn(`LocalStorage access failed for key "${key}":`, e);
+    return null;
+  }
+};
+
 const apiRequest = async (endpoint, options = {}) => {
   // Read token from localStorage (matching authStore configuration)
-  const token = localStorage.getItem('dintask-auth-storage')
-    ? JSON.parse(localStorage.getItem('dintask-auth-storage')).state.token
+  const storedData = getLocalStorageItem('dintask-auth-storage');
+  const token = storedData
+    ? JSON.parse(storedData).state.token
     : null;
 
   const headers = {
@@ -52,7 +62,7 @@ const apiRequest = async (endpoint, options = {}) => {
         // Fallback to storage if not in response
         if (!role) {
           try {
-            const storage = JSON.parse(localStorage.getItem('dintask-auth-storage'));
+            const storage = JSON.parse(getLocalStorageItem('dintask-auth-storage'));
             role = storage?.state?.user?.role || '';
           } catch (e) {
             console.error('Error getting role from storage:', e);
@@ -69,7 +79,11 @@ const apiRequest = async (endpoint, options = {}) => {
           }
         };
 
-        localStorage.removeItem('dintask-auth-storage');
+        try {
+          localStorage.removeItem('dintask-auth-storage');
+        } catch (e) {
+          console.warn('Failed to remove item from localStorage:', e);
+        }
         window.location.href = `${getLoginPath(role)}?status=suspended`;
       }
 

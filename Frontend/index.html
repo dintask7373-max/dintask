@@ -13,11 +13,16 @@
     rel="stylesheet">
   <script>
     (function() {
-      const theme = localStorage.getItem('theme');
-      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+      try {
+        const theme = localStorage.getItem('theme');
+        const darkModeShortcut = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (!theme && darkModeShortcut)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        console.warn('Theme initialization failed:', e);
       }
     })();
   </script>
@@ -30,7 +35,14 @@
   <meta name="keywords"
     content="dintask, task management, crm, employee monitoring, business productivity, project management, sales tracking, team collaboration, remote work tools, administration dashboard" />
   <meta name="author" content="DinTask" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#1e6fd9" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- iOS Specific Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="DinTask" />
+  <link rel="apple-touch-icon" href="/dintask-logo.png" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
