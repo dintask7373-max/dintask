@@ -82,7 +82,7 @@ const useAuthStore = create(
             },
 
             fetchProfile: async () => {
-                const { role, token } = get();
+                const { role, token, logout } = get();
                 if (!token) return;
 
                 try {
@@ -94,20 +94,25 @@ const useAuthStore = create(
                     }
 
                     if (response.success) {
-                        const rawRole = response.data.role || response.user.role;
+                        const rawRole = response.data?.role || response.user?.role || role;
                         // Helper to keep role consistent
                         let normalizedRole = rawRole;
                         if (rawRole === 'super_admin') normalizedRole = 'superadmin';
                         if (rawRole === 'sales_executive') normalizedRole = 'sales';
 
-                        // If role changed (e.g. from super_admin to superadmin), update it
                         set({
                             user: response.data || response.user,
-                            role: normalizedRole
+                            role: normalizedRole,
+                            error: null
                         });
+                    } else {
+                        // If response is not success (e.g. 401 handled by apiRequest throwing)
+                        // but just in case it returns success: false
+                        logout();
                     }
                 } catch (err) {
-                    console.error('Failed to fetch user profile:', err);
+                    console.error('Failed to fetch user profile, logging out:', err);
+                    logout();
                 }
             },
 
@@ -291,6 +296,16 @@ const useAuthStore = create(
                 } catch (err) {
                     set({ loading: false, error: err.message });
                     return { success: false, error: err.message };
+                }
+            },
+
+            checkEmail: async (email, role) => {
+                try {
+                    const response = await apiRequest(`/auth/check-email?email=${encodeURIComponent(email)}&role=${role || ''}`);
+                    return response;
+                } catch (err) {
+                    console.error('Email check failed:', err);
+                    return { success: false, exists: false };
                 }
             },
 

@@ -16,10 +16,31 @@ import { Eye, EyeOff } from 'lucide-react';
 
 const SuperAdminLogin = () => {
     const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [activeTab, setActiveTab] = useState('admin');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { login, loading, error, isAuthenticated, role } = useAuthStore();
+    const { login, loading, error, isAuthenticated, role, checkEmail } = useAuthStore();
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!email) return;
+        const systemRole = activeTab === 'admin' ? 'superadmin' : 'superadmin_staff';
+        const result = await checkEmail(email, systemRole);
+        if (result.success) {
+            if (!result.exists) {
+                setEmailError('System ID not found');
+                toast.error('Identity Mismatch: Record not found in master database');
+            } else if (result.role && result.role !== systemRole) {
+                let normRole = result.role;
+                if (normRole === 'sales_executive') normRole = 'sales';
+                setEmailError(`Registered as ${normRole.toUpperCase()}`);
+                toast.error(`Wrong Portal: This ID is registered as a ${normRole.toUpperCase()}.`);
+            } else {
+                setEmailError('');
+            }
+        }
+    };
 
     // Auto-redirect if already logged in
     useEffect(() => {
@@ -28,11 +49,16 @@ const SuperAdminLogin = () => {
         }
     }, [isAuthenticated, role, navigate]);
 
-    const handleLogin = async (e, role) => {
+    const handleLogin = async (e, r) => {
         e.preventDefault();
 
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
+
         // Map UI role to system role
-        const systemRole = role === 'admin' ? 'superadmin' : 'superadmin_staff';
+        const systemRole = r === 'admin' ? 'superadmin' : 'superadmin_staff';
 
         const result = await login(email, password, systemRole);
         if (result.success) {
@@ -51,7 +77,14 @@ const SuperAdminLogin = () => {
             formSubtitle="Authenticating Root Protocol Access"
             bgImage="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop"
         >
-            <Tabs defaultValue="admin" className="w-full">
+            <Tabs
+                defaultValue="admin"
+                className="w-full"
+                onValueChange={(val) => {
+                    setActiveTab(val);
+                    setEmailError('');
+                }}
+            >
                 <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-8">
                     <TabsTrigger value="admin" className="rounded-lg h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-sm">Super Admin</TabsTrigger>
                     <TabsTrigger value="employee" className="rounded-lg h-10 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-sm">Operations Staff</TabsTrigger>
@@ -66,10 +99,16 @@ const SuperAdminLogin = () => {
                                 type="email"
                                 placeholder="ROOT@DINTASK.EXE"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    setEmailError('');
+                                }}
+                                onBlur={handleEmailBlur}
+                                className={`h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
                             />
+                            {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                         </div>
+                        {/* ... password fields ... */}
                         <div className="space-y-2">
                             <div className="flex items-center justify-between px-1">
                                 <Label htmlFor="admin-password" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Secure Password</Label>
@@ -114,9 +153,14 @@ const SuperAdminLogin = () => {
                                 type="email"
                                 placeholder="STAFF@DINTASK.COM"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    setEmailError('');
+                                }}
+                                onBlur={handleEmailBlur}
+                                className={`h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
                             />
+                            {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between px-1">
@@ -156,9 +200,6 @@ const SuperAdminLogin = () => {
 
             <div className="text-center mt-10 space-y-4">
                 <div className="h-px w-full bg-slate-100 dark:bg-slate-800" />
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    New Administrator? <Link to="/superadmin/register" className="text-primary-600 hover:underline ml-1 font-bold">Initialize Root</Link>
-                </p>
                 <p className="text-[8px] font-bold text-slate-300 uppercase tracking-[0.2em]">
                     SECURE SYSTEM CONNECTION // 2026 DINTASK
                 </p>

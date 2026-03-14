@@ -14,9 +14,22 @@ const useSubscriptionMonitor = () => {
   const [isChecking, setIsChecking] = useState(false);
 
   const handleTeamLogout = () => {
+    const currentRole = role;
     setShowTeamExpiredModal(false);
     logout();
-    window.location.href = '/login';
+
+    // Redirect based on role
+    if (currentRole === 'admin') {
+      window.location.href = '/admin/login';
+    } else if (currentRole === 'manager') {
+      window.location.href = '/manager/login';
+    } else if (currentRole === 'sales') {
+      window.location.href = '/sales/login';
+    } else if (currentRole === 'partner') {
+      window.location.href = '/partner/login';
+    } else {
+      window.location.href = '/employee/login';
+    }
   };
 
   const checkSubscription = async () => {

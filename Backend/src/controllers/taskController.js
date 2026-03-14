@@ -59,6 +59,8 @@ exports.getTasks = async (req, res) => {
         ],
         adminId: adminId
       };
+    } else {
+      return res.status(403).json({ success: false, error: 'User role not authorized for task visibility' });
     }
 
     // -- OVERDUE AUTO-CHECK & ESCALATION --

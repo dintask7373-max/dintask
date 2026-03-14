@@ -140,9 +140,13 @@ const useCRMStore = create(
               .catch(err => console.error("Background sync error:", err));
 
             toast.success("Lead updated");
+            return res;
+          } else {
+            throw new Error(res.error || res.message || "Failed to update lead");
           }
         } catch (error) {
           toast.error(error.message || "Failed to update lead");
+          throw error;
         }
       },
 
@@ -357,20 +361,23 @@ const useCRMStore = create(
       // Helper: Move Lead (Calls editLead)
       moveLead: async (leadId, fromStage, toStage) => {
         const { leads } = get();
+        
+        // Find the lead to ensure we have the correct ID for API
+        const lead = leads.find(l => l._id === leadId || l.id === leadId);
+        if (!lead) return;
+
         // Optimistic update
         set(state => ({
           leads: state.leads.map(l => (l._id === leadId || l.id === leadId) ? { ...l, status: toStage } : l)
         }));
 
-        // Find the lead to ensure we have the correct ID for API
-        const lead = leads.find(l => l._id === leadId || l.id === leadId);
         const actualId = lead?._id || lead?.id || leadId;
 
         // API Call
         try {
           await get().editLead(actualId, { status: toStage });
         } catch (err) {
-          // Revert if failed (optional, but good practice)
+          // Revert if failed
           console.error("Move lead failed", err);
           set(state => ({
             leads: state.leads.map(l => (l._id === leadId || l.id === leadId) ? { ...l, status: fromStage } : l)

@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, logout, forgotPassword, resetPassword, getMe, updateDetails, updatePassword, checkSubscriptionStatus, sendOtp, verifyOtp } = require('../controllers/authController');
+const { register, login, logout, forgotPassword, resetPassword, getMe, updateDetails, updatePassword, checkSubscriptionStatus, sendOtp, verifyOtp, checkEmail } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
 const upload = require('../middleware/fileUpload');
@@ -7,6 +7,7 @@ const upload = require('../middleware/fileUpload');
 const router = express.Router();
 
 router.post('/register', register);
+router.get('/check-email', checkEmail);
 router.post('/upload', (req, res, next) => {
     upload.single('file')(req, res, (err) => {
         if (err) {

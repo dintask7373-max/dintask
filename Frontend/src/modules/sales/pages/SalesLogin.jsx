@@ -19,8 +19,27 @@ const SalesLogin = () => {
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
 
-    const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role } = useAuthStore();
+    const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role, checkEmail } = useAuthStore();
+    const [emailError, setEmailError] = useState('');
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!email || loginMethod !== 'password') return;
+        const result = await checkEmail(email, 'sales_executive');
+        if (result.success) {
+            if (!result.exists) {
+                setEmailError('Operator ID not found');
+                toast.error('Identity Mismatch: Comm link not established');
+            } else if (result.role && result.role !== 'sales_executive') {
+                let normRole = result.role;
+                if (normRole === 'sales_executive') normRole = 'sales';
+                setEmailError(`Registered as ${normRole.toUpperCase()}`);
+                toast.error(`Wrong Portal: This ID is registered as a ${normRole.toUpperCase()}.`);
+            } else {
+                setEmailError('');
+            }
+        }
+    };
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -40,6 +59,10 @@ const SalesLogin = () => {
         e.preventDefault();
 
         if (loginMethod === 'password') {
+            if (emailError) {
+                toast.error(emailError);
+                return;
+            }
             if (!email || !password) {
                 toast.error('Tactical credentials required');
                 return;
@@ -62,7 +85,7 @@ const SalesLogin = () => {
                 }
             }
         } else {
-            // OTP Flow
+            // ... OTP flow ...
             if (!phone) {
                 toast.error('Tactical comms required');
                 return;
@@ -107,13 +130,13 @@ const SalesLogin = () => {
             <div className="mb-6">
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                     <button
-                        onClick={() => setLoginMethod('password')}
+                        onClick={() => { setLoginMethod('password'); setEmailError(''); }}
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'password' ? 'bg-white dark:bg-slate-900 shadow-sm text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Lock size={14} /> Password
                     </button>
                     <button
-                        onClick={() => setLoginMethod('otp')}
+                        onClick={() => { setLoginMethod('otp'); setEmailError(''); }}
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${loginMethod === 'otp' ? 'bg-white dark:bg-slate-900 shadow-sm text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Zap size={14} /> Secure Link
@@ -131,10 +154,15 @@ const SalesLogin = () => {
                                 type="email"
                                 placeholder="operator@dintask.com"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    setEmailError('');
+                                }}
+                                onBlur={handleEmailBlur}
                                 autoComplete="username"
-                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                className={`h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
                             />
+                            {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">

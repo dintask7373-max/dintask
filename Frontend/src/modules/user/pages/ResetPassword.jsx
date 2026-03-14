@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Shield, Lock, CheckCircle2, AlertCircle, Terminal, KeyRound } from 'lucide-react';
+import { Shield, Lock, CheckCircle2, AlertCircle, Terminal, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,6 +19,8 @@ const ResetPassword = () => {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
@@ -99,31 +101,45 @@ const ResetPassword = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">New Identity Key</Label>
-                      <div className="relative">
+                      <div className="relative group/pass">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <Input
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800"
+                          className="h-12 pl-11 pr-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 font-bold"
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                        >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Confirm Identity Key</Label>
-                      <div className="relative">
+                      <div className="relative group/pass">
                         <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <Input
-                          type="password"
+                          type={showConfirmPassword ? "text" : "password"}
                           placeholder="••••••••"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          className="h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800"
+                          className="h-12 pl-11 pr-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 font-bold"
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                        >
+                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
                       </div>
                     </div>
                   </div>

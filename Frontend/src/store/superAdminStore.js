@@ -685,7 +685,8 @@ const useSuperAdminStore = create(
                             email: adminData.email,
                             subscriptionPlan: adminData.plan,
                             subscriptionPlanId: adminData.planId,
-                            partnerId: adminData.partnerId // Link to partner if provided
+                            partnerId: adminData.partnerId, // Link to partner if provided
+                            password: adminData.password
                         }
                     });
 

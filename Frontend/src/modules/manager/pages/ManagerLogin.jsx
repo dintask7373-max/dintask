@@ -15,9 +15,28 @@ import AuthLayout from '@/shared/components/layout/AuthLayout';
 
 const ManagerLogin = () => {
     const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, error, isAuthenticated, role } = useAuthStore();
+    const { login, loading, error, isAuthenticated, role, checkEmail } = useAuthStore();
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!email) return;
+        const result = await checkEmail(email, 'manager');
+        if (result.success) {
+            if (!result.exists) {
+                setEmailError('Manager email not found');
+                toast.error('Identity Mismatch: Record not registered in manager division');
+            } else if (result.role && result.role !== 'manager') {
+                let normRole = result.role;
+                if (normRole === 'sales_executive') normRole = 'sales';
+                setEmailError(`Registered as ${normRole.toUpperCase()}`);
+                toast.error(`Wrong Portal: This email is registered as a ${normRole.toUpperCase()}.`);
+            } else {
+                setEmailError('');
+            }
+        }
+    };
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -42,6 +61,10 @@ const ManagerLogin = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
         if (!email || !password) {
             toast.error('Parameters incomplete');
             return;
@@ -82,11 +105,19 @@ const ManagerLogin = () => {
                             type="email"
                             placeholder="manager@company.com"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                setEmailError('');
+                            }}
+                            onBlur={handleEmailBlur}
                             autoComplete="email"
-                            className="h-12 pl-11 rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs text-slate-900 dark:text-white"
+                            className={cn(
+                                "h-12 pl-11 rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs text-slate-900 dark:text-white",
+                                emailError && "ring-2 ring-red-500/50"
+                            )}
                         />
                     </div>
+                    {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                 </div>
 
                 <div className="space-y-2">

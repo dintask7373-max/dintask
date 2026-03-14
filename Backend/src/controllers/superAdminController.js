@@ -191,13 +191,17 @@ exports.createAdmin = async (req, res, next) => {
       subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     }
 
+    // Sanitize ObjectIds from frontend
+    const partnerId = (req.body.partnerId === 'none' || !req.body.partnerId || req.body.partnerId.trim() === '') ? undefined : req.body.partnerId;
+    const subscriptionPlanId = (req.body.subscriptionPlanId === 'none' || !req.body.subscriptionPlanId || req.body.subscriptionPlanId.trim() === '') ? undefined : req.body.subscriptionPlanId;
+
     const admin = await Admin.create({
       companyName,
       name,
       email,
       subscriptionPlan,
-      subscriptionPlanId: req.body.subscriptionPlanId,
-      partnerId: req.body.partnerId,
+      subscriptionPlanId,
+      partnerId,
       password: adminPassword,
       subscriptionStatus: 'active',
       subscriptionExpiry
@@ -205,13 +209,52 @@ exports.createAdmin = async (req, res, next) => {
 
 
     // Send email to new admin
-    const message = `Hello ${name},\n\nYour company account for ${companyName} has been provisioned at DinTask.\n\nLogin Credentials:\nEmail: ${email}\nPassword: ${adminPassword}\n\nPlease login at ${process.env.FRONTEND_URL || 'http://localhost:5173'} and change your password immediately.\n\nRegards,\nDinTask Team`;
+    const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
+    const adminPanelLink = `${frontendUrl}/admin/login`;
+
+    const message = `Hello ${name},\n\nYour company account for ${companyName} has been provisioned at DinTask.\n\nLogin Credentials:\nEmail: ${email}\nPassword: ${adminPassword}\n\nDin Task Web link: ${frontendUrl}\nAdmin Panel Link: ${adminPanelLink}\n\nPlease login and change your password immediately.\n\nRegards,\nDinTask Team`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
+        <div style="background-color: #3b82f6; color: #ffffff; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Welcome to DinTask</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p>Hello <strong>${name}</strong>,</p>
+          <p>Your company account for <strong>${companyName}</strong> has been successfully provisioned.</p>
+          
+          <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin-top: 0; font-weight: bold; color: #1f2937;">Login Credentials:</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 5px 0;"><strong>Password:</strong> ${adminPassword}</p>
+          </div>
+
+          <p>You can access your account through the links below:</p>
+          
+          <div style="margin: 20px 0;">
+            <a href="${adminPanelLink}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-right: 10px;">Go to Admin Panel</a>
+          </div>
+
+          <p style="font-size: 14px; color: #6b7280;">
+            <strong>Din Task Web link:</strong> <a href="${frontendUrl}" style="color: #3b82f6;">${frontendUrl}</a><br>
+            <strong>Admin Panel Link:</strong> <a href="${adminPanelLink}" style="color: #3b82f6;">${adminPanelLink}</a>
+          </p>
+
+          <p style="margin-top: 30px; font-weight: bold; color: #ef4444;">Please change your password immediately after your first login for security reasons.</p>
+        </div>
+        <div style="background-color: #f3f4f6; color: #6b7280; padding: 20px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">&copy; ${new Date().getFullYear()} DinTask Team. All rights reserved.</p>
+        </div>
+      </div>
+    `;
 
     try {
       await sendEmail({
         email: admin.email,
         subject: 'Account Provisioned - DinTask',
-        message
+        message,
+        html
       });
     } catch (err) {
       console.error('Account Provisioning Email Error:', err);
@@ -325,7 +368,12 @@ exports.deleteAdmin = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.updateAdminPlan = async (req, res, next) => {
   try {
-    const { planId, planName } = req.body;
+    const { planId: rawPlanId, planName } = req.body;
+    const planId = (rawPlanId === 'none' || !rawPlanId || (typeof rawPlanId === 'string' && rawPlanId.trim() === '')) ? undefined : rawPlanId;
+
+    if (!planId) {
+      return next(new ErrorResponse('Please provide a valid plan ID', 400));
+    }
 
     // Get plan duration
     const plan = await Plan.findById(planId);
@@ -481,16 +529,46 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}?role=${user.role}`;
 
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.`;
 
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
+        <div style="background-color: #ef4444; color: #ffffff; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Password Reset Request</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p>Hello,</p>
+          <p>You are receiving this email because you (or someone else) has requested the reset of a password for your <strong>DinTask SuperAdmin</strong> account.</p>
+          
+          <p>Please click the button below to reset your password. This link will expire in <strong>10 minutes</strong>.</p>
+          
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${resetUrl}" style="display: inline-block; background-color: #ef4444; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+          </div>
+
+          <p style="font-size: 14px; color: #6b7280;">
+            If you're having trouble clicking the button, copy and paste the URL below into your web browser:<br>
+            <a href="${resetUrl}" style="color: #3b82f6; word-break: break-all;">${resetUrl}</a>
+          </p>
+
+          <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        </div>
+        <div style="background-color: #f3f4f6; color: #6b7280; padding: 20px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">&copy; ${new Date().getFullYear()} DinTask Team. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
     try {
       await sendEmail({
         email: user.email,
-        subject: 'Password Reset Token',
-        message
+        subject: 'Password Reset Token - DinTask',
+        message,
+        html
       });
 
       res.status(200).json({ success: true, data: 'Email sent' });

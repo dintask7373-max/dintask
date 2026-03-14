@@ -35,10 +35,12 @@ const EmployeeDashboard = () => {
   } = useCRMStore();
 
   useEffect(() => {
-    fetchTasks();
+    if (user?.role !== 'sales') {
+      fetchTasks();
+    }
     fetchLeads();
     fetchFollowUps();
-  }, [fetchTasks, fetchLeads, fetchFollowUps]);
+  }, [fetchTasks, fetchLeads, fetchFollowUps, user?.role]);
 
   const currentUserId = user?._id || user?.id;
 
@@ -131,10 +133,10 @@ const EmployeeDashboard = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: 'Follow-ups', value: todayFollowUps.length, icon: CalendarIcon, color: 'indigo', border: 'border-indigo-100', shadow: 'shadow-indigo-200/50', gradient: 'bg-gradient-to-br from-white to-indigo-50/30' },
-          { label: 'Pending Tasks', value: pendingTasks.length, icon: ListTodo, color: 'emerald', border: 'border-emerald-100', shadow: 'shadow-emerald-200/50', gradient: 'bg-gradient-to-br from-white to-emerald-50/30' },
+          ...(user?.role !== 'sales' ? [{ label: 'Pending Tasks', value: pendingTasks.length, icon: ListTodo, color: 'emerald', border: 'border-emerald-100', shadow: 'shadow-emerald-200/50', gradient: 'bg-gradient-to-br from-white to-emerald-50/30' }] : []),
           { label: 'Completion Rate', value: completionRate, icon: TrendingUp, color: 'primary', border: 'border-primary-100', shadow: 'shadow-primary-200/50', gradient: 'bg-gradient-to-br from-white to-primary-50/30' }
-        ].map((stat, i) => (
-          <motion.div key={i} variants={fadeInUp} className={cn(i === 2 ? "col-span-2 sm:col-span-1" : "")}>
+        ].map((stat, i, arr) => (
+          <motion.div key={i} variants={fadeInUp} className={cn((arr.length === 3 && i === 2) || (arr.length === 2) ? "col-span-2 sm:col-span-1" : "")}>
             <Card className={cn(
               "border-2 shadow-lg rounded-3xl overflow-hidden group transition-all duration-300 hover:-translate-y-1 h-full",
               stat.border,
@@ -228,22 +230,24 @@ const EmployeeDashboard = () => {
 
       <motion.div variants={fadeInUp}>
         <Tabs defaultValue="followups" className="w-full">
-          <div className="flex items-center justify-center mb-6">
-            <TabsList className="bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl h-11 w-full max-w-md border border-slate-100 dark:border-slate-800 shadow-sm">
-              <TabsTrigger
-                value="followups"
-                className="flex-1 rounded-xl h-8 text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm"
-              >
-                Schedule
-              </TabsTrigger>
-              <TabsTrigger
-                value="tasks"
-                className="flex-1 rounded-xl h-8 text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm"
-              >
-                Tasks
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          {user?.role !== 'sales' && (
+            <div className="flex items-center justify-center mb-6">
+              <TabsList className="bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl h-11 w-full max-w-md border border-slate-100 dark:border-slate-800 shadow-sm">
+                <TabsTrigger
+                  value="followups"
+                  className="flex-1 rounded-xl h-8 text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm"
+                >
+                  Schedule
+                </TabsTrigger>
+                <TabsTrigger
+                  value="tasks"
+                  className="flex-1 rounded-xl h-8 text-[9px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary-600 data-[state=active]:shadow-sm"
+                >
+                  Tasks
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          )}
 
           <TabsContent value="followups" className="mt-0 space-y-3">
             {todayFollowUps.length > 0 ? (
@@ -283,44 +287,46 @@ const EmployeeDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="tasks" className="mt-0 space-y-3">
-            {pendingTasks.length > 0 ? (
-              pendingTasks.map((task) => (
-                <motion.div
-                  key={task._id || task.id}
-                  variants={fadeInUp}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-50 dark:border-slate-800/50 shadow-sm flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="size-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <ListTodo size={20} />
-                    </div>
-                    <div>
-                      <h3 className="text-[11px] font-black uppercase tracking-tight text-slate-900 dark:text-white">{task.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge className={cn(
-                          "h-4 px-1.5 text-[7px] font-black uppercase tracking-tighter border-none",
-                          task.priority === 'High' ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'
-                        )}>
-                          {task.priority}
-                        </Badge>
-                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest italic">{format(new Date(task.deadline), 'dd MMM')}</span>
+          {user?.role !== 'sales' && (
+            <TabsContent value="tasks" className="mt-0 space-y-3">
+              {pendingTasks.length > 0 ? (
+                pendingTasks.map((task) => (
+                  <motion.div
+                    key={task._id || task.id}
+                    variants={fadeInUp}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-50 dark:border-slate-800/50 shadow-sm flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="size-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <ListTodo size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-[11px] font-black uppercase tracking-tight text-slate-900 dark:text-white">{task.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className={cn(
+                            "h-4 px-1.5 text-[7px] font-black uppercase tracking-tighter border-none",
+                            task.priority === 'High' ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'
+                          )}>
+                            {task.priority}
+                          </Badge>
+                          <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest italic">{format(new Date(task.deadline), 'dd MMM')}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all h-10 w-10">
-                    <CheckCircle size={20} />
-                  </Button>
-                </motion.div>
-              ))
-            ) : (
-              <div className="py-12 flex flex-col items-center justify-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl">
-                <ListTodo size={40} className="mb-3 opacity-20" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Tasks</p>
-              </div>
-            )}
-          </TabsContent>
+                    <Button variant="ghost" size="icon" className="text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all h-10 w-10">
+                      <CheckCircle size={20} />
+                    </Button>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl">
+                  <ListTodo size={40} className="mb-3 opacity-20" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Tasks</p>
+                </div>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </motion.div>
     </motion.div>

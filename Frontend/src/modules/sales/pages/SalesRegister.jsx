@@ -20,7 +20,6 @@ const SalesRegister = () => {
     const inviteEmail = queryParams.get('email');
 
     const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
-    const { register } = useAuthStore();
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -34,7 +33,20 @@ const SalesRegister = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState('');
+    const { register, checkEmail } = useAuthStore();
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!formData.email || !!inviteEmail) return;
+        const result = await checkEmail(formData.email, 'sales_executive');
+        if (result.success && result.exists) {
+            setEmailError('Comm Link already active in another division');
+            toast.error('Identity Collision: Email already registered in Sales Division');
+        } else {
+            setEmailError('');
+        }
+    };
 
     useEffect(() => {
         if (inviteEmail) {
@@ -42,17 +54,24 @@ const SalesRegister = () => {
         }
     }, [inviteEmail]);
 
+
     const handleChange = (e) => {
         const { id, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [id]: value
         }));
+        if (id === 'email') setEmailError('');
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         const { fullName, email, phoneNumber, password, confirmPassword } = formData;
+
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
 
         if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
             toast.error('Operational initialization failed: missing data');
@@ -183,9 +202,11 @@ const SalesRegister = () => {
                                 placeholder="operator@entity.com"
                                 value={formData.email}
                                 onChange={handleChange}
+                                onBlur={handleEmailBlur}
                                 readOnly={!!inviteEmail}
-                                className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''} ${emailError ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                             />
+                            {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -251,7 +272,7 @@ const SalesRegister = () => {
                                 required
                             />
                             <Label htmlFor="consent" className="text-[11px] font-medium text-slate-500 cursor-pointer leading-tight">
-                                I agree to the <span className="text-primary-600 font-bold underline cursor-pointer">Security Protocol</span>
+                                I agree to the <Link to="/terms" className="text-primary-600 font-bold underline">Terms of Service</Link> and <Link to="/privacy" className="text-primary-600 font-bold underline">Privacy Policy</Link>
                             </Label>
                         </div>
 

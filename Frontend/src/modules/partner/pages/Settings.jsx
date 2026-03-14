@@ -1,4 +1,4 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Settings as SettingsIcon,
     User,
@@ -17,6 +17,12 @@ import useAuthStore from '@/store/authStore';
 
 const Settings = () => {
     const { user, logout } = useAuthStore();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/partner/login');
+    };
 
     const settingsSections = [
         { title: 'Profile Information', icon: User, description: 'Update your personal and business details' },
@@ -49,7 +55,7 @@ const Settings = () => {
                         </button>
                     ))}
 
-                    <Button onClick={logout} variant="ghost" className="w-full justify-start h-14 rounded-2xl text-red-600 hover:bg-red-50 hover:text-red-700 font-bold gap-4 px-4">
+                    <Button onClick={handleLogout} variant="ghost" className="w-full justify-start h-14 rounded-2xl text-red-600 hover:bg-red-50 hover:text-red-700 font-bold gap-4 px-4">
                         <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
                             <LogOut size={20} />
                         </div>

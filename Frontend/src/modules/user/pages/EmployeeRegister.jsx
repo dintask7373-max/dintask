@@ -29,9 +29,21 @@ const EmployeeRegister = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState('');
     const navigate = useNavigate();
-    const { register } = useAuthStore();
+    const { register, checkEmail } = useAuthStore();
     const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
+
+    const handleEmailBlur = async () => {
+        if (!formData.email || !!inviteEmail) return;
+        const result = await checkEmail(formData.email, 'employee');
+        if (result.success && result.exists) {
+            setEmailError('This email is already registered as an employee');
+            toast.error('Identity Conflict: Employee record already exists');
+        } else {
+            setEmailError('');
+        }
+    };
 
     useEffect(() => {
         if (inviteEmail) {
@@ -45,11 +57,17 @@ const EmployeeRegister = () => {
             ...prev,
             [id]: value
         }));
+        if (id === 'email') setEmailError('');
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         const { fullName, email, phoneNumber, password, confirmPassword } = formData;
+
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
 
         if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
             toast.error('Please fill in all fields');
@@ -183,9 +201,11 @@ const EmployeeRegister = () => {
                                 placeholder="name@company.com"
                                 value={formData.email}
                                 onChange={handleChange}
+                                onBlur={handleEmailBlur}
                                 readOnly={!!inviteEmail}
-                                className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`h-12 px-5 bg-slate-50 border-slate-100 rounded-xl text-slate-900 font-medium text-sm placeholder:text-slate-300 focus:bg-white focus:ring-2 focus:ring-[#4461f2]/10 transition-all duration-200 ${inviteEmail ? 'opacity-70 cursor-not-allowed' : ''} ${emailError ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                             />
+                            {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -251,7 +271,7 @@ const EmployeeRegister = () => {
                                 required
                             />
                             <Label htmlFor="consent" className="text-[11px] font-medium text-slate-500 cursor-pointer leading-tight">
-                                I agree to the <span className="text-[#4461f2] font-bold underline">Privacy Policy</span>
+                                I agree to the <Link to="/terms" className="text-[#4461f2] font-bold underline">Terms of Service</Link> and <Link to="/privacy" className="text-[#4461f2] font-bold underline">Privacy Policy</Link>
                             </Label>
                         </div>
 

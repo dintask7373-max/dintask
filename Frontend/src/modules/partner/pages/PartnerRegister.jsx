@@ -62,12 +62,27 @@ const PartnerRegister = () => {
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [emailError, setEmailError] = useState('');
 
     const [uploading, setUploading] = useState({}); // { 'PAN': true }
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleEmailBlur = async () => {
+        if (!formData.email) return;
+        const res = await apiRequest(`/auth/check-email?email=${encodeURIComponent(formData.email)}&role=partner`);
+        if (res.success && res.exists) {
+            setEmailError('This email is already registered as a partner');
+            toast.error('Identity Conflict: Partner account already exists');
+        } else {
+            setEmailError('');
+        }
     };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if (name === 'email') setEmailError('');
+    };
+
 
     const validateEmail = (email) => {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -128,6 +143,10 @@ const PartnerRegister = () => {
         }
 
         if (step === 3) {
+            if (emailError) {
+                toast.error(emailError);
+                return false;
+            }
             if (!formData.email.trim() || !validateEmail(formData.email)) {
                 toast.error('Please enter a valid email address');
                 return false;
@@ -413,7 +432,16 @@ const PartnerRegister = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Email Address</Label>
-                    <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="partner@example.com" />
+                    <Input
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        onBlur={handleEmailBlur}
+                        placeholder="partner@example.com"
+                        className={cn(emailError && "border-red-500 ring-1 ring-red-500")}
+                    />
+                    {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label>Phone Number</Label>
@@ -630,11 +658,21 @@ const PartnerRegister = () => {
             </div>
 
             <div className="space-y-4 pt-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded border border-slate-300 flex items-center justify-center bg-primary-500 text-white">
-                        <CheckCircle2 size={12} />
+                <div className="flex items-start gap-3">
+                    <div className="flex h-5 items-center">
+                        <input
+                            id="agree_terms"
+                            type="checkbox"
+                            required
+                            className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600"
+                        />
                     </div>
-                    <p className="text-xs text-slate-600">I confirm that all information provided is accurate and valid per official documents.</p>
+                    <Label htmlFor="agree_terms" className="text-[10px] leading-tight text-slate-500 font-bold uppercase tracking-widest cursor-pointer">
+                        I confirm that all information provided is accurate and I agree to the{' '}
+                        <Link to="/terms" className="text-primary-600 hover:underline">Partner Terms</Link>
+                        {' '}and{' '}
+                        <Link to="/privacy" className="text-primary-600 hover:underline">Privacy Policy</Link>.
+                    </Label>
                 </div>
             </div>
 
