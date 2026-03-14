@@ -113,6 +113,7 @@ const BillingPayments = () => {
                 'Payment ID': txn.razorpayPaymentId || 'N/A',
                 'Date': new Date(txn.createdAt).toLocaleDateString('en-IN'),
                 'Plan Purchased': txn.planId?.name || 'N/A',
+                'Total Users': txn.totalUsers || 0,
                 'Currency': txn.currency,
                 'Amount (INR)': txn.amount,
                 'Status': txn.status.toUpperCase()
@@ -125,6 +126,7 @@ const BillingPayments = () => {
                 { wch: 20 }, // Payment ID
                 { wch: 15 }, // Date
                 { wch: 15 }, // Plan
+                { wch: 12 }, // Total Users
                 { wch: 10 }, // Currency
                 { wch: 15 }, // Amount
                 { wch: 15 }  // Status
@@ -188,11 +190,12 @@ const BillingPayments = () => {
             </header>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
                     { label: 'Total Revenue', value: role === 'superadmin' ? `₹${(billingStats.totalRevenue || 0).toLocaleString()}` : '₹ ••••••', icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-100', shadow: 'shadow-primary-200/40', trend: role === 'superadmin' ? '+12.5%' : 'LOCKED', isUp: true },
                     { label: 'Active Subscriptions', value: billingStats.activeSubscriptions || 0, icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', shadow: 'shadow-emerald-200/40', trend: '+3.2%', isUp: true },
-                    { label: 'Churn Rate', value: `${billingStats.churnRate || 0}%`, icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', shadow: 'shadow-rose-200/40', trend: '+0.5%', isUp: false }
+                    { label: 'Total Platform Users', value: (billingStats.totalUsers || 0).toLocaleString(), icon: TrendingUp, color: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-100', shadow: 'shadow-primary-200/40', trend: '+5.4%', isUp: true },
+                    { label: 'Churn Rate', value: `${billingStats.churnRate || 0}%`, icon: RotateCcw, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', shadow: 'shadow-rose-200/40', trend: '+0.5%', isUp: false }
                 ].map((stat, i) => (
                     <Card key={i} className={cn(
                         "border-2 shadow-lg transition-all duration-300 rounded-[2rem] relative bg-white overflow-hidden group hover:-translate-y-1",
@@ -273,6 +276,7 @@ const BillingPayments = () => {
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type & Plan</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Gateway</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Users</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</th>
                             </tr>
@@ -359,6 +363,14 @@ const BillingPayments = () => {
                                                         {role === 'superadmin' ? `₹${(payment.amount).toLocaleString()}` : '₹ ••••••'}
                                                     </span>
                                                     <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Incl. GST</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-center">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-xs font-black text-slate-900 group-hover:text-primary-600 transition-colors uppercase tracking-widest italic flex items-center gap-1">
+                                                        {payment.totalUsers || 1}
+                                                    </span>
+                                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Added</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">

@@ -88,7 +88,8 @@ const sendTokenResponse = async (user, statusCode, res) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role, adminId, companyName, referralCode, partnerType, ...partnerData } = req.body;
+    const { name, email, password, role, adminId, companyName, partnerType, referralCode } = req.body;
+    const partnerData = req.body; // Use req.body directly since frontend sends flat structure
 
     if (!role || !models[role]) {
       return next(new ErrorResponse('Please provide a valid role', 400));
