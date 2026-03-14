@@ -15,7 +15,7 @@ const checkUserLimit = require('../utils/checkUserLimit');
 // @access  Public
 exports.registerAdmin = async (req, res, next) => {
   try {
-    const { name, email, password, companyName, phoneNumber } = req.body;
+    const { name, email, password, companyName, phoneNumber, teamSize } = req.body;
 
     // Check if user exists
     const userExists = await Admin.findOne({ email });
@@ -24,6 +24,9 @@ exports.registerAdmin = async (req, res, next) => {
       return next(new ErrorResponse('User already exists', 400));
     }
 
+    // Set 7 day demo expiry
+    const subscriptionExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
     // Create user
     const user = await Admin.create({
       name,
@@ -31,8 +34,12 @@ exports.registerAdmin = async (req, res, next) => {
       password,
       companyName,
       phoneNumber,
+      teamSize: teamSize || 1,
+      userLimit: teamSize || 1, // Capacity same as team size initially
       role: 'admin',
-      subscriptionStatus: 'active' // Default to active for now
+      subscriptionStatus: 'active',
+      subscriptionPlan: 'Free Trial',
+      subscriptionExpiry
     });
 
     sendTokenResponse(user, 201, res);
@@ -541,6 +548,13 @@ exports.deleteUser = async (req, res, next) => {
       success: true,
       data: {}
     });
+
+    // Update Admin's teamSize
+    const admin = await Admin.findById(req.user.id);
+    if (admin) {
+      admin.teamSize = Math.max(0, (admin.teamSize || 0) - 1);
+      await admin.save();
+    }
   } catch (err) {
     next(err);
   }
@@ -946,8 +960,16 @@ exports.approveJoinRequest = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
+      message: 'Join request approved and member added.',
       data: user
     });
+
+    // Increment Team Size
+    const admin = await Admin.findById(req.user.id);
+    if (admin) {
+      admin.teamSize = (admin.teamSize || 0) + 1;
+      await admin.save();
+    }
   } catch (err) {
     next(err);
   }
@@ -1066,8 +1088,16 @@ exports.addTeamMember = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: user
+      data: user,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} added successfully.`
     });
+
+    // Increment Team Size
+    const admin = await Admin.findById(adminId);
+    if (admin) {
+      admin.teamSize = (admin.teamSize || 0) + 1;
+      await admin.save();
+    }
   } catch (err) {
     next(err);
   }

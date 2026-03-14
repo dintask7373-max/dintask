@@ -155,7 +155,8 @@ const AdminAccounts = () => {
         planId: '',
         partnerId: '',
         status: 'active',
-        password: ''
+        password: '',
+        teamSize: '1'
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -213,7 +214,8 @@ const AdminAccounts = () => {
                 planId: '',
                 partnerId: '',
                 status: 'active',
-                password: ''
+                password: '',
+                teamSize: '1'
             });
 
         } else {
@@ -369,6 +371,18 @@ const AdminAccounts = () => {
                                     </button>
                                 </div>
                                 <p className="text-[9px] text-slate-400 font-medium ml-1">Default: DinTask@123 if left blank</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Initial Team Size</Label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    placeholder="e.g. 10"
+                                    className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs"
+                                    value={newAdmin.teamSize}
+                                    onChange={(e) => setNewAdmin({ ...newAdmin, teamSize: e.target.value })}
+                                />
+                                <p className="text-[8px] text-slate-400 font-medium ml-1 italic italic">Allocated capacity for this workspace</p>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Referral Partner (Optional)</Label>

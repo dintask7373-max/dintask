@@ -24,11 +24,11 @@ const useSubscriptionMonitor = () => {
     } else if (currentRole === 'manager') {
       window.location.href = '/manager/login';
     } else if (currentRole === 'sales') {
-      window.location.href = '/sales/login';
+      window.location.href = '/init';
     } else if (currentRole === 'partner') {
       window.location.href = '/partner/login';
     } else {
-      window.location.href = '/employee/login';
+      window.location.href = '/init';
     }
   };
 

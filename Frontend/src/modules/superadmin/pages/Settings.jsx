@@ -12,7 +12,11 @@ import {
     User,
     Eye,
     EyeOff,
-    Camera
+    Camera,
+    IndianRupee,
+    Briefcase,
+    Info,
+    Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,7 +41,7 @@ import useAuthStore from '@/store/authStore';
 
 const SuperAdminSettings = () => {
     const { user, updateProfile, changePassword } = useAuthStore();
-    const { systemSettings, updateSystemSettings } = useSuperAdminStore();
+    const { systemSettings, fetchSystemSettings, updateSystemSettings } = useSuperAdminStore();
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'profile';
 
@@ -53,6 +57,15 @@ const SuperAdminSettings = () => {
         supportEmail: '',
         maintenanceMode: false
     });
+    const [billingForm, setBillingForm] = useState({
+        pricePerMember: '50',
+        annualDiscount: '20',
+        demoDays: '7'
+    });
+
+    useEffect(() => {
+        fetchSystemSettings();
+    }, [fetchSystemSettings]);
 
     useEffect(() => {
         if (user) {
@@ -63,6 +76,11 @@ const SuperAdminSettings = () => {
                 platformName: systemSettings.platformName || '',
                 supportEmail: systemSettings.supportEmail || '',
                 maintenanceMode: systemSettings.maintenanceMode || false
+            });
+            setBillingForm({
+                pricePerMember: systemSettings.pricePerMember?.toString() || '50',
+                annualDiscount: systemSettings.annualDiscount?.toString() || '20',
+                demoDays: systemSettings.demoDays?.toString() || '7'
             });
         }
     }, [user, systemSettings]);
@@ -94,20 +112,31 @@ const SuperAdminSettings = () => {
         }
     };
 
-    const handleSystemSubmit = (e) => {
+    const handleSystemSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-        setTimeout(() => {
-            updateSystemSettings(systemForm);
-            setIsSaving(false);
-            toast.success('System settings updated globally');
-        }, 800);
+        const success = await updateSystemSettings(systemForm);
+        setIsSaving(false);
+        if (success) toast.success('System settings updated globally');
+    };
+
+    const handleBillingSubmit = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+        const success = await updateSystemSettings({
+            pricePerMember: Number(billingForm.pricePerMember),
+            annualDiscount: Number(billingForm.annualDiscount),
+            demoDays: Number(billingForm.demoDays)
+        });
+        setIsSaving(false);
+        if (success) toast.success('Global billing parameters synchronized');
     };
 
     const tabs = [
         { id: 'profile', icon: User, label: 'My Account', desc: 'Profile & Identity' },
         { id: 'security', icon: Lock, label: 'Security', desc: 'Password & Protection' },
         { id: 'platform', icon: SettingsIcon, label: 'Platform Settings', desc: 'Global Configuration' },
+        { id: 'billing', icon: IndianRupee, label: 'Subscription Control', desc: 'Pricing & Trial Policies' },
     ];
 
     return (
@@ -395,6 +424,82 @@ const SuperAdminSettings = () => {
                                                     <Button type="submit" disabled={isSaving} className="h-11 sm:h-14 w-full sm:w-auto px-6 sm:px-8 rounded-xl sm:rounded-2xl gap-2 font-black bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-500/20 transition-all active:scale-95 text-xs sm:text-sm">
                                                         {isSaving ? <RefreshCw className="animate-spin" size={16} /> : <Check size={16} />}
                                                         Apply Global Changes
+                                                    </Button>
+                                                </div>
+                                            </form>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            </TabsContent>
+
+                            {/* Billing Tab */}
+                            <TabsContent value="billing" className="m-0 focus-visible:outline-none" key="billing">
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 sm:space-y-6">
+                                    <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+                                        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 p-5 sm:p-8 border-b-2 border-slate-100 dark:border-slate-800">
+                                            <CardTitle className="text-lg sm:text-2xl font-black uppercase tracking-tight italic">Subscription <span className="text-primary-600">Calibration</span></CardTitle>
+                                            <CardDescription className="text-xs sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Configure global pricing, discounts and trial metrics</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="p-5 sm:p-8 space-y-6 sm:space-y-8">
+                                            <form onSubmit={handleBillingSubmit} className="space-y-6 sm:space-y-8">
+                                                <div className="grid gap-4 sm:gap-8 md:grid-cols-3">
+                                                    <div className="space-y-1.5 sm:space-y-2">
+                                                        <Label className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Price Per Member (₹)</Label>
+                                                        <div className="relative">
+                                                            <IndianRupee className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                                            <Input
+                                                                type="number"
+                                                                value={billingForm.pricePerMember}
+                                                                onChange={(e) => setBillingForm({ ...billingForm, pricePerMember: e.target.value })}
+                                                                className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-xs sm:text-sm"
+                                                            />
+                                                        </div>
+                                                        <p className="text-[8px] text-slate-400 font-bold ml-1">Base cost for each active node seat</p>
+                                                    </div>
+                                                    <div className="space-y-1.5 sm:space-y-2">
+                                                        <Label className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Annual Discount (%)</Label>
+                                                        <div className="relative">
+                                                            <Zap className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                                            <Input
+                                                                type="number"
+                                                                value={billingForm.annualDiscount}
+                                                                onChange={(e) => setBillingForm({ ...billingForm, annualDiscount: e.target.value })}
+                                                                className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-xs sm:text-sm"
+                                                            />
+                                                        </div>
+                                                        <p className="text-[8px] text-slate-400 font-bold ml-1">Discount applied for 12-month cycles</p>
+                                                    </div>
+                                                    <div className="space-y-1.5 sm:space-y-2">
+                                                        <Label className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Trial Duration (Days)</Label>
+                                                        <div className="relative">
+                                                            <RefreshCw className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                                            <Input
+                                                                type="number"
+                                                                value={billingForm.demoDays}
+                                                                onChange={(e) => setBillingForm({ ...billingForm, demoDays: e.target.value })}
+                                                                className="pl-10 sm:pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold text-xs sm:text-sm"
+                                                            />
+                                                        </div>
+                                                        <p className="text-[8px] text-slate-400 font-bold ml-1">Free initialization period for new admins</p>
+                                                    </div>
+                                                </div>
+
+                                                <Separator />
+
+                                                <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 space-y-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <Info className="text-blue-600" size={18} />
+                                                        <h4 className="text-sm font-black text-blue-900 dark:text-blue-500 uppercase">Impact Analysis</h4>
+                                                    </div>
+                                                    <p className="text-[10px] sm:text-xs font-bold text-blue-700/80 dark:text-blue-400/70 ml-8 leading-relaxed">
+                                                        Changes to global pricing parameters will take effect immediately for all new subscriptions and renewals. Current active cycles will maintain their locked-in rates until their respective expiry dates.
+                                                    </p>
+                                                </div>
+
+                                                <div className="flex justify-end pt-2 sm:pt-4">
+                                                    <Button type="submit" disabled={isSaving} className="h-11 sm:h-14 w-full sm:w-auto px-6 sm:px-8 rounded-xl sm:rounded-2xl gap-2 font-black bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-500/20 transition-all active:scale-95 text-xs sm:text-sm">
+                                                        {isSaving ? <RefreshCw className="animate-spin" size={16} /> : <Check size={16} />}
+                                                        Synchronize Policies
                                                     </Button>
                                                 </div>
                                             </form>

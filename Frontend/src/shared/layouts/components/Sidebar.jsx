@@ -82,11 +82,11 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
         } else if (currentRole === 'manager') {
             navigate('/manager/login');
         } else if (currentRole === 'sales') {
-            navigate('/sales/login');
+            navigate('/init');
         } else if (currentRole === 'partner') {
             navigate('/partner/login');
         } else {
-            navigate('/employee/login');
+            navigate('/init');
         }
     };
 

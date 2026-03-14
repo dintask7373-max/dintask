@@ -43,8 +43,11 @@ const Subscription = () => {
     const [loadingPlan, setLoadingPlan] = React.useState(null);
     const [downloadingId, setDownloadingId] = React.useState(null);
     const [selectedRole, setSelectedRole] = React.useState('employee');
-    const [inviteEmail, setInviteEmail] = React.useState('');
     const [loadingInvite, setLoadingInvite] = React.useState(false);
+    const [expandLimitDialog, setExpandLimitDialog] = React.useState(false);
+    const [additionalSeats, setAdditionalSeats] = React.useState(1);
+    const [expansionLoading, setExpansionLoading] = React.useState(false);
+    const { createExpansionOrder } = useSubscriptionStore();
 
 
     React.useEffect(() => {
@@ -91,11 +94,11 @@ const Subscription = () => {
         }
 
         const options = {
-            key: 'rzp_test_8sYbzHWidwe5Zw', // Should ideally be in env
+            key: 'rzp_test_8sYbzHWidwe5Zw',
             amount: orderRes.data.amount,
             currency: orderRes.data.currency,
             name: 'DinTask CRM',
-            description: `Payment for ${plan.name} Plan`,
+            description: `Subscription for ${user?.teamSize || 1} members`,
             order_id: orderRes.data.id,
             handler: async (response) => {
                 const verifyRes = await verifyPayment({
@@ -106,7 +109,8 @@ const Subscription = () => {
 
                 if (verifyRes.success) {
                     toast.success('Subscription upgraded successfully!');
-                    await fetchProfile(); // Refresh user data to get new plan
+                    await fetchProfile();
+                    fetchSubscriptionLimit();
                 } else {
                     toast.error(verifyRes.error || 'Payment verification failed');
                 }
@@ -124,6 +128,72 @@ const Subscription = () => {
         const paymentObject = new window.Razorpay(options);
         paymentObject.open();
         setLoadingPlan(null);
+    };
+
+    const handleExpansion = async () => {
+        setExpansionLoading(true);
+        const res = await loadRazorpayScript();
+
+        if (!res) {
+            toast.error('Razorpay SDK failed to load.');
+            setExpansionLoading(false);
+            return;
+        }
+
+        const newLimit = (user?.userLimit || user?.teamSize || 1) + Number(additionalSeats);
+        const orderRes = await createExpansionOrder(newLimit);
+
+        if (orderRes.success && orderRes.free) {
+            toast.success('Capacity expanded successfully!');
+            await fetchProfile();
+            fetchSubscriptionLimit();
+            setExpandLimitDialog(false);
+            setExpansionLoading(false);
+            return;
+        }
+
+        if (!orderRes.success) {
+            toast.error(orderRes.error || 'Expansion failed');
+            setExpansionLoading(false);
+            return;
+        }
+
+        const options = {
+            key: 'rzp_test_8sYbzHWidwe5Zw',
+            amount: orderRes.data.amount,
+            currency: orderRes.data.currency,
+            name: 'DinTask CRM',
+            description: `Expanding by ${additionalSeats} seats`,
+            order_id: orderRes.data.id,
+            handler: async (response) => {
+                const verifyRes = await verifyPayment({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature
+                });
+
+                if (verifyRes.success) {
+                    toast.success(`Expanded to ${newLimit} seats!`);
+                    await fetchProfile();
+                    fetchSubscriptionLimit();
+                    setExpandLimitDialog(false);
+                } else {
+                    toast.error(verifyRes.error || 'Verification failed');
+                }
+                setExpansionLoading(false);
+            },
+            prefill: {
+                name: user?.name,
+                email: user?.email,
+            },
+            theme: {
+                color: '#2563eb'
+            }
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+        setExpansionLoading(false);
     };
 
     const displayLimit = limitStatus?.limit || user?.planDetails?.userLimit || subscriptionLimit || 0;
@@ -217,9 +287,18 @@ const Subscription = () => {
                                         <span className="font-bold text-slate-900 dark:text-white">{currentCount} / {displayLimit}</span>
                                     </div>
                                     <Progress value={usagePercentage} className="h-2 bg-slate-100 dark:bg-slate-800" />
-                                    <p className="text-[10px] text-slate-400 italic">
-                                        {usagePercentage > 80 ? "⚠️ You are running out of seats." : "You have room for more team members."}
-                                    </p>
+                                    <div className="flex justify-between items-center mt-1">
+                                        <p className="text-[10px] text-slate-400 italic">
+                                            {usagePercentage > 90 ? "⚠️ Critical: Exhausted seats" : usagePercentage > 75 ? "⚠️ Warning: Low capacity" : "Available capacity healthy"}
+                                        </p>
+                                        <Button
+                                            variant="link"
+                                            className="h-auto p-0 text-[10px] font-black uppercase text-primary-600"
+                                            onClick={() => setExpandLimitDialog(true)}
+                                        >
+                                            Buy Seats
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -316,8 +395,8 @@ const Subscription = () => {
                                     </Button>
                                 </div>
                                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                                    <span>Remaining Seats</span>
-                                    <span className="text-primary-600">{subscriptionLimit - employees.length} slots</span>
+                                    <span>Available for Hiring</span>
+                                    <span className="text-primary-600 font-black">{Math.max(0, displayLimit - employees.length)} SLOTS</span>
                                 </div>
                             </div>
 
@@ -370,8 +449,10 @@ const Subscription = () => {
                                 {isCurrent && subscriptionExpired && <Badge className="w-fit mb-2 bg-red-600">Expired Plan</Badge>}
                                 <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
                                 <CardDescription className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                                    ₹{plan.price}
-                                    <span className="text-sm font-normal text-slate-400">/{plan.duration || 30}d</span>
+                                    ₹{plan.price * (user?.userLimit || user?.teamSize || 1)}
+                                    <span className="text-xs font-bold text-slate-400 ml-2 italic">
+                                        (₹{plan.price}/mem)
+                                    </span>
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -384,7 +465,7 @@ const Subscription = () => {
                                     ))}
                                     <li className="flex items-center gap-2 text-xs text-slate-900 font-bold">
                                         <Users size={14} className="text-primary-500" />
-                                        Up to {plan.userLimit} Users
+                                        Team-Based Scaling
                                     </li>
                                 </ul>
                             </CardContent>
@@ -490,6 +571,63 @@ const Subscription = () => {
                     </div>
                 </CardContent>
             </Card>
+            {/* Expand Limit Dialog */}
+            <Dialog open={expandLimitDialog} onOpenChange={setExpandLimitDialog}>
+                <DialogContent className="sm:max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+                    <DialogHeader className="bg-slate-900 text-white p-8">
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight italic">Expand <span className="text-primary-400">Team Capacity</span></DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Increase your seat count mid-cycle</DialogDescription>
+                    </DialogHeader>
+                    <div className="p-8 space-y-8">
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Additional Seats Required</Label>
+                            <div className="flex items-center gap-4">
+                                <Button
+                                    variant="outline"
+                                    className="h-14 w-14 rounded-2xl border-2 font-black text-xl"
+                                    onClick={() => setAdditionalSeats(Math.max(1, additionalSeats - 1))}
+                                >
+                                    -
+                                </Button>
+                                <Input
+                                    type="number"
+                                    value={additionalSeats}
+                                    onChange={(e) => setAdditionalSeats(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="h-14 flex-1 text-center font-black text-xl rounded-2xl bg-slate-50 border-none"
+                                />
+                                <Button
+                                    variant="outline"
+                                    className="h-14 w-14 rounded-2xl border-2 font-black text-xl"
+                                    onClick={() => setAdditionalSeats(additionalSeats + 1)}
+                                >
+                                    +
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="p-6 rounded-2xl bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/20 space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold text-slate-500">Prorated Cost</span>
+                                <span className="text-lg font-black text-primary-600">Calculated at Checkout</span>
+                            </div>
+                            <Separator className="bg-primary-200/50" />
+                            <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">
+                                * Your payment will be calculated based on the remaining days of your current cycle and the plan's unit price.
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col sm:flex-row gap-3">
+                        <Button variant="ghost" onClick={() => setExpandLimitDialog(false)} className="rounded-xl font-bold text-xs uppercase tracking-widest">Cancel</Button>
+                        <Button
+                            onClick={handleExpansion}
+                            disabled={expansionLoading}
+                            className="bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-black text-xs uppercase tracking-widest px-8"
+                        >
+                            {expansionLoading ? 'Calculating...' : 'Proceed to Payment'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
