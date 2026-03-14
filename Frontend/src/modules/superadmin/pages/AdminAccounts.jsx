@@ -14,7 +14,8 @@ import {
     UserPlus,
     Plus,
     ArrowUpRight,
-    Calendar
+    Calendar,
+    EyeOff
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -153,8 +154,11 @@ const AdminAccounts = () => {
         plan: 'Starter',
         planId: '',
         partnerId: '',
-        status: 'active'
+        status: 'active',
+        password: ''
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     const [editFormData, setEditFormData] = useState({
         companyName: '',
@@ -199,7 +203,7 @@ const AdminAccounts = () => {
 
         const result = await useSuperAdminStore.getState().addAdmin(newAdmin);
         if (result.success) {
-            toast.success("Company account provisioned successfully");
+            toast.success("Company account provisioned. Credentials sent via email.");
             setIsAddModalOpen(false);
             setNewAdmin({
                 name: '',
@@ -208,7 +212,8 @@ const AdminAccounts = () => {
                 plan: 'Starter',
                 planId: '',
                 partnerId: '',
-                status: 'active'
+                status: 'active',
+                password: ''
             });
 
         } else {
@@ -344,6 +349,26 @@ const AdminAccounts = () => {
                                     value={newAdmin.email}
                                     onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
                                 />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Initial Password (Optional)</Label>
+                                <div className="relative group/pass">
+                                    <Input
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        className="h-12 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl font-bold text-xs pr-11"
+                                        value={newAdmin.password}
+                                        onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                                <p className="text-[9px] text-slate-400 font-medium ml-1">Default: DinTask@123 if left blank</p>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Referral Partner (Optional)</Label>

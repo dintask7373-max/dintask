@@ -32,11 +32,11 @@ const Privacy = () => {
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
                 <div className="max-w-4xl mx-auto px-6 h-24 flex items-center justify-between">
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate(-1)}
                         className="flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors group"
                     >
                         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-sm font-bold uppercase tracking-widest">Back to Home</span>
+                        <span className="text-sm font-bold uppercase tracking-widest">Back</span>
                     </button>
                     <div className="flex items-center gap-3">
                         <img src="/dintask-logo.png" alt="DinTask" className="h-18 w-18 sm:h-22 sm:w-22 object-contain" />

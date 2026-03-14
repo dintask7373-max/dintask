@@ -39,8 +39,8 @@ router.use(protect);
 // Shared route for Chat/Directory - now accessible by Managers/Sales/Employees etc.
 router.get('/users', getAllUsers);
 
-// Routes for Admin, Super Admin, and Manager
-router.use(authorize('admin', 'superadmin', 'manager'));
+// Routes for Admin, Super Admin, Manager and Sales
+router.use(authorize('admin', 'superadmin', 'manager', 'sales'));
 router.get('/plans', getPlans);
 router.get('/subscription-limit', getSubscriptionLimitStatus);
 router.get('/dashboard-stats', getDashboardStats);
@@ -49,6 +49,7 @@ router.get('/dashboard-charts/pipeline', getSalesPipelineChart);
 router.get('/dashboard-charts/projects', getProjectHealthChart);
 router.get('/dashboard-actionable-lists', getActionableLists);
 router.get('/reports/stats', getReportsStats);
+router.get('/crm/stats', getCRMStats);
 
 // Restricted Admin and Super Admin only routes
 router.use(authorize('admin', 'superadmin'));
@@ -59,7 +60,6 @@ router.route('/users/:id')
 router.get('/managers', getManagers);
 router.get('/employees', getEmployees);
 router.get('/sales-executives', getSalesExecutives);
-router.get('/crm/stats', getCRMStats); // Added CRM Stats route
 
 // Join Requests
 router.get('/join-requests', getJoinRequests);

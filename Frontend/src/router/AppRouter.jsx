@@ -1,9 +1,30 @@
-﻿import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import useAuthStore from '@/store/authStore';
 import LoadingScreen from '@/shared/components/LoadingScreen';
 
+
+const PublicRoute = ({ children }) => {
+    const { isAuthenticated, role } = useAuthStore();
+    
+    if (isAuthenticated && role) {
+        const defaultRoute = role === 'superadmin' 
+            ? '/superadmin' 
+            : role === 'admin' 
+                ? '/admin' 
+                : role === 'manager' 
+                    ? '/manager' 
+                    : role === 'sales' 
+                        ? '/sales' 
+                        : role === 'partner' 
+                            ? '/partner' 
+                            : '/employee';
+        return <Navigate to={defaultRoute} replace />;
+    }
+    
+    return children;
+};
 
 const NotFoundRedirect = () => {
     const { isAuthenticated, role } = useAuthStore();
@@ -16,7 +37,7 @@ const NotFoundRedirect = () => {
             ? '/admin'
             : role === 'manager'
                 ? '/manager'
-                : role === 'sales'
+                : (role === 'sales' || role === 'sales_executive')
                     ? '/sales'
                     : role === 'partner'
                         ? '/partner'
@@ -38,7 +59,6 @@ const ForgotPassword = lazy(() => import('@/modules/user/pages/ForgotPassword'))
 const AdminLogin = lazy(() => import('@/modules/admin/pages/AdminLogin'));
 const AdminRegister = lazy(() => import('@/modules/admin/pages/AdminRegister'));
 const SuperAdminLogin = lazy(() => import('@/modules/superadmin/pages/SuperAdminLogin'));
-const SuperAdminRegister = lazy(() => import('@/modules/superadmin/pages/SuperAdminRegister'));
 const SuperAdminForgotPassword = lazy(() => import('@/modules/superadmin/pages/SuperAdminForgotPassword'));
 
 // Admin Pages
@@ -173,7 +193,7 @@ const AppRouter = () => {
         <Suspense fallback={<LoadingScreen />}>
             <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
                 <Route path="/init" element={<InitialSplash />} />
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/client" element={<ClientTestimonial />} />
@@ -181,29 +201,28 @@ const AppRouter = () => {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/cookies" element={<Cookies />} />
-                <Route path="/employee/splash" element={<SplashScreen />} />
+                <Route path="/employee/splash" element={<PublicRoute><SplashScreen /></PublicRoute>} />
                 <Route path="/pending-approval" element={<PendingApproval />} />
                 <Route path="/employee/success-join" element={<SuccessJoin />} />
-                <Route path="/employee/login" element={<EmployeeLogin />} />
-                <Route path="/employee/register" element={<EmployeeRegister />} />
-                <Route path="/employee/forgot-password" element={<ForgotPassword returnPath="/employee/login" />} />
-                <Route path="/manager/login" element={<ManagerLogin />} />
-                <Route path="/manager/register" element={<ManagerRegister />} />
-                <Route path="/manager/forgot-password" element={<ForgotPassword returnPath="/manager/login" />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/register" element={<AdminRegister />} />
-                <Route path="/admin/forgot-password" element={<ForgotPassword returnPath="/admin/login" />} />
-                <Route path="/superadmin/login" element={<SuperAdminLogin />} />
-                <Route path="/superadmin/register" element={<SuperAdminRegister />} />
-                <Route path="/superadmin/forgot-password" element={<SuperAdminForgotPassword />} />
-                <Route path="/sales/login" element={<SalesLogin />} />
-                <Route path="/sales/register" element={<SalesRegister />} />
-                <Route path="/sales/forgot-password" element={<ForgotPassword returnPath="/sales/login" />} />
+                <Route path="/employee/login" element={<PublicRoute><EmployeeLogin /></PublicRoute>} />
+                <Route path="/employee/register" element={<PublicRoute><EmployeeRegister /></PublicRoute>} />
+                <Route path="/employee/forgot-password" element={<PublicRoute><ForgotPassword returnPath="/employee/login" /></PublicRoute>} />
+                <Route path="/manager/login" element={<PublicRoute><ManagerLogin /></PublicRoute>} />
+                <Route path="/manager/register" element={<PublicRoute><ManagerRegister /></PublicRoute>} />
+                <Route path="/manager/forgot-password" element={<PublicRoute><ForgotPassword returnPath="/manager/login" /></PublicRoute>} />
+                <Route path="/admin/login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
+                <Route path="/admin/register" element={<PublicRoute><AdminRegister /></PublicRoute>} />
+                <Route path="/admin/forgot-password" element={<PublicRoute><ForgotPassword returnPath="/admin/login" /></PublicRoute>} />
+                <Route path="/superadmin/login" element={<PublicRoute><SuperAdminLogin /></PublicRoute>} />
+                <Route path="/superadmin/forgot-password" element={<PublicRoute><SuperAdminForgotPassword /></PublicRoute>} />
+                <Route path="/sales/login" element={<PublicRoute><SalesLogin /></PublicRoute>} />
+                <Route path="/sales/register" element={<PublicRoute><SalesRegister /></PublicRoute>} />
+                <Route path="/sales/forgot-password" element={<PublicRoute><ForgotPassword returnPath="/sales/login" /></PublicRoute>} />
 
                 {/* Partner Auth Routes */}
-                <Route path="/partner/login" element={<PartnerLogin />} />
-                <Route path="/partner/register" element={<PartnerRegister />} />
-                <Route path="/partner/forgot-password" element={<ForgotPassword returnPath="/partner/login" />} />
+                <Route path="/partner/login" element={<PublicRoute><PartnerLogin /></PublicRoute>} />
+                <Route path="/partner/register" element={<PublicRoute><PartnerRegister /></PublicRoute>} />
+                <Route path="/partner/forgot-password" element={<PublicRoute><ForgotPassword returnPath="/partner/login" /></PublicRoute>} />
 
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
 

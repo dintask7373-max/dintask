@@ -13,10 +13,31 @@ import AuthLayout from '@/shared/components/layout/AuthLayout';
 
 const AdminLogin = () => {
     const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { login, loading, error, isAuthenticated, role } = useAuthStore();
+    const { login, loading, error, isAuthenticated, role, checkEmail } = useAuthStore();
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!email) return;
+        const result = await checkEmail(email, 'admin');
+        if (result.success) {
+            if (!result.exists) {
+                setEmailError('Email not found in our records');
+                toast.error('Identity Mismatch: This email is not registered');
+            } else if (result.role && result.role !== 'admin') {
+                // Check for normalized roles
+                let normRole = result.role;
+                if (normRole === 'sales_executive') normRole = 'sales';
+
+                setEmailError(`Registered as ${normRole.toUpperCase()}`);
+                toast.error(`Wrong Portal: This email is registered as a ${normRole.toUpperCase()}. Please use the correct login page.`);
+            } else {
+                setEmailError('');
+            }
+        }
+    };
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -29,6 +50,11 @@ const AdminLogin = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
 
         const result = await login(email, password, 'admin');
         if (result.success) {
@@ -54,10 +80,15 @@ const AdminLogin = () => {
                         type="email"
                         placeholder="admin@company.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            setEmailError('');
+                        }}
+                        onBlur={handleEmailBlur}
                         autoComplete="email"
-                        className="h-12 rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs"
+                        className={`h-12 rounded-xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus-visible:ring-primary-500/20 text-xs ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
                     />
+                    {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                 </div>
 
                 <div className="space-y-2">

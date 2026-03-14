@@ -20,12 +20,12 @@ router.get('/', getTasks);
 router.get('/:id', getTask);
 
 // Create Task (Manager, Admin, Employee)
-router.post('/', authorize('manager', 'admin', 'employee', 'sales_executive'), createTask);
+router.post('/', authorize('manager', 'admin', 'employee'), createTask);
 
 // Update Task (Manager, Admin, Employee can update status)
 router.put('/:id', updateTask);
 
 // Delete Task (Manager, Admin, Employee - owner only)
-router.delete('/:id', authorize('manager', 'admin', 'employee', 'sales_executive'), deleteTask);
+router.delete('/:id', authorize('manager', 'admin', 'employee'), deleteTask);
 
 module.exports = router;

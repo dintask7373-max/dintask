@@ -21,8 +21,27 @@ const EmployeeLogin = () => {
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
 
-    const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role } = useAuthStore();
+    const { login, sendOtp, verifyOtp, loading, error, isAuthenticated, role, checkEmail } = useAuthStore();
+    const [emailError, setEmailError] = useState('');
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!email || loginMethod !== 'password') return;
+        const result = await checkEmail(email, 'employee');
+        if (result.success) {
+            if (!result.exists) {
+                setEmailError('Personnel email not found');
+                toast.error('Identity Mismatch: Record not found');
+            } else if (result.role && result.role !== 'employee') {
+                let normRole = result.role;
+                if (normRole === 'sales_executive') normRole = 'sales';
+                setEmailError(`Registered as ${normRole.toUpperCase()}`);
+                toast.error(`Wrong Portal: This email belongs to a ${normRole.toUpperCase()}.`);
+            } else {
+                setEmailError('');
+            }
+        }
+    };
  
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -42,6 +61,10 @@ const EmployeeLogin = () => {
         e.preventDefault();
 
         if (loginMethod === 'password') {
+            if (emailError) {
+                toast.error(emailError);
+                return;
+            }
             if (!email || !password) {
                 toast.error('Tactical credentials required');
                 return;
@@ -64,7 +87,7 @@ const EmployeeLogin = () => {
                 }
             }
         } else {
-            // OTP Flow
+            // ... OTP flow ...
             if (!phone) {
                 toast.error('Mobile uplink required');
                 return;
@@ -110,7 +133,7 @@ const EmployeeLogin = () => {
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6">
                 <button
                     type="button"
-                    onClick={() => setLoginMethod('password')}
+                    onClick={() => { setLoginMethod('password'); setEmailError(''); }}
                     className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${loginMethod === 'password' ? 'bg-white dark:bg-slate-900 text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                         }`}
                 >
@@ -118,7 +141,7 @@ const EmployeeLogin = () => {
                 </button>
                 <button
                     type="button"
-                    onClick={() => setLoginMethod('otp')}
+                    onClick={() => { setLoginMethod('otp'); setEmailError(''); }}
                     className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${loginMethod === 'otp' ? 'bg-white dark:bg-slate-900 text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                         }`}
                 >
@@ -136,10 +159,15 @@ const EmployeeLogin = () => {
                                 type="email"
                                 placeholder="name@company.com"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    setEmailError('');
+                                }}
+                                onBlur={handleEmailBlur}
                                 autoComplete="email"
-                                className="h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                                className={`h-12 px-5 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
                             />
+                            {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                         </div>
 
                         <div className="space-y-2">

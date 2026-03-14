@@ -20,19 +20,44 @@ import AuthLayout from '@/shared/components/layout/AuthLayout';
 
 const PartnerLogin = () => {
     const navigate = useNavigate();
-    const login = useAuthStore(state => state.login);
+    const { login, checkEmail } = useAuthStore();
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState('');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
 
+    const handleEmailBlur = async () => {
+        if (!formData.email) return;
+        const result = await checkEmail(formData.email, 'partner');
+        if (result.success) {
+            if (!result.exists) {
+                setEmailError('Partner email not found');
+                toast.error('Identity Mismatch: Entry not found in registry');
+            } else if (result.role && result.role !== 'partner') {
+                let normRole = result.role;
+                if (normRole === 'sales_executive') normRole = 'sales';
+                setEmailError(`Registered as ${normRole.toUpperCase()}`);
+                toast.error(`Wrong Portal: This ID is registered as a ${normRole.toUpperCase()}.`);
+            } else {
+                setEmailError('');
+            }
+        }
+    };
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if (name === 'email') setEmailError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
         setLoading(true);
         try {
             const result = await login(formData.email, formData.password, 'partner');
@@ -70,10 +95,12 @@ const PartnerLogin = () => {
                             required
                             value={formData.email}
                             onChange={handleChange}
-                            className="pl-11 h-12 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200"
+                            onBlur={handleEmailBlur}
+                            className={`pl-11 h-12 bg-slate-50 border-none dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-primary-500/10 transition-all duration-200 ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
                             placeholder="name@company.com"
                         />
                     </div>
+                    {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                 </div>
 
                 <div className="space-y-2">

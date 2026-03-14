@@ -10,7 +10,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 
 const AdminRegister = () => {
-    const { register, error, loading: storeLoading } = useAuthStore();
+    const { checkEmail, register, error, loading: storeLoading } = useAuthStore();
     const [localLoading, setLocalLoading] = useState(false);
     const loading = storeLoading || localLoading;
 
@@ -22,6 +22,7 @@ const AdminRegister = () => {
         confirmPassword: ''
     });
 
+    const [emailError, setEmailError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -37,11 +38,26 @@ const AdminRegister = () => {
         }));
     };
 
-    // ... existing handleChange ...
+    const handleEmailBlur = async () => {
+        if (!formData.email) return;
+        const result = await checkEmail(formData.email, 'admin');
+        if (result.success && result.exists) {
+            setEmailError('This enterprise email is already registered');
+            toast.error('Identity Conflict: This email is already registered as an Administrator');
+        } else {
+            setEmailError('');
+        }
+    };
+
 
     const handleRegister = async (e) => {
         e.preventDefault();
         const { companyName, adminName, email, password, confirmPassword } = formData;
+
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
 
         if (!companyName || !adminName || !email || !password || !confirmPassword) {
             toast.error('Please fill in all fields');
@@ -111,83 +127,101 @@ const AdminRegister = () => {
             <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 overflow-y-auto no-scrollbar">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center md:text-left">
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Join DinTask</h2>
-                        <p className="text-slate-500 dark:text-slate-400 mt-2">Setup your organization's workspace and start your tactical journey.</p>
+                        <div className="md:hidden flex justify-center mb-6">
+                            <div className="h-10 w-10 rounded-xl bg-primary-600 flex items-center justify-center shadow-lg shadow-primary-900/20">
+                                <img src="/dintask-logo.png" alt="DinTask" className="h-6 w-6 object-contain" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Join <span className="text-primary-600">DinTask</span></h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-bold uppercase tracking-widest italic opacity-70">Setup your organization's workspace</p>
                     </div>
 
-                    <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900">
-                        <CardContent className="pt-8 pb-8 px-6 space-y-4">
-                            <form onSubmit={handleRegister} className="space-y-4">
+                    <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
+                        <CardContent className="pt-10 pb-10 px-8 space-y-6">
+                            <form onSubmit={handleRegister} className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="companyName">Company Name</Label>
-                                    <Input
-                                        id="companyName"
-                                        placeholder="Tech Solutions Inc."
-                                        value={formData.companyName}
-                                        onChange={handleChange}
-                                        className="h-11 rounded-lg"
-                                    />
+                                    <Label htmlFor="companyName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Entity Name</Label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <Input
+                                            id="companyName"
+                                            placeholder="Tech Solutions Inc."
+                                            value={formData.companyName}
+                                            onChange={handleChange}
+                                            className="h-14 pl-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus:ring-primary-500/20"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="adminName">Admin Full Name</Label>
-                                    <Input
-                                        id="adminName"
-                                        placeholder="John Boss"
-                                        value={formData.adminName}
-                                        onChange={handleChange}
-                                        className="h-11 rounded-lg"
-                                    />
+                                    <Label htmlFor="adminName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Master Administrator</Label>
+                                    <div className="relative">
+                                        <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <Input
+                                            id="adminName"
+                                            placeholder="John Boss"
+                                            value={formData.adminName}
+                                            onChange={handleChange}
+                                            className="h-14 pl-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus:ring-primary-500/20"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Work Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="admin@company.com"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        className="h-11 rounded-lg"
-                                    />
+                                    <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Enterprise Email</Label>
+                                    <div className="relative">
+                                        <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="admin@company.com"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            onBlur={handleEmailBlur}
+                                            className={`h-14 pl-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus:ring-primary-500/20 ${emailError ? 'ring-2 ring-red-500/50' : ''}`}
+                                        />
+                                    </div>
+                                    {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="password">Password</Label>
+                                        <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Security Key</Label>
                                         <div className="relative group/pass">
+                                            <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                             <Input
                                                 id="password"
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder="••••••••"
                                                 value={formData.password}
                                                 onChange={handleChange}
-                                                className="h-11 rounded-lg pr-10"
+                                                className="h-14 pl-12 pr-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus:ring-primary-500/20"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
                                             >
                                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                             </button>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="confirmPassword">Confirm</Label>
+                                        <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Verify Key</Label>
                                         <div className="relative group/pass">
+                                            <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                             <Input
                                                 id="confirmPassword"
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 placeholder="••••••••"
                                                 value={formData.confirmPassword}
                                                 onChange={handleChange}
-                                                className="h-11 rounded-lg pr-10"
+                                                className="h-14 pl-12 pr-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus:ring-primary-500/20"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors p-1"
                                             >
                                                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                             </button>
@@ -195,26 +229,44 @@ const AdminRegister = () => {
                                     </div>
                                 </div>
 
+                                <div className="flex items-start gap-3 px-1">
+                                    <div className="flex h-5 items-center">
+                                        <input
+                                            id="terms"
+                                            name="terms"
+                                            type="checkbox"
+                                            required
+                                            className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600"
+                                        />
+                                    </div>
+                                    <div className="text-[10px] leading-tight text-slate-500 font-bold uppercase tracking-widest">
+                                        By initializing, you agree to our{' '}
+                                        <Link to="/terms" className="text-primary-600 hover:underline">Terms of Service</Link>
+                                        {' '}and{' '}
+                                        <Link to="/privacy" className="text-primary-600 hover:underline">Privacy Policy</Link>.
+                                    </div>
+                                </div>
+
                                 <Button
                                     type="submit"
-                                    className="w-full h-11 text-base font-black bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-900/20"
+                                    className="w-full h-14 text-xs font-black uppercase tracking-[0.2em] bg-primary-600 hover:bg-primary-700 text-white rounded-2xl shadow-xl shadow-primary-600/20 active:scale-95 transition-all mt-4"
                                     disabled={loading}
                                 >
-                                    {loading ? 'Creating Workspace...' : 'Create Admin Account'}
+                                    {loading ? 'MODULATING...' : 'Initialize Workspace'}
                                 </Button>
                             </form>
 
-                            <div className="text-center pt-2 border-t border-slate-100 flex items-center justify-center gap-2">
-                                <span className="text-xs text-slate-500">Already a Partner?</span>
-                                <Link to="/admin/login" className="text-xs font-bold text-primary-600 hover:text-primary-500 uppercase tracking-tight">
+                            <div className="text-center pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-2">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Established Identity?</span>
+                                <Link to="/admin/login" className="text-[10px] font-black text-primary-600 hover:underline uppercase tracking-wide">
                                     Sign In
                                 </Link>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <p className="text-center text-xs text-slate-400">
-                        &copy; 2026 DinTask Inc. All rights reserved.
+                    <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        &copy; 2026 DinTask Enterprise • SECURE-NODE-01
                     </p>
                 </div>
             </div>

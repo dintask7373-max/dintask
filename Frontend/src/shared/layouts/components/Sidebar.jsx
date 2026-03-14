@@ -71,8 +71,23 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const activeTab = sidebarSearchParams.get('tab') || 'profile';
 
     const handleLogout = () => {
+        const currentRole = role;
         logout();
-        navigate('/init');
+
+        // Redirect based on role
+        if (currentRole === 'superadmin' || currentRole === 'superadmin_staff') {
+            navigate('/superadmin/login');
+        } else if (currentRole === 'admin') {
+            navigate('/admin/login');
+        } else if (currentRole === 'manager') {
+            navigate('/manager/login');
+        } else if (currentRole === 'sales') {
+            navigate('/sales/login');
+        } else if (currentRole === 'partner') {
+            navigate('/partner/login');
+        } else {
+            navigate('/employee/login');
+        }
     };
 
     const user = useAuthStore(state => state.user);

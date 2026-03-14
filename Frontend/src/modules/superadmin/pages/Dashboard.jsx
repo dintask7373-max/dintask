@@ -122,7 +122,7 @@ const SuperAdminDashboard = () => {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Total Revenue - Root Or Staff (Locked for Staff) */}
-                <motion.div variants={fadeInUp}>
+                <motion.div variants={fadeInUp} onClick={() => isSuperAdminRoot && navigate('/superadmin/billing')} className={cn(isSuperAdminRoot && "cursor-pointer")}>
                     <Card className="border-2 border-emerald-100 shadow-lg shadow-emerald-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] relative hover:-translate-y-1">
                         {!isSuperAdminRoot && (
                             <div className="absolute inset-0 bg-slate-50/10 dark:bg-slate-950/20 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-2 text-center">
@@ -153,7 +153,7 @@ const SuperAdminDashboard = () => {
                 </motion.div>
 
                 {/* Active Companies */}
-                <motion.div variants={fadeInUp}>
+                <motion.div variants={fadeInUp} onClick={() => navigate('/superadmin/admins')} className="cursor-pointer">
                     <Card className="border-2 border-blue-100 shadow-lg shadow-blue-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] hover:-translate-y-1">
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
@@ -171,7 +171,7 @@ const SuperAdminDashboard = () => {
                 </motion.div>
 
                 {/* Total Users */}
-                <motion.div variants={fadeInUp}>
+                <motion.div variants={fadeInUp} onClick={() => navigate('/superadmin/users')} className="cursor-pointer">
                     <Card className="border-2 border-indigo-100 shadow-lg shadow-indigo-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] hover:-translate-y-1">
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
@@ -189,9 +189,8 @@ const SuperAdminDashboard = () => {
                 </motion.div>
 
                 {/* Active Support Tickets */}
-                <motion.div variants={fadeInUp}>
-                    <Card className="border-2 border-orange-100 shadow-lg shadow-orange-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] cursor-pointer hover:-translate-y-1"
-                        onClick={() => navigate('/superadmin/support')}>
+                <motion.div variants={fadeInUp} onClick={() => navigate('/superadmin/support')} className="cursor-pointer">
+                    <Card className="border-2 border-orange-100 shadow-lg shadow-orange-200/50 bg-white dark:bg-slate-900 group transition-all duration-300 overflow-hidden rounded-[2rem] hover:-translate-y-1">
                         <CardContent className="p-3 sm:p-5">
                             <div className="flex justify-between items-start mb-2 sm:mb-3">
                                 <div className="p-1.5 sm:p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 group-hover:scale-105 transition-transform shadow-inner shadow-orange-100">
@@ -288,8 +287,8 @@ const SuperAdminDashboard = () => {
                 )}
 
                 {/* Plan Distribution */}
-                <motion.div variants={fadeInUp}>
-                    <Card className="h-full border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem]">
+                <motion.div variants={fadeInUp} onClick={() => isSuperAdminRoot && navigate('/superadmin/plans')} className={cn(isSuperAdminRoot && "cursor-pointer")}>
+                    <Card className="h-full border-2 border-slate-100 shadow-xl shadow-slate-200/30 bg-white dark:bg-slate-900 overflow-hidden rounded-[2rem] hover:shadow-slate-300/40 transition-shadow transition-transform hover:-translate-y-1">
                         <CardHeader className="px-5 md:px-8 py-4 md:py-6 border-b border-slate-50 dark:border-slate-800/50">
                             <CardTitle className="text-xs md:text-base font-black uppercase tracking-widest text-slate-900 dark:text-slate-200">Adoption</CardTitle>
                             <p className="text-[9px] font-bold text-slate-400 uppercase">Plan distribution</p>

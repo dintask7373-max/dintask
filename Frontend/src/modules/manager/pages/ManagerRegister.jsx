@@ -19,7 +19,6 @@ const ManagerRegister = () => {
     const adminId = queryParams.get('adminId');
     const inviteEmail = queryParams.get('email');
 
-    const { register } = useAuthStore();
     const addPendingRequest = useEmployeeStore(state => state.addPendingRequest);
 
     const [formData, setFormData] = useState({
@@ -33,7 +32,20 @@ const ManagerRegister = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState('');
+    const { register, checkEmail } = useAuthStore();
     const navigate = useNavigate();
+
+    const handleEmailBlur = async () => {
+        if (!formData.email || !!inviteEmail) return;
+        const result = await checkEmail(formData.email, 'manager');
+        if (result.success && result.exists) {
+            setEmailError('Email already registered for a manager');
+            toast.error('Registration Blocked: Email exists in registry');
+        } else {
+            setEmailError('');
+        }
+    };
 
     useEffect(() => {
         if (inviteEmail) {
@@ -41,17 +53,24 @@ const ManagerRegister = () => {
         }
     }, [inviteEmail]);
 
+
     const handleChange = (e) => {
         const { id, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [id]: value
         }));
+        if (id === 'email') setEmailError('');
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         const { fullName, email, password, confirmPassword } = formData;
+
+        if (emailError) {
+            toast.error(emailError);
+            return;
+        }
 
         if (!fullName || !email || !password || !confirmPassword) {
             toast.error('Parameters incomplete');
@@ -189,13 +208,16 @@ const ManagerRegister = () => {
                                             placeholder="manager@company.com"
                                             value={formData.email}
                                             onChange={handleChange}
+                                            onBlur={handleEmailBlur}
                                             readOnly={!!inviteEmail}
                                             className={cn(
-                                                "h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800",
-                                                inviteEmail && "opacity-70 cursor-not-allowed"
+                                                "h-12 pl-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800 font-bold",
+                                                inviteEmail && "opacity-70 cursor-not-allowed",
+                                                emailError && "border-red-500 ring-1 ring-red-500"
                                             )}
                                         />
                                     </div>
+                                    {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -240,6 +262,24 @@ const ManagerRegister = () => {
                                                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                             </button>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 px-1">
+                                    <div className="flex h-5 items-center">
+                                        <input
+                                            id="terms"
+                                            name="terms"
+                                            type="checkbox"
+                                            required
+                                            className="h-4 w-4 rounded border-slate-200 dark:border-slate-800 text-primary-600 focus:ring-primary-600"
+                                        />
+                                    </div>
+                                    <div className="text-[10px] leading-tight text-slate-500 font-bold uppercase tracking-widest">
+                                        I accept the{' '}
+                                        <Link to="/terms" className="text-primary-600 hover:underline">Terms of Service</Link>
+                                        {' '}and{' '}
+                                        <Link to="/privacy" className="text-primary-600 hover:underline">Privacy Policy</Link>.
                                     </div>
                                 </div>
 

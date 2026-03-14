@@ -182,6 +182,12 @@ exports.register = async (req, res, next) => {
       };
     }
 
+    // Check if email is already taken for THIS role (or any role if we want global uniqueness)
+    const emailExists = await UserModel.findOne({ email });
+    if (emailExists) {
+      return next(new ErrorResponse('Email already registered for this role', 400));
+    }
+
     // Check if phone number is already taken (if provided)
     if (req.body.phoneNumber || req.body.phone) {
       const phone = req.body.phoneNumber || req.body.phone;
@@ -698,17 +704,47 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
     // We append role to query so frontend knows which endpoint to hit if needed, or just centralize
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}?role=${user.role}`;
 
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.`;
 
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
+        <div style="background-color: #3b82f6; color: #ffffff; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Password Reset Request</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>You are receiving this email because you (or someone else) has requested the reset of a password for your <strong>DinTask</strong> account.</p>
+          
+          <p>Please click the button below to reset your password. This link will expire in <strong>10 minutes</strong>.</p>
+          
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${resetUrl}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+          </div>
+
+          <p style="font-size: 14px; color: #6b7280;">
+            If you're having trouble clicking the button, copy and paste the URL below into your web browser:<br>
+            <a href="${resetUrl}" style="color: #3b82f6; word-break: break-all;">${resetUrl}</a>
+          </p>
+
+          <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        </div>
+        <div style="background-color: #f3f4f6; color: #6b7280; padding: 20px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">&copy; ${new Date().getFullYear()} DinTask Team. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
     try {
       await sendEmail({
         email: user.email,
         subject: 'Password Reset Request - DinTask',
-        message
+        message,
+        html
       });
 
       res.status(200).json({
@@ -961,3 +997,42 @@ exports.verifyOtp = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Check if email exists
+// @route   GET /api/v1/auth/check-email
+// @access  Public
+exports.checkEmail = async (req, res, next) => {
+  try {
+    const { email, role } = req.query;
+
+    if (!email) {
+      return next(new ErrorResponse('Please provide an email', 400));
+    }
+
+    let user;
+    let foundRole = null;
+
+    if (role && models[role]) {
+      user = await models[role].findOne({ email });
+      if (user) foundRole = role;
+    } else {
+      // Check across all models
+      for (const [r, Model] of Object.entries(models)) {
+        user = await Model.findOne({ email });
+        if (user) {
+          foundRole = r;
+          break;
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      exists: !!user,
+      role: foundRole || null
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+

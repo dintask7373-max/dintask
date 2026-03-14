@@ -254,10 +254,41 @@ exports.shareReferralLink = async (req, res, next) => {
 
         const message = `Hello,\n\nYou have been invited to join DinTask by ${partner.fullName || partner.companyName}.\n\nDinTask is a powerful SaaS platform designed to streamline your business operations.\n\nClick the link below to register and get started with your account:\n${referralLink}\n\nBest regards,\nDinTask Team`;
 
+        const html = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
+            <div style="background-color: #3b82f6; color: #ffffff; padding: 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px;">Invitation to join DinTask</h1>
+            </div>
+            <div style="padding: 30px;">
+              <p>Hello,</p>
+              <p>You have been invited to join <strong>DinTask</strong> by <strong>${partner.fullName || partner.companyName}</strong>.</p>
+              
+              <p><strong>DinTask</strong> is a powerful SaaS platform designed to streamline your business operations, manage teams, and scale effectively.</p>
+              
+              <p>Click the button below to register and get started with your account:</p>
+              
+              <div style="margin: 30px 0; text-align: center;">
+                <a href="${referralLink}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Get Started Now</a>
+              </div>
+
+              <p style="font-size: 14px; color: #6b7280;">
+                If you're having trouble clicking the button, copy and paste the URL below into your web browser:<br>
+                <a href="${referralLink}" style="color: #3b82f6; word-break: break-all;">${referralLink}</a>
+              </p>
+
+              <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">Best regards,<br>DinTask Team</p>
+            </div>
+            <div style="background-color: #f3f4f6; color: #6b7280; padding: 20px; text-align: center; font-size: 12px;">
+              <p style="margin: 0;">&copy; ${new Date().getFullYear()} DinTask Team. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+
         await sendEmail({
             email: clientEmail,
             subject: 'Special Invitation to join DinTask',
-            message
+            message,
+            html
         });
 
         res.status(200).json({ success: true, message: 'Referral link shared successfully' });

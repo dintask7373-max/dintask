@@ -73,7 +73,7 @@ const LeadsManagement = () => {
     notes: '',
   });
 
-  const leadStatuses = ['New', 'Contacted', 'Follow-Up', 'Interested', 'Closed', 'Won', 'Lost'];
+  const leadStatuses = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
   const leadSources = ['Call', 'Website', 'WhatsApp', 'Referral', 'Manual'];
 
   // Use leads directly from store as backend handles filtering and pagination
@@ -391,11 +391,26 @@ const LeadsManagement = () => {
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl">
-                          {leadStatuses.map((status) => (
-                            <SelectItem key={status} value={status} className="rounded-xl">
-                              {status}
-                            </SelectItem>
-                          ))}
+                          {leadStatuses.map((status) => {
+                            // Status progression restriction
+                            const currentStatus = editingLead?.status || 'New';
+                            const order = ['New', 'Contacted', 'Follow-Up', 'Interested', 'Closed', 'Won', 'Lost'];
+                            const currentIndex = order.indexOf(currentStatus);
+                            const targetIndex = order.indexOf(status);
+                            const isDisabled = targetIndex < currentIndex && targetIndex !== -1;
+
+                            return (
+                              <SelectItem 
+                                key={status} 
+                                value={status} 
+                                className="rounded-xl"
+                                disabled={isDisabled}
+                              >
+                                {status}
+                                {isDisabled && " (Regression Locked)"}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
