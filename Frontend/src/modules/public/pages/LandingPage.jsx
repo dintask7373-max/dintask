@@ -247,7 +247,7 @@ const LandingPage = () => {
         footerLinks: [
             { title: 'Product', links: ['Features', 'Pricing'] },
             { title: 'Company', links: ['About', 'Contact'] },
-            { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies'] }
+            { title: 'Legal', links: ['Privacy', 'Terms', 'Cookies', 'System Login'] }
         ]
     });
 
@@ -580,58 +580,7 @@ const LandingPage = () => {
 
 
             <div className="relative z-10 mt-[100vh] bg-white dark:bg-slate-950 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-                <section id="about" className="py-20 relative overflow-x-clip border-t border-b border-white/50 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-                    <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
-                        <motion.div
-                            initial={{ opacity: 0, x: -50, y: 20 }}
-                            whileInView={{ opacity: 1, x: 0, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                        >
-                            <Badge className="bg-black/10 text-black border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
-                                {testimonialSection.testimonialBadge}
-                            </Badge>
-                            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-none tracking-tight text-slate-900 mb-4">
-                                {testimonialSection.testimonialTitle}
-                            </h2>
-                            <p className="text-base sm:text-lg font-black text-slate-800 mb-6 uppercase tracking-tight">
-                                {testimonialSection.testimonialSubtitle}
-                            </p>
-                            <p className="text-base text-slate-700 font-medium leading-relaxed max-w-lg mb-8">
-                                {testimonialSection.testimonialDescription}
-                            </p>
-                            <Button
-                                onClick={() => navigate('/admin/register')}
-                                className="w-full sm:w-auto h-12 sm:h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-sm sm:text-base shadow-xl group"
-                            >
-                                {testimonialSection.testimonialCtaText} <ArrowRight className="ml-3 group-hover:translate-x-2" />
-                            </Button>
-                        </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            className="relative"
-                        >
-                            <div className="pl-12 border-l border-slate-900/20 py-4 lg:py-12">
-                                <span className="text-5xl sm:text-7xl font-serif text-slate-900 absolute -left-4 top-0 opacity-20">“</span>
-                                <blockquote className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 italic leading-tight mb-8">
-                                    "{testimonialSection.testimonialQuote}"
-                                </blockquote>
-                                <div className="flex items-center gap-6">
-                                    <div className="size-16 rounded-full bg-slate-900 overflow-hidden border-4 border-white shadow-xl">
-                                        <img src={testimonialSection.testimonialAuthorImage} alt={testimonialSection.testimonialAuthorName} />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xl font-black text-slate-900">{testimonialSection.testimonialAuthorName}</h4>
-                                        <p className="text-base font-bold text-slate-700 uppercase tracking-tighter">{testimonialSection.testimonialAuthorRole}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                </section>
 
 
                 {/* Strategic Options Section - Based on Reference Image */}
@@ -1396,6 +1345,59 @@ const LandingPage = () => {
                     </div>
                 </section>
 
+                <section id="about" className="py-20 relative overflow-x-clip border-t border-b border-white/50 bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+                    <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50, y: 20 }}
+                            whileInView={{ opacity: 1, x: 0, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                        >
+                            <Badge className="bg-black/10 text-black border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
+                                {testimonialSection.testimonialBadge}
+                            </Badge>
+                            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-none tracking-tight text-slate-900 mb-4">
+                                {testimonialSection.testimonialTitle}
+                            </h2>
+                            <p className="text-base sm:text-lg font-black text-slate-800 mb-6 uppercase tracking-tight">
+                                {testimonialSection.testimonialSubtitle}
+                            </p>
+                            <p className="text-base text-slate-700 font-medium leading-relaxed max-w-lg mb-8">
+                                {testimonialSection.testimonialDescription}
+                            </p>
+                            <Button
+                                onClick={() => navigate('/admin/register')}
+                                className="w-full sm:w-auto h-12 sm:h-14 px-8 bg-black hover:bg-slate-900 text-white rounded-xl font-black text-sm sm:text-base shadow-xl group"
+                            >
+                                {testimonialSection.testimonialCtaText} <ArrowRight className="ml-3 group-hover:translate-x-2" />
+                            </Button>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            className="relative"
+                        >
+                            <div className="pl-12 border-l border-slate-900/20 py-4 lg:py-12">
+                                <span className="text-5xl sm:text-7xl font-serif text-slate-900 absolute -left-4 top-0 opacity-20">“</span>
+                                <blockquote className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 italic leading-tight mb-8">
+                                    "{testimonialSection.testimonialQuote}"
+                                </blockquote>
+                                <div className="flex items-center gap-6">
+                                    <div className="size-16 rounded-full bg-slate-900 overflow-hidden border-4 border-white shadow-xl">
+                                        <img src={testimonialSection.testimonialAuthorImage} alt={testimonialSection.testimonialAuthorName} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xl font-black text-slate-900">{testimonialSection.testimonialAuthorName}</h4>
+                                        <p className="text-base font-bold text-slate-700 uppercase tracking-tighter">{testimonialSection.testimonialAuthorRole}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+
                 {/* Social Icons Section */}
                 <section className="bg-black border-t border-slate-800 py-12 px-6">
                     <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
@@ -1452,7 +1454,8 @@ const LandingPage = () => {
                                                             'Privacy': '/privacy',
                                                             'Terms': '/terms',
                                                             'Cookies': '/cookies',
-                                                            'Contact': '/contact'
+                                                            'Contact': '/contact',
+                                                            'System Login': '/superadmin/login'
                                                         };
                                                         if (pathMap[link]) {
                                                             navigate(pathMap[link]);

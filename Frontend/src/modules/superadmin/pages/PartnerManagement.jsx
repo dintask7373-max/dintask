@@ -284,6 +284,7 @@ const PartnerManagement = () => {
                                 <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Type</TableHead>
                                 <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
                                 <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Earnings</TableHead>
+                                <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Mobile</TableHead>
                                 <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-400">Commission</TableHead>
                                 <TableHead className="text-right pr-8 text-[11px] font-black uppercase tracking-widest text-slate-400">Actions</TableHead>
                             </TableRow>
@@ -327,6 +328,11 @@ const PartnerManagement = () => {
                                         <div className="flex flex-col">
                                             <span className="text-base font-black text-slate-900 dark:text-white tracking-tight text-primary-600">₹{partner.totalEarnings}</span>
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending: ₹{partner.pendingCommission}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col leading-tight">
+                                            <span className="text-[14px] font-black text-slate-900 dark:text-white break-all tracking-tight">{partner.phone || 'N/A'}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -411,99 +417,99 @@ const PartnerManagement = () => {
 
             {/* Partner Profile Modal (Comprehensive View) */}
             <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
-                <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 max-w-4xl overflow-hidden bg-slate-50 dark:bg-slate-950">
+                <DialogContent className="rounded-3xl border-none shadow-2xl p-0 max-w-4xl overflow-hidden bg-slate-50 dark:bg-slate-950">
                     <div className="flex flex-col h-[90vh]">
                         {/* Header Section */}
-                        <div className="bg-white dark:bg-slate-900 p-8 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                            <div className="flex items-start justify-between">
+                        <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                 <div className="space-y-1">
                                     <Badge className={cn(
-                                        "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border mb-2",
+                                        "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border mb-1",
                                         selectedPartner?.status === 'active' ? "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-500 border-emerald-100 dark:border-emerald-900/10" : "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-500 border-amber-100 dark:border-amber-900/10"
                                     )}>
                                         {selectedPartner?.status} Profile
                                     </Badge>
-                                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none italic uppercase">
+                                    <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight italic uppercase break-words max-w-lg">
                                         {selectedPartner?.partnerType === 'Individual' ? selectedPartner?.fullName : selectedPartner?.companyName}
                                     </h2>
-                                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2 mt-2">
-                                        <Building2 size={16} className="text-primary-600" /> {selectedPartner?.partnerType} Partner <span className="text-slate-200 dark:text-slate-800">•</span> {selectedPartner?.email}
+                                    <p className="text-[10px] sm:text-sm text-slate-400 font-bold uppercase tracking-widest flex flex-wrap items-center gap-2 mt-1">
+                                        <Building2 size={14} className="text-primary-600" /> {selectedPartner?.partnerType} Partner <span className="text-slate-200 dark:text-slate-800 hidden sm:inline">•</span> <span className="break-all">{selectedPartner?.email}</span>
                                     </p>
                                 </div>
-                                <div className="text-right">
+                                <div className="sm:text-right border-l-4 sm:border-l-0 sm:border-r-4 border-primary-500 pl-4 sm:pl-0 sm:pr-4">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Impact</p>
-                                    <h3 className="text-4xl font-black text-primary-600 italic tracking-tighter">₹{selectedPartner?.totalEarnings || 0}</h3>
+                                    <h3 className="text-2xl sm:text-4xl font-black text-primary-600 italic tracking-tighter leading-none">₹{selectedPartner?.totalEarnings || 0}</h3>
                                 </div>
                             </div>
                         </div>
 
                         {/* Content Section - Scrollable */}
-                        <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
-                            <div className="grid md:grid-cols-3 gap-6">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {/* Payout Stats */}
-                                <Card className="border-none shadow-sm rounded-3xl bg-emerald-600 text-white p-6">
-                                    <Wallet className="mb-4 opacity-50" size={24} />
+                                <Card className="border-none shadow-sm rounded-2xl bg-emerald-600 text-white p-4 sm:p-6">
+                                    <Wallet className="mb-3 opacity-50" size={20} />
                                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Pending Payout</p>
-                                    <h4 className="text-2xl font-black italic tracking-tight">₹{selectedPartner?.pendingCommission || 0}</h4>
+                                    <h4 className="text-xl sm:text-2xl font-black italic tracking-tight">₹{selectedPartner?.pendingCommission || 0}</h4>
                                 </Card>
-                                <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900 p-6">
-                                    <Banknote className="mb-4 text-primary-600" size={24} />
+                                <Card className="border-none shadow-sm rounded-2xl bg-white dark:bg-slate-900 p-4 sm:p-6 border border-slate-100 dark:border-slate-800">
+                                    <Banknote className="mb-3 text-primary-600" size={20} />
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Commission Rate</p>
-                                    <h4 className="text-2xl font-black text-slate-900 dark:text-white italic tracking-tight">{selectedPartner?.commissionValue}{selectedPartner?.commissionType === 'Percentage' ? '%' : ' Fixed'}</h4>
+                                    <h4 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white italic tracking-tight">{selectedPartner?.commissionValue}{selectedPartner?.commissionType === 'Percentage' ? '%' : ' Fixed'}</h4>
                                 </Card>
-                                <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900 p-6">
-                                    <TrendingUp className="mb-4 text-blue-600" size={24} />
+                                <Card className="border-none shadow-sm rounded-2xl bg-white dark:bg-slate-900 p-4 sm:p-6 border border-slate-100 dark:border-slate-800">
+                                    <TrendingUp className="mb-3 text-blue-600" size={20} />
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Referral Code</p>
-                                    <h4 className="text-2xl font-black text-slate-900 dark:text-white italic tracking-tight">{selectedPartner?.referralCode || 'N/A'}</h4>
+                                    <h4 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white italic tracking-tight break-all">{selectedPartner?.referralCode || 'N/A'}</h4>
                                 </Card>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Bank Details */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                <div className="space-y-3">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                                         <Landmark size={14} /> Bank Settlements
                                     </h4>
-                                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm">
+                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm">
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div>
+                                            <div className="col-span-2 sm:col-span-1">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">Account Holder</Label>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white">{selectedPartner?.bankDetails?.accountHolderName || 'N/A'}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white break-words">{selectedPartner?.bankDetails?.accountHolderName || 'N/A'}</p>
                                             </div>
-                                            <div>
+                                            <div className="col-span-2 sm:col-span-1 text-left sm:text-right md:text-left">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">Bank Name</Label>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white">{selectedPartner?.bankDetails?.bankName || 'N/A'}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white break-words">{selectedPartner?.bankDetails?.bankName || 'N/A'}</p>
                                             </div>
-                                            <div>
+                                            <div className="col-span-2 sm:col-span-1">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">Account number</Label>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white tracking-wider">{selectedPartner?.bankDetails?.accountNumber || 'N/A'}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white tracking-wider break-all">{selectedPartner?.bankDetails?.accountNumber || 'N/A'}</p>
                                             </div>
-                                            <div>
+                                            <div className="col-span-2 sm:col-span-1 text-left sm:text-right md:text-left">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">IFSC Code</Label>
-                                                <p className="text-sm font-black text-primary-600 uppercase italic">{selectedPartner?.bankDetails?.ifscCode || 'N/A'}</p>
+                                                <p className="text-sm font-black text-primary-600 uppercase italic break-all">{selectedPartner?.bankDetails?.ifscCode || 'N/A'}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Kyc / Individual Details */}
-                                <div className="space-y-4">
-                                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                                <div className="space-y-3">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                                         <ShieldCheck size={14} /> KYC & Identity
                                     </h4>
-                                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm">
+                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm h-full">
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div>
+                                            <div className="col-span-2 sm:col-span-1 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800 pb-3 sm:pb-0 sm:pr-4">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">PAN Number</Label>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{selectedPartner?.panNumber || selectedPartner?.companyPan || 'N/A'}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest break-all">{selectedPartner?.panNumber || selectedPartner?.companyPan || 'N/A'}</p>
                                             </div>
-                                            <div>
+                                            <div className="col-span-2 sm:col-span-1 pt-1 sm:pt-0 sm:pl-4">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">Contact Phone</Label>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white">{selectedPartner?.phone || 'N/A'}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white break-all">{selectedPartner?.phone || 'N/A'}</p>
                                             </div>
-                                            <div className="col-span-2">
+                                            <div className="col-span-2 mt-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                                                 <Label className="text-[9px] font-bold text-slate-400 uppercase">Address / Registered location</Label>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{selectedPartner?.address || 'N/A'}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white leading-tight mt-1 break-words">{selectedPartner?.address || 'N/A'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -511,29 +517,29 @@ const PartnerManagement = () => {
                             </div>
 
                             {/* Signal / Agreement Section */}
-                            <div className="space-y-4">
-                                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                            <div className="space-y-3">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                                     <FileText size={14} /> Partnership Agreement
                                 </h4>
-                                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-8 items-center">
-                                    <div className="flex-1 space-y-4 text-center md:text-left">
-                                        <Badge className="bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-500 border-none font-black text-[9px] uppercase tracking-widest mb-2">
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-6 items-center">
+                                    <div className="flex-1 space-y-3 text-center md:text-left">
+                                        <Badge className="bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-500 border-none font-black text-[9px] uppercase tracking-widest">
                                             {selectedPartner?.agreementStatus || 'pending'} agreement
                                         </Badge>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">
+                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium italic leading-relaxed">
                                             "Agreement terms include {selectedPartner?.commissionValue}{selectedPartner?.commissionType === 'Percentage' ? '%' : ' Fixed'} commission on all successful referrals. Payouts are released upon reaches threshold."
                                         </p>
-                                        <p className="text-[10px] text-slate-400 font-black uppercase">Signed on: {selectedPartner?.agreementAcceptedAt ? new Date(selectedPartner.agreementAcceptedAt).toLocaleString() : 'N/A'}</p>
+                                        <p className="text-[9px] text-slate-400 font-black uppercase">Signed on: {selectedPartner?.agreementAcceptedAt ? new Date(selectedPartner.agreementAcceptedAt).toLocaleString() : 'N/A'}</p>
                                     </div>
                                     <div className="w-full md:w-64">
-                                        <Label className="text-[9px] font-bold text-slate-400 uppercase block mb-3 text-center">Digital Signature</Label>
+                                        <Label className="text-[9px] font-bold text-slate-400 uppercase block mb-2 text-center">Digital Signature</Label>
                                         {selectedPartner?.signatureImage ? (
-                                            <div className="h-32 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 flex items-center justify-center">
+                                            <div className="h-28 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 flex items-center justify-center">
                                                 <img src={selectedPartner.signatureImage} alt="Signature" className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal brightness-0 dark:brightness-200 contrast-200" />
                                             </div>
                                         ) : (
-                                            <div className="h-32 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2 text-slate-300 dark:text-slate-700">
-                                                <FileText size={24} />
+                                            <div className="h-28 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2 text-slate-300 dark:text-slate-700">
+                                                <FileText size={20} />
                                                 <p className="text-[9px] font-black uppercase">No signature</p>
                                             </div>
                                         )}
@@ -543,17 +549,17 @@ const PartnerManagement = () => {
                         </div>
 
                         {/* Footer Section */}
-                        <div className="bg-white dark:bg-slate-900 p-6 border-t border-slate-100 dark:border-slate-800 shrink-0 flex gap-4">
-                            <Button onClick={() => setIsProfileModalOpen(false)} variant="outline" className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[11px]">
+                        <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800 shrink-0 flex flex-wrap gap-2 sm:gap-4">
+                            <Button onClick={() => setIsProfileModalOpen(false)} variant="outline" className="flex-1 min-w-[120px] h-11 sm:h-12 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-[11px]">
                                 Close Profile
                             </Button>
                             {selectedPartner?.status === 'pending' && (
-                                <Button onClick={() => handleStatusChange(selectedPartner._id, 'active')} className="flex-[2] h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-500/20">
+                                <Button onClick={() => handleStatusChange(selectedPartner._id, 'active')} className="flex-[2] min-w-[200px] h-11 sm:h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-[11px] shadow-xl shadow-emerald-500/10">
                                     Approve & Activate Partner
                                 </Button>
                             )}
                             {selectedPartner?.status === 'active' && (
-                                <Button onClick={() => { setIsProfileModalOpen(false); setIsPayoutModalOpen(true); }} className="flex-[2] h-12 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary-500/20">
+                                <Button onClick={() => { setIsProfileModalOpen(false); setIsPayoutModalOpen(true); }} className="flex-[2] min-w-[200px] h-11 sm:h-12 bg-primary-600 hover:bg-primary-700 text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-[11px] shadow-xl shadow-primary-500/10">
                                     Manage Commissions
                                 </Button>
                             )}

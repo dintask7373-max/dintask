@@ -969,14 +969,20 @@ exports.getPlanDistribution = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.getBillingStats = async (req, res, next) => {
   try {
-    const totalRevenue = await Payment.aggregate([
-      { $match: { status: 'paid' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+    const [totalRevenueResult, activeSubscriptions, adminCount, managerCount, salesCount, employeeCount] = await Promise.all([
+      Payment.aggregate([
+        { $match: { status: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      Admin.countDocuments({ subscriptionStatus: 'active' }),
+      Admin.countDocuments(),
+      Manager.countDocuments(),
+      SalesExecutive.countDocuments(),
+      Employee.countDocuments()
     ]);
 
-    const activeSubscriptions = await Admin.countDocuments({
-      subscriptionStatus: 'active'
-    });
+    const totalUsers = adminCount + managerCount + salesCount + employeeCount;
+    const totalRevenue = totalRevenueResult;
 
     // Get period from query, default to 6 months
     const period = parseInt(req.query.period) || 6;
@@ -1050,7 +1056,8 @@ exports.getBillingStats = async (req, res, next) => {
     const data = {
       activeSubscriptions,
       pendingRefunds,
-      churnRate
+      churnRate,
+      totalUsers
     };
 
     // Mask revenue for staff
@@ -1109,7 +1116,43 @@ exports.getAllTransactions = async (req, res, next) => {
           as: 'planDetails'
         }
       },
-      { $unwind: { path: '$planDetails', preserveNullAndEmptyArrays: true } }
+      { $unwind: { path: '$planDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'managers',
+          localField: 'adminId',
+          foreignField: 'adminId',
+          as: 'managers'
+        }
+      },
+      {
+        $lookup: {
+          from: 'employees',
+          localField: 'adminId',
+          foreignField: 'adminId',
+          as: 'employees'
+        }
+      },
+      {
+        $lookup: {
+          from: 'salesexecutives',
+          localField: 'adminId',
+          foreignField: 'adminId',
+          as: 'sales'
+        }
+      },
+      {
+        $addFields: {
+          totalUsers: {
+            $add: [
+              1, // The Admin itself
+              { $size: '$managers' },
+              { $size: '$employees' },
+              { $size: '$sales' }
+            ]
+          }
+        }
+      }
     ];
 
     // Search stage
@@ -1153,6 +1196,7 @@ exports.getAllTransactions = async (req, res, next) => {
                 amount: 1,
                 currency: 1,
                 status: 1,
+                totalUsers: 1,
                 createdAt: 1
               }
             }
