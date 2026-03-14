@@ -31,7 +31,11 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
         const newMode = !isDarkMode;
         setIsDarkMode(newMode);
         document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', newMode ? 'dark' : 'light');
+        try {
+            localStorage.setItem('theme', newMode ? 'dark' : 'light');
+        } catch (e) {
+            console.warn('Failed to save theme preference:', e);
+        }
     };
 
     const handleLogout = () => {

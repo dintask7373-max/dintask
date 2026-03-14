@@ -12,7 +12,14 @@ const useNotificationStore = create((set, get) => ({
         try {
             const res = await api('/notifications');
             if (res.success) {
-                const role = localStorage.getItem('role'); // Or use authStore
+                // Get role from auth storage instead of direct localStorage access
+                let role = null;
+                try {
+                    const authData = localStorage.getItem('dintask-auth-storage');
+                    if (authData) role = JSON.parse(authData).state.role;
+                } catch (e) {
+                    console.warn('Failed to get role from storage:', e);
+                }
                 let data = res.data;
 
                 if (role === 'admin') {
@@ -101,7 +108,13 @@ const useNotificationStore = create((set, get) => ({
 
     // For real-time updates (if we implement socket later)
     addNotification: (notification) => {
-        const role = localStorage.getItem('role');
+        let role = null;
+        try {
+            const authData = localStorage.getItem('dintask-auth-storage');
+            if (authData) role = JSON.parse(authData).state.role;
+        } catch (e) {
+            console.warn('Failed to get role from storage for notification filter:', e);
+        }
         if (role === 'admin' && (['task_assigned', 'task_overdue', 'task'].includes(notification.type) || notification.category === 'task')) {
             return;
         }

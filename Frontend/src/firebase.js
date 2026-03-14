@@ -13,10 +13,24 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+
+let messaging = null;
+try {
+    // Basic check for environment support before initializing messaging
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+        messaging = getMessaging(app);
+    }
+} catch (error) {
+    console.warn("Firebase Messaging not supported in this environment:", error);
+}
 
 export const requestForToken = async () => {
+    if (!messaging) return null;
     try {
+        if (!('Notification' in window)) {
+            console.log("This browser does not support notifications.");
+            return null;
+        }
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
             const currentToken = await getToken(messaging, {
@@ -45,6 +59,7 @@ export const requestForToken = async () => {
 };
 
 export const onMessageListener = (callback) => {
+    if (!messaging) return () => {};
     return onMessage(messaging, (payload) => {
         console.log("Foreground message received:", payload);
         callback(payload);

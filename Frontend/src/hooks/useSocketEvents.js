@@ -59,7 +59,11 @@ const useSocketEvents = () => {
                             role === 'sales' ? '/sales/login' :
                                 role === 'partner' ? '/partner/login' : '/employee/login';
                     
-                    localStorage.removeItem('dintask-auth-storage');
+                    try {
+                        localStorage.removeItem('dintask-auth-storage');
+                    } catch (e) {
+                        console.warn('Failed to remove storage during force logout:', e);
+                    }
                     window.location.href = `${loginPath}?status=suspended`;
                 }
             });
