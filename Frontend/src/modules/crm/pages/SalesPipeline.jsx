@@ -140,15 +140,15 @@ const SalesPipeline = () => {
   const handleDrop = (toStage) => {
     if (draggedLead && draggedFromStage !== toStage) {
       const statusOrder = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
-      // Tactical regression check removed to allow backward movement
-      /*
+      const fromIndex = statusOrder.indexOf(draggedFromStage);
+      const toIndex = statusOrder.indexOf(toStage);
+
       if (toIndex < fromIndex && toIndex !== -1) {
         toast.error(`Tactical regression blocked: Cannot move deal back from ${draggedFromStage} to ${toStage}`);
         setDraggedLead(null);
         setDraggedFromStage(null);
         return;
       }
-      */
 
       if (toStage === 'Won' || toStage === 'Lost') {
         const lead = leads.find(l => (l._id === draggedLead || l.id === draggedLead));

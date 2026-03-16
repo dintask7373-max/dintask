@@ -49,6 +49,14 @@ import {
     DialogTrigger,
 } from "@/shared/components/ui/dialog";
 
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+    SheetFooter
+} from "@/shared/components/ui/sheet";
 import useTaskStore from '@/store/taskStore';
 import useEmployeeStore from '@/store/employeeStore';
 import useAuthStore from '@/store/authStore';
@@ -63,7 +71,7 @@ const API_ROOT = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const TaskDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { tasks, updateTask } = useTaskStore();
+    const { tasks, updateTask, addComment } = useTaskStore();
     const { employees } = useEmployeeStore();
     const { managers } = useManagerStore();
     const { user } = useAuthStore();
@@ -82,6 +90,10 @@ const TaskDetail = () => {
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+
+    // Discussion State
+    const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
+    const [newMessage, setNewMessage] = useState('');
 
     // Individual Progress State
     const [myProgress, setMyProgress] = useState(0);
@@ -116,6 +128,19 @@ const TaskDetail = () => {
         } finally {
             setIsUpdating(false);
         }
+    };
+
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !task) return;
+
+        await addComment(task.id, {
+            text: newMessage,
+            sender: user?.name || 'User',
+            senderId: user?.id,
+            role: user?.role
+        });
+
+        setNewMessage('');
     };
 
     const handleFileUpload = async (e) => {
@@ -409,6 +434,28 @@ const TaskDetail = () => {
 
                     {/* Side Column */}
                     <div className="lg:col-span-4 space-y-4 md:space-y-6">
+                        {/* Discussion Access Card */}
+                        <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-primary-600 text-white overflow-hidden group">
+                            <CardContent className="p-4 md:p-6 flex flex-col items-center text-center space-y-3 relative">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                                    <MessageSquare size={80} />
+                                </div>
+                                <div className="size-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-1">
+                                    <MessageSquare size={24} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-black uppercase tracking-tight">Mission Discussion</h4>
+                                    <p className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Communicate with Command and Squadron</p>
+                                </div>
+                                <Button 
+                                    onClick={() => setIsDiscussionOpen(true)}
+                                    className="w-full bg-white text-primary-600 hover:bg-slate-50 font-black text-[10px] uppercase tracking-widest h-10 rounded-xl mt-2"
+                                >
+                                    Open Board
+                                </Button>
+                            </CardContent>
+                        </Card>
+
                         {/* Task Hierarchy Visualization */}
                         <Card className="rounded-2xl md:rounded-3xl border-none shadow-sm bg-slate-50 dark:bg-slate-900 overflow-hidden">
                             <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
@@ -697,6 +744,93 @@ const TaskDetail = () => {
                     </Dialog>
                 </div>
             </div>
+
+            {/* Discussion Sheet */}
+            <Sheet open={isDiscussionOpen} onOpenChange={setIsDiscussionOpen}>
+                <SheetContent side="right" className="w-full sm:w-[450px] flex flex-col gap-0 p-0 rounded-l-3xl border-l border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-950">
+                    <SheetHeader className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950">
+                        <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 shrink-0">
+                                <MessageSquare size={20} />
+                            </div>
+                            <div>
+                                <SheetTitle className="text-xl font-black uppercase tracking-tight">Discussion Board</SheetTitle>
+                                <SheetDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Task: {task.title}</SheetDescription>
+                            </div>
+                        </div>
+                    </SheetHeader>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 dark:bg-slate-950/20">
+                        {task.comments && task.comments.length > 0 ? (
+                            task.comments.map((comment, idx) => {
+                                const isMe = comment.senderId === user?.id;
+                                return (
+                                    <div key={idx} className={cn(
+                                        "flex flex-col gap-2 max-w-[85%]",
+                                        isMe ? "ml-auto items-end" : "items-start"
+                                    )}>
+                                        <div className="flex items-center gap-2 px-1">
+                                            {!isMe && <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">{comment.sender}</span>}
+                                            <span className={cn(
+                                                "text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded",
+                                                comment.role === 'admin' ? "bg-red-100 text-red-600" : 
+                                                comment.role === 'manager' ? "bg-amber-100 text-amber-600" : 
+                                                "bg-blue-100 text-blue-600"
+                                            )}>
+                                                {comment.role || 'Member'}
+                                            </span>
+                                        </div>
+                                        <div className={cn(
+                                            "p-4 rounded-2xl text-sm font-bold shadow-sm leading-relaxed",
+                                            isMe
+                                                ? "bg-primary-600 text-white rounded-tr-none"
+                                                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-tl-none border border-slate-100 dark:border-slate-800"
+                                        )}>
+                                            {comment.text}
+                                        </div>
+                                        <span className="text-[9px] text-slate-400 font-bold px-1 uppercase tracking-widest">
+                                            {format(new Date(comment.createdAt), 'h:mm a')}
+                                        </span>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-slate-400/50 p-8 text-center">
+                                <div className="size-20 rounded-[2.5rem] bg-slate-100 dark:bg-slate-900 flex items-center justify-center mb-4">
+                                    <MessageSquare size={32} />
+                                </div>
+                                <h3 className="text-sm font-black uppercase tracking-tight text-slate-600 dark:text-slate-300">No Dialogue Yet</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest mt-1">Initiate conversation with your sequence leads.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+                        <div className="flex items-center gap-2">
+                            <Input
+                                placeholder="Broadcast updates..."
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                className="rounded-xl h-12 bg-slate-50 dark:bg-slate-900 border-none focus:ring-2 focus:ring-primary/10 font-bold text-xs"
+                            />
+                            <Button
+                                size="icon"
+                                onClick={handleSendMessage}
+                                className={cn(
+                                    "h-12 w-12 rounded-xl transition-all shadow-lg shrink-0",
+                                    newMessage.trim()
+                                        ? "bg-primary-600 hover:bg-primary-700 shadow-primary-500/20"
+                                        : "bg-slate-100 dark:bg-slate-900 text-slate-400 shadow-none cursor-not-allowed"
+                                )}
+                                disabled={!newMessage.trim()}
+                            >
+                                <Send size={20} className="ml-0.5" />
+                            </Button>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div >
     );
 };

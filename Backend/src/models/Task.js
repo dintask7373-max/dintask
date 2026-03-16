@@ -91,6 +91,13 @@ const TaskSchema = new mongoose.Schema({
     action: String,
     timestamp: { type: Date, default: Date.now }
   }],
+  comments: [{
+    text: { type: String, required: true },
+    sender: { type: String, required: true },
+    senderId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    role: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
   createdAt: {
     type: Date,
     default: Date.now

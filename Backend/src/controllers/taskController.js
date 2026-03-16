@@ -622,3 +622,77 @@ exports.deleteTask = async (req, res) => {
     res.status(400).json({ success: false, error: err.message });
   }
 }
+// @desc    Add Comment to Task
+// @route   POST /api/tasks/:id/comments
+// @access  Private
+exports.addComment = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ success: false, error: 'Task not found' });
+    }
+
+    const { text, sender, senderId, role } = req.body;
+
+    const newComment = {
+      text,
+      sender,
+      senderId: req.user.id,
+      role: req.user.role,
+      createdAt: new Date()
+    };
+
+    task.comments.push(newComment);
+    await task.save();
+
+    // -- NOTIFICATION: Message for Manager/Assignee --
+    // If Admin sends message, notify the assigned Manager (if any) or assigned Employees
+    if (req.user.role === 'admin') {
+      // 1. Notify assigned Manager (if task was assigned to a manager)
+      if (task.assignedToModel === 'Manager' && task.assignedTo.length > 0) {
+        const managerNotifications = task.assignedTo.map(managerId => ({
+          recipient: managerId,
+          sender: req.user.id,
+          adminId: task.adminId,
+          type: 'general',
+          title: 'Admin message in mission discussion',
+          message: `Admin: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
+          link: `/manager/my-tasks` // Adjusted based on previous learnings
+        }));
+        await Notification.insertMany(managerNotifications);
+      }
+      
+      // 2. Also notify any assigned employees directly if they are on the task
+      if (task.assignedToModel === 'Employee' && task.assignedTo.length > 0) {
+        const employeeNotifications = task.assignedTo.map(empId => ({
+          recipient: empId,
+          sender: req.user.id,
+          adminId: task.adminId,
+          type: 'general',
+          title: 'Admin message in discussion',
+          message: `Admin: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
+          link: `/employee/tasks/${task._id}`
+        }));
+        await Notification.insertMany(employeeNotifications);
+      }
+    } else if (req.user.role === 'manager' || req.user.role === 'employee') {
+      // If Manager/Employee sends message, notify Admin (AssignedBy)
+      if (task.assignedBy) {
+        await Notification.create({
+          recipient: task.assignedBy,
+          sender: req.user.id,
+          adminId: task.adminId,
+          type: 'general',
+          title: 'New message in mission discussion',
+          message: `${req.user.name}: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`,
+          link: `/admin/task-management` // Adjusted for admin path
+        });
+      }
+    }
+
+    res.status(200).json({ success: true, data: task });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};

@@ -28,6 +28,8 @@ import {
     DialogDescription
 } from '@/shared/components/ui/dialog';
 import { Progress } from "@/shared/components/ui/progress";
+import { Separator } from "@/shared/components/ui/separator";
+import { Label } from "@/shared/components/ui/label";
 import useEmployeeStore from '@/store/employeeStore';
 import { cn } from '@/shared/utils/cn';
 
@@ -47,6 +49,7 @@ const Subscription = () => {
     const [expandLimitDialog, setExpandLimitDialog] = React.useState(false);
     const [additionalSeats, setAdditionalSeats] = React.useState(1);
     const [expansionLoading, setExpansionLoading] = React.useState(false);
+    const [inviteEmail, setInviteEmail] = React.useState('');
     const { createExpansionOrder } = useSubscriptionStore();
 
 

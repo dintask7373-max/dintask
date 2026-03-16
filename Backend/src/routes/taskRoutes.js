@@ -4,7 +4,8 @@ const {
   getTask,
   createTask,
   updateTask,
-  deleteTask
+  deleteTask,
+  addComment
 } = require('../controllers/taskController');
 
 const { protect, authorize } = require('../middleware/auth');
@@ -27,5 +28,8 @@ router.put('/:id', updateTask);
 
 // Delete Task (Manager, Admin, Employee - owner only)
 router.delete('/:id', authorize('manager', 'admin', 'employee'), deleteTask);
+
+// Add Comment
+router.post('/:id/comments', protect, addComment);
 
 module.exports = router;

@@ -57,7 +57,17 @@ const SupportManagement = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Store Data
-    const { tickets, loading, fetchTickets, addTicket, fetchTicketStats, stats, initializeSocket } = useTicketStore();
+    const { 
+        tickets, 
+        loading, 
+        fetchTickets, 
+        addTicket, 
+        fetchTicketStats, 
+        stats, 
+        initializeSocket,
+        resolveTicket,
+        escalateTicket
+    } = useTicketStore();
 
     // Sync selectedTicket with store data for real-time updates
     useEffect(() => {
@@ -121,6 +131,15 @@ const SupportManagement = () => {
     const handleEscalate = async () => {
         if (!selectedTicket) return;
         const success = await escalateTicket(selectedTicket._id);
+        if (success) {
+            const updated = useTicketStore.getState().tickets.find(t => t._id === selectedTicket._id);
+            if (updated) setSelectedTicket(updated);
+        }
+    };
+
+    const handleResolve = async () => {
+        if (!selectedTicket) return;
+        const success = await resolveTicket(selectedTicket._id);
         if (success) {
             const updated = useTicketStore.getState().tickets.find(t => t._id === selectedTicket._id);
             if (updated) setSelectedTicket(updated);
@@ -524,6 +543,16 @@ const SupportManagement = () => {
                                                     className="h-7 text-[9px] font-black uppercase text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10"
                                                 >
                                                     Escalate
+                                                </Button>
+                                            )}
+                                            {!['Resolved', 'Closed'].includes(selectedTicket.status) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleResolve}
+                                                    className="h-7 text-[9px] font-black uppercase text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
+                                                >
+                                                    Resolve
                                                 </Button>
                                             )}
                                             <Button

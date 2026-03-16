@@ -190,6 +190,28 @@ const useTicketStore = create((set, get) => ({
         }
     },
 
+    resolveTicket: async (id) => {
+        try {
+            const res = await api(`/support-tickets/${id}`, {
+                method: 'PUT',
+                body: { status: 'Resolved' }
+            });
+
+            set((state) => ({
+                tickets: state.tickets.map((t) =>
+                    t._id === id ? res.data : t
+                )
+            }));
+
+            toast.success('Ticket marked as Resolved');
+            return true;
+        } catch (err) {
+            console.error("Resolve Error:", err);
+            toast.error(err.message || 'Failed to resolve ticket');
+            return false;
+        }
+    },
+
     giveFeedback: async (id, rating, feedback) => {
         try {
             const res = await api(`/support-tickets/${id}`, {

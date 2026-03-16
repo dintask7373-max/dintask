@@ -73,6 +73,15 @@ const SalesManagement = () => {
         email: ''
     });
 
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedRep, setSelectedRep] = useState(null);
+    const [editRepData, setEditRepData] = useState({
+        name: '',
+        email: '',
+        status: 'active',
+        phoneNumber: ''
+    });
+
     const [parent] = useAutoAnimate();
     const [pipelineSearchTerm, setPipelineSearchTerm] = useState('');
 
@@ -170,6 +179,28 @@ const SalesManagement = () => {
         toast.success("New deal created and assigned");
     };
 
+    const openEditModal = (rep) => {
+        setSelectedRep(rep);
+        setEditRepData({
+            name: rep.name,
+            email: rep.email,
+            status: rep.status || 'active',
+            phoneNumber: rep.phoneNumber || ''
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await updateSalesRep(selectedRep.id || selectedRep._id, editRepData);
+            setIsEditModalOpen(false);
+            setSelectedRep(null);
+        } catch (error) {
+            console.error("Edit error", error);
+        }
+    };
+
     const getRepName = (id) => {
         const actualId = id?._id || id?.id || id;
         const rep = salesReps.find(r => r.id === actualId);
@@ -199,6 +230,15 @@ const SalesManagement = () => {
 
         const startStage = source.droppableId;
         const finishStage = destination.droppableId;
+
+        const statusOrder = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
+        const fromIndex = statusOrder.indexOf(startStage);
+        const toIndex = statusOrder.indexOf(finishStage);
+
+        if (toIndex < fromIndex && toIndex !== -1) {
+            toast.error(`Tactical regression blocked: Cannot move deal back from ${startStage} to ${finishStage}`);
+            return;
+        }
 
         await moveLead(draggableId, startStage, finishStage);
         toast.success(`Moved to ${finishStage}`);
@@ -367,7 +407,7 @@ const SalesManagement = () => {
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex justify-end gap-1">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg"> <Edit2 size={12} /> </Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" onClick={() => openEditModal(rep)}> <Edit2 size={12} /> </Button>
                                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} /> </Button>
                                                     </div>
                                                 </td>
@@ -483,7 +523,7 @@ const SalesManagement = () => {
                                                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{rep.activeDeals || 0} Open Deals</span>
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"> <Edit2 size={12} /> </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => openEditModal(rep)}> <Edit2 size={12} /> </Button>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm" onClick={() => deleteSalesRep(rep._id || rep.id)}> <Trash2 size={12} className="text-red-400" /> </Button>
                                             </div>
                                         </div>
@@ -688,6 +728,60 @@ const SalesManagement = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog >
+
+
+            {/* Edit Representative Dialog */}
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Edit <span className="text-primary-600">Sales Executive</span></DialogTitle>
+                        <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Update representative profile and permissions</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
+                        <div className="grid gap-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Full Name</Label>
+                            <Input 
+                                value={editRepData.name} 
+                                onChange={(e) => setEditRepData({ ...editRepData, name: e.target.value })} 
+                                className="h-11 rounded-xl border-slate-100 font-bold"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Email Node</Label>
+                            <Input 
+                                value={editRepData.email} 
+                                onChange={(e) => setEditRepData({ ...editRepData, email: e.target.value })} 
+                                disabled
+                                className="h-11 rounded-xl border-slate-100 font-bold bg-slate-50"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Phone Vector</Label>
+                            <Input 
+                                value={editRepData.phoneNumber} 
+                                onChange={(e) => setEditRepData({ ...editRepData, phoneNumber: e.target.value })} 
+                                className="h-11 rounded-xl border-slate-100 font-bold"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Operational Status</Label>
+                            <Select value={editRepData.status} onValueChange={(val) => setEditRepData({ ...editRepData, status: val })}>
+                                <SelectTrigger className="h-11 rounded-xl border-slate-100 font-bold">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem value="active" className="rounded-lg">Active</SelectItem>
+                                    <SelectItem value="inactive" className="rounded-lg">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DialogFooter className="pt-4">
+                            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="rounded-xl uppercase text-[10px] font-black">Cancel</Button>
+                            <Button type="submit" className="rounded-xl uppercase text-[10px] font-black bg-primary-600">Save Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 };

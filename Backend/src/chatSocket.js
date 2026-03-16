@@ -5,12 +5,26 @@ const setupChatSocket = (io) => {
     io.on('connection', (socket) => {
         console.log('User Connected:', socket.id);
 
-        // Join personal room for notifications and setup
         socket.on('setup', (userData) => {
             const userId = userData?.id || userData?._id;
             if (userId) {
                 socket.join(userId);
                 console.log(`User joined personal room: ${userId}`);
+
+                // Join Company Room for shared updates (e.g. support tickets)
+                const companyId = userData.role === 'admin' ? userId : userData.adminId;
+                if (companyId) {
+                    socket.join(companyId.toString());
+                    console.log(`User joined company room: ${companyId}`);
+                }
+
+                // Join SuperAdmin Global Room
+                const isSuperAdmin = ['superadmin', 'superadmin_staff', 'super_admin'].includes(userData.role);
+                if (isSuperAdmin) {
+                    socket.join('superadmin_room');
+                    console.log(`User joined SuperAdmin room`);
+                }
+
                 socket.emit('connected');
             }
         });

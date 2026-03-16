@@ -102,7 +102,24 @@ exports.createTicket = async (req, res, next) => {
             console.error('Notification Error:', err);
         }
 
-        res.status(201).json({ success: true, data: ticket });
+        const populatedTicket = await SupportTicket.findById(ticket._id)
+            .populate('creator', 'name email role phoneNumber')
+            .populate('companyId', 'companyName');
+
+        // Emit socket event for real-time updates
+        if (global.io) {
+            const ticketObj = populatedTicket.toObject();
+            
+            // Emit to Company Room (Admins/Managers)
+            global.io.to(ticket.companyId.toString()).emit('new_support_ticket', ticketObj);
+            
+            // Emit to SuperAdmin Room if escalated
+            if (ticket.isEscalatedToSuperAdmin) {
+                global.io.to('superadmin_room').emit('new_support_ticket', ticketObj);
+            }
+        }
+
+        res.status(201).json({ success: true, data: populatedTicket });
     } catch (err) {
         next(err);
     }
@@ -250,7 +267,43 @@ exports.updateTicket = async (req, res, next) => {
         if (req.body.feedback) ticket.feedback = req.body.feedback;
 
         await ticket.save();
+
+        // Send notification to ticket creator if someone else replied
+        if (req.body.response && ticket.creator.toString() !== req.user.id.toString()) {
+            try {
+                await Notification.create({
+                    recipient: ticket.creator,
+                    sender: req.user.id,
+                    type: 'support_update',
+                    title: 'New Support Reply',
+                    message: `You have a new reply on your ticket: "${ticket.title}"`,
+                    link: '/support',
+                    adminId: ticket.companyId
+                });
+            } catch (notifyErr) {
+                console.error('[Support Notification Error]', notifyErr);
+            }
+        }
+
         const updated = await SupportTicket.findById(req.params.id).populate('creator').populate('companyId');
+
+        // Emit socket event for real-time updates
+        if (global.io) {
+            const updatePayload = { 
+                ticketId: ticket._id, 
+                updatedTicket: updated.toObject() 
+            };
+
+            // 1. Emit to the specific ticket room (for those viewing the details)
+            global.io.to(ticket._id.toString()).emit('new_support_response', updatePayload);
+            
+            // 2. Emit to the Company room (for list updates)
+            global.io.to(ticket.companyId.toString()).emit('new_support_response', updatePayload);
+            
+            // 3. Emit to SuperAdmin room (if superadmin needs to see updates in their list)
+            global.io.to('superadmin_room').emit('new_support_response', updatePayload);
+        }
+
         res.status(200).json({ success: true, data: updated });
     } catch (err) {
         next(err);

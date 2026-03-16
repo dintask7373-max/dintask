@@ -20,7 +20,9 @@ import {
     X,
     Star,
     Trash2,
-    ChevronLeft
+    ChevronLeft,
+    FileText,
+    Send
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -46,7 +48,7 @@ const SupportCenter = () => {
     const { user, role } = useAuthStore();
     const location = useLocation();
     const isSalesSupport = location.pathname.includes('/sales/support');
-    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket, initializeSocket, uploadFiles, giveFeedback, deleteTicket, pagination } = useTicketStore();
+    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket, initializeSocket, uploadFiles, giveFeedback, deleteTicket, pagination, escalateTicket, resolveTicket } = useTicketStore();
     const fileInputRef = React.useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
@@ -218,9 +220,31 @@ const SupportCenter = () => {
                                 </SelectContent>
                             </Select>
                         ) : (
-                            <Badge className={cn("px-3 py-1 text-[10px] font-black uppercase tracking-widest", getStatusStyle(selectedTicket.status))}>
-                                {selectedTicket.status}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                <Badge className={cn("px-3 py-1 text-[10px] font-black uppercase tracking-widest", getStatusStyle(selectedTicket.status))}>
+                                    {selectedTicket.status}
+                                </Badge>
+                                {role === 'admin' && !['Resolved', 'Closed'].includes(selectedTicket.status) && (
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            onClick={() => resolveTicket(selectedTicket._id)}
+                                            className="h-7 px-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg border-none shadow-sm"
+                                        >
+                                            Resolve
+                                        </Button>
+                                        {!selectedTicket.isEscalatedToSuperAdmin && (
+                                            <Button
+                                                size="sm"
+                                                onClick={() => escalateTicket(selectedTicket._id)}
+                                                className="h-7 px-3 bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg border-none shadow-sm"
+                                            >
+                                                Escalate
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         )}
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -714,7 +738,7 @@ const SupportCenter = () => {
                                                                 <Trash2 size={18} />
                                                             </Button>
                                                         )}
-                                                        {role === 'admin' && activeTab === 'received' && ticket.status === 'Open' && (
+                                                        {role === 'admin' && activeTab === 'received' && ['Open', 'Pending'].includes(ticket.status) && (
                                                             <Button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -803,7 +827,7 @@ const SupportCenter = () => {
                         </div>
                     </div>
 
-                    <div className="hidden lg:block lg:col-span-4 h-[calc(100vh-140px)] sticky top-24">
+                    <div className="lg:col-span-4 sticky top-8 h-fit">
                         <AnimatePresence mode="wait">
                             {selectedTicket ? (
                                 <motion.div
@@ -811,34 +835,34 @@ const SupportCenter = () => {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="h-full"
+                                    className="h-[calc(100vh-160px)]"
                                 >
                                     {renderDetailContent()}
                                 </motion.div>
                             ) : (
-                                <div className="h-full bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center p-8">
+                                <motion.div
+                                    key="empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="h-[400px] flex flex-col items-center justify-center p-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 text-center"
+                                >
                                     <div className="size-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-                                        <MessageSquare size={32} className="text-slate-300 dark:text-slate-600" />
+                                        <LifeBuoy size={32} className="text-slate-300 dark:text-slate-600" />
                                     </div>
-                                    <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-widest text-xs mb-2">Select a ticket</h3>
-                                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">View conversation & details</p>
-                                </div>
+                                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest italic">Select a ticket to <br /> respond and resolve</h4>
+                                </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
                 </div>
-            </div >
+            </div>
 
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent className="w-full sm:max-w-md bg-transparent p-4 border-none shadow-none lg:hidden flex flex-col justify-end [&>button]:hidden">
-                    {selectedTicket && (
-                        <div className="h-[70vh] w-full max-w-[380px] mx-auto rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-black/5">
-                            {renderDetailContent()}
-                        </div>
-                    )}
+                <SheetContent side="right" className="p-0 border-none w-full sm:max-w-xl bg-transparent">
+                    {selectedTicket && renderDetailContent()}
                 </SheetContent>
             </Sheet>
-        </div >
+        </div>
     );
 };
 

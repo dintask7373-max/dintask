@@ -3,6 +3,7 @@ import socketService from '@/services/socket';
 import useChatStore from '@/store/chatStore';
 import useAuthStore from '@/store/authStore';
 import useTicketStore from '@/store/ticketStore';
+import useSuperAdminStore from '@/store/superAdminStore';
 import useNotificationStore from '@/store/notificationStore';
 import { toast } from 'sonner';
 
@@ -12,11 +13,19 @@ const useSocketEvents = () => {
     const { addNotification } = useNotificationStore();
 
     const { initializeSocket } = useTicketStore();
+    const { initializeSupportSocket } = useSuperAdminStore();
 
     useEffect(() => {
         if (isAuthenticated && user) {
             // Connect socket
             socketService.connect(user);
+
+            // Initialize Support listeners (even if socket is connecting, 
+            // our improved socketService will queue them)
+            initializeSocket(user._id);
+            if (['superadmin', 'superadmin_staff', 'super_admin'].includes(user.role)) {
+                initializeSupportSocket();
+            }
 
             // Set up chat listeners
             socketService.onMessageReceived((message) => {

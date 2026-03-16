@@ -105,6 +105,30 @@ const useTaskStore = create((set, get) => ({
         }
     },
 
+    // Add Comment to Task
+    addComment: async (taskId, commentData) => {
+        try {
+            const res = await api(`/tasks/${taskId}/comments`, {
+                method: 'POST',
+                body: commentData
+            });
+
+            if (res.success) {
+                // Update specific task in state
+                set((state) => ({
+                    tasks: state.tasks.map((task) =>
+                        task.id === taskId ? { ...task, comments: res.data.comments } : task
+                    )
+                }));
+                return true;
+            }
+        } catch (error) {
+            console.error("Failed to add comment", error);
+            toast.error("Failed to send message");
+            return false;
+        }
+    },
+
     // Reports Stats
     reportsStats: null,
     fetchReportsStats: async (params = {}) => {

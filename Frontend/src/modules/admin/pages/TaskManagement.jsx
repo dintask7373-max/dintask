@@ -99,7 +99,8 @@ const TaskManagement = () => {
     const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
     const [activeTaskForDiscussion, setActiveTaskForDiscussion] = useState(null);
     const [newMessage, setNewMessage] = useState('');
-    const [assignType, setAssignType] = useState('manager'); // Restrict to manager only as per user request
+    const [assignType, setAssignType] = useState('manager'); 
+    const [editingTaskId, setEditingTaskId] = useState(null);
 
     const [newTask, setNewTask] = useState({
         title: '',
@@ -147,35 +148,40 @@ const TaskManagement = () => {
             project: newTask.project === 'none' ? undefined : newTask.project,
             assignedTo: assignType === 'manager' ? [newTask.assignedToManager] : newTask.assignedTo,
             assignedToModel: assignType === 'manager' ? 'Manager' : 'Employee',
-            status: 'pending',
-            progress: 0,
+            status: editingTaskId ? undefined : 'pending',
+            progress: editingTaskId ? undefined : 0,
             assignedBy: 'admin',
-            createdAt: new Date().toISOString()
+            createdAt: editingTaskId ? undefined : new Date().toISOString()
         };
 
-        addTask(taskRecord);
-
-        // Notify assignees
-        if (assignType === 'employee') {
-            newTask.assignedTo.forEach(empId => {
-                addNotification({
-                    title: 'New Admin Task',
-                    description: `Admin assigned you: "${newTask.title}"`,
-                    category: 'task',
-                    recipientId: empId
+        if (editingTaskId) {
+            updateTask(editingTaskId, taskRecord);
+            toast.success('Task directive updated');
+        } else {
+            addTask(taskRecord);
+            // Notify assignees (only for new tasks)
+            if (assignType === 'employee') {
+                newTask.assignedTo.forEach(empId => {
+                    addNotification({
+                        title: 'New Admin Task',
+                        description: `Admin assigned you: "${newTask.title}"`,
+                        category: 'task',
+                        recipientId: empId
+                    });
                 });
-            });
-        } else if (newTask.assignedToManager) {
-            addNotification({
-                title: 'New Project Assignment',
-                description: `Admin assigned a new project to your department: "${newTask.title}"`,
-                category: 'task',
-                recipientId: newTask.assignedToManager
-            });
+            } else if (newTask.assignedToManager) {
+                addNotification({
+                    title: 'New Project Assignment',
+                    description: `Admin assigned a new project to your department: "${newTask.title}"`,
+                    category: 'task',
+                    recipientId: newTask.assignedToManager
+                });
+            }
+            toast.success('Task created and assigned');
         }
 
-        toast.success('Task created and assigned');
         setIsCreateModalOpen(false);
+        setEditingTaskId(null);
         setNewTask({
             title: '',
             description: '',
@@ -186,6 +192,22 @@ const TaskManagement = () => {
             assignedToManager: '',
             collaborationEnabled: false
         });
+    };
+
+    const handleOpenEditModal = (task) => {
+        setNewTask({
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            deadline: format(new Date(task.deadline), 'yyyy-MM-dd'),
+            project: task.project?._id || task.project || 'none',
+            assignedTo: task.assignedToModel === 'Employee' ? task.assignedTo.map(u => u._id || u) : [],
+            assignedToManager: task.assignedToModel === 'Manager' ? (task.assignedTo[0]?._id || task.assignedTo[0]) : '',
+            collaborationEnabled: task.collaborationEnabled || false
+        });
+        setAssignType(task.assignedToModel === 'Manager' ? 'manager' : 'employee');
+        setEditingTaskId(task.id);
+        setIsCreateModalOpen(true);
     };
 
     const toggleEmployeeAssignment = (empId) => {
@@ -205,11 +227,14 @@ const TaskManagement = () => {
     const handleSendMessage = () => {
         if (!newMessage.trim() || !activeTaskForDiscussion) return;
 
+        const authState = JSON.parse(localStorage.getItem('dintask-auth-storage'))?.state;
+        const currentUser = authState?.user;
+
         addComment(activeTaskForDiscussion.id, {
             text: newMessage,
-            sender: 'Admin', // In a real app, this would be the logged-in user
-            senderId: 'admin',
-            role: 'admin'
+            sender: currentUser?.name || 'Admin',
+            senderId: currentUser?.id,
+            role: currentUser?.role || 'admin'
         });
 
         setNewMessage('');
@@ -238,7 +263,22 @@ const TaskManagement = () => {
                     </div>
                 </div>
 
-                <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <Dialog open={isCreateModalOpen} onOpenChange={(val) => {
+                    setIsCreateModalOpen(val);
+                    if (!val) {
+                        setEditingTaskId(null);
+                        setNewTask({
+                            title: '',
+                            description: '',
+                            priority: 'medium',
+                            deadline: '',
+                            project: '',
+                            assignedTo: [],
+                            assignedToManager: '',
+                            collaborationEnabled: false
+                        });
+                    }
+                }}>
                     <DialogTrigger asChild>
                         <motion.div {...scaleOnTap} className="w-full md:w-auto px-1 sm:px-0">
                             <Button className="w-full md:w-auto flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700 h-10 sm:h-11 px-6 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest">
@@ -247,11 +287,13 @@ const TaskManagement = () => {
                             </Button>
                         </motion.div>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto rounded-3xl border-none">
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] sm:rounded-[3rem] border-none p-4 sm:p-8">
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-black">Create New Task</DialogTitle>
-                            <DialogDescription className="text-xs font-medium text-slate-500">
-                                Fill in the details below to assign a new task to your team.
+                            <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tight">
+                                {editingTaskId ? 'Edit Task Directive' : 'New Task Directive'}
+                            </DialogTitle>
+                            <DialogDescription className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
+                                {editingTaskId ? 'Modify operational parameters for this mission.' : 'Formulate a new operational sequence for the squadron.'}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleCreateTask} className="grid gap-6 py-4">
@@ -392,7 +434,9 @@ const TaskManagement = () => {
                         </form>
                         <DialogFooter className="gap-2 sm:gap-0">
                             <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="rounded-xl h-11 px-6">Cancel</Button>
-                            <Button onClick={handleCreateTask} className="rounded-xl h-11 px-6 bg-primary-600 hover:bg-primary-700">Assign Task</Button>
+                            <Button onClick={handleCreateTask} className="rounded-xl h-11 px-6 bg-primary-600 hover:bg-primary-700">
+                                {editingTaskId ? 'Update Directive' : 'Assign Task'}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -516,10 +560,13 @@ const TaskManagement = () => {
                                                                     <MoreVertical size={18} />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="rounded-xl">
-                                                                <DropdownMenuItem className="text-xs font-bold gap-2 rounded-lg">
-                                                                    <Edit2 size={14} /> Edit Task
-                                                                </DropdownMenuItem>
+                                                             <DropdownMenuContent align="end" className="rounded-xl">
+                                                                 <DropdownMenuItem
+                                                                    className="text-xs font-bold gap-2 rounded-lg cursor-pointer"
+                                                                    onClick={() => handleOpenEditModal(task)}
+                                                                 >
+                                                                     <Edit2 size={14} /> Edit Task
+                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem className="text-xs font-bold gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10 rounded-lg" onClick={() => deleteTask(task.id)}>
                                                                     <Trash2 size={14} /> Delete
                                                                 </DropdownMenuItem>
