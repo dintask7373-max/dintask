@@ -168,7 +168,7 @@ const Welcome = () => {
                 initial={{ opacity: 0, x: -20, y: -20 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ duration: 0.8 }}
-                onClick={() => navigate('/')}
+                onClick={() => window.open('https://dintask.com', '_blank')}
                 className="absolute top-0 -left-2 z-50 flex items-center gap-1 cursor-pointer group p-0"
             >
                 <div className="relative">
@@ -249,7 +249,7 @@ const Welcome = () => {
                     className="mt-12 md:mt-20"
                 >
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => window.open('https://dintask.com', '_blank')}
                         className="text-white/60 hover:text-white text-sm font-black uppercase tracking-[0.4em] transition-all hover:tracking-[0.5em] drop-shadow-md"
                         style={{ fontFamily: 'Outfit, sans-serif' }}
                     >
@@ -287,7 +287,7 @@ const Welcome = () => {
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => {
                                             setShowIntel(false);
-                                            navigate('/');
+                                            window.open('https://dintask.com', '_blank');
                                         }}
                                         className="text-slate-900 dark:text-white text-[10px] md:text-xs font-black uppercase tracking-[0.3em] flex flex-col items-start gap-1 group relative transition-all"
                                     >
@@ -366,16 +366,17 @@ const Welcome = () => {
 
                                         <div className="mt-auto pt-6 w-full">
                                             <Button
+                                                disabled
                                                 className={cn(
-                                                    "w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 text-white border-none shadow-lg",
-                                                    module.role === 'Admin' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20' :
-                                                        module.role === 'Manager' ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20' :
-                                                            module.role === 'Sales' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' :
-                                                                'bg-primary-600 hover:bg-primary-700 shadow-primary-500/20'
+                                                    "w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 text-white border-none shadow-lg opacity-50 cursor-not-allowed",
+                                                    module.role === 'Admin' ? 'bg-blue-600 shadow-blue-500/20' :
+                                                        module.role === 'Manager' ? 'bg-amber-600 shadow-amber-500/20' :
+                                                            module.role === 'Sales' ? 'bg-emerald-600 shadow-emerald-500/20' :
+                                                                'bg-primary-600 shadow-primary-500/20'
                                                 )}
                                                 onClick={() => {
-                                                    setShowIntel(false);
-                                                    navigate(`/${module.role.toLowerCase()}/login`);
+                                                    // setShowIntel(false);
+                                                    // navigate(`/${module.role.toLowerCase()}/login`);
                                                 }}
                                             >
                                                 Initialize Access

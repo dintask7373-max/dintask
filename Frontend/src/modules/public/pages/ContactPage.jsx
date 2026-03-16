@@ -122,7 +122,7 @@ const ContactPage = () => {
                     <div className="absolute bottom-[-5%] left-[-5%] w-48 h-48 bg-black/10 rounded-full blur-2xl pointer-events-none" />
 
                     <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-16 cursor-pointer" onClick={() => navigate('/')}>
+                        <div className="flex items-center gap-3 mb-16 cursor-pointer" onClick={() => window.open('https://dintask.com', '_blank')}>
                             <img src="/dintask-logo.png" alt="DinTask" className="h-10 w-10 brightness-0 invert" />
                             <span className="text-2xl font-black tracking-tighter uppercase italic">
                                 Din<span className="text-blue-200">Task</span>
@@ -217,7 +217,7 @@ const ContactPage = () => {
                                         Expected response window: 12-24 hours.
                                     </p>
                                 </div>
-                                <Button onClick={() => navigate('/')} className="h-12 px-8 bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20">
+                                <Button onClick={() => window.open('https://dintask.com', '_blank')} className="h-12 px-8 bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20">
                                     RETURN TO DASHBOARD
                                 </Button>
                             </motion.div>

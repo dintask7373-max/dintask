@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Shield, Lock, Eye, EyeOff, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { Card, CardContent } from '@/shared/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/shared/components/ui/dialog";
+import useAuthStore from '@/store/authStore';
 import { cn } from '@/shared/utils/cn';
 import { fadeInUp } from '@/shared/utils/animations';
 
 const Security = () => {
     const navigate = useNavigate();
+    const { deleteAccount, changePassword } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [showPasswords, setShowPasswords] = useState({
         current: false,
         new: false,
@@ -51,19 +63,35 @@ const Security = () => {
         setIsLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            toast.success('Password updated successfully');
+            await changePassword(formData.currentPassword, formData.newPassword);
+            toast.success('Security protocol updated');
             setFormData({
                 currentPassword: '',
                 newPassword: '',
                 confirmPassword: ''
             });
         } catch (error) {
-            toast.error('Failed to update password. Please try again.');
+            toast.error('Failed to update credentials');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setIsDeleting(true);
+        try {
+            const success = await deleteAccount();
+            if (success) {
+                toast.success("Account deleted permanently");
+                navigate('/welcome');
+            } else {
+                toast.error("Account termination failed");
+            }
+        } catch (error) {
+            toast.error("An error occurred during account deletion");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
         }
     };
 
@@ -96,14 +124,14 @@ const Security = () => {
                     <form onSubmit={handlePasswordChange} className="space-y-8">
                         {/* Current Password */}
                         <div className="space-y-3">
-                            <Label className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">Entry Key (Current)</Label>
+                            <Label className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">Current Cipher</Label>
                             <div className="relative group">
                                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
                                 <Input
                                     type={showPasswords.current ? "text" : "password"}
                                     value={formData.currentPassword}
                                     onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                                    placeholder="Enter current password"
+                                    placeholder="••••••••"
                                     className="pl-14 pr-14 h-16 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300"
                                 />
                                 <button
@@ -121,14 +149,14 @@ const Security = () => {
                         {/* New Password */}
                         <div className="space-y-8">
                             <div className="space-y-3">
-                                <Label className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">New Security Key</Label>
+                                <Label className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">New Sequence</Label>
                                 <div className="relative group">
                                     <Shield className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
                                     <Input
                                         type={showPasswords.new ? "text" : "password"}
                                         value={formData.newPassword}
                                         onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                                        placeholder="Min. 8 characters"
+                                        placeholder="••••••••"
                                         className="pl-14 pr-14 h-16 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300"
                                     />
                                     <button
@@ -145,14 +173,14 @@ const Security = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <Label className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">Confirm Key</Label>
+                                <Label className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">Verify Sequence</Label>
                                 <div className="relative group">
                                     <Shield className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
                                     <Input
                                         type={showPasswords.confirm ? "text" : "password"}
                                         value={formData.confirmPassword}
                                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                        placeholder="Verify new key"
+                                        placeholder="••••••••"
                                         className="pl-14 pr-14 h-16 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300"
                                     />
                                     <button
@@ -173,7 +201,7 @@ const Security = () => {
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full h-16 bg-primary text-white font-black rounded-3xl shadow-2xl shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all text-base uppercase tracking-[0.1em] flex items-center justify-center gap-3 overflow-hidden group"
+                                className="w-full h-16 bg-slate-900 border-none shadow-xl hover:bg-black text-white dark:bg-white dark:text-slate-900 font-black text-base uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
                             >
                                 <AnimatePresence mode="wait">
                                     {isLoading ? (
@@ -185,7 +213,7 @@ const Security = () => {
                                             className="flex items-center gap-2"
                                         >
                                             <div className="w-5 h-5 border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Encrypting...</span>
+                                            <span>ENCRYPTING...</span>
                                         </motion.div>
                                     ) : (
                                         <motion.div
@@ -195,8 +223,8 @@ const Security = () => {
                                             exit={{ opacity: 0, y: -10 }}
                                             className="flex items-center gap-2"
                                         >
-                                            <CheckCircle2 size={20} className="group-hover:scale-125 transition-transform" />
-                                            <span>Secure Update</span>
+                                            <Shield size={20} className="group-hover:scale-125 transition-transform" />
+                                            <span>ROTATE SECURITY KEY</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -204,6 +232,68 @@ const Security = () => {
                         </div>
                     </form>
                 </Card>
+
+                {/* Danger Zone */}
+                <Card className="border-none shadow-xl bg-red-50/30 dark:bg-red-950/20 rounded-[3rem] overflow-hidden border border-red-100 dark:border-red-900/40 p-10 space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500">Danger Zone</h4>
+                            <p className="text-[10px] font-bold text-red-400 italic mt-1 uppercase">Irreversible account actions</p>
+                        </div>
+                        <AlertTriangle size={24} className="text-red-500 opacity-50" />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4 border-t border-red-100 dark:border-red-900/20">
+                        <div className="space-y-1 text-center sm:text-left text-wrap max-w-xs">
+                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Delete Account</p>
+                            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                                Permanently remove your operational identity and data. This action is absolute.
+                            </p>
+                        </div>
+                        <Button
+                            variant="destructive"
+                            className="h-14 px-10 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-red-500/20 w-full sm:w-auto"
+                            onClick={() => setShowDeleteModal(true)}
+                        >
+                            <Trash2 size={18} className="mr-2" /> Delete Permanently
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* Delete Confirmation Modal */}
+                <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+                    <DialogContent className="sm:max-w-[425px] rounded-[2rem] border-none shadow-2xl bg-white dark:bg-slate-900 p-0 overflow-hidden">
+                        <div className="p-10 pb-0">
+                            <div className="size-20 rounded-[2rem] bg-red-50 dark:bg-red-950/30 text-red-600 flex items-center justify-center mx-auto mb-8">
+                                <AlertTriangle size={40} />
+                            </div>
+                            <DialogTitle className="text-2xl font-black text-center text-slate-900 dark:text-white tracking-tight uppercase italic">
+                                Identity Erasure
+                            </DialogTitle>
+                            <DialogDescription className="text-center text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] pt-4 leading-relaxed px-4">
+                                Are you certain you want to erase your operational profile? This action is absolute and cannot be reversed.
+                            </DialogDescription>
+                        </div>
+                        <DialogFooter className="p-10 flex flex-col sm:flex-row gap-4">
+                            <Button
+                                variant="ghost"
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                disabled={isDeleting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleDeleteAccount}
+                                className="flex-1 h-14 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-500/20 active:scale-95"
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? "ERASING..." : "CONFIRM ERASURE"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 <motion.p
                     initial={{ opacity: 0 }}
