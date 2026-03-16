@@ -7,7 +7,9 @@ import {
     AlertCircle,
     User,
     Shield,
-    LogOut
+    LogOut,
+    Trash2,
+    AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
@@ -15,13 +17,23 @@ import { Input } from '@/shared/components/ui/input';
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
 import { Separator } from '@/shared/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/shared/components/ui/dialog";
 import useAuthStore from '@/store/authStore';
 import { toast } from 'sonner';
 import { cn } from '@/shared/utils/cn';
 
 const EmployeeProfile = () => {
-    const { user, updateProfile, changePassword, logout } = useAuthStore();
+    const { user, updateProfile, changePassword, logout, deleteAccount } = useAuthStore();
     const navigate = useNavigate();
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [profileData, setProfileData] = useState({
         name: '',
@@ -92,10 +104,28 @@ const EmployeeProfile = () => {
     const handleLogout = async () => {
         try {
             await logout();
-            navigate('/init');
+            navigate('/welcome');
             toast.success("Identity session terminated");
         } catch (error) {
             toast.error("Logout protocol failed");
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setIsDeleting(true);
+        try {
+            const success = await deleteAccount();
+            if (success) {
+                toast.success("Account deleted permanently");
+                navigate('/welcome');
+            } else {
+                toast.error("Account termination failed");
+            }
+        } catch (error) {
+            toast.error("An error occurred during account deletion");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
         }
     };
 
@@ -217,6 +247,69 @@ const EmployeeProfile = () => {
                             <LogOut size={20} /> Terminate Session (Logout)
                         </Button>
                     </div>
+
+                    {/* Danger Zone */}
+                    <Card className="border-none shadow-xl bg-red-50/30 dark:bg-red-950/10 rounded-[2.5rem] overflow-hidden border border-red-100 dark:border-red-900/20 mb-10">
+                        <CardHeader className="py-6 px-10 border-b border-red-100/50 dark:border-red-900/20 flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500">Danger Zone</CardTitle>
+                                <CardDescription className="text-[10px] font-bold text-red-400 italic">Irreversible account actions</CardDescription>
+                            </div>
+                            <AlertTriangle size={20} className="text-red-500" />
+                        </CardHeader>
+                        <CardContent className="p-8 sm:p-10 space-y-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                                <div className="space-y-1 text-center sm:text-left">
+                                    <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Delete Account</h4>
+                                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 max-w-sm">
+                                        Permanently remove your account and all associated data from the DinTask system. This action cannot be undone.
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="destructive"
+                                    className="h-11 px-8 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-red-500/20"
+                                    onClick={() => setShowDeleteModal(true)}
+                                >
+                                    <Trash2 size={16} className="mr-2" /> Delete Permanently
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Delete Confirmation Modal */}
+                    <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+                        <DialogContent className="sm:max-w-[425px] rounded-[2rem] border-none shadow-2xl bg-white dark:bg-slate-900">
+                            <DialogHeader className="pt-6">
+                                <div className="size-16 rounded-full bg-red-100 dark:bg-red-950/30 text-red-600 flex items-center justify-center mx-auto mb-4">
+                                    <AlertTriangle size={32} />
+                                </div>
+                                <DialogTitle className="text-2xl font-black text-center text-slate-900 dark:text-white tracking-tight uppercase italic">
+                                    Final Confirmation
+                                </DialogTitle>
+                                <DialogDescription className="text-center text-sm font-medium text-slate-500 dark:text-slate-400 pt-2 px-6">
+                                    Are you absolutely sure you want to delete your account? This will erase your entire tactical profile and access history.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="p-6 pt-2 flex flex-col sm:flex-row gap-3">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="flex-1 h-12 rounded-xl font-bold text-xs uppercase tracking-widest text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    disabled={isDeleting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDeleteAccount}
+                                    className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95"
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? "Terminating..." : "Confirm Deletion"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
         </div>

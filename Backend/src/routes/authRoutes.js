@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, logout, forgotPassword, resetPassword, getMe, updateDetails, updatePassword, checkSubscriptionStatus, sendOtp, verifyOtp, checkEmail } = require('../controllers/authController');
+const { register, login, logout, forgotPassword, resetPassword, getMe, updateDetails, updatePassword, checkSubscriptionStatus, sendOtp, verifyOtp, checkEmail, deleteAccount } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
 const upload = require('../middleware/fileUpload');
@@ -32,6 +32,7 @@ router.put('/resetpassword/:resettoken', resetPassword);
 router.get('/me', protect, getMe);
 router.put('/updatedetails', protect, updateDetails);
 router.put('/updatepassword', protect, updatePassword);
+router.delete('/deleteaccount', protect, deleteAccount);
 router.get('/subscription-status', protect, checkSubscriptionStatus);
 
 module.exports = router;

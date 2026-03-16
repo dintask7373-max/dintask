@@ -1046,3 +1046,50 @@ exports.checkEmail = async (req, res, next) => {
   }
 };
 
+// @desc    Delete user account
+// @route   DELETE /api/v1/auth/deleteaccount
+// @access  Private
+exports.deleteAccount = async (req, res, next) => {
+  try {
+    const UserModel = models[req.user.role];
+
+    if (!UserModel) {
+      return next(new ErrorResponse('Invalid user role', 400));
+    }
+
+    const user = await UserModel.findById(req.user.id);
+
+    if (!user) {
+      return next(new ErrorResponse('User not found', 404));
+    }
+
+    // Notify Admin before deletion (if team member)
+    const teamMemberRoles = ['employee', 'manager', 'sales_executive', 'sales'];
+    if (teamMemberRoles.includes(req.user.role) && user.adminId) {
+      try {
+        await Notification.create({
+          recipient: user.adminId,
+          sender: user._id,
+          adminId: user.adminId,
+          type: 'security_alert',
+          title: 'Account Deleted',
+          message: `${req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1)} "${user.name}" has deleted their account permanently.`,
+          link: '/hr/directory'
+        });
+      } catch (notifyErr) {
+        console.error('Account Deletion Notification Error:', notifyErr);
+      }
+    }
+
+    // Perform Hard Delete
+    await UserModel.findByIdAndDelete(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      data: {},
+      message: 'Account deleted successfully'
+    });
+  } catch (err) {
+    next(err);
+  }
+};

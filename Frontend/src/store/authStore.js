@@ -309,6 +309,35 @@ const useAuthStore = create(
                 }
             },
 
+            deleteAccount: async () => {
+                set({ loading: true });
+                try {
+                    const response = await apiRequest('/auth/deleteaccount', {
+                        method: 'DELETE'
+                    });
+
+                    if (response.success) {
+                        // Logout and clear state
+                        const socketService = (await import('../services/socket')).default;
+                        socketService.disconnect();
+
+                        set({
+                            user: null,
+                            role: null,
+                            token: null,
+                            isAuthenticated: false,
+                            loading: false
+                        });
+                        return true;
+                    } else {
+                        throw new Error(response.error || 'Account deletion failed');
+                    }
+                } catch (err) {
+                    set({ loading: false, error: err.message });
+                    return false;
+                }
+            },
+
             clearError: () => set({ error: null }),
         }),
         {

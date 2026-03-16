@@ -50,11 +50,11 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
         } else if (currentRole === 'manager') {
             navigate('/manager/login');
         } else if (currentRole === 'sales') {
-            navigate('/init');
+            navigate('/welcome');
         } else if (currentRole === 'partner') {
             navigate('/partner/login');
         } else { // This covers 'employee' or any other unlisted role
-            navigate('/init');
+            navigate('/welcome');
         }
     };
 

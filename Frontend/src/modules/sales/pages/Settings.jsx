@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Palette, Globe, Lock, Save } from 'lucide-react';
+import { User, Bell, Shield, Palette, Globe, Lock, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Switch } from '@/shared/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { toast } from 'sonner';
 import useAuthStore from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 const SalesSettings = () => {
-    const { user, updateProfile, changePassword } = useAuthStore();
+    const { user, updateProfile, changePassword, deleteAccount } = useAuthStore();
+    const navigate = useNavigate();
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [profileData, setProfileData] = useState({
         name: '',
@@ -76,6 +88,24 @@ const SalesSettings = () => {
             toast.error("Recall failed");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setIsDeleting(true);
+        try {
+            const success = await deleteAccount();
+            if (success) {
+                toast.success("Account deleted permanently");
+                navigate('/welcome');
+            } else {
+                toast.error("Account termination failed");
+            }
+        } catch (error) {
+            toast.error("An error occurred during account deletion");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
         }
     };
 
@@ -179,6 +209,69 @@ const SalesSettings = () => {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Danger Zone */}
+                    <Card className="border-2 border-red-100 shadow-xl shadow-red-200/50 bg-gradient-to-br from-white to-red-50/10 dark:from-slate-900 dark:to-red-900/5 rounded-2xl sm:rounded-[2rem] overflow-hidden">
+                        <CardHeader className="py-4 sm:py-6 px-5 sm:px-8 border-b border-slate-50 dark:border-slate-800 flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-red-500">Danger Zone</CardTitle>
+                                <CardDescription className="text-[8px] sm:text-[10px] font-black text-red-300 italic uppercase">Irreversible account actions</CardDescription>
+                            </div>
+                            <AlertTriangle size={18} className="text-red-500 shrink-0" />
+                        </CardHeader>
+                        <CardContent className="p-5 sm:p-8 space-y-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                                <div className="space-y-1 text-center sm:text-left">
+                                    <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Delete Account</h4>
+                                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest max-w-sm">
+                                        Permanently remove your operational identity and data.
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="destructive"
+                                    className="h-11 px-8 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-red-500/20 w-full sm:w-auto"
+                                    onClick={() => setShowDeleteModal(true)}
+                                >
+                                    <Trash2 size={16} className="mr-2" /> Delete Permanently
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Delete Confirmation Modal */}
+                    <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+                        <DialogContent className="sm:max-w-[425px] rounded-[2rem] border-none shadow-2xl bg-white dark:bg-slate-900 p-0 overflow-hidden">
+                            <div className="p-8 pb-0">
+                                <div className="size-16 rounded-3xl bg-red-50 dark:bg-red-950/30 text-red-600 flex items-center justify-center mx-auto mb-6">
+                                    <AlertTriangle size={36} />
+                                </div>
+                                <DialogTitle className="text-2xl font-black text-center text-slate-900 dark:text-white tracking-tight uppercase italic">
+                                    Identity Erasure
+                                </DialogTitle>
+                                <DialogDescription className="text-center text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] pt-3 leading-relaxed">
+                                    Are you certain you want to erase your operational profile? This action is absolute and cannot be reversed.
+                                </DialogDescription>
+                            </div>
+                            <DialogFooter className="p-8 flex flex-col sm:flex-row gap-4">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="flex-1 h-12 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    disabled={isDeleting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDeleteAccount}
+                                    className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-500/20 active:scale-95"
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? "DELETING..." : "CONFIRM ERASURE"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
         </div>
