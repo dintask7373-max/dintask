@@ -133,7 +133,11 @@ exports.createFollowUp = async (req, res) => {
 // @access  Private
 exports.updateFollowUp = async (req, res) => {
     try {
-        let followUp = await FollowUp.findById(req.params.id);
+        const { id } = req.params;
+        const { status } = req.body;
+        console.log(`[DEBUG] Updating FollowUp ${id} with status: ${status}`);
+        
+        let followUp = await FollowUp.findById(id);
 
         if (!followUp) {
             return res.status(404).json({ success: false, error: 'Follow-up not found' });

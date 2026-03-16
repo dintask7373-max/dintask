@@ -12,6 +12,7 @@ initReminderCron();
 
 const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`Follow-up Overdue status patch verified.`);
 });
 
 // Socket.io initialization

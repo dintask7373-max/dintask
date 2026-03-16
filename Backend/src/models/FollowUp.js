@@ -26,7 +26,7 @@ const FollowUpSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Scheduled', 'Completed', 'Missed', 'Cancelled'],
+        enum: ['Scheduled', 'Completed', 'Missed', 'Cancelled', 'Overdue'],
         default: 'Scheduled'
     },
     adminId: {

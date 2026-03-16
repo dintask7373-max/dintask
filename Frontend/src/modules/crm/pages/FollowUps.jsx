@@ -11,7 +11,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Calendar } from '@/shared/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Search, Edit, Trash2, Users } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Search, Edit, Trash2, Users, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import useCRMStore from '@/store/crmStore';
 import useAuthStore from '@/store/authStore';
@@ -28,7 +28,9 @@ const FollowUps = () => {
     deleteFollowUp,
     fetchLeads,
     fetchFollowUps,
-    fetchSalesExecutives
+    fetchSalesExecutives,
+    pipelineStages,
+    editLead
   } = useCRMStore();
 
   const { role } = useAuthStore();
@@ -51,8 +53,15 @@ const FollowUps = () => {
   const [leadSearch, setLeadSearch] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Transition Dialog States
+  const [isTransitionOpen, setIsTransitionOpen] = useState(false);
+  const [transitionFollowUpId, setTransitionFollowUpId] = useState(null);
+  const [transitionLead, setTransitionLead] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [newDeadline, setNewDeadline] = useState(null);
+
   const followUpTypes = ['Call', 'Meeting', 'Email', 'WhatsApp'];
-  const followUpStatuses = ['Scheduled', 'Completed', 'Missed', 'Cancelled'];
+  const followUpStatuses = ['Scheduled', 'Completed', 'Missed', 'Cancelled', 'Overdue'];
 
   React.useEffect(() => {
     fetchLeads();
@@ -155,7 +164,51 @@ const FollowUps = () => {
   };
 
   const handleStatusChange = (followUpId, status) => {
-    updateFollowUp(followUpId, { status });
+    if (status === 'Overdue') {
+      if (!confirm('Are you sure you want to mark this synchronization as Overdue?')) {
+        return;
+      }
+      updateFollowUp(followUpId, { status });
+    } else if (status === 'Completed') {
+      if (!confirm('Are you sure you want to mark this synchronization as Completed? Next, you can update the Lead status.')) {
+        return;
+      }
+      const followUp = followUps.find(f => (f.id || f._id) === followUpId);
+      if (followUp) {
+        const leadId = followUp.leadId?._id || followUp.leadId;
+        const lead = leads.find(l => (l.id || l._id) === leadId);
+        setTransitionFollowUpId(followUpId);
+        setTransitionLead(lead || (typeof followUp.leadId === 'object' ? followUp.leadId : null));
+        setNewStatus(lead?.status || (typeof followUp.leadId === 'object' ? followUp.leadId.status : 'Contacted'));
+        setNewDeadline(null);
+        setIsTransitionOpen(true);
+      }
+    } else {
+      updateFollowUp(followUpId, { status });
+    }
+  };
+
+  const handleSubmitTransition = async () => {
+    if (!transitionLead) return;
+
+    try {
+      // 1. Update Follow-up to Completed
+      await updateFollowUp(transitionFollowUpId, { status: 'Completed' });
+
+      // 2. Update Lead Status
+      const leadId = transitionLead.id || transitionLead._id;
+      const leadData = { status: newStatus };
+      if (newStatus === 'Won' && newDeadline) {
+        leadData.deadline = newDeadline.toISOString();
+      }
+      await editLead(leadId, leadData);
+
+      setIsTransitionOpen(false);
+      setTransitionFollowUpId(null);
+      setTransitionLead(null);
+    } catch (error) {
+      console.error("Transition failed", error);
+    }
   };
 
   const resetForm = () => {
@@ -270,9 +323,9 @@ const FollowUps = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Total Schedule', value: (followUps || []).length, color: 'primary' },
-          { label: 'Today Ops', value: (followUps || []).filter(f => format(new Date(f.scheduledAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, color: 'amber' },
+          { label: 'Pending Ops', value: (followUps || []).filter(f => f.status === 'Scheduled').length, color: 'amber' },
           { label: 'Completed', value: (followUps || []).filter(f => f.status === 'Completed').length, color: 'emerald' },
-          { label: 'Overdue Flow', value: (followUps || []).filter(f => new Date(f.scheduledAt) < new Date() && f.status === 'Scheduled').length, color: 'red' }
+          { label: 'Overdue Flow', value: (followUps || []).filter(f => f.status === 'Overdue').length, color: 'red' }
         ].map((stat, i) => (
           <Card key={i} className={cn(
             "border-2 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1",
@@ -355,11 +408,40 @@ const FollowUps = () => {
                         <p className="text-[9px] text-slate-400 font-bold">{format(new Date(f.scheduledAt), 'HH:mm')}</p>
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn("text-[9px] font-black h-5", f.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary-50 text-primary-600')}>{f.status}</Badge>
+                        <Badge className={cn(
+                          "text-[9px] font-black h-5",
+                          f.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
+                            f.status === 'Overdue' ? 'bg-red-50 text-red-600' :
+                              'bg-primary-50 text-primary-600'
+                        )}>
+                          {f.status}
+                        </Badge>
                       </TableCell>
                       {!isAdmin && (
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
+                            {f.status === 'Scheduled' && new Date(f.scheduledAt) < new Date() && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => handleStatusChange(f.id || f._id, 'Overdue')}
+                                title="Mark as Overdue"
+                              >
+                                <AlertCircle size={12} />
+                              </Button>
+                            )}
+                            {f.status !== 'Completed' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50"
+                                onClick={() => handleStatusChange(f.id || f._id, 'Completed')}
+                                title="Mark as Completed"
+                              >
+                                <CheckCircle2 size={12} />
+                              </Button>
+                            )}
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(f)}><Edit size={12} /></Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(f.id || f._id)}><Trash2 size={12} /></Button>
                           </div>
@@ -475,6 +557,16 @@ const FollowUps = () => {
                           >
                             <CheckCircle2 size={14} />
                           </Button>
+                          {f.status === 'Scheduled' && new Date(f.scheduledAt) < new Date() && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-red-500 border border-slate-100 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm"
+                              onClick={() => handleStatusChange(f.id || f._id, 'Overdue')}
+                            >
+                              <AlertCircle size={14} />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -494,6 +586,80 @@ const FollowUps = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Status Transition Dialog */}
+      <Dialog open={isTransitionOpen} onOpenChange={setIsTransitionOpen}>
+        <DialogContent className="sm:max-w-[425px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black uppercase tracking-tight">Lead Status Update</DialogTitle>
+            <DialogDescription className="text-[10px] font-bold uppercase text-slate-400 tracking-widest italic">
+              Synchronize pipeline state with activity results
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-6">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Lead</p>
+              <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{transitionLead?.name}</p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">{transitionLead?.company}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Update Pipeline Status</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold text-xs uppercase tracking-tight">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {pipelineStages.map(stage => (
+                    <SelectItem key={stage} value={stage} className="text-xs font-bold uppercase tracking-tight">
+                      {stage}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {newStatus === 'Won' && (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Target Project Deadline</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-11 justify-start text-left font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border-none",
+                        !newDeadline && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                      {newDeadline ? format(newDeadline, "PPP") : <span>Select deadline</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={newDeadline}
+                      onSelect={setNewDeadline}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0)) || date > new Date("2035-12-31")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleSubmitTransition}
+              className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-black uppercase tracking-widest text-[11px] rounded-2xl shadow-lg shadow-primary-500/20"
+            >
+              Complete activity & Sync Pipeline
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

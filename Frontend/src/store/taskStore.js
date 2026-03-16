@@ -68,9 +68,12 @@ const useTaskStore = create((set, get) => ({
             if (res.success) {
                 get().fetchTasks();
 
-                // Background re-fetch for global state synchronization
-                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
-                    .catch(err => console.error("Background sync error:", err));
+                // Background re-fetch only for admins
+                const authState = JSON.parse(localStorage.getItem('dintask-auth-storage'))?.state;
+                if (authState?.user?.role === 'admin') {
+                    import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
+                        .catch(err => console.error("Background sync error:", err));
+                }
 
                 toast.success('Task updated successfully');
             } else {

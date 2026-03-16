@@ -33,13 +33,19 @@ import {
   Search,
   Filter,
   MoreHorizontal,
-  Calendar,
+  Calendar as CalendarIcon,
   IndianRupee,
   UserCircle,
   Building2,
   Edit2,
   Trash2
 } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { Calendar } from "@/shared/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,7 +96,7 @@ const SalesPipeline = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [editingDealData, setEditingDealData] = useState(null);
   const [outcomeReason, setOutcomeReason] = useState('');
-  const [outcomeDeadline, setOutcomeDeadline] = useState('');
+  const [outcomeDeadline, setOutcomeDeadline] = useState(null);
   const [originalAmount, setOriginalAmount] = useState(null);
   const [changeReason, setChangeReason] = useState('');
 
@@ -147,7 +153,7 @@ const SalesPipeline = () => {
       if (toStage === 'Won' || toStage === 'Lost') {
         const lead = leads.find(l => (l._id === draggedLead || l.id === draggedLead));
         setSelectedLead({ ...lead, status: toStage }); // Temporarily update status for dialog
-        setOutcomeDeadline(lead.deadline ? new Date(lead.deadline).toISOString().split('T')[0] : '');
+        setOutcomeDeadline(lead.deadline ? new Date(lead.deadline) : null);
         setIsOutcomeOpen(true);
       } else {
         moveLead(draggedLead, draggedFromStage, toStage);
@@ -165,13 +171,13 @@ const SalesPipeline = () => {
     await editLead(leadId, {
       status: selectedLead.status,
       notes: outcomeReason ? `${selectedLead.notes || ''}\nOutcome Note: ${outcomeReason}` : selectedLead.notes,
-      deadline: outcomeDeadline || selectedLead.deadline
+      deadline: outcomeDeadline ? outcomeDeadline.toISOString() : selectedLead.deadline
     });
 
     toast.success(`Deal marked as ${selectedLead.status}`);
     setIsOutcomeOpen(false);
     setOutcomeReason('');
-    setOutcomeDeadline('');
+    setOutcomeDeadline(null);
     setSelectedLead(null);
   };
 
@@ -211,7 +217,7 @@ const SalesPipeline = () => {
     setEditingDealData({
       ...lead,
       amount: lead.amount.toString(), // Ensure amount is editable string
-      deadline: lead.deadline ? new Date(lead.deadline).toISOString().split('T')[0] : ''
+      deadline: lead.deadline ? new Date(lead.deadline) : null
     });
     setOriginalAmount(lead.amount);
     setChangeReason('');
@@ -240,7 +246,8 @@ const SalesPipeline = () => {
     editLead(leadId, {
       ...editingDealData,
       amount: currentAmount,
-      notes: finalNotes
+      notes: finalNotes,
+      deadline: editingDealData.deadline ? editingDealData.deadline.toISOString() : undefined
     });
 
     toast.success("Deal updated successfully");
@@ -533,14 +540,32 @@ const SalesPipeline = () => {
           <div className="space-y-4 py-4">
             {selectedLead?.status === 'Won' && (
               <div className="space-y-2">
-                <Label htmlFor="deadline" className="text-xs font-black uppercase text-slate-500">Target project deadline</Label>
-                <Input
-                  id="deadline"
-                  type="date"
-                  value={outcomeDeadline}
-                  onChange={(e) => setOutcomeDeadline(e.target.value)}
-                  className="rounded-xl border-slate-100 dark:border-slate-800"
-                />
+                <Label className="text-xs font-black uppercase text-slate-500">Target project deadline</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full h-11 justify-start text-left font-bold rounded-xl border-slate-100 dark:border-slate-800",
+                        !outcomeDeadline && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                      {outcomeDeadline ? format(outcomeDeadline, "PPP") : <span>Pick a deadline</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={outcomeDeadline}
+                      onSelect={setOutcomeDeadline}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0)) || date > new Date("2035-12-31")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <p className="text-[9px] text-amber-600 font-bold uppercase italic">* Mandatory for project conversion</p>
               </div>
             )}
@@ -703,14 +728,32 @@ const SalesPipeline = () => {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="edit-deadline" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Target Deadline</Label>
-                  <Input
-                    id="edit-deadline"
-                    type="date"
-                    value={editingDealData.deadline}
-                    onChange={(e) => setEditingDealData({ ...editingDealData, deadline: e.target.value })}
-                    className="h-11 rounded-2xl border-slate-100 dark:border-slate-800 focus:ring-primary-500/20 bg-slate-50/50 dark:bg-slate-900/50 font-bold"
-                  />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Target Deadline</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full h-11 justify-start text-left font-bold rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50",
+                          !editingDealData.deadline && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                        {editingDealData.deadline ? format(editingDealData.deadline, "PPP") : <span>No deadline set</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={editingDealData.deadline}
+                        onSelect={(date) => setEditingDealData({ ...editingDealData, deadline: date })}
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0)) || date > new Date("2035-12-31")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {originalAmount !== null && parseFloat(editingDealData.amount) !== originalAmount && (

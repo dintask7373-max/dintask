@@ -115,30 +115,6 @@ const CRMLayout = ({ role }) => {
                 </div>
             </div>
 
-            {role !== 'sales' && (
-                <div className={cn(
-                    "mt-auto p-4 border-t",
-                    (role === 'sales' || role === 'admin') ? "border-white/10" : "border-slate-100 dark:border-slate-800/50"
-                )}>
-                    <div className={cn(
-                        "rounded-xl p-4 border transition-all",
-                        (role === 'sales' || role === 'admin')
-                            ? "bg-white/5 border-white/10 hover:bg-white/10"
-                            : "bg-slate-50/50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
-                    )}>
-                        <p className={cn("text-[10px] font-black mb-1 uppercase tracking-widest", (role === 'sales' || role === 'admin') ? "text-white" : "text-slate-900 dark:text-white")}>Support Area</p>
-                        <p className={cn("text-[9px] mb-3 font-medium leading-relaxed", (role === 'sales' || role === 'admin') ? "text-blue-100/70" : "text-slate-400")}>Advanced CRM features documentation</p>
-                        <Button size="sm" variant="outline" className={cn(
-                            "w-full text-[9px] font-black uppercase tracking-widest h-7 rounded-lg",
-                            (role === 'sales' || role === 'admin')
-                                ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
-                        )}>
-                            Docs
-                        </Button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 

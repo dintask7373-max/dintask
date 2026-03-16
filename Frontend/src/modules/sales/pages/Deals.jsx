@@ -4,7 +4,7 @@ import {
     Filter,
     Plus,
     Search,
-    Calendar,
+    Calendar as CalendarIcon,
     IndianRupee,
     User,
     Clock,
@@ -20,6 +20,12 @@ import {
     Edit2,
     ShieldAlert
 } from 'lucide-react';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { Calendar } from "@/shared/components/ui/calendar";
 import { Textarea } from '@/shared/components/ui/textarea';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/utils/cn';
@@ -81,7 +87,7 @@ const Deals = () => {
         amount: '',
         status: 'New',
         priority: 'medium',
-        deadline: ''
+        deadline: null
     });
     const [originalAmount, setOriginalAmount] = useState(null);
     const [changeReason, setChangeReason] = useState('');
@@ -237,7 +243,7 @@ const Deals = () => {
             amount: deal.amount,
             status: deal.status,
             priority: deal.priority,
-            deadline: deal.deadline ? new Date(deal.deadline).toISOString().split('T')[0] : '',
+            deadline: deal.deadline ? new Date(deal.deadline) : null,
             notes: deal.notes || ''
         });
         setOriginalAmount(deal.amount);
@@ -253,7 +259,7 @@ const Deals = () => {
                 amount: selectedDeal.amount,
                 status: selectedDeal.status,
                 priority: selectedDeal.priority,
-                deadline: selectedDeal.deadline ? new Date(selectedDeal.deadline).toISOString().split('T')[0] : '',
+                deadline: selectedDeal.deadline ? new Date(selectedDeal.deadline) : null,
                 notes: selectedDeal.notes || ''
             });
             setOriginalAmount(selectedDeal.amount);
@@ -283,7 +289,8 @@ const Deals = () => {
         editLead(selectedDeal._id || selectedDeal.id, {
             ...editDealData,
             amount: currentAmount,
-            notes: finalNotes
+            notes: finalNotes,
+            deadline: editDealData.deadline ? editDealData.deadline.toISOString() : selectedDeal.deadline
         });
         toast.success("Deal updated successfully");
         setIsEditOpen(false);
@@ -822,12 +829,31 @@ const Deals = () => {
                         </div>
                         <div className="space-y-1.5">
                             <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Target Deadline</Label>
-                            <Input
-                                type="date"
-                                value={editDealData.deadline}
-                                onChange={(e) => setEditDealData({ ...editDealData, deadline: e.target.value })}
-                                className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm px-4"
-                            />
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full h-10 justify-start text-left font-bold text-sm px-4 rounded-xl bg-slate-50 border-none",
+                                            !editDealData.deadline && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                                        {editDealData.deadline ? format(editDealData.deadline, "PPP") : <span>Pick a deadline</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={editDealData.deadline}
+                                        onSelect={(date) => setEditDealData({ ...editDealData, deadline: date })}
+                                        disabled={(date) =>
+                                            date < new Date(new Date().setHours(0, 0, 0, 0)) || date > new Date("2035-12-31")
+                                        }
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         {originalAmount !== null && parseFloat(editDealData.amount) !== originalAmount && (
