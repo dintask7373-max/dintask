@@ -615,20 +615,18 @@ const LeadsManagement = () => {
       </div >
 
       {/* Stats Bar */}
-      < div className="grid grid-cols-2 md:grid-cols-4 gap-3" >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {
           [
             { label: 'Total Pool', value: pagination.total, color: 'primary' },
             { label: 'Interested', value: leads.filter(l => l.status === 'Interested').length, color: 'amber' },
-            { label: 'Strategic', value: leads.filter(l => l.status === 'Closed').length, color: 'emerald' },
             { label: 'Lost Flow', value: leads.filter(l => l.status === 'Lost').length, color: 'slate' }
           ].map((stat, i) => (
             <Card key={i} className={cn(
               "border-2 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1",
               stat.color === 'primary' ? 'border-primary-100 shadow-primary-200/50' :
                 stat.color === 'amber' ? 'border-amber-100 shadow-amber-200/50' :
-                  stat.color === 'emerald' ? 'border-emerald-100 shadow-emerald-200/50' :
-                    'border-slate-200 shadow-slate-200/50'
+                  'border-slate-200 shadow-slate-200/50'
             )}>
               <CardContent className="p-3 sm:p-4">
                 <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.label}</p>
