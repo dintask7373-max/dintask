@@ -28,7 +28,9 @@ const {
     getStaff,
     createStaff,
     updateStaff,
-    deleteStaff
+    deleteStaff,
+    getSystemSettings,
+    updateSystemSettings
 } = require('../controllers/superAdminController');
 const upload = require('../middleware/upload');
 
@@ -90,6 +92,11 @@ router.route('/staff')
 router.route('/staff/:id')
     .put(updateStaff)
     .delete(deleteStaff);
+
+// System Settings
+router.route('/settings')
+    .get(getSystemSettings)
+    .put(updateSystemSettings);
 
 // Billing & History
 router.get('/billing/stats', getBillingStats);

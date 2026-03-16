@@ -86,12 +86,16 @@ exports.createOrder = async (req, res, next) => {
       }
     }
 
-    if (plan.price === 0) {
+    // Dynamic Pricing: Total = Plan.price (per member) * admin.userLimit
+    const totalAmount = plan.price * (admin.userLimit || 1);
+
+    if (totalAmount === 0) {
       // Free plan - update directly
       admin.subscriptionPlan = plan.name;
       admin.subscriptionPlanId = plan._id;
       admin.subscriptionStatus = 'active';
       admin.subscriptionExpiry = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
+      admin.userLimit = admin.teamSize || 1; // Update limit to current team size
       await admin.save();
 
       return res.status(200).json({
@@ -102,7 +106,7 @@ exports.createOrder = async (req, res, next) => {
     }
 
     const options = {
-      amount: plan.price * 100, // amount in the smallest currency unit (paise)
+      amount: totalAmount * 100, // amount in paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`
     };
@@ -118,13 +122,88 @@ exports.createOrder = async (req, res, next) => {
       adminId: req.user.id,
       planId,
       razorpayOrderId: order.id,
-      amount: plan.price,
-      status: 'created'
+      amount: totalAmount,
+      status: 'created',
+      type: 'subscription'
     });
 
     res.status(200).json({
       success: true,
       data: order
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Calculate and Create Order for Team Expansion
+// @route   POST /api/v1/payments/expand-team
+// @access  Private (Admin)
+exports.createExpansionOrder = async (req, res, next) => {
+  try {
+    const { newTotalLimit } = req.body;
+    const admin = await Admin.findById(req.user.id).populate('subscriptionPlanId');
+
+    if (!admin || !admin.subscriptionPlanId) {
+      return res.status(400).json({ success: false, error: 'Active subscription required for expansion' });
+    }
+
+    const plan = admin.subscriptionPlanId;
+    const currentLimit = admin.userLimit || admin.teamSize || 1;
+
+    if (newTotalLimit <= currentLimit) {
+      return res.status(400).json({ success: false, error: 'New limit must be greater than current limit' });
+    }
+
+    const additionalSeats = newTotalLimit - currentLimit;
+    const now = new Date();
+    const expiryDate = new Date(admin.subscriptionExpiry);
+    
+    // Calculate remaining days
+    const diffTime = Math.abs(expiryDate - now);
+    const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (remainingDays <= 0) {
+      return res.status(400).json({ success: false, error: 'Subscription expired. Please renew instead.' });
+    }
+
+    // Pro-rated price: (Plan Price / Plan Duration) * remainingDays * additionalSeats
+    const dailyRatePerMember = plan.price / (plan.duration || 30);
+    const expansionAmount = Math.ceil(dailyRatePerMember * remainingDays * additionalSeats);
+
+    if (expansionAmount < 1) { // Min charge 1 INR
+      // Just update it if the amount is negligible (though unlikely)
+      admin.userLimit = newTotalLimit;
+      await admin.save();
+      return res.status(200).json({ success: true, message: 'Expansion applied (low amount)', free: true });
+    }
+
+    const options = {
+      amount: expansionAmount * 100,
+      currency: 'INR',
+      receipt: `expansion_${Date.now()}`
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    await Payment.create({
+      adminId: req.user.id,
+      planId: plan._id,
+      razorpayOrderId: order.id,
+      amount: expansionAmount,
+      status: 'created',
+      type: 'expansion',
+      metadata: { additionalSeats, newTotalLimit }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: order,
+      breakdown: {
+        additionalSeats,
+        remainingDays,
+        expansionAmount
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -166,16 +245,33 @@ exports.verifyPayment = async (req, res, next) => {
       const plan = await Plan.findById(payment.planId);
       const admin = await Admin.findById(payment.adminId);
 
+      let title = '';
+      let message = '';
+
       if (admin && plan) {
-        admin.subscriptionPlan = plan.name;
-        admin.subscriptionPlanId = plan._id;
-        admin.subscriptionStatus = 'active';
+        if (payment.type === 'expansion' && payment.metadata && payment.metadata.newTotalLimit) {
+          // TEAM EXPANSION: Only update userLimit
+          admin.userLimit = payment.metadata.newTotalLimit;
+          // Note: teamSize remains as current active members, userLimit is the capacity
+          await admin.save();
+          
+          title = 'Team Expansion Payment';
+          message = `Admin "${admin.name}" has expanded their team to ${payment.metadata.newTotalLimit} seats.`;
+        } else {
+          // STANDARD SUBSCRIPTION: Update plan and expiry
+          admin.subscriptionPlan = plan.name;
+          admin.subscriptionPlanId = plan._id;
+          admin.subscriptionStatus = 'active';
 
-        // Calculate expiry based on plan duration
-        const expiryDate = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
-        admin.subscriptionExpiry = expiryDate;
+          // Calculate expiry based on plan duration
+          const expiryDate = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
+          admin.subscriptionExpiry = expiryDate;
 
-        await admin.save();
+          await admin.save();
+          
+          title = 'New Subscription Payment';
+          message = `Admin "${admin.name}" has paid for the ${plan.name} plan.`;
+        }
 
         // --- NOTIFICATION LOGIC START ---
         try {
@@ -188,8 +284,8 @@ exports.verifyPayment = async (req, res, next) => {
               recipient: sa._id,
               sender: admin._id,
               type: 'general',
-              title: 'New Subscription Payment',
-              message: `Admin "${admin.name}" has paid for the ${plan.name} plan.`,
+              title: title,
+              message: message,
               link: '/superadmin/admins'
             }));
             await Notification.insertMany(notifications);
@@ -206,7 +302,7 @@ exports.verifyPayment = async (req, res, next) => {
 
       res.status(200).json({
         success: true,
-        message: 'Payment verified and plan updated successfully'
+        message: payment.type === 'expansion' ? 'Team expanded successfully' : 'Payment verified and plan updated successfully'
       });
     } else {
       res.status(400).json({ success: false, error: 'Invalid signature' });

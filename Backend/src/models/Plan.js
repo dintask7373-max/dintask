@@ -13,7 +13,7 @@ const PlanSchema = new mongoose.Schema({
   },
   userLimit: {
     type: Number,
-    required: [true, 'Please add a user limit']
+    default: 0
   },
   features: {
     type: [String],

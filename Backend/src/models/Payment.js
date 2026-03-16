@@ -34,6 +34,14 @@ const PaymentSchema = new mongoose.Schema({
     type: String,
     enum: ['created', 'paid', 'failed'],
     default: 'created'
+  },
+  type: {
+    type: String,
+    enum: ['subscription', 'expansion'],
+    default: 'subscription'
+  },
+  metadata: {
+    type: Object
   }
 }, { timestamps: true });
 

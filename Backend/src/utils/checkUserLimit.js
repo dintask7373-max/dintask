@@ -15,27 +15,8 @@ const checkUserLimit = async (adminId) => {
     breakdown: { managers: 0, salesExecutives: 0, employees: 0 }
   };
 
-  // Get plan details - handle both string based and reference based
-  let plan;
-  if (admin.subscriptionPlanId) {
-    plan = await Plan.findById(admin.subscriptionPlanId);
-  } else {
-    // Fallback to name search if ID not set
-    plan = await Plan.findOne({ name: admin.subscriptionPlan });
-  }
-
-  if (!plan) {
-    // If no plan found, deny access for safety
-    return {
-      allowed: false,
-      error: 'No subscription plan found. Please contact support.',
-      current: 0,
-      limit: 0,
-      breakdown: { managers: 0, salesExecutives: 0, employees: 0 }
-    };
-  }
-
-  // 2. Count current users
+  // 2. Count current users (excluding the Admin themselves if they are not counted in the limit)
+  // Usually, userLimit is for staff (Managers, Sales, Employees)
   const [managers, sales, employees] = await Promise.all([
     Manager.countDocuments({ adminId }),
     SalesExecutive.countDocuments({ adminId }),
@@ -43,13 +24,16 @@ const checkUserLimit = async (adminId) => {
   ]);
 
   const totalUsers = managers + sales + employees;
-  const remaining = plan.userLimit - totalUsers;
+  
+  // Use admin.userLimit which is the capacity provisioned for this specific admin
+  const currentLimit = admin.userLimit || 1; 
+  const remaining = currentLimit - totalUsers;
 
-  if (totalUsers >= plan.userLimit) {
+  if (totalUsers >= currentLimit) {
     return {
       allowed: false,
-      error: `Subscription limit reached! Your ${plan.name} plan allows ${plan.userLimit} members. You currently have ${totalUsers} members (${managers} managers, ${sales} sales executives, ${employees} employees). Please upgrade your plan to add more members.`,
-      limit: plan.userLimit,
+      error: `Subscription limit reached! Your workspace capacity is ${currentLimit} members. You currently have ${totalUsers} members (${managers} managers, ${sales} sales executives, ${employees} employees). Please expand your team size to add more members.`,
+      limit: currentLimit,
       current: totalUsers,
       remaining: 0,
       breakdown: {
@@ -62,7 +46,7 @@ const checkUserLimit = async (adminId) => {
 
   return {
     allowed: true,
-    limit: plan.userLimit,
+    limit: currentLimit,
     current: totalUsers,
     remaining,
     breakdown: {

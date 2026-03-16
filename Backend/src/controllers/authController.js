@@ -112,7 +112,9 @@ exports.register = async (req, res, next) => {
 
     // If registering as Admin, assign the Free Plan (Amount 0)
     if (role === 'admin') {
+      const teamSize = parseInt(req.body.teamSize) || 1;
       const freePlan = await Plan.findOne({ price: 0 });
+      
       if (freePlan) {
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + (freePlan.duration || 30));
@@ -121,7 +123,14 @@ exports.register = async (req, res, next) => {
           subscriptionPlan: freePlan.name,
           subscriptionPlanId: freePlan._id,
           subscriptionStatus: 'active',
-          subscriptionExpiry: expiryDate
+          subscriptionExpiry: expiryDate,
+          teamSize: 1, // Start with only the admin themselves count? No, teamSize should be current staff count.
+          userLimit: teamSize // This is the requested capacity
+        };
+      } else {
+        extraData = {
+          teamSize: 1,
+          userLimit: teamSize
         };
       }
 

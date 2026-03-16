@@ -44,6 +44,19 @@ const useSubscriptionStore = create((set, get) => ({
     }
   },
 
+  createExpansionOrder: async (newTotalLimit) => {
+    try {
+      const response = await apiRequest('/payments/expand-team', {
+        method: 'POST',
+        body: { newTotalLimit }
+      });
+      return response;
+    } catch (err) {
+      console.error('Expansion order creation failed:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
   verifyPayment: async (paymentData) => {
     try {
       const response = await apiRequest('/payments/verify', {

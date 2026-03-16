@@ -83,6 +83,14 @@ const AdminSchema = new mongoose.Schema({
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Partner'
+  },
+  teamSize: {
+    type: Number,
+    default: 1
+  },
+  userLimit: {
+    type: Number,
+    default: 1 // Default capacity
   }
 }, { timestamps: true });
 

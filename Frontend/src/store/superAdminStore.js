@@ -595,10 +595,31 @@ const useSuperAdminStore = create(
 
 
 
-            updateSystemSettings: (settings) => {
-                set((state) => ({
-                    systemSettings: { ...state.systemSettings, ...settings }
-                }));
+            updateSystemSettings: async (settings) => {
+                try {
+                    const response = await apiRequest('/superadmin/settings', {
+                        method: 'PUT',
+                        body: settings
+                    });
+                    if (response.success) {
+                        set({ systemSettings: response.data });
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Failed to update system settings:', err);
+                }
+                return false;
+            },
+
+            fetchSystemSettings: async () => {
+                try {
+                    const response = await apiRequest('/superadmin/settings');
+                    if (response.success) {
+                        set({ systemSettings: response.data });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch system settings:', err);
+                }
             },
 
             updateAdminStatus: async (id, status) => {
@@ -686,7 +707,8 @@ const useSuperAdminStore = create(
                             subscriptionPlan: adminData.plan,
                             subscriptionPlanId: adminData.planId,
                             partnerId: adminData.partnerId, // Link to partner if provided
-                            password: adminData.password
+                            password: adminData.password,
+                            teamSize: adminData.teamSize
                         }
                     });
 
