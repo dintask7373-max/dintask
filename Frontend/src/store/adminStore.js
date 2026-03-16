@@ -47,7 +47,8 @@ const useAdminStore = create((set) => ({
         } catch (error) {
             const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch dashboard stats';
             set({ error: errorMessage, loading: false });
-            toast.error(errorMessage);
+            // Silence background sync error
+            console.warn('Silent background sync failure:', errorMessage);
         }
     },
 

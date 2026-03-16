@@ -82,13 +82,15 @@ const ManagerProjectDetails = () => {
               Resume Project
             </Button>
           )}
-          <Button
-            variant="ghost"
-            onClick={handleDelete}
-            className="size-10 p-0 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50"
-          >
-            <Trash2 size={20} />
-          </Button>
+          {project.status !== 'completed' && (
+            <Button
+              variant="ghost"
+              onClick={handleDelete}
+              className="size-10 p-0 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={20} />
+            </Button>
+          )}
           <Button onClick={() => navigate(`/manager/assign-task?projectId=${project._id || project.id}`)} className="font-black uppercase tracking-widest text-xs">
             Assign New Task
           </Button>

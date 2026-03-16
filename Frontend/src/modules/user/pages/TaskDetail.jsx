@@ -111,9 +111,8 @@ const TaskDetail = () => {
                 // Automatically set status to 'in_progress' if progress > 0 and was pending
                 status: (task.status === 'pending' && myProgress > 0) ? 'in_progress' : undefined
             });
-            toast.success("Operational status updated");
         } catch (error) {
-            toast.error("Failed to sync status");
+            // Error handled by store
         } finally {
             setIsUpdating(false);
         }
@@ -142,7 +141,7 @@ const TaskDetail = () => {
                 toast.success(`${files.length} file(s) attached to deployment`);
             }
         } catch (error) {
-            toast.error("Deployment evidence upload failed");
+            // Error handled by Toast in generic API catch or not needed if specific
         } finally {
             setIsUploading(false);
         }
@@ -606,7 +605,7 @@ const TaskDetail = () => {
                             <Button
                                 onClick={() => {
                                     updateTask(task.id, { status: 'in_progress', progress: 50 });
-                                    toast.error("Directive Returned for Revision");
+                                    toast.warning("Directive Returned for Revision");
                                 }}
                                 className="h-14 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-rose-500/20"
                             >
