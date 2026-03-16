@@ -156,13 +156,12 @@ exports.updateLead = async (req, res) => {
     const oldStatus = lead.status;
     const statusOrder = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
     
-    // Status progression restriction: Cannot go back to previous status
+    // Status progression restriction removed based on user request to allow backward movement
+    /*
     if (req.body.status && req.body.status !== oldStatus) {
       const oldIndex = statusOrder.indexOf(oldStatus);
       const newIndex = statusOrder.indexOf(req.body.status);
       
-      // If either status is not in the list, we can skip or handle as error. 
-      // Assuming all valid statuses are in the list.
       if (oldIndex !== -1 && newIndex !== -1 && newIndex < oldIndex) {
         return res.status(400).json({ 
           success: false, 
@@ -170,6 +169,7 @@ exports.updateLead = async (req, res) => {
         });
       }
     }
+    */
 
     lead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
       new: true,

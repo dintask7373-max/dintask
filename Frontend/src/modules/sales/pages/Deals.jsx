@@ -17,8 +17,11 @@ import {
     ChevronLeft,
     ChevronRight,
     ArrowRight,
-    Edit2
+    Edit2,
+    ShieldAlert
 } from 'lucide-react';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/utils/cn';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -80,6 +83,8 @@ const Deals = () => {
         priority: 'medium',
         deadline: ''
     });
+    const [originalAmount, setOriginalAmount] = useState(null);
+    const [changeReason, setChangeReason] = useState('');
 
     const debouncedSearch = useDebounce(searchTerm, 500);
 
@@ -232,8 +237,11 @@ const Deals = () => {
             amount: deal.amount,
             status: deal.status,
             priority: deal.priority,
-            deadline: deal.deadline ? new Date(deal.deadline).toISOString().split('T')[0] : ''
+            deadline: deal.deadline ? new Date(deal.deadline).toISOString().split('T')[0] : '',
+            notes: deal.notes || ''
         });
+        setOriginalAmount(deal.amount);
+        setChangeReason('');
         setIsEditOpen(true);
     };
 
@@ -245,8 +253,11 @@ const Deals = () => {
                 amount: selectedDeal.amount,
                 status: selectedDeal.status,
                 priority: selectedDeal.priority,
-                deadline: selectedDeal.deadline ? new Date(selectedDeal.deadline).toISOString().split('T')[0] : ''
+                deadline: selectedDeal.deadline ? new Date(selectedDeal.deadline).toISOString().split('T')[0] : '',
+                notes: selectedDeal.notes || ''
             });
+            setOriginalAmount(selectedDeal.amount);
+            setChangeReason('');
             setIsEditOpen(true);
             setIsViewOpen(false);
         }
@@ -257,9 +268,22 @@ const Deals = () => {
             toast.error("Name is required");
             return;
         }
+        const currentAmount = parseFloat(editDealData.amount) || 0;
+        const isAmountChanged = originalAmount !== null && currentAmount !== originalAmount;
+
+        if (isAmountChanged && !changeReason.trim()) {
+            toast.error("Reason for valuation adjustment is mandatory when changing deal price");
+            return;
+        }
+
+        const finalNotes = isAmountChanged
+            ? `${editDealData.notes || ''}\n[${new Date().toLocaleString()}] Amount adjusted from ₹${originalAmount} to ₹${currentAmount}. Reason: ${changeReason}`
+            : editDealData.notes;
+
         editLead(selectedDeal._id || selectedDeal.id, {
             ...editDealData,
-            amount: parseFloat(editDealData.amount) || 0
+            amount: currentAmount,
+            notes: finalNotes
         });
         toast.success("Deal updated successfully");
         setIsEditOpen(false);
@@ -805,6 +829,27 @@ const Deals = () => {
                                 className="h-10 rounded-xl bg-slate-50 border-none font-bold text-sm px-4"
                             />
                         </div>
+
+                        {originalAmount !== null && parseFloat(editDealData.amount) !== originalAmount && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="space-y-2 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30"
+                            >
+                                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                                    <ShieldAlert size={14} className="animate-pulse" />
+                                    <Label className="text-[9px] font-black uppercase tracking-widest italic">
+                                        Mandatory: Reason for valuation adjustment
+                                    </Label>
+                                </div>
+                                <Textarea
+                                    placeholder="Explain why the deal value was modified..."
+                                    value={changeReason}
+                                    onChange={(e) => setChangeReason(e.target.value)}
+                                    className="min-h-[90px] rounded-xl border-amber-200 dark:border-amber-800 bg-white dark:bg-slate-900 font-bold text-xs"
+                                />
+                            </motion.div>
+                        )}
                         <DialogFooter className="pt-4 flex gap-3">
                             <Button variant="ghost" onClick={() => setIsEditOpen(false)} className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase tracking-widest">Cancel</Button>
                             <Button onClick={submitEditDeal} className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase tracking-widest bg-slate-900 hover:bg-slate-800 text-white">Save Changes</Button>

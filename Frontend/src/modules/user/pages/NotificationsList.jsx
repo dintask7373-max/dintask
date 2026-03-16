@@ -160,27 +160,28 @@ const NotificationsList = () => {
                                 <ArrowLeft size={20} />
                             </Button>
                             <div>
-                                <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                                <h1 className="text-xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
                                     Notifications
                                     {unreadCount > 0 && (
-                                        <span className="bg-[#4461f2] text-white text-[10px] px-2 py-0.5 rounded-full ring-4 ring-blue-500/20 font-black">
-                                            {unreadCount} NEW
+                                        <span className="bg-[#4461f2] text-white text-[9px] px-2 py-0.5 rounded-full ring-4 ring-blue-500/20 font-black">
+                                            {unreadCount}
                                         </span>
                                     )}
                                 </h1>
-                                <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest mt-1">
-                                    Your system alerts & activity
+                                <p className="text-white/60 text-[9px] md:text-[11px] font-bold uppercase tracking-widest mt-1">
+                                    Alerts & Activity
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             {unreadCount > 0 && (
                                 <Button
                                     onClick={handleMarkAll}
-                                    className="bg-white hover:bg-slate-100 text-[#4461f2] text-[10px] font-black uppercase tracking-widest px-6 h-12 rounded-2xl shadow-xl transition-all active:scale-95 border-none"
+                                    className="bg-white hover:bg-slate-100 text-[#4461f2] text-[10px] font-black uppercase tracking-widest px-4 md:px-6 h-10 md:h-12 rounded-xl md:rounded-2xl shadow-xl transition-all active:scale-95 border-none"
                                 >
-                                    Mark all as read
+                                    <span className="hidden md:inline">Mark all as read</span>
+                                    <span className="md:hidden">Mark all</span>
                                 </Button>
                             )}
                         </div>

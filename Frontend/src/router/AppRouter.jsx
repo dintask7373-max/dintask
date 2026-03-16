@@ -76,6 +76,7 @@ const JoinRequests = lazy(() => import('@/modules/admin/pages/JoinRequests'));
 const SalesManagement = lazy(() => import('@/modules/admin/pages/SalesManagement'));
 const ProjectApprovals = lazy(() => import('@/modules/admin/pages/ProjectApprovals'));
 const AdminProjects = lazy(() => import('@/modules/admin/pages/Projects'));
+const AdminProjectDetails = lazy(() => import('@/modules/admin/pages/ProjectDetails'));
 const AdminNotifications = lazy(() => import('@/modules/admin/pages/Notifications'));
 
 const ManagerLogin = lazy(() => import('@/modules/manager/pages/ManagerLogin'));
@@ -235,6 +236,7 @@ const AppRouter = () => {
                     <Route path="tasks" element={<TaskManagement />} />
                     <Route path="sales" element={<SalesManagement />} />
                     <Route path="projects" element={<AdminProjects />} />
+                    <Route path="projects/:id" element={<AdminProjectDetails />} />
                     <Route path="projects/approvals" element={<ProjectApprovals />} />
                     <Route path="reports" element={<Reports />} />
                     <Route path="chat" element={<AdminChat />} />

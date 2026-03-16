@@ -14,6 +14,7 @@ import useCRMStore from '@/store/crmStore';
 import { cn } from '@/shared/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { useDebounce } from '@/shared/hooks/use-debounce';
 
 const LeadsManagement = () => {
@@ -71,7 +72,11 @@ const LeadsManagement = () => {
     owner: '',
     status: 'New',
     notes: '',
+    amount: '',
   });
+
+  const [originalAmount, setOriginalAmount] = useState(null);
+  const [changeReason, setChangeReason] = useState('');
 
   const leadStatuses = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
   const leadSources = ['Call', 'Website', 'WhatsApp', 'Referral', 'Manual'];
@@ -81,10 +86,29 @@ const LeadsManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const currentAmount = parseFloat(formData.amount) || 0;
+    const isAmountChanged = originalAmount !== null && currentAmount !== originalAmount;
+
+    if (isAmountChanged && !changeReason.trim()) {
+      toast.error("Reason for valuation adjustment is mandatory when changing deal price");
+      return;
+    }
+
+    const finalNotes = isAmountChanged
+      ? `${formData.notes || ''}\n[${new Date().toLocaleString()}] Amount adjusted from ₹${originalAmount} to ₹${currentAmount}. Reason: ${changeReason}`
+      : formData.notes;
+
+    const submissionData = {
+      ...formData,
+      amount: currentAmount,
+      notes: finalNotes
+    };
+
     if (editingLead) {
-      await editLead(editingLead._id || editingLead.id, formData);
+      await editLead(editingLead._id || editingLead.id, submissionData);
     } else {
-      await addLead(formData);
+      await addLead(submissionData);
     }
     resetForm();
     setOpen(false);
@@ -94,8 +118,11 @@ const LeadsManagement = () => {
     setEditingLead(lead);
     setFormData({
       ...lead,
-      owner: lead.owner?._id || lead.owner || ''
+      owner: lead.owner?._id || lead.owner || '',
+      amount: lead.amount ? lead.amount.toString() : '0'
     });
+    setOriginalAmount(lead.amount || 0);
+    setChangeReason('');
     setOpen(true);
   };
 
@@ -130,7 +157,10 @@ const LeadsManagement = () => {
       owner: '',
       status: 'New',
       notes: '',
+      amount: '',
     });
+    setOriginalAmount(null);
+    setChangeReason('');
   };
 
   const handleFileUpload = (e) => {
@@ -450,6 +480,37 @@ const LeadsManagement = () => {
                     />
                   </div>
 
+                  <div className="space-y-1.5">
+                    <Label htmlFor="amount" className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Valuation (₹)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      className="h-11 rounded-2xl border-slate-100 dark:border-slate-800 focus:ring-primary-500/20 bg-slate-50/50 dark:bg-slate-900/50 font-bold"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  {originalAmount !== null && (parseFloat(formData.amount) || 0) !== originalAmount && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-1.5 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30"
+                    >
+                      <Label htmlFor="changeReason" className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 ml-1 italic">
+                        Mandatory: Reason for valuation adjustment
+                      </Label>
+                      <Textarea
+                        id="changeReason"
+                        value={changeReason}
+                        onChange={(e) => setChangeReason(e.target.value)}
+                        placeholder="Explain why the deal value was modified..."
+                        className="min-h-[80px] rounded-xl border-amber-200 dark:border-amber-800 focus:ring-amber-500/20 bg-white dark:bg-slate-900 font-bold text-xs"
+                      />
+                    </motion.div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       variant="outline"
@@ -625,6 +686,7 @@ const LeadsManagement = () => {
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Source</th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Owner</th>
+                  <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Valuation</th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                   <th className="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                 </tr>
@@ -658,6 +720,12 @@ const LeadsManagement = () => {
                       <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
                         {lead.owner?.name || 'Unassigned'}
                       </span>
+                    </TableCell>
+                    <TableCell className="p-4">
+                      <div className="flex items-center gap-1 text-primary-600 font-black text-xs">
+                        <IndianRupee size={10} className="stroke-[3px]" />
+                        {Number(lead.amount || 0).toLocaleString()}
+                      </div>
                     </TableCell>
                     <TableCell className="p-4">
                       <Badge

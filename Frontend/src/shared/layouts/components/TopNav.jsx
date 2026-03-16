@@ -38,9 +38,9 @@ const TopNav = ({ onMenuClick, isSidebarCollapsed }) => {
         }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         const currentRole = role;
-        logout();
+        await logout();
 
         // Redirect based on role
         if (currentRole === 'superadmin' || currentRole === 'superadmin_staff') {

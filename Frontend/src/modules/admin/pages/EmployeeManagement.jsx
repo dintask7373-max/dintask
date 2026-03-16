@@ -61,7 +61,6 @@ const EmployeeManagement = () => {
     const navigate = useNavigate();
     const { employees, deleteEmployee, addEmployee, updateEmployee, employeePagination, fetchEmployees, fetchSubscriptionLimit, limitStatus } = useEmployeeStore();
     const { user } = useAuthStore();
-    const { tasks } = useTaskStore();
     const { allManagers, fetchAllManagers } = useManagerStore();
 
     // State for Server-Side Pagination & Search
@@ -102,23 +101,7 @@ const EmployeeManagement = () => {
     const currentCount = limitStatus?.current || employeePagination.total; // Use total from pagination
     const isLimitReached = limitStatus?.allowed === false || currentCount >= EMPLOYEE_LIMIT;
 
-    const employeeStats = useMemo(() => {
-        const stats = {};
-        employees.forEach(emp => {
-            const empId = emp._id || emp.id;
-            if (!empId) return;
-            // assignedTo is likely an array of strings (IDs)
-            const empTasks = tasks.filter(t => t.assignedTo && t.assignedTo.includes(empId.toString()));
-            const completed = empTasks.filter(t => t.status === 'completed').length;
-            stats[empId] = {
-                total: empTasks.length,
-                completed: completed,
-                percentage: empTasks.length > 0 ? (completed / empTasks.length) * 100 : 0,
-                tasks: empTasks
-            };
-        });
-        return stats;
-    }, [employees, tasks]);
+    // No longer needed as stats come from backend
 
     const handleAddEmployee = async (e) => {
         e.preventDefault();
@@ -290,10 +273,9 @@ const EmployeeManagement = () => {
                         </thead>
                         <tbody ref={parent}>
                             {employees.length > 0 ? (
-                                employees.map((emp) => {
-                                    const empId = emp._id || emp.id;
-                                    const stats = employeeStats[empId] || { total: 0, completed: 0, percentage: 0, tasks: [] };
-                                    const isExpanded = expandedEmployee === empId;
+                                    employees.map((emp) => {
+                                        const empId = emp._id || emp.id;
+                                        const isExpanded = expandedEmployee === empId;
 
                                     // Find manager in allManagers list
                                     const manager = allManagers.find(m => m._id === emp.managerId);
@@ -343,9 +325,9 @@ const EmployeeManagement = () => {
                                                     <div className="flex flex-col gap-1.5 w-40">
                                                         <div className="flex justify-between items-center text-[10px] font-bold">
                                                             <span className="text-slate-500 uppercase">Success Rate</span>
-                                                            <span className="text-primary-600">{stats.completed}/{stats.total}</span>
+                                                            <span className="text-primary-600">{(emp.completedTasksCount || 0)}/{(emp.totalTasksCount || 0)}</span>
                                                         </div>
-                                                        <Progress value={stats.percentage} className="h-1.5 bg-slate-100 dark:bg-slate-800" indicatorClassName="bg-primary-600" />
+                                                        <Progress value={emp.successRate || 0} className="h-1.5 bg-slate-100 dark:bg-slate-800" indicatorClassName="bg-primary-600" />
                                                     </div>
                                                 </td>
                                                 <td className="p-5">
@@ -407,50 +389,16 @@ const EmployeeManagement = () => {
                                                         <div className="px-16 py-6 animate-in slide-in-from-top-2 duration-300">
                                                             <div className="flex items-center justify-between mb-4">
                                                                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                                                    Tasks Todo List
-                                                                    <Badge className="bg-primary-50 text-primary-700 hover:bg-primary-50 border-none px-2 py-0.5 text-[9px]">{stats.total} Assigned</Badge>
+                                                                    Tasks Done/Total
+                                                                    <Badge className="bg-primary-50 text-primary-700 hover:bg-primary-50 border-none px-2 py-0.5 text-[9px]">{(emp.totalTasksCount || 0)} Assigned</Badge>
                                                                 </h4>
                                                             </div>
                                                             <div className="grid gap-2">
-                                                                {stats.tasks.length > 0 ? (
-                                                                    stats.tasks.map(task => (
-                                                                        <div key={task.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm group/task">
-                                                                            <div className="flex items-center gap-3">
-                                                                                <div className={cn(
-                                                                                    "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-                                                                                    task.status === 'completed'
-                                                                                        ? "bg-emerald-500 border-emerald-500 text-white"
-                                                                                        : "border-slate-200 dark:border-slate-700 bg-transparent"
-                                                                                )}>
-                                                                                    {task.status === 'completed' && <Check size={12} strokeWidth={4} />}
-                                                                                </div>
-                                                                                <span className={cn(
-                                                                                    "text-sm font-bold",
-                                                                                    task.status === 'completed' ? "text-slate-400 line-through decoration-slate-300" : "text-slate-700 dark:text-slate-200"
-                                                                                )}>
-                                                                                    {task.title}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <Badge variant="outline" className={cn(
-                                                                                    "text-[9px] font-black uppercase tracking-tighter px-2 py-0",
-                                                                                    task.priority === 'urgent' ? "text-red-500 border-red-100 bg-red-50/50" :
-                                                                                        task.priority === 'high' ? "text-orange-500 border-orange-100 bg-orange-50/50" :
-                                                                                            "text-blue-500 border-blue-100 bg-blue-50/50"
-                                                                                )}>
-                                                                                    {task.priority}
-                                                                                </Badge>
-                                                                                <span className="text-[10px] font-bold text-slate-400 tabular-nums">
-                                                                                    {task.progress}%
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <div className="py-8 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
-                                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No tasks assigned yet</p>
-                                                                    </div>
-                                                                )}
+                                                                <div className="py-8 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
+                                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center px-4">
+                                                                        Performance details and full task lists are available in the detailed reports section.
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </td>

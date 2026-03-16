@@ -155,10 +155,13 @@ const MyTasks = () => {
                 <AnimatePresence mode="popLayout">
                     {myTasks.length > 0 ? myTasks.map((task) => (
                         <motion.div key={task.id} variants={fadeInUp} layout>
-                            <Card className={cn(
-                                "border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden group hover:scale-[1.005] transition-all",
-                                task.status === 'overdue' && "ring-2 ring-rose-500/50"
-                            )}>
+                            <Card 
+                                onClick={() => navigate(`/manager/tasks/${task.id}`)}
+                                className={cn(
+                                    "border-none shadow-xl shadow-slate-200/30 dark:shadow-none bg-white dark:bg-slate-900 rounded-[1.5rem] overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer hover:ring-2 hover:ring-primary-500/20",
+                                    task.status === 'overdue' && "ring-2 ring-rose-500/50"
+                                )}
+                            >
                                 <CardContent className="p-0">
                                     <div className="flex">
                                         <div className={cn(
@@ -234,12 +237,15 @@ const MyTasks = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col items-end gap-3 shrink-0 cursor-pointer" onClick={() => navigate(`/manager/tasks/${task.id}`)}>
+                                                <div className="flex flex-col items-end gap-3 shrink-0">
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         className="size-8 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary-600"
-                                                        onClick={() => navigate(`/manager/tasks/${task.id}`)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/manager/tasks/${task.id}`);
+                                                        }}
                                                     >
                                                         <ChevronRight size={18} />
                                                     </Button>
@@ -248,7 +254,8 @@ const MyTasks = () => {
                                                             <Button
                                                                 size="sm"
                                                                 className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
                                                                     updateTask(task.id, { status: 'completed', progress: 100 });
                                                                     toast.success("Directive Approved");
                                                                 }}
@@ -258,7 +265,8 @@ const MyTasks = () => {
                                                             <Button
                                                                 size="sm"
                                                                 className="h-8 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-rose-500/20"
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
                                                                     updateTask(task.id, { status: 'in_progress', progress: 50 });
                                                                     toast.error("Directive Sent for Correction");
                                                                 }}
@@ -271,7 +279,8 @@ const MyTasks = () => {
                                                         <Button
                                                             size="sm"
                                                             className="h-8 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 updateTask(task.id, { status: 'completed', progress: 100 });
                                                                 toast.success("Directive fulfilled");
                                                             }}
@@ -284,7 +293,10 @@ const MyTasks = () => {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="size-8 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                                            onClick={() => navigate(`/manager/assign-task?edit=${task.id}`)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/manager/assign-task?edit=${task.id}`);
+                                                            }}
                                                             title="Edit Task"
                                                         >
                                                             <Edit size={14} />
@@ -293,7 +305,8 @@ const MyTasks = () => {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="size-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 if (confirm("Confirm deletion of this directive? This action is irreversible.")) {
                                                                     useTaskStore.getState().deleteTask(task.id);
                                                                 }

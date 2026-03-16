@@ -145,7 +145,11 @@ const AdminProjects = () => {
                     </div>
                 ) : (
                     projects.map(project => (
-                        <Card key={project._id} className="group border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 border border-slate-50 dark:border-slate-800/50">
+                        <Card 
+                            key={project._id} 
+                            className="group border-none shadow-xl shadow-slate-200/20 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 border border-slate-50 dark:border-slate-800/50 cursor-pointer"
+                            onClick={() => navigate(`/admin/projects/${project._id}`)}
+                        >
                             <div className={`h-1.5 w-full ${project.status === 'completed' ? 'bg-emerald-500' : 'bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]'}`} />
                             <CardContent className="p-8">
                                 <div className="flex justify-between items-start mb-8">
@@ -193,9 +197,12 @@ const AdminProjects = () => {
                                         <Button
                                             size="sm"
                                             className="rounded-2xl h-11 px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-primary-600 hover:text-white dark:hover:bg-primary-600 dark:hover:text-white transition-all duration-300 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-200 dark:shadow-none translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100"
-                                            onClick={() => navigate(`/manager/projects/${project._id}`)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/admin/projects/${project._id}`);
+                                            }}
                                         >
-                                            Intercept <ChevronRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                            View Details <ChevronRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
                                         </Button>
                                     </div>
                                 </div>

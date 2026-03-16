@@ -107,11 +107,11 @@ const ManagerProjectDetails = () => {
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Client Email</label>
-                  <div className="font-bold text-slate-900 dark:text-white text-sm">{project.clientEmail || 'N/A'}</div>
+                  <div className="font-bold text-slate-900 dark:text-white text-sm">{project.client?.email || 'N/A'}</div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Budget</label>
-                  <div className="font-bold text-slate-900 dark:text-white text-sm">${project.amount?.toLocaleString() || '0'}</div>
+                  <div className="font-bold text-slate-900 dark:text-white text-sm">₹{project.budget?.toLocaleString() || '0'}</div>
                 </div>
               </div>
             </CardContent>

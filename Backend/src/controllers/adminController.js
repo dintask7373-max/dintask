@@ -255,7 +255,51 @@ exports.getEmployees = async (req, res, next) => {
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: limit },
-            { $project: { password: 0 } }
+            {
+              $lookup: {
+                from: 'tasks',
+                let: { empId: '$_id' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $isArray: "$assignedTo" },
+                          { $in: [{ $toString: "$$empId" }, "$assignedTo"] }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                as: 'employeeTasks'
+              }
+            },
+            {
+              $addFields: {
+                totalTasksCount: { $size: '$employeeTasks' },
+                completedTasksCount: {
+                  $size: {
+                    $filter: {
+                      input: '$employeeTasks',
+                      as: 'task',
+                      cond: { $eq: ['$$task.status', 'completed'] }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              $addFields: {
+                successRate: {
+                  $cond: [
+                    { $gt: ['$totalTasksCount', 0] },
+                    { $multiply: [{ $divide: ['$completedTasksCount', '$totalTasksCount'] }, 100] },
+                    0
+                  ]
+                }
+              }
+            },
+            { $project: { password: 0, employeeTasks: 0 } }
           ]
         }
       }

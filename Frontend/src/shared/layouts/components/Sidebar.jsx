@@ -70,9 +70,9 @@ const Sidebar = ({ role, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) => {
     const sidebarSearchParams = new URLSearchParams(location.search);
     const activeTab = sidebarSearchParams.get('tab') || 'profile';
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         const currentRole = role;
-        logout();
+        await logout();
 
         // Redirect based on role
         if (currentRole === 'superadmin' || currentRole === 'superadmin_staff') {

@@ -58,6 +58,8 @@ import useNotificationStore from '@/store/notificationStore';
 import { motion } from 'framer-motion';
 import { cn } from '@/shared/utils/cn';
 
+const API_ROOT = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const TaskDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -79,6 +81,7 @@ const TaskDetail = () => {
     const [attachments, setAttachments] = useState([]);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
 
     // Individual Progress State
     const [myProgress, setMyProgress] = useState(0);
@@ -149,6 +152,14 @@ const TaskDetail = () => {
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
+    const getAssetUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        // Ensure starting slash
+        const path = url.startsWith('/') ? url : `/${url}`;
+        return `${API_ROOT}${path}`;
+    };
+
     const isAssignee = task?.assignedTo?.includes(user?.id) || task?.assignedTo?.some(u => u._id === user?.id);
     const isManager = (user?.role === 'manager' && (task?.assignedBy === user?.id || task?.assignedBy?._id === user?.id)) || user?.role === 'admin';
     const mySubTask = task?.subTasks?.find(st => st.user?._id === user?.id || st.user === user?.id);
@@ -159,8 +170,9 @@ const TaskDetail = () => {
             status: 'review',
             progress: 90,
             submissionNote: submissionNote,
-            attachments: attachments
+            attachments: [...(task.attachments || []), ...attachments]
         });
+        setIsSubmitDialogOpen(false);
 
         // Notify the manager
         if (task.delegatedBy || task.assignedBy) {
@@ -319,27 +331,41 @@ const TaskDetail = () => {
                             </div>
                         )}
 
-                        {/* Submission Details (If Review or Completed) */}
-                        {(task.status === 'review' || task.status === 'completed') && (
-                            <div className="bg-emerald-50/30 dark:bg-emerald-900/10 p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-emerald-100/50 dark:border-emerald-800/30 text-left">
-                                <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-600/70 mb-3 md:mb-4">Operational Evidence</h3>
-                                <p className="text-slate-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
-                                    {task.submissionNote || "No submission statement provided."}
-                                </p>
-                                {task.attachments?.length > 0 && (
-                                    <div className="grid grid-cols-2 gap-3 mt-4">
+                        {/* Task Resources Section */}
+                        {((task.attachments && task.attachments.length > 0) || (task.status === 'review' || task.status === 'completed')) && (
+                            <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/50 text-left">
+                                <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 md:mb-4 flex items-center gap-2">
+                                    <Paperclip size={14} className="text-primary-500" />
+                                    Task Resources
+                                </h3>
+                                
+                                {task.attachments && task.attachments.length > 0 && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                                         {task.attachments.map((file, idx) => (
                                             <a
                                                 key={idx}
-                                                href={file.url}
+                                                href={getAssetUrl(file.url)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-emerald-200 transition-colors group"
+                                                className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary-200 transition-colors group"
                                             >
-                                                <FileText size={16} className="text-emerald-500 group-hover:scale-110 transition-transform" />
-                                                <span className="text-[10px] font-bold truncate max-w-[120px] text-slate-700 dark:text-slate-300">{file.name}</span>
+                                                <FileText size={16} className="text-primary-500 group-hover:scale-110 transition-transform" />
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[11px] font-black truncate max-w-[150px] text-slate-700 dark:text-slate-300 uppercase tracking-tight">{file.name}</span>
+                                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Reference Asset</span>
+                                                </div>
                                             </a>
                                         ))}
+                                    </div>
+                                )}
+
+                                {/* Submission Note (If Review or Completed) */}
+                                {(task.status === 'review' || task.status === 'completed') && (
+                                    <div className="pt-4 border-t border-slate-50 dark:border-slate-800">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-2">Operational Evidence</p>
+                                        <p className="text-slate-700 dark:text-gray-300 text-sm leading-relaxed">
+                                            {task.submissionNote || "No submission statement provided."}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -472,7 +498,7 @@ const TaskDetail = () => {
                                     </div>
 
                                     {/* Dynamic Controls for Assignee */}
-                                    {isAssignee ? (
+                                    {isAssignee && task.status !== 'review' && task.status !== 'completed' ? (
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <div className="flex justify-between items-end">
@@ -588,80 +614,20 @@ const TaskDetail = () => {
                             </Button>
                         </div>
                     ) : (
-                        /* ASSIGNEE VIEW: Submit Controls */
+                        /* ASSIGNEE VIEW: Submit Controls Trigger */
                         isAssignee && task.status !== 'completed' && task.status !== 'review' ? (
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <button
-                                        disabled={task.project && ['on_hold', 'cancelled'].includes(task.project.status)}
-                                        className={cn(
-                                            "w-full h-14 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all",
-                                            task.status === 'overdue' ? "bg-red-600 shadow-red-500/20" : "bg-primary shadow-primary/20",
-                                            task.project && ['on_hold', 'cancelled'].includes(task.project.status) && "opacity-50 cursor-not-allowed filter grayscale"
-                                        )}
-                                    >
-                                        <Send size={20} />
-                                        <span>{task.status === 'overdue' ? 'Submit Overdue Mission' : 'Submit for Review'}</span>
-                                    </button>
-                                </DialogTrigger>
-                                <DialogContent className="rounded-[2.5rem] border-none">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Mission Submission</DialogTitle>
-                                        <DialogDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Provide operational evidence for directive fulfilment.</DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Evidence Statement</label>
-                                            <Input
-                                                placeholder="What exactly was completed? (e.g. Migration finished, repo updated)"
-                                                value={submissionNote}
-                                                onChange={(e) => setSubmissionNote(e.target.value)}
-                                                className="h-12 bg-slate-50 border-none rounded-xl font-bold"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between px-1">
-                                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Technical Attachments</label>
-                                                <label className="cursor-pointer">
-                                                    <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={isUploading} />
-                                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-2 py-1 rounded-lg hover:bg-primary-100 transition-colors">
-                                                        {isUploading ? <Loader2 size={10} className="animate-spin" /> : <Paperclip size={10} />}
-                                                        ATTACH FILES
-                                                    </div>
-                                                </label>
-                                            </div>
-
-                                            {attachments.length > 0 && (
-                                                <div className="grid grid-cols-1 gap-2">
-                                                    {attachments.map((file, idx) => (
-                                                        <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-xl group">
-                                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                                <FileText size={14} className="text-slate-400 shrink-0" />
-                                                                <span className="text-[10px] font-bold text-slate-600 truncate">{file.name}</span>
-                                                            </div>
-                                                            <button onClick={() => removeAttachment(idx)} className="text-slate-400 hover:text-red-500 transition-colors">
-                                                                <X size={14} />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {attachments.length === 0 && !isUploading && (
-                                                <div className="h-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl">
-                                                    <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">No technical assets attached</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button onClick={handleMarkComplete} className="w-full h-12 bg-primary text-white font-black uppercase tracking-wider rounded-xl">
-                                            CONFIRM DEPLOΥΜΕΝΤ
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                            <button
+                                onClick={() => setIsSubmitDialogOpen(true)}
+                                disabled={task.project && ['on_hold', 'cancelled'].includes(task.project.status)}
+                                className={cn(
+                                    "w-full h-14 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all",
+                                    task.status === 'overdue' ? "bg-red-600 shadow-red-500/20" : "bg-primary shadow-primary/20",
+                                    task.project && ['on_hold', 'cancelled'].includes(task.project.status) && "opacity-50 cursor-not-allowed filter grayscale"
+                                )}
+                            >
+                                <Send size={20} />
+                                <span>{task.status === 'overdue' ? 'Submit Overdue Mission' : 'Submit for Review'}</span>
+                            </button>
                         ) : (
                             <button disabled className="w-full h-14 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl flex items-center justify-center gap-2 opacity-80 cursor-not-allowed">
                                 {task.status === 'review' ? <Clock size={24} className="text-amber-500" /> : <CheckCircle2 size={24} />}
@@ -669,6 +635,67 @@ const TaskDetail = () => {
                             </button>
                         )
                     )}
+
+                    {/* Controlled Submission Dialog - Moved outside for stability */}
+                    <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
+                        <DialogContent className="rounded-[2.5rem] border-none">
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-black uppercase tracking-tight">Mission Submission</DialogTitle>
+                                <DialogDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Provide operational evidence for directive fulfilment.</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Evidence Statement</label>
+                                    <Input
+                                        placeholder="What exactly was completed? (e.g. Migration finished, repo updated)"
+                                        value={submissionNote}
+                                        onChange={(e) => setSubmissionNote(e.target.value)}
+                                        className="h-12 bg-slate-50 border-none rounded-xl font-bold"
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between px-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Technical Attachments</label>
+                                        <label className="cursor-pointer">
+                                            <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-2 py-1 rounded-lg hover:bg-primary-100 transition-colors">
+                                                {isUploading ? <Loader2 size={10} className="animate-spin" /> : <Paperclip size={10} />}
+                                                ATTACH FILES
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {attachments.length > 0 && (
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {attachments.map((file, idx) => (
+                                                <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-xl group">
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        <FileText size={14} className="text-slate-400 shrink-0" />
+                                                        <span className="text-[10px] font-bold text-slate-600 truncate">{file.name}</span>
+                                                    </div>
+                                                    <button onClick={() => removeAttachment(idx)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {attachments.length === 0 && !isUploading && (
+                                        <div className="h-16 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl">
+                                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">No technical assets attached</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleMarkComplete} className="w-full h-12 bg-primary text-white font-black uppercase tracking-wider rounded-xl">
+                                    CONFIRM DEPLOYMENT
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
         </div >

@@ -91,6 +91,8 @@ const SalesPipeline = () => {
   const [editingDealData, setEditingDealData] = useState(null);
   const [outcomeReason, setOutcomeReason] = useState('');
   const [outcomeDeadline, setOutcomeDeadline] = useState('');
+  const [originalAmount, setOriginalAmount] = useState(null);
+  const [changeReason, setChangeReason] = useState('');
 
   // New Deal Form State
   const [newDealData, setNewDealData] = useState({
@@ -132,15 +134,15 @@ const SalesPipeline = () => {
   const handleDrop = (toStage) => {
     if (draggedLead && draggedFromStage !== toStage) {
       const statusOrder = ['New', 'Contacted', 'Meeting Done', 'Proposal Sent', 'Won', 'Lost'];
-      const fromIndex = statusOrder.indexOf(draggedFromStage);
-      const toIndex = statusOrder.indexOf(toStage);
-
+      // Tactical regression check removed to allow backward movement
+      /*
       if (toIndex < fromIndex && toIndex !== -1) {
         toast.error(`Tactical regression blocked: Cannot move deal back from ${draggedFromStage} to ${toStage}`);
         setDraggedLead(null);
         setDraggedFromStage(null);
         return;
       }
+      */
 
       if (toStage === 'Won' || toStage === 'Lost') {
         const lead = leads.find(l => (l._id === draggedLead || l.id === draggedLead));
@@ -211,24 +213,34 @@ const SalesPipeline = () => {
       amount: lead.amount.toString(), // Ensure amount is editable string
       deadline: lead.deadline ? new Date(lead.deadline).toISOString().split('T')[0] : ''
     });
+    setOriginalAmount(lead.amount);
+    setChangeReason('');
     setIsEditOpen(true);
   };
 
   const handleSaveEdit = () => {
-    if (!editingDealData.name || !editingDealData.company) {
-      toast.error("Name and Company are required");
-      return;
-    }
-
     const leadId = editingDealData._id || editingDealData.id;
     if (!leadId) {
       toast.error("Invalid Asset ID");
       return;
     }
 
+    const currentAmount = parseFloat(editingDealData.amount) || 0;
+    const isAmountChanged = originalAmount !== null && currentAmount !== originalAmount;
+    
+    if (isAmountChanged && !changeReason.trim()) {
+      toast.error("Reason for valuation adjustment is mandatory when changing deal price");
+      return;
+    }
+
+    const finalNotes = isAmountChanged
+      ? `${editingDealData.notes || ''}\n[${new Date().toLocaleString()}] Amount adjusted from ₹${originalAmount} to ₹${currentAmount}. Reason: ${changeReason}`
+      : editingDealData.notes;
+
     editLead(leadId, {
       ...editingDealData,
-      amount: parseFloat(editingDealData.amount) || 0
+      amount: currentAmount,
+      notes: finalNotes
     });
 
     toast.success("Deal updated successfully");
@@ -700,6 +712,25 @@ const SalesPipeline = () => {
                     className="h-11 rounded-2xl border-slate-100 dark:border-slate-800 focus:ring-primary-500/20 bg-slate-50/50 dark:bg-slate-900/50 font-bold"
                   />
                 </div>
+
+                {originalAmount !== null && parseFloat(editingDealData.amount) !== originalAmount && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-1.5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30"
+                  >
+                    <Label htmlFor="change-reason" className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 ml-1 italic">
+                      Mandatory: Reason for valuation adjustment
+                    </Label>
+                    <Textarea
+                      id="change-reason"
+                      placeholder="Explain why the deal value was modified..."
+                      value={changeReason}
+                      onChange={(e) => setChangeReason(e.target.value)}
+                      className="min-h-[80px] rounded-xl border-amber-200 dark:border-amber-800 focus:ring-amber-500/20 bg-white dark:bg-slate-900 font-bold text-xs"
+                    />
+                  </motion.div>
+                )}
               </div>
             )}
 
