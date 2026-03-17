@@ -31,6 +31,21 @@ const useTicketStore = create((set, get) => ({
         }
     },
 
+    fetchTicketById: async (id) => {
+        set({ loading: true, error: null });
+        try {
+            const res = await api(`/support-tickets/${id}`);
+            if (res.success) {
+                set({ loading: false });
+                return res.data;
+            }
+        } catch (err) {
+            console.error("Fetch Ticket By ID Error:", err);
+            set({ error: err.message, loading: false });
+        }
+        return null;
+    },
+
     fetchTickets: async ({ page = 1, limit = 10, search = '', scope = 'all' } = {}) => {
         set({ loading: true, error: null });
         try {
@@ -124,6 +139,11 @@ const useTicketStore = create((set, get) => ({
             )
         }));
 
+        // Optimistic update for dashboard
+        import('./adminStore').then(m => {
+            m.default.getState().updateActionableTicket(id, { status });
+        }).catch(() => {});
+
         try {
             await api(`/support-tickets/${id}`, {
                 method: 'PUT',
@@ -133,8 +153,11 @@ const useTicketStore = create((set, get) => ({
             get().fetchTicketStats();
 
             // Background re-fetch for global state synchronization
-            import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
-                .catch(err => console.error("Background sync error:", err));
+            import('./adminStore').then(m => {
+                const store = m.default.getState();
+                store.fetchDashboardStats();
+                store.fetchActionableLists();
+            }).catch(err => console.error("Background sync error:", err));
 
             toast.success(`Ticket marked as ${status}`);
         } catch (err) {
@@ -169,17 +192,25 @@ const useTicketStore = create((set, get) => ({
     },
 
     escalateTicket: async (id) => {
+        // Optimistic update for dashboard
+        import('./adminStore').then(m => {
+            m.default.getState().updateActionableTicket(id, { status: 'Escalated', isEscalatedToSuperAdmin: true });
+        }).catch(() => {});
+
         try {
-            const res = await api(`/support-tickets/${id}`, {
-                method: 'PUT',
-                body: { isEscalatedToSuperAdmin: true, status: 'Escalated' }
-            });
 
             set((state) => ({
                 tickets: state.tickets.map((t) =>
                     t._id === id ? res.data : t
                 )
             }));
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => {
+                const store = m.default.getState();
+                store.fetchDashboardStats();
+                store.fetchActionableLists();
+            }).catch(err => console.error("Background sync error:", err));
 
             toast.success('Ticket escalated to Super Admin');
             return true;
@@ -191,17 +222,25 @@ const useTicketStore = create((set, get) => ({
     },
 
     resolveTicket: async (id) => {
+        // Optimistic update for dashboard
+        import('./adminStore').then(m => {
+            m.default.getState().updateActionableTicket(id, { status: 'Resolved' });
+        }).catch(() => {});
+
         try {
-            const res = await api(`/support-tickets/${id}`, {
-                method: 'PUT',
-                body: { status: 'Resolved' }
-            });
 
             set((state) => ({
                 tickets: state.tickets.map((t) =>
                     t._id === id ? res.data : t
                 )
             }));
+
+            // Background re-fetch for global state synchronization
+            import('./adminStore').then(m => {
+                const store = m.default.getState();
+                store.fetchDashboardStats();
+                store.fetchActionableLists();
+            }).catch(err => console.error("Background sync error:", err));
 
             toast.success('Ticket marked as Resolved');
             return true;
@@ -247,8 +286,11 @@ const useTicketStore = create((set, get) => ({
             if (['Resolved', 'Closed'].includes(updatedTicket.status)) {
                 get().fetchTicketStats();
                 // Refresh admin dashboard stats if applicable
-                import('./adminStore').then(m => m.default.getState().fetchDashboardStats())
-                    .catch(e => console.error("Stats sync error:", e));
+                import('./adminStore').then(m => {
+                    const store = m.default.getState();
+                    store.fetchDashboardStats();
+                    store.fetchActionableLists();
+                }).catch(e => console.error("Stats sync error:", e));
             }
         });
 

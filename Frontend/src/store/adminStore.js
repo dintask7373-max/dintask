@@ -124,6 +124,49 @@ const useAdminStore = create((set) => ({
         }
     },
 
+    // Optimistic update for actionable items
+    updateActionableTicket: (ticketId, updates) => {
+        set((state) => {
+            if (!state.actionableLists) return state;
+
+            // If the status is changing to Resolved or Closed, remove it from the Open Tickets list
+            // also update the counts in dashboardStats
+            const isRemoving = updates.status && ['Resolved', 'Closed'].includes(updates.status);
+
+            let newOpenTickets = state.actionableLists.openTickets;
+            let newPendingActions = state.dashboardStats?.pendingActions || 0;
+            let newOpenTicketsCount = state.dashboardStats?.breakdown?.openTickets || 0;
+
+            if (isRemoving) {
+                const ticketExists = newOpenTickets.some(t => t._id === ticketId);
+                if (ticketExists) {
+                    newOpenTickets = newOpenTickets.filter(t => t._id !== ticketId);
+                    newPendingActions = Math.max(0, newPendingActions - 1);
+                    newOpenTicketsCount = Math.max(0, newOpenTicketsCount - 1);
+                }
+            } else {
+                newOpenTickets = newOpenTickets.map((t) =>
+                    t._id === ticketId ? { ...t, ...updates } : t
+                );
+            }
+
+            return {
+                dashboardStats: state.dashboardStats ? {
+                    ...state.dashboardStats,
+                    pendingActions: newPendingActions,
+                    breakdown: {
+                        ...state.dashboardStats.breakdown,
+                        openTickets: newOpenTicketsCount
+                    }
+                } : state.dashboardStats,
+                actionableLists: {
+                    ...state.actionableLists,
+                    openTickets: newOpenTickets
+                }
+            };
+        });
+    },
+
     // Clear dashboard stats
     clearDashboardStats: () => set({
         dashboardStats: null,

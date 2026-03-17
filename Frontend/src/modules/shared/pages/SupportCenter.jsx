@@ -48,7 +48,7 @@ const SupportCenter = () => {
     const { user, role } = useAuthStore();
     const location = useLocation();
     const isSalesSupport = location.pathname.includes('/sales/support');
-    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket, initializeSocket, uploadFiles, giveFeedback, deleteTicket, pagination, escalateTicket, resolveTicket } = useTicketStore();
+    const { tickets, addTicket, updateTicketStatus, fetchTickets, loading, fetchTicketStats, stats, replyToTicket, initializeSocket, uploadFiles, giveFeedback, deleteTicket, pagination, escalateTicket, resolveTicket, fetchTicketById } = useTicketStore();
     const fileInputRef = React.useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
@@ -100,6 +100,29 @@ const SupportCenter = () => {
         fetchTicketStats();
         if (user?._id) initializeSocket(user._id);
     }, [fetchTicketStats, initializeSocket, user?._id]);
+
+    // Handle Deep Linking from Dashboard
+    React.useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        const ticketId = queryParams.get('id');
+
+        if (ticketId) {
+            const loadTicket = async () => {
+                // Try to find in existing tickets
+                let ticket = tickets.find(t => t._id === ticketId);
+
+                // If not found, fetch it
+                if (!ticket) {
+                    ticket = await fetchTicketById(ticketId);
+                }
+
+                if (ticket) {
+                    handleTicketSelect(ticket);
+                }
+            };
+            loadTicket();
+        }
+    }, [location.search, tickets.length]);
 
     // Sync selectedTicket with store data for real-time updates
     React.useEffect(() => {

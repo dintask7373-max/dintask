@@ -37,6 +37,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { formatDistanceToNow } from 'date-fns';
+import useTicketStore from '@/store/ticketStore';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -129,6 +130,7 @@ const AdminDashboard = () => {
             'Open': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
             'Pending': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
             'Escalated': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            'Resolved': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
             'High': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
             'Medium': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
             'Low': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -486,12 +488,16 @@ const AdminDashboard = () => {
                                 <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
                                     {actionableLists?.openTickets?.length > 0 ? (
                                         actionableLists.openTickets.map((ticket) => (
-                                            <div key={ticket._id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                                            <div
+                                                key={ticket._id}
+                                                onClick={() => navigate(`/admin/support?id=${ticket._id}`)}
+                                                className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group/ticket"
+                                            >
+                                                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 transition-transform group-hover/ticket:scale-110">
                                                     <AlertCircle size={16} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate">{ticket.title}</h5>
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white truncate group-hover/ticket:text-primary-600 transition-colors">{ticket.title}</h5>
                                                     <p className="text-[10px] text-slate-500 font-medium truncate">#{ticket.ticketId}</p>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5", getStatusColor(ticket.priority))}>
@@ -502,6 +508,20 @@ const AdminDashboard = () => {
                                                         </Badge>
                                                     </div>
                                                 </div>
+                                                {['Open', 'Pending', 'Escalated'].includes(ticket.status) && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const { resolveTicket } = useTicketStore.getState();
+                                                            resolveTicket(ticket._id);
+                                                        }}
+                                                        className="h-7 px-3 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-lg border-none transition-all relative z-10"
+                                                    >
+                                                        Resolve
+                                                    </Button>
+                                                )}
                                             </div>
                                         ))
                                     ) : (
