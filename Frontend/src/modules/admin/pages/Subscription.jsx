@@ -451,10 +451,15 @@ const Subscription = () => {
                                 {isCurrent && !subscriptionExpired && <Badge className="w-fit mb-2 bg-primary-600">Current Plan</Badge>}
                                 {isCurrent && subscriptionExpired && <Badge className="w-fit mb-2 bg-red-600">Expired Plan</Badge>}
                                 <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                                <CardDescription className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                                    ₹{plan.price * (user?.userLimit || user?.teamSize || 1)}
-                                    <span className="text-xs font-bold text-slate-400 ml-2 italic">
-                                        (₹{plan.price}/mem)
+                                <CardDescription className="flex flex-col gap-1 mt-2">
+                                    <div className="text-2xl font-black text-slate-900 dark:text-white">
+                                        ₹{plan.price * (user?.userLimit || user?.teamSize || 1)}
+                                        <span className="text-xs font-bold text-slate-400 ml-2 italic">
+                                            (₹{plan.price}/mem)
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                                        Valid for {plan.duration || 30} Days
                                     </span>
                                 </CardDescription>
                             </CardHeader>

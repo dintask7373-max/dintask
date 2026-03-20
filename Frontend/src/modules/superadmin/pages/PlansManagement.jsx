@@ -21,7 +21,6 @@ const PlansManagement = () => {
 
     const [planForm, setPlanForm] = useState({
         name: '',
-        price: '',
         isActive: true,
         features: [],
         duration: '30'
@@ -37,7 +36,6 @@ const PlansManagement = () => {
             setSelectedPlanId(plan._id);
             setPlanForm({
                 name: plan.name || '',
-                price: plan.price?.toString() || '0',
                 isActive: plan.isActive !== undefined ? plan.isActive : true,
                 features: Array.isArray(plan.features) ? [...plan.features] : [],
                 duration: plan.duration?.toString() || '30'
@@ -46,7 +44,6 @@ const PlansManagement = () => {
             setIsEditMode(false);
             setPlanForm({
                 name: '',
-                price: '',
                 isActive: true,
                 features: [],
                 duration: '30'
@@ -75,20 +72,15 @@ const PlansManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const { name, price, duration } = planForm;
+        const { name, duration } = planForm;
 
         if (!name.trim()) {
             toast.error("Plan Name is required");
             return;
         }
 
-        if (!price || !duration) {
+        if (!duration) {
             toast.error('Identity Conflict: Missing critical module parameters');
-            return;
-        }
-
-        if (Number(price) < 0) {
-            toast.error("Value cannot be negative");
             return;
         }
 
@@ -99,7 +91,6 @@ const PlansManagement = () => {
 
         const planData = {
             ...planForm,
-            price: Number(planForm.price),
             duration: Number(planForm.duration)
         };
 
@@ -195,10 +186,10 @@ const PlansManagement = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-50">Base Recurring Value</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-50">Est. Node Value</p>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">₹{plan.price}</span>
-                                        <span className="text-xs font-bold text-slate-400 uppercase italic">/ {plan.duration}D</span>
+                                        <span className="text-xs font-bold text-slate-400 uppercase italic">/ {plan.duration}D / mem</span>
                                     </div>
                                 </div>
 
@@ -280,17 +271,7 @@ const PlansManagement = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">PLAN VALUE (₹)</Label>
-                                        <Input
-                                            id="price"
-                                            type="number"
-                                            placeholder="2999"
-                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
-                                            value={planForm.price}
-                                            onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
-                                        />
-                                    </div>
+
                                     <div className="space-y-3">
                                         <Label htmlFor="duration" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">VALIDITY (DAYS)</Label>
                                         <Input
@@ -337,9 +318,11 @@ const PlansManagement = () => {
 
                                     <div className="flex flex-wrap gap-2 mt-4">
                                         {planForm.features.map((feature, idx) => (
-                                            <Badge key={idx} className="bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 py-2 px-4 rounded-xl gap-3 text-[9px] font-black uppercase tracking-widest border-none">
+                                            <Badge key={idx} className="bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 py-2 px-4 rounded-xl gap-3 text-[9px] font-black uppercase tracking-widest border-none items-center flex">
                                                 {feature}
-                                                <X size={14} className="cursor-pointer hover:text-red-500 transition-colors" onClick={() => removeFeature(idx)} />
+                                                <button type="button" onClick={() => removeFeature(idx)} className="cursor-pointer hover:text-red-500 transition-colors focus:outline-none pointer-events-auto flex items-center justify-center">
+                                                    <X size={14} />
+                                                </button>
                                             </Badge>
                                         ))}
                                     </div>
