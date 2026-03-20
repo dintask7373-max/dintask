@@ -14,6 +14,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import api from '@/lib/api';
+import SEO from '@/shared/components/SEO';
 // import useSuperAdminStore from '@/store/superAdminStore'; // Removed as we use API directly
 
 const ContactPage = () => {
@@ -110,6 +111,11 @@ const ContactPage = () => {
 
     return (
         <div className="min-h-screen bg-[#F0F2F5] dark:bg-slate-950 font-sans selection:bg-[#2563EB] selection:text-white flex items-center justify-center p-4">
+            <SEO 
+                title="Contact Us" 
+                description="Get in touch with the DinTask team for inquiries, business partnerships, or support." 
+                keywords="dintask contact, dintask support, contact business"
+            />
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

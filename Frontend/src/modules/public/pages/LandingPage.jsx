@@ -37,6 +37,7 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+import SEO from '@/shared/components/SEO';
 import {
     Dialog,
     DialogContent,
@@ -435,6 +436,11 @@ const LandingPage = () => {
 
     return (
         <main className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-primary-500 selection:text-white overflow-x-clip">
+            <SEO 
+                title="Home" 
+                description="Streamline your business operations with DinTask. The all-in-one platform for task management, sales CRM, employee monitoring, and team collaboration." 
+                keywords="dintask, task management, crm, employee monitoring, business productivity"
+            />
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="max-w-7xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">

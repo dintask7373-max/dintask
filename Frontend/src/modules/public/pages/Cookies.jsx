@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import apiRequest from '@/lib/api';
+import SEO from '@/shared/components/SEO';
 
 const Cookies = () => {
     const navigate = useNavigate();
@@ -28,6 +29,11 @@ const Cookies = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#FFEE8C] via-[#FFF9C4] to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 font-sans selection:bg-primary-500 selection:text-white pb-20">
+            <SEO 
+                title="Cookie Policy" 
+                description="Learn about how we use cookies on DinTask to improve your experience." 
+                keywords="cookie policy, cookies, dintask cookies"
+            />
             {/* Header Area */}
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
                 <div className="max-w-4xl mx-auto px-6 h-24 flex items-center justify-between">

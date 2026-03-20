@@ -5,6 +5,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Star, CheckCircle2 } from 'lucide-react';
 import apiRequest from '@/lib/api';
+import SEO from '@/shared/components/SEO';
 
 const ClientTestimonial = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,6 +49,11 @@ const ClientTestimonial = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+            <SEO 
+                title="Client Testimonials" 
+                description="See what our clients are saying about DinTask and share your own story." 
+                keywords="testimonials, client reviews, dintask stories"
+            />
             <div className="bg-white dark:bg-slate-900 w-full max-w-md p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
                 <div className="text-center mb-8">
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Share Your Story</h1>

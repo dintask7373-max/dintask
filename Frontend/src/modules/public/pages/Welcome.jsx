@@ -19,6 +19,7 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import useSuperAdminStore from '@/store/superAdminStore';
+import SEO from '@/shared/components/SEO';
 
 const Welcome = () => {
     const navigate = useNavigate();
@@ -141,6 +142,11 @@ const Welcome = () => {
                 fontFamily: '"Plus Jakarta Sans", sans-serif'
             }}
         >
+            <SEO 
+                title="Welcome" 
+                description="Welcome to DinTask Home Base. Access your tactical portals for business management." 
+                keywords="dintask welcome, business portal, task management"
+            />
             {/* Subtle Gradient Overlay for dynamic contrast */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
 
