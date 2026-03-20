@@ -13,7 +13,30 @@ exports.getPlans = async (req, res, next) => {
       query.price = { $ne: 0 };
     }
 
-    const plans = await Plan.find(query);
+    let plans = await Plan.find(query).lean();
+
+    // Fetch System Settings for dynamic pricing
+    const SystemSettings = require('../models/SystemSettings');
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = { pricePerMember: 50, annualDiscount: 20 };
+    }
+
+    // Override plan.price with dynamic price for frontend display
+    plans = plans.map(plan => {
+      if (plan.price === 0) {
+        return plan; // Free plan remains free
+      }
+      const durationMultiplier = (plan.duration || 30) / 30;
+      let calculatedPrice = settings.pricePerMember * durationMultiplier;
+      
+      if (plan.duration >= 365) {
+        calculatedPrice = calculatedPrice - (calculatedPrice * (settings.annualDiscount / 100));
+      }
+      plan.price = Math.ceil(calculatedPrice);
+      return plan;
+    });
+
     res.status(200).json({
       success: true,
       count: plans.length,
@@ -52,16 +75,24 @@ exports.createPlan = async (req, res, next) => {
     const { name, price, userLimit, duration } = req.body;
 
     // Validation
-    if (!name || price === undefined || userLimit === undefined || duration === undefined) {
-      return next(new ErrorResponse('Please provide name, price, user limit and duration', 400));
+    if (!name || duration === undefined) {
+      return next(new ErrorResponse('Please provide name and duration', 400));
     }
 
     if (name.trim() === '') {
       return next(new ErrorResponse('Plan name cannot be empty', 400));
     }
 
-    if (price < 0 || userLimit < 1 || duration < 1) {
-      return next(new ErrorResponse('Price must be non-negative, and user limit/duration must be at least 1', 400));
+    if (duration < 1) {
+      return next(new ErrorResponse('Duration must be at least 1', 400));
+    }
+
+    // Default price to 1 to mark it as paid, or 0 if explicitly passed as 0
+    req.body.price = price === 0 ? 0 : 1;
+
+    // Default userLimit for backward compatibility if needed
+    if (userLimit === undefined) {
+        req.body.userLimit = 0;
     }
 
     // Check for existing plan with the same name
@@ -71,7 +102,7 @@ exports.createPlan = async (req, res, next) => {
     }
 
     // Check if trying to create a free plan
-    if (Number(price) === 0) {
+    if (req.body.price === 0) {
       const existingFreePlan = await Plan.findOne({ price: 0 });
       if (existingFreePlan) {
         return next(new ErrorResponse('You can only create one free plan (Amount 0).', 400));

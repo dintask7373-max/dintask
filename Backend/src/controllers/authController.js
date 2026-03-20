@@ -881,7 +881,7 @@ exports.sendOtp = async (req, res, next) => {
     }
 
     // Test numbers logic (from RukkooIn)
-    const testNumbers = ['9009925021', '6261096283', '9752275626', '8889948896', '7047716600', '6263322405'];
+    const testNumbers = ['9009925021', '6261096283', '9685974247', '9752275626', '8889948896', '7047716600', '6263322405'];
     const isTestNumber = testNumbers.includes(phone);
 
     // Generate OTP

@@ -86,8 +86,31 @@ exports.createOrder = async (req, res, next) => {
       }
     }
 
-    // Dynamic Pricing: Total = Plan.price (per member) * admin.userLimit
-    const totalAmount = plan.price * (admin.userLimit || 1);
+    // Fetch System Settings
+    const SystemSettings = require('../models/SystemSettings');
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = { pricePerMember: 50, annualDiscount: 20 };
+    }
+
+    // Dynamic Pricing: Total = SystemSettings.pricePerMember * admin.userLimit
+    // Scale by duration (assuming pricePerMember is for 30 days)
+    const baseAmount = settings.pricePerMember * (admin.userLimit || admin.teamSize || 1);
+    const durationMultiplier = (plan.duration || 30) / 30;
+    let totalAmount = baseAmount * durationMultiplier;
+
+    // Apply annual discount if duration is 365 days or more
+    if (plan.duration >= 365) {
+        totalAmount = totalAmount - (totalAmount * (settings.annualDiscount / 100));
+    }
+    
+    totalAmount = Math.ceil(totalAmount);
+
+    // If it's a completely free plan (configured as price 0 in DB) we keep it free
+    // e.g., Free Trial
+    if (plan.price === 0) {
+      totalAmount = 0;
+    }
 
     if (totalAmount === 0) {
       // Free plan - update directly
@@ -129,7 +152,8 @@ exports.createOrder = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: order
+      data: order,
+      amountProcessed: totalAmount
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -167,15 +191,30 @@ exports.createExpansionOrder = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Subscription expired. Please renew instead.' });
     }
 
-    // Pro-rated price: (Plan Price / Plan Duration) * remainingDays * additionalSeats
-    const dailyRatePerMember = plan.price / (plan.duration || 30);
+    // Fetch System Settings
+    const SystemSettings = require('../models/SystemSettings');
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = { pricePerMember: 50, annualDiscount: 20 };
+    }
+
+    // Pro-rated price: (Settings Price / 30) * remainingDays * additionalSeats
+    // Assuming settings.pricePerMember is the monthly standard cost.
+    let dailyRatePerMember = settings.pricePerMember / 30;
+    
+    // Check if the current plan was an annual plan to apply the discount to the expansion as well
+    if (plan.duration >= 365) {
+        const discountedPrice = settings.pricePerMember - (settings.pricePerMember * (settings.annualDiscount / 100));
+        dailyRatePerMember = discountedPrice / 30;
+    }
+
     const expansionAmount = Math.ceil(dailyRatePerMember * remainingDays * additionalSeats);
 
-    if (expansionAmount < 1) { // Min charge 1 INR
-      // Just update it if the amount is negligible (though unlikely)
+    if (expansionAmount < 1 || plan.price === 0) { // Min charge 1 INR or free plan
+      // Just update it if the amount is negligible or free plan
       admin.userLimit = newTotalLimit;
       await admin.save();
-      return res.status(200).json({ success: true, message: 'Expansion applied (low amount)', free: true });
+      return res.status(200).json({ success: true, message: 'Expansion applied (free/low amount)', free: true });
     }
 
     const options = {
