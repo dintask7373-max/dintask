@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import prerender from 'vite-plugin-prerender'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -13,17 +12,6 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    prerender({
-      // Required - The path to the vite-outputted app to prerender.
-      staticDir: path.join(__dirname, 'dist'),
-      // Required - Routes to render.
-      routes: ['/', '/contact', '/privacy', '/terms', '/cookies', '/welcome', '/client'],
-      // Optional - Configuration for the renderer.
-      rendererOptions: {
-        maxConcurrentRoutes: 4,
-        renderAfterTime: 2000, // Wait for animations or data fetching
-      }
-    }),
   ],
   resolve: {
     alias: {
