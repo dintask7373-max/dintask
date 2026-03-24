@@ -16,7 +16,6 @@ const Lead = require('../models/Lead');
 const Project = require('../models/Project');
 const Task = require('../models/Task');
 const Team = require('../models/Team');
-const SystemSettings = require('../models/SystemSettings');
 const SupportLead = require('../models/SupportLead');
 const SupportTicket = require('../models/SupportTicket');
 
@@ -161,7 +160,7 @@ exports.getAdmins = async (req, res, next) => {
 // @access  Private (Super Admin)
 exports.createAdmin = async (req, res, next) => {
   try {
-    const { companyName, name, email, subscriptionPlan, password, teamSize } = req.body;
+    const { companyName, name, email, subscriptionPlan, password } = req.body;
 
     // Validation
     if (!companyName || !name || !email) {
@@ -185,14 +184,18 @@ exports.createAdmin = async (req, res, next) => {
 
     // Calculate subscription expiry
     let subscriptionExpiry = null;
+    let actualUserLimit = 1;
     if (req.body.subscriptionPlanId) {
       const plan = await Plan.findById(req.body.subscriptionPlanId);
       if (plan) {
         subscriptionExpiry = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
+        // Use plan's limit as defined
+        actualUserLimit = plan.userLimit || 5;
       }
     } else {
       // Default to 7 days demo if no plan ID provided
       subscriptionExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      actualUserLimit = 5; 
     }
 
     // Sanitize ObjectIds from frontend
@@ -207,8 +210,8 @@ exports.createAdmin = async (req, res, next) => {
       subscriptionPlanId,
       partnerId,
       password: adminPassword,
-      teamSize: teamSize || 1,
-      userLimit: teamSize || 1,
+      teamSize: 1, 
+      userLimit: actualUserLimit, 
       subscriptionStatus: 'active',
       subscriptionExpiry
     });
@@ -1599,47 +1602,4 @@ exports.deleteStaff = async (req, res, next) => {
   }
 };
 
-// @desc    Get System Settings
-// @route   GET /api/v1/superadmin/settings
-// @access  Private (SuperAdmin)
-exports.getSystemSettings = async (req, res, next) => {
-  try {
-    let settings = await SystemSettings.findOne();
 
-    if (!settings) {
-      settings = await SystemSettings.create({});
-    }
-
-    res.status(200).json({
-      success: true,
-      data: settings
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// @desc    Update System Settings
-// @route   PUT /api/v1/superadmin/settings
-// @access  Private (SuperAdmin)
-exports.updateSystemSettings = async (req, res, next) => {
-  try {
-    let settings = await SystemSettings.findOne();
-
-    if (!settings) {
-      settings = await SystemSettings.create(req.body);
-    } else {
-      settings = await SystemSettings.findOneAndUpdate({}, req.body, {
-        new: true,
-        runValidators: true
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: settings
-    });
-  } catch (err) {
-    next(err);
-  }
-};

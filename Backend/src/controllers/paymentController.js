@@ -86,31 +86,8 @@ exports.createOrder = async (req, res, next) => {
       }
     }
 
-    // Fetch System Settings
-    const SystemSettings = require('../models/SystemSettings');
-    let settings = await SystemSettings.findOne();
-    if (!settings) {
-      settings = { pricePerMember: 50, annualDiscount: 20 };
-    }
-
-    // Dynamic Pricing: Total = SystemSettings.pricePerMember * admin.userLimit
-    // Scale by duration (assuming pricePerMember is for 30 days)
-    const baseAmount = settings.pricePerMember * (admin.userLimit || admin.teamSize || 1);
-    const durationMultiplier = (plan.duration || 30) / 30;
-    let totalAmount = baseAmount * durationMultiplier;
-
-    // Apply annual discount if duration is 365 days or more
-    if (plan.duration >= 365) {
-        totalAmount = totalAmount - (totalAmount * (settings.annualDiscount / 100));
-    }
-    
-    totalAmount = Math.ceil(totalAmount);
-
-    // If it's a completely free plan (configured as price 0 in DB) we keep it free
-    // e.g., Free Trial
-    if (plan.price === 0) {
-      totalAmount = 0;
-    }
+    // Fixed Pricing: Total = Plan.price
+    const totalAmount = plan.price;
 
     if (totalAmount === 0) {
       // Free plan - update directly
@@ -118,7 +95,7 @@ exports.createOrder = async (req, res, next) => {
       admin.subscriptionPlanId = plan._id;
       admin.subscriptionStatus = 'active';
       admin.subscriptionExpiry = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
-      admin.userLimit = admin.teamSize || 1; // Update limit to current team size
+      admin.userLimit = plan.userLimit || admin.teamSize || 1; // Use plan's allowed members
       await admin.save();
 
       return res.status(200).json({
@@ -191,23 +168,11 @@ exports.createExpansionOrder = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Subscription expired. Please renew instead.' });
     }
 
-    // Fetch System Settings
-    const SystemSettings = require('../models/SystemSettings');
-    let settings = await SystemSettings.findOne();
-    if (!settings) {
-      settings = { pricePerMember: 50, annualDiscount: 20 };
-    }
-
-    // Pro-rated price: (Settings Price / 30) * remainingDays * additionalSeats
-    // Assuming settings.pricePerMember is the monthly standard cost.
-    let dailyRatePerMember = settings.pricePerMember / 30;
-    
-    // Check if the current plan was an annual plan to apply the discount to the expansion as well
-    if (plan.duration >= 365) {
-        const discountedPrice = settings.pricePerMember - (settings.pricePerMember * (settings.annualDiscount / 100));
-        dailyRatePerMember = discountedPrice / 30;
-    }
-
+    // Pro-rated price: (Plan Price / Plan Duration) * remainingDays * (additionalSeats / plan.userLimit)
+    // Actually, usually it's just based on a "seat price". 
+    // If the base plan has 10 seats for ₹1000, then 1 seat is ₹100.
+    const seatBasePrice = plan.price / (plan.userLimit || 1);
+    const dailyRatePerMember = seatBasePrice / (plan.duration || 30);
     const expansionAmount = Math.ceil(dailyRatePerMember * remainingDays * additionalSeats);
 
     if (expansionAmount < 1 || plan.price === 0) { // Min charge 1 INR or free plan
@@ -249,17 +214,74 @@ exports.createExpansionOrder = async (req, res, next) => {
   }
 };
 
+// Helper to update admin account after successful payment
+const processPaymentSuccess = async (paymentId, razorpayPaymentId, razorpaySignature) => {
+  try {
+    const payment = await Payment.findById(paymentId);
+    if (!payment || payment.status === 'paid') return { success: true, alreadyProcessed: true };
+
+    payment.razorpayPaymentId = razorpayPaymentId;
+    if (razorpaySignature) payment.razorpaySignature = razorpaySignature;
+    payment.status = 'paid';
+    await payment.save();
+
+    const plan = await Plan.findById(payment.planId);
+    const admin = await Admin.findById(payment.adminId);
+
+    if (admin && plan) {
+      if (payment.type === 'expansion' && payment.metadata && payment.metadata.newTotalLimit) {
+        admin.userLimit = payment.metadata.newTotalLimit;
+        await admin.save();
+      } else {
+        // STANDARD SUBSCRIPTION: Update plan, expiry, and userLimit
+        admin.subscriptionPlan = plan.name;
+        admin.subscriptionPlanId = plan._id;
+        admin.subscriptionStatus = 'active';
+
+        // Calculate expiry
+        const expiryDate = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
+        admin.subscriptionExpiry = expiryDate;
+
+        // CRITICAL: Update fixed capacity limit
+        if (plan.userLimit) {
+          admin.userLimit = plan.userLimit;
+        }
+
+        await admin.save();
+      }
+
+      // Notify Superadmins
+      try {
+        const title = payment.type === 'expansion' ? 'Team Expansion Payment' : 'New Subscription Payment';
+        const message = payment.type === 'expansion' 
+          ? `Admin "${admin.name}" expanded team to ${payment.metadata.newTotalLimit} seats.`
+          : `Admin "${admin.name}" paid for ${plan.name} plan.`;
+
+        const superAdmins = await SuperAdmin.find({ role: { $in: ['superadmin', 'superadmin_staff'] } });
+        if (superAdmins.length > 0) {
+          const notifications = superAdmins.map(sa => ({
+            recipient: sa._id, sender: admin._id, type: 'general', title, message, link: '/superadmin/admins'
+          }));
+          await Notification.insertMany(notifications);
+        }
+      } catch (notifyErr) { console.error('Payment Notification Error:', notifyErr); }
+
+      // Partner Commission
+      await calculatePartnerCommission(admin._id, payment._id, payment.amount);
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('Process Payment Success Error:', err);
+    return { success: false, error: err.message };
+  }
+};
+
 // @desc    Verify Payment
 // @route   POST /api/v1/payments/verify
 // @access  Private (Admin)
 exports.verifyPayment = async (req, res, next) => {
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    } = req.body;
-
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     const body = razorpay_order_id + '|' + razorpay_payment_id;
 
     const expectedSignature = crypto
@@ -268,81 +290,19 @@ exports.verifyPayment = async (req, res, next) => {
       .digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      // Payment is verified
       const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
+      if (!payment) return res.status(404).json({ success: false, error: 'Payment record not found' });
 
-      if (!payment) {
-        return res.status(404).json({ success: false, error: 'Payment record not found' });
+      const result = await processPaymentSuccess(payment._id, razorpay_payment_id, razorpay_signature);
+      
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          message: payment.type === 'expansion' ? 'Team expanded successfully' : 'Payment verified successfully'
+        });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
       }
-
-      payment.razorpayPaymentId = razorpay_payment_id;
-      payment.razorpaySignature = razorpay_signature;
-      payment.status = 'paid';
-      await payment.save();
-
-      // Update Admin's plan
-      const plan = await Plan.findById(payment.planId);
-      const admin = await Admin.findById(payment.adminId);
-
-      let title = '';
-      let message = '';
-
-      if (admin && plan) {
-        if (payment.type === 'expansion' && payment.metadata && payment.metadata.newTotalLimit) {
-          // TEAM EXPANSION: Only update userLimit
-          admin.userLimit = payment.metadata.newTotalLimit;
-          // Note: teamSize remains as current active members, userLimit is the capacity
-          await admin.save();
-          
-          title = 'Team Expansion Payment';
-          message = `Admin "${admin.name}" has expanded their team to ${payment.metadata.newTotalLimit} seats.`;
-        } else {
-          // STANDARD SUBSCRIPTION: Update plan and expiry
-          admin.subscriptionPlan = plan.name;
-          admin.subscriptionPlanId = plan._id;
-          admin.subscriptionStatus = 'active';
-
-          // Calculate expiry based on plan duration
-          const expiryDate = new Date(Date.now() + plan.duration * 24 * 60 * 60 * 1000);
-          admin.subscriptionExpiry = expiryDate;
-
-          await admin.save();
-          
-          title = 'New Subscription Payment';
-          message = `Admin "${admin.name}" has paid for the ${plan.name} plan.`;
-        }
-
-        // --- NOTIFICATION LOGIC START ---
-        try {
-          const superAdmins = await SuperAdmin.find({
-            role: { $in: ['superadmin', 'superadmin_staff'] }
-          });
-
-          if (superAdmins.length > 0) {
-            const notifications = superAdmins.map(sa => ({
-              recipient: sa._id,
-              sender: admin._id,
-              type: 'general',
-              title: title,
-              message: message,
-              link: '/superadmin/admins'
-            }));
-            await Notification.insertMany(notifications);
-          }
-        } catch (notifyErr) {
-          console.error('Payment Notification Error:', notifyErr);
-        }
-        // --- NOTIFICATION LOGIC END ---
-
-        // --- PARTNER COMMISSION LOGIC START ---
-        await calculatePartnerCommission(admin._id, payment._id, payment.amount);
-        // --- PARTNER COMMISSION LOGIC END ---
-      }
-
-      res.status(200).json({
-        success: true,
-        message: payment.type === 'expansion' ? 'Team expanded successfully' : 'Payment verified and plan updated successfully'
-      });
     } else {
       res.status(400).json({ success: false, error: 'Invalid signature' });
     }
@@ -488,12 +448,7 @@ exports.handleRazorpayWebhook = async (req, res, next) => {
 
       const payment = await Payment.findOne({ razorpayOrderId });
       if (payment && payment.status !== 'paid') {
-        payment.status = 'paid';
-        payment.razorpayPaymentId = razorpayPaymentId;
-        await payment.save();
-
-        // Trigger commission logic
-        await calculatePartnerCommission(payment.adminId, payment._id, amount);
+        await processPaymentSuccess(payment._id, razorpayPaymentId);
       }
     }
 

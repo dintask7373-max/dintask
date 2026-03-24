@@ -101,7 +101,7 @@ const Subscription = () => {
             amount: orderRes.data.amount,
             currency: orderRes.data.currency,
             name: 'DinTask CRM',
-            description: `Subscription for ${user?.teamSize || 1} members`,
+            description: `Subscription for ${plan.name} Plan`,
             order_id: orderRes.data.id,
             handler: async (response) => {
                 const verifyRes = await verifyPayment({
@@ -143,7 +143,7 @@ const Subscription = () => {
             return;
         }
 
-        const newLimit = (user?.userLimit || user?.teamSize || 1) + Number(additionalSeats);
+        const newLimit = (user?.userLimit || 1) + Number(additionalSeats);
         const orderRes = await createExpansionOrder(newLimit);
 
         if (orderRes.success && orderRes.free) {
@@ -453,13 +453,10 @@ const Subscription = () => {
                                 <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
                                 <CardDescription className="flex flex-col gap-1 mt-2">
                                     <div className="text-2xl font-black text-slate-900 dark:text-white">
-                                        ₹{plan.price * (user?.userLimit || user?.teamSize || 1)}
-                                        <span className="text-xs font-bold text-slate-400 ml-2 italic">
-                                            (₹{plan.price}/mem)
-                                        </span>
+                                        ₹{plan.price.toLocaleString()}
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                                        Valid for {plan.duration || 30} Days
+                                        Valid for {plan.duration || 30} Days • {plan.userLimit || 0} Members
                                     </span>
                                 </CardDescription>
                             </CardHeader>

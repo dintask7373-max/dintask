@@ -15,12 +15,14 @@ const AdminRegister = () => {
     const loading = storeLoading || localLoading;
 
     const [formData, setFormData] = useState({
-        companyName: '',
         adminName: '',
         email: '',
         password: '',
         confirmPassword: '',
-        teamSize: '1'
+        companyName: '',
+        role: 'admin',
+        partnerType: 'Individual',
+        referralCode: ''
     });
 
     const [emailError, setEmailError] = useState('');
@@ -60,13 +62,8 @@ const AdminRegister = () => {
             return;
         }
 
-        if (!companyName || !adminName || !email || !password || !confirmPassword || !formData.teamSize) {
+        if (!companyName || !adminName || !email || !password || !confirmPassword) {
             toast.error('Please fill in all fields');
-            return;
-        }
-
-        if (parseInt(formData.teamSize) < 1) {
-            toast.error('Team size must be at least 1');
             return;
         }
 
@@ -84,8 +81,7 @@ const AdminRegister = () => {
                 password,
                 role: 'admin',
                 companyName,
-                referralCode,
-                teamSize: parseInt(formData.teamSize)
+                referralCode
             };
 
             const success = await register(payload);
@@ -191,22 +187,7 @@ const AdminRegister = () => {
                                     {emailError && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">{emailError}</p>}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="teamSize" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expected Team Size</Label>
-                                    <div className="relative">
-                                        <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        <Input
-                                            id="teamSize"
-                                            type="number"
-                                            min="1"
-                                            placeholder="e.g. 10"
-                                            value={formData.teamSize}
-                                            onChange={handleChange}
-                                            className="h-14 pl-12 rounded-2xl bg-slate-50 border-none dark:bg-slate-800 font-bold focus:ring-primary-500/20"
-                                        />
-                                    </div>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1 italic opacity-60">Pricing will be calculated based on this node count</p>
-                                </div>
+
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">

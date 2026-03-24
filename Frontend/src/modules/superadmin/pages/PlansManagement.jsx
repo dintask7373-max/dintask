@@ -21,6 +21,8 @@ const PlansManagement = () => {
 
     const [planForm, setPlanForm] = useState({
         name: '',
+        price: '',
+        userLimit: '',
         isActive: true,
         features: [],
         duration: '30'
@@ -36,6 +38,8 @@ const PlansManagement = () => {
             setSelectedPlanId(plan._id);
             setPlanForm({
                 name: plan.name || '',
+                price: plan.price?.toString() || '0',
+                userLimit: plan.userLimit?.toString() || '1',
                 isActive: plan.isActive !== undefined ? plan.isActive : true,
                 features: Array.isArray(plan.features) ? [...plan.features] : [],
                 duration: plan.duration?.toString() || '30'
@@ -44,6 +48,8 @@ const PlansManagement = () => {
             setIsEditMode(false);
             setPlanForm({
                 name: '',
+                price: '',
+                userLimit: '',
                 isActive: true,
                 features: [],
                 duration: '30'
@@ -72,15 +78,25 @@ const PlansManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const { name, duration } = planForm;
+        const { name, price, userLimit, duration } = planForm;
 
         if (!name.trim()) {
             toast.error("Plan Name is required");
             return;
         }
 
-        if (!duration) {
+        if (price === '' || userLimit === '' || !duration) {
             toast.error('Identity Conflict: Missing critical module parameters');
+            return;
+        }
+
+        if (Number(price) < 0) {
+            toast.error("Value cannot be negative");
+            return;
+        }
+
+        if (Number(userLimit) < 1) {
+            toast.error("Member limit must be at least 1");
             return;
         }
 
@@ -91,6 +107,8 @@ const PlansManagement = () => {
 
         const planData = {
             ...planForm,
+            price: Number(planForm.price),
+            userLimit: Number(planForm.userLimit),
             duration: Number(planForm.duration)
         };
 
@@ -173,7 +191,7 @@ const PlansManagement = () => {
                                             {plan.isActive ? 'NODE ONLINE' : 'NODE OFFLINE'}
                                         </Badge>
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mt-4">{plan.name}</h3>
-                                        <p className="text-[10px] text-slate-400 font-medium">Valid for {plan.duration} Days • Base Node Access</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">Valid for {plan.duration} Days • {plan.userLimit} Member Limit</p>
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                                         <Button variant="ghost" size="icon" onClick={() => handleOpenModal(plan)} className="size-10 rounded-xl hover:bg-primary-50 hover:text-primary-600">
@@ -186,10 +204,10 @@ const PlansManagement = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-50">Est. Node Value</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-50">Base Recurring Value</p>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">₹{plan.price}</span>
-                                        <span className="text-xs font-bold text-slate-400 uppercase italic">/ {plan.duration}D / mem</span>
+                                        <span className="text-xs font-bold text-slate-400 uppercase italic">/ {plan.duration}D</span>
                                     </div>
                                 </div>
 
@@ -271,6 +289,29 @@ const PlansManagement = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">PLAN VALUE (₹)</Label>
+                                        <Input
+                                            id="price"
+                                            type="number"
+                                            placeholder="2999"
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
+                                            value={planForm.price}
+                                            onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label htmlFor="userLimit" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">ALLOWED MEMBERS</Label>
+                                        <Input
+                                            id="userLimit"
+                                            type="number"
+                                            placeholder="50"
+                                            className="h-14 rounded-2xl bg-white dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 font-black text-xs tracking-widest px-6"
+                                            value={planForm.userLimit}
+                                            onChange={(e) => setPlanForm({ ...planForm, userLimit: e.target.value })}
+                                        />
+                                    </div>
 
                                     <div className="space-y-3">
                                         <Label htmlFor="duration" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">VALIDITY (DAYS)</Label>

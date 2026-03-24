@@ -707,8 +707,7 @@ const useSuperAdminStore = create(
                             subscriptionPlan: adminData.plan,
                             subscriptionPlanId: adminData.planId,
                             partnerId: adminData.partnerId, // Link to partner if provided
-                            password: adminData.password,
-                            teamSize: adminData.teamSize
+                            password: adminData.password
                         }
                     });
 
