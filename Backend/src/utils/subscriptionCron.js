@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const Admin = require('../models/Admin');
 const Notification = require('../models/Notification');
 const sendEmail = require('./sendEmail');
+const { istStartOfDay, addDays, DAY_MS } = require('./dateIST');
 
 const checkSubscriptionExpiry = async () => {
   console.log('Running subscription expiry check...');
@@ -10,20 +11,18 @@ const checkSubscriptionExpiry = async () => {
   const frontendUrl = rawFrontendUrl.split(',')[0].trim();
 
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Day boundaries anchored to IST midnight (not server-local time)
+    const today = istStartOfDay();
 
-    const threeDaysFromNow = new Date(today);
-    threeDaysFromNow.setDate(today.getDate() + 3);
+    const threeDaysFromNow = addDays(today, 3);
 
-    const oneDayFromNow = new Date(today);
-    oneDayFromNow.setDate(today.getDate() + 1);
+    const oneDayFromNow = addDays(today, 1);
 
     // Find admins expiring in 3 days
     const expiringIn3Days = await Admin.find({
       subscriptionExpiry: {
         $gte: threeDaysFromNow,
-        $lt: new Date(threeDaysFromNow.getTime() + 24 * 60 * 60 * 1000)
+        $lt: new Date(threeDaysFromNow.getTime() + DAY_MS)
       },
       subscriptionStatus: 'active'
     });
@@ -77,7 +76,7 @@ const checkSubscriptionExpiry = async () => {
     const expiringIn1Day = await Admin.find({
       subscriptionExpiry: {
         $gte: oneDayFromNow,
-        $lt: new Date(oneDayFromNow.getTime() + 24 * 60 * 60 * 1000)
+        $lt: new Date(oneDayFromNow.getTime() + DAY_MS)
       },
       subscriptionStatus: 'active'
     });
@@ -128,13 +127,12 @@ const checkSubscriptionExpiry = async () => {
     }
 
     // Find admins expiring in 2 days (New Requirement)
-    const twoDaysFromNow = new Date(today);
-    twoDaysFromNow.setDate(today.getDate() + 2);
+    const twoDaysFromNow = addDays(today, 2);
 
     const expiringIn2Days = await Admin.find({
       subscriptionExpiry: {
         $gte: twoDaysFromNow,
-        $lt: new Date(twoDaysFromNow.getTime() + 24 * 60 * 60 * 1000)
+        $lt: new Date(twoDaysFromNow.getTime() + DAY_MS)
       },
       subscriptionStatus: 'active'
     });
@@ -165,7 +163,7 @@ const checkSubscriptionExpiry = async () => {
     const expiringToday = await Admin.find({
       subscriptionExpiry: {
         $gte: today,
-        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        $lt: new Date(today.getTime() + DAY_MS)
       },
       subscriptionStatus: 'active'
     });
@@ -218,7 +216,7 @@ const checkSubscriptionExpiry = async () => {
       } catch (err) { console.error('Cron Notify Error:', err); }
     }
 
-    console.log(`Cron job completed. Notified ${expiringIn3Days.length + expiringIn1Day.length + expiringToday.length} admins.`);
+    console.log(`Cron job completed. Notified ${expiringIn3Days.length + expiringIn2Days.length + expiringIn1Day.length + expiringToday.length} admins.`);
   } catch (err) {
     console.error('Error in subscription cron job:', err);
   }
@@ -228,7 +226,7 @@ const checkSubscriptionExpiry = async () => {
 const initSubscriptionCron = () => {
   cron.schedule('0 0 * * *', () => {
     checkSubscriptionExpiry();
-  });
+  }, { timezone: 'Asia/Kolkata' });
 
   // Also run once on startup for debugging/initial check
   // checkSubscriptionExpiry(); 

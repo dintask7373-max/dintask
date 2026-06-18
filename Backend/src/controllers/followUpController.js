@@ -1,5 +1,6 @@
 const FollowUp = require('../models/FollowUp');
 const Lead = require('../models/Lead');
+const { formatIST } = require('../utils/dateIST');
 
 // @desc    Get follow-ups for a lead or all follow-ups for user
 // @route   GET /api/v1/follow-ups
@@ -114,7 +115,7 @@ exports.createFollowUp = async (req, res) => {
                     adminId: req.user.id, // Admin's ID is the workspace ID
                     type: 'general',
                     title: 'New Follow-up Scheduled',
-                    message: `Admin scheduled a ${type} for lead "${lead?.name || 'Unknown'}" on ${new Date(scheduledAt).toLocaleString()}.`,
+                    message: `Admin scheduled a ${type} for lead "${lead?.name || 'Unknown'}" on ${formatIST(scheduledAt)}.`,
                     link: '/sales/follow-ups'
                 });
             } catch (err) {

@@ -452,6 +452,7 @@ exports.updateTask = async (req, res) => {
         // Reset subtasks for the new task
         const newSubTasks = task.subTasks.map(st => ({
           user: st.user,
+          userModel: st.userModel,
           status: 'pending',
           progress: 0
         }));

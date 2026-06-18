@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const Task = require('../models/Task');
 const FollowUp = require('../models/FollowUp');
 const Notification = require('../models/Notification');
+const { formatIST, istStartOfDay } = require('./dateIST');
 
 const REMINDER_STAGES = [
     { label: '2_days', hours: 48 },
@@ -16,7 +17,7 @@ const checkAndSendReminders = async () => {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
     try {
-        console.log(`[Reminder Heartbeat] Cron active at ${now.toLocaleString()}`);
+        console.log(`[Reminder Heartbeat] Cron active at ${formatIST(now)}`);
 
         // 1. Process Tasks
         const tasks = await Task.find({
@@ -51,11 +52,9 @@ const processItemReminders = async (item, modelName) => {
     const diffMs = deadline - now;
     const diffMins = diffMs / (1000 * 60);
 
-    // Calculate Stage Eligibility
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const deadlineDay = new Date(deadline);
-    deadlineDay.setHours(0, 0, 0, 0);
+    // Calculate Stage Eligibility (day boundaries anchored to IST, not server-local time)
+    const today = istStartOfDay(now);
+    const deadlineDay = istStartOfDay(deadline);
     const daysDiff = Math.round((deadlineDay - today) / (1000 * 60 * 60 * 24));
 
     const eligibleStages = [];
@@ -97,7 +96,7 @@ const triggerNotification = async (item, modelName, stage) => {
         const title = `${urgency}Reminder for ${modelName}`;
 
         const timeText = stage.replace('_', ' ');
-        const message = `Reminder (${timeText}): "${item.title || (modelName === 'FollowUp' ? item.type + ' Follow-up' : '')}" is scheduled for ${new Date(modelName === 'Task' ? item.deadline : item.scheduledAt).toLocaleString()}.`;
+        const message = `Reminder (${timeText}): "${item.title || (modelName === 'FollowUp' ? item.type + ' Follow-up' : '')}" is scheduled for ${formatIST(modelName === 'Task' ? item.deadline : item.scheduledAt)}.`;
 
         const link = modelName === 'Task'
             ? (item.assignedToModel === 'Manager' ? '/manager/my-tasks' : `/employee/tasks/${item._id}`)
@@ -125,10 +124,10 @@ const triggerNotification = async (item, modelName, stage) => {
 
 const initReminderCron = () => {
     console.log('[Reminder Cron] Initializing multi-stage reminder system...');
-    // Run every minute
+    // Run every minute (anchored to IST)
     cron.schedule('* * * * *', () => {
         checkAndSendReminders();
-    });
+    }, { timezone: 'Asia/Kolkata' });
 };
 
 module.exports = initReminderCron;

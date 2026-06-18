@@ -6,7 +6,7 @@ import {
     Sparkles,
     Search
 } from 'lucide-react';
-import { format, isToday, isAfter, parseISO } from 'date-fns';
+import { isToday, isAfter, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { toast } from 'sonner';
@@ -33,6 +33,23 @@ const TaskHome = () => {
     }, []);
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
+
+    // -- Time-based Greeting (always in Indian Standard Time, Asia/Kolkata) --
+    const greeting = useMemo(() => {
+        // Read the current hour in IST regardless of the device's local timezone.
+        const istHour = parseInt(
+            new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Kolkata',
+                hour: 'numeric',
+                hour12: false,
+            }).format(new Date()),
+            10
+        );
+        if (istHour < 12) return 'Good Morning';
+        if (istHour < 17) return 'Good Afternoon';
+        if (istHour < 21) return 'Good Evening';
+        return 'Good Night';
+    }, []);
 
     // -- Summary Stats Logic --
     const stats = useMemo(() => {
@@ -80,10 +97,15 @@ const TaskHome = () => {
                 <div className="relative z-10">
                     <div className="flex flex-col">
                         <h2 className="text-xl font-black leading-tight tracking-tight flex items-center gap-2 text-white">
-                            Good Morning, {user?.name?.split(' ')[0] || 'User'}
+                            {greeting}, {user?.name?.split(' ')[0] || 'User'}
                         </h2>
                         <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-                            {format(new Date(), 'EEEE, MMM dd')}
+                            {new Intl.DateTimeFormat('en-US', {
+                                timeZone: 'Asia/Kolkata',
+                                weekday: 'long',
+                                month: 'short',
+                                day: '2-digit',
+                            }).format(new Date())}
                         </p>
                     </div>
                 </div>
