@@ -8,10 +8,26 @@ const SuperAdmin = require('../models/SuperAdmin');
 const Partner = require('../models/Partner');
 const PartnerCommission = require('../models/PartnerCommission');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+// Lazily initialise Razorpay so a missing key doesn't crash the whole
+// server at module-load time. Payment endpoints will return a clean 500
+// instead, and the rest of the app stays online.
+let razorpayInstance = null;
+const getRazorpay = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error('Razorpay is not configured: RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are missing in the environment.');
+  }
+  if (!razorpayInstance) {
+    razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
+    });
+  }
+  return razorpayInstance;
+};
+
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  console.warn('⚠️  WARNING: RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are missing. Payment endpoints will be disabled.');
+}
 
 // Helper to calculate and record partner commission
 const calculatePartnerCommission = async (adminId, paymentId, amount) => {
@@ -111,7 +127,7 @@ exports.createOrder = async (req, res, next) => {
       receipt: `receipt_${Date.now()}`
     };
 
-    const order = await razorpay.orders.create(options);
+    const order = await getRazorpay().orders.create(options);
 
     if (!order) {
       return res.status(500).json({ success: false, error: 'Failed to create Razorpay order' });
@@ -188,7 +204,7 @@ exports.createExpansionOrder = async (req, res, next) => {
       receipt: `expansion_${Date.now()}`
     };
 
-    const order = await razorpay.orders.create(options);
+    const order = await getRazorpay().orders.create(options);
 
     await Payment.create({
       adminId: req.user.id,

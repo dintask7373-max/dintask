@@ -4,8 +4,12 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-// Load env vars check and fix
-dotenv.config();
+// Load env vars from Backend/.env regardless of the process cwd
+// (app.js lives in src/, so .env is one level up). This prevents
+// "injecting env (0)" when PM2 starts the app from a different directory.
+dotenv.config({
+  path: path.join(__dirname, '../.env')
+});
 
 // Connect to database
 connectDB();
